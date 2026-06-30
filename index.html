@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boni Lottery - Premium Digital Draw Platform</title>
+    <!-- Tailwind CSS for modern aesthetics -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Premium Fonts: Inter and Playfair Display -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: {
+                            DEFAULT: '#0A1D2F',
+                            dark: '#05101C',
+                            light: '#142E47',
+                        },
+                        gold: {
+                            DEFAULT: '#C8B87B',
+                            light: '#DFD4A6',
+                            dark: '#A69559',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Modern scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #05101C;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #C8B87B;
+            border-radius: 3px;
+        }
+        /* Custom pulsing effect for verified state */
+        @keyframes pulse-gold {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: .7; transform: scale(1.02); }
+        }
+        .pulse-gold-active {
+            animation: pulse-gold 2s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-[#FAF9F5] text-navy font-sans min-h-screen flex flex-col selection:bg-gold selection:text-navy">
+
+    <!-- Simulated SMS/Push Notification banner -->
+    <div id="sms-notification" class="fixed top-4 right-4 z-[100] max-w-sm w-full bg-white border-l-4 border-gold shadow-2xl rounded-lg overflow-hidden transform translate-x-full transition-all duration-500 ease-in-out pointer-events-none">
+        <div class="p-4 flex items-start gap-3">
+            <div class="bg-gold/10 p-2 rounded-full text-gold-dark">
+                <i data-lucide="message-square"></i>
+            </div>
+            <div class="flex-1">
+                <div class="flex items-center justify-between">
+                    <span class="font-bold text-xs uppercase tracking-wider text-gold-dark">Boni SMS Alert</span>
+                    <span class="text-[10px] text-gray-400">Just now</span>
+                </div>
+                <p id="sms-content" class="text-xs text-gray-600 mt-1 font-mono">Status check: Your ticket is being reviewed...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Brand Navigation Bar -->
+    <nav class="sticky top-0 z-50 bg-navy text-white border-b border-navy-light/40 backdrop-blur-md bg-opacity-95 px-4 md:px-8 py-4 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-gradient-to-tr from-gold-dark to-gold flex items-center justify-center text-navy font-bold text-xl tracking-tighter">B</div>
+            <div>
+                <h1 class="font-serif font-bold text-xl tracking-wide">BONI LOTTERY</h1>
+                <p class="text-[9px] tracking-[0.2em] uppercase text-gold">Fair • Transaparent • Live</p>
+            </div>
+        </div>
+        
+        <!-- Navigation Tabs -->
+        <div class="hidden md:flex gap-1 bg-navy-dark p-1 rounded-full border border-navy-light">
+            <button onclick="switchTab('home')" id="tab-home" class="tab-btn px-4 py-1.5 text-xs font-medium uppercase tracking-wider rounded-full bg-gold text-navy transition-all">Home</button>
+            <button onclick="switchTab('play')" id="tab-play" class="tab-btn px-4 py-1.5 text-xs font-medium uppercase tracking-wider rounded-full hover:text-gold transition-all">Select Numbers</button>
+            <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn px-4 py-1.5 text-xs font-medium uppercase tracking-wider rounded-full hover:text-gold transition-all">My Dashboard</button>
+            <button onclick="switchTab('draw')" id="tab-draw" class="tab-btn px-4 py-1.5 text-xs font-medium uppercase tracking-wider rounded-full hover:text-gold transition-all">Draw Hub</button>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <!-- Simulated balance for engagement -->
+            <div class="bg-navy-dark border border-navy-light px-3 py-1.5 rounded-lg text-right hidden sm:block">
+                <span class="text-[9px] block text-gray-400 uppercase tracking-widest">Active Tickets</span>
+                <span id="nav-active-count" class="text-sm font-mono font-bold text-gold">0 Registered</span>
+            </div>
+            <!-- Mobile Menu Toggle Button -->
+            <button onclick="toggleMobileMenu()" class="md:hidden text-white hover:text-gold p-2">
+                <i data-lucide="menu"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Navigation Drawer -->
+    <div id="mobile-menu" class="fixed inset-0 z-40 bg-navy/95 backdrop-blur-sm hidden flex-col justify-center items-center gap-6 text-white md:hidden">
+        <button onclick="toggleMobileMenu()" class="absolute top-6 right-6 text-white hover:text-gold">
+            <i data-lucide="x" class="w-8 h-8"></i>
+        </button>
+        <button onclick="switchTab('home'); toggleMobileMenu()" class="text-2xl font-serif hover:text-gold">Home</button>
+        <button onclick="switchTab('play'); toggleMobileMenu()" class="text-2xl font-serif hover:text-gold">Select Numbers</button>
+        <button onclick="switchTab('dashboard'); toggleMobileMenu()" class="text-2xl font-serif hover:text-gold">My Dashboard</button>
+        <button onclick="switchTab('draw'); toggleMobileMenu()" class="text-2xl font-serif hover:text-gold">Draw Hub</button>
+    </div>
+
+    <main class="flex-grow">
+        <!-- VIEW: Home -->
+        <section id="view-home" class="view-section animate-fade-in">
+            <!-- Hero Stage -->
+            <div class="relative bg-navy text-white overflow-hidden py-24 px-6 md:px-12 text-center border-b border-gold/20">
+                <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(200,184,123,0.15)_0%,transparent_70%)]"></div>
+                
+                <div class="max-w-4xl mx-auto relative z-10 space-y-6">
+                    <div class="inline-flex items-center gap-2 bg-navy-light border border-gold/30 px-3 py-1 rounded-full text-xs text-gold">
+                        <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span>
+                        Next Live Selection: Friday @ 8:00 PM (TikTok Live)
+                    </div>
+                    <h2 class="text-4xl md:text-7xl font-serif tracking-tight leading-tight">
+                        Choose Your Chance. <br><span class="text-gold font-light italic">Verify Live.</span>
+                    </h2>
+                    <p class="text-gray-300 max-w-xl mx-auto text-sm md:text-base leading-relaxed">
+                        A modern digital lottery crafted for trust. Secure your chosen ticket numbers between 1 and 1000, verify your CBE/Telebirr transaction instant-style, and see the randomized draw live on TikTok.
+                    </p>
+                    
+                    <!-- Countdown & Jackpot Stats -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto pt-6">
+                        <div class="bg-navy-dark border border-navy-light p-6 rounded-2xl flex flex-col justify-center">
+                            <span class="text-xs text-gray-400 uppercase tracking-widest">Estimated Jackpot Pool</span>
+                            <span class="text-3xl md:text-4xl font-serif font-bold text-gold mt-1">100,000 ETB</span>
+                        </div>
+                        <div class="bg-navy-dark border border-navy-light p-6 rounded-2xl flex flex-col justify-center">
+                            <span class="text-xs text-gray-400 uppercase tracking-widest">Time Remaining for Next Draw</span>
+                            <div class="text-2xl font-mono font-bold text-white mt-1 flex justify-center gap-2">
+                                <span id="hours-timer">23</span>h : <span id="mins-timer">45</span>m : <span id="secs-timer">12</span>s
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-4 flex flex-col sm:flex-row gap-4 justify-center">
+                        <button onclick="switchTab('play')" class="bg-gold hover:bg-gold-dark text-navy font-bold px-8 py-4 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2">
+                            Select Your Numbers <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                        </button>
+                        <button onclick="switchTab('draw')" class="border border-white/30 hover:border-white text-white px-8 py-4 rounded-xl transition-all flex items-center justify-center gap-2">
+                            <i data-lucide="tv" class="w-5 h-5"></i> Visit TikTok Draw Hub
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- How It Works & Trust Framework -->
+            <div class="py-20 px-6 max-w-6xl mx-auto">
+                <h3 class="text-center font-serif text-3xl mb-12">Our Transparent Path to Your Win</h3>
+                <div class="grid md:grid-cols-3 gap-8">
+                    <!-- Step 1 -->
+                    <div class="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden group hover:shadow-md transition">
+                        <span class="absolute -right-4 -bottom-4 text-8xl font-serif text-gray-100 font-bold group-hover:text-gold/10 transition">01</span>
+                        <div class="bg-navy text-white w-10 h-10 rounded-lg flex items-center justify-center mb-6 font-bold">1</div>
+                        <h4 class="font-bold text-lg mb-2">Select Your Luck</h4>
+                        <p class="text-gray-500 text-sm">Explore the 1-1000 grid. Pick your lucky combination or use our randomized Quick Pick algorithm.</p>
+                    </div>
+                    <!-- Step 2 -->
+                    <div class="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden group hover:shadow-md transition">
+                        <span class="absolute -right-4 -bottom-4 text-8xl font-serif text-gray-100 font-bold group-hover:text-gold/10 transition">02</span>
+                        <div class="bg-navy text-white w-10 h-10 rounded-lg flex items-center justify-center mb-6 font-bold">2</div>
+                        <h4 class="font-bold text-lg mb-2">Transfer & Send Receipt</h4>
+                        <p class="text-gray-500 text-sm">Follow instructions to transfer via Telebirr or CBE. Enter your ID and send the instant confirmation bridge link.</p>
+                    </div>
+                    <!-- Step 3 -->
+                    <div class="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden group hover:shadow-md transition">
+                        <span class="absolute -right-4 -bottom-4 text-8xl font-serif text-gray-100 font-bold group-hover:text-gold/10 transition">03</span>
+                        <div class="bg-navy text-white w-10 h-10 rounded-lg flex items-center justify-center mb-6 font-bold">3</div>
+                        <h4 class="font-bold text-lg mb-2">Watch Draw Live</h4>
+                        <p class="text-gray-500 text-sm">We use verified randomness processes streamed directly to TikTok Live. Keep an eye on your status feed.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW: Play / Select Numbers -->
+        <section id="view-play" class="view-section hidden animate-fade-in py-12 px-4 md:px-8 max-w-6xl mx-auto">
+            <div class="grid lg:grid-cols-3 gap-8">
+                <!-- Left panel: Selection Controls and Quick Pick -->
+                <div class="lg:col-span-1 space-y-6">
+                    <div class="bg-navy text-white p-6 rounded-2xl space-y-4">
+                        <h3 class="font-serif text-xl text-gold">Lottery Ticket Board</h3>
+                        <p class="text-xs text-gray-300">Choose numbers between 1 and 1000. Each selected number guarantees you one unique entry in the draw.</p>
+                        
+                        <!-- Quick Pick Actions -->
+                        <div class="border-t border-navy-light/60 pt-4 space-y-3">
+                            <span class="text-xs text-gray-400 block uppercase tracking-wider">Quick Generator Options</span>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="triggerQuickPick(1)" class="bg-navy-light hover:bg-navy-light/80 text-white text-xs py-2.5 rounded-lg border border-gold/20 transition">Pick 1 Random</button>
+                                <button onclick="triggerQuickPick(3)" class="bg-navy-light hover:bg-navy-light/80 text-white text-xs py-2.5 rounded-lg border border-gold/20 transition">Pick 3 Random</button>
+                                <button onclick="triggerQuickPick(5)" class="bg-navy-light hover:bg-navy-light/80 text-white text-xs py-2.5 rounded-lg border border-gold/20 transition">Pick 5 Random</button>
+                                <button onclick="clearSelectedNumbers()" class="bg-red-950/40 text-red-300 border border-red-900/40 text-xs py-2.5 rounded-lg hover:bg-red-900/20 transition">Clear Selected</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Current Cart / Selections -->
+                    <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4">
+                        <h4 class="font-bold text-navy flex items-center justify-between">
+                            <span>Your Selected Board</span>
+                            <span id="selected-count-badge" class="bg-navy text-white text-xs font-mono px-2 py-0.5 rounded-full">0</span>
+                        </h4>
+                        <div id="selected-numbers-container" class="flex flex-wrap gap-2 text-sm text-gray-500 max-h-36 overflow-y-auto p-1 bg-gray-50 rounded-lg">
+                            <div class="text-xs text-gray-400 p-2 text-center w-full italic">No numbers selected yet. Click any number or use Quick Pick.</div>
+                        </div>
+
+                        <!-- Proceed to Verification Dashboard -->
+                        <div class="border-t border-gray-100 pt-4">
+                            <div class="flex justify-between items-center mb-4">
+                                <span class="text-xs text-gray-500">Estimated Ticket Cost:</span>
+                                <span class="font-bold text-lg font-mono text-navy" id="ticket-price-display">0.00 ETB</span>
+                            </div>
+                            <button id="checkout-button" onclick="proceedToVerification()" disabled class="w-full bg-gray-300 cursor-not-allowed text-gray-600 font-bold py-3.5 rounded-xl transition shadow flex items-center justify-center gap-2">
+                                <i data-lucide="shield-check"></i> Register and Pay
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right panel: The Number Selection Grid (1-1000 Pagination Optimized) -->
+                <div class="lg:col-span-2 space-y-4">
+                    <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                        <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
+                            <div>
+                                <h3 class="font-serif text-2xl">Digital Number Grid</h3>
+                                <p class="text-xs text-gray-400 mt-1">Selectable entries from 1 to 1000.</p>
+                            </div>
+                            <!-- Search & Filter Controls -->
+                            <div class="flex items-center gap-2 w-full sm:w-auto">
+                                <input type="number" id="grid-search-input" placeholder="Go to number (1-1000)" class="border border-gray-200 text-sm rounded-lg px-3 py-2 w-full sm:w-44 focus:outline-none focus:ring-1 focus:ring-gold" min="1" max="1000">
+                                <button onclick="searchGridNumber()" class="bg-navy text-white p-2.5 rounded-lg hover:bg-navy-light"><i data-lucide="search" class="w-4 h-4"></i></button>
+                            </div>
+                        </div>
+
+                        <!-- Grid Pagination Tabs -->
+                        <div class="flex gap-1 overflow-x-auto pb-3 mb-4 scrollbar-thin border-b border-gray-100">
+                            <button onclick="changeGridPage(0)" class="page-tab-btn whitespace-nowrap px-3 py-1.5 text-xs font-semibold rounded-lg bg-navy text-white">1 - 100</button>
+                            <button onclick="changeGridPage(1)" class="page-tab-btn whitespace-nowrap px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200">101 - 200</button>
+                            <button onclick="changeGridPage(2)" class="page-tab-btn whitespace-nowrap px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200">201 - 300</button>
+                            <button onclick="changeGridPage(3)" class="page-tab-btn whitespace-nowrap px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200">301 - 400</button>
+                            <button onclick="changeGridPage(4)" class="page-tab-btn whitespace-nowrap px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200">401 - 500</button>
+                            <button onclick="changeGridPage(5)" class="page-tab-btn whitespace-nowrap px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200">501 - 600</button>
+                            <button onclick="changeGridPage(6)" class="page-tab-btn whitespace-nowrap px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200">601 - 700</button>
+                            <button onclick="changeGridPage(7)" class="page-tab-btn whitespace-nowrap px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200">701 - 800</button>
+                            <button onclick="changeGridPage(8)" class="page-tab-btn whitespace-nowrap px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200">801 - 900</button>
+                            <button onclick="changeGridPage(9)" class="page-tab-btn whitespace-nowrap px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200">901 - 1000</button>
+                        </div>
+
+                        <!-- Active Grid Box -->
+                        <div id="grid-numbers-wrapper" class="grid grid-cols-5 sm:grid-cols-10 gap-2 max-h-[420px] overflow-y-auto p-1">
+                            <!-- Injected dynamically with JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW: User Dashboard (Payment Verification Central Hub) -->
+        <section id="view-dashboard" class="view-section hidden animate-fade-in py-12 px-4 md:px-8 max-w-5xl mx-auto space-y-8">
+            <!-- Global Dashboard Banner -->
+            <div class="bg-navy text-white p-8 rounded-2xl relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border border-gold/20">
+                <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(200,184,123,0.1)_0%,transparent_60%)]"></div>
+                <div class="space-y-2 relative z-10">
+                    <h3 class="font-serif text-2xl text-gold">Active Session Hub</h3>
+                    <p class="text-xs text-gray-300 max-w-xl">Upload your transaction receipt from Telebirr or CBE Birr. Below is your direct integration bridge link to lock your numbers in before the live draw.</p>
+                </div>
+                <!-- Simulated Verification controls (Testing Mode) -->
+                <div class="bg-navy-light border border-gold/30 p-3 rounded-xl flex flex-col gap-2 w-full md:w-auto">
+                    <span class="text-[9px] uppercase tracking-wider text-gold-light text-center">Interactive Simulator Tool</span>
+                    <button onclick="toggleVerificationState()" id="simulate-verify-btn" class="bg-gold text-navy font-bold text-xs py-2 px-4 rounded-lg hover:bg-gold-dark transition text-center">
+                        Simulate Admin Approval
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step Progress State tracker -->
+            <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div class="flex items-center gap-3">
+                        <span class="text-xs text-gray-400 uppercase tracking-widest block font-bold">Ticket Progress</span>
+                        <span id="tracker-current-label" class="bg-yellow-500/10 text-yellow-600 border border-yellow-500/20 text-xs px-2.5 py-1 rounded-full font-bold">1. Numbers Selected</span>
+                    </div>
+                    
+                    <!-- Progress Grid Steps -->
+                    <div class="flex items-center gap-2 w-full md:w-auto text-xs overflow-x-auto pb-2">
+                        <div id="step-selected" class="flex items-center gap-2 text-gold font-bold">
+                            <span class="w-5 h-5 rounded-full bg-gold text-navy flex items-center justify-center font-bold text-[10px]">1</span> Select
+                        </div>
+                        <div class="h-0.5 w-6 bg-gray-200" id="line-1"></div>
+                        <div id="step-upload" class="flex items-center gap-2 text-gray-400 font-normal">
+                            <span class="w-5 h-5 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center font-bold text-[10px]">2</span> Upload
+                        </div>
+                        <div class="h-0.5 w-6 bg-gray-200" id="line-2"></div>
+                        <div id="step-verifying" class="flex items-center gap-2 text-gray-400 font-normal">
+                            <span class="w-5 h-5 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center font-bold text-[10px]">3</span> Verifying
+                        </div>
+                        <div class="h-0.5 w-6 bg-gray-200" id="line-3"></div>
+                        <div id="step-active" class="flex items-center gap-2 text-gray-400 font-normal">
+                            <span class="w-5 h-5 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center font-bold text-[10px]">4</span> Locked
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main verification bridge block -->
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- Payment Directions and Details Card -->
+                <div class="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm space-y-6">
+                    <div>
+                        <h4 class="font-serif text-xl">1. Secure Bank Accounts</h4>
+                        <p class="text-xs text-gray-400 mt-1">Transfer the exact ticket value to one of our verified business accounts below. Standard price per ticket entry is <strong class="text-navy">100 ETB</strong>.</p>
+                    </div>
+
+                    <!-- Payment Details Cards -->
+                    <div class="space-y-3">
+                        <!-- Telebirr Card -->
+                        <div class="bg-[#F3F4F6] p-4 rounded-xl flex justify-between items-center border border-gray-200 hover:border-gold/50 transition">
+                            <div class="space-y-1">
+                                <span class="bg-[#2563EB]/10 text-[#2563EB] text-[9px] px-2 py-0.5 rounded font-bold uppercase tracking-wider">Telebirr Account</span>
+                                <p class="font-mono text-sm font-bold text-navy tracking-wide">+251 912 345 678</p>
+                                <p class="text-[10px] text-gray-400 font-sans">Name: Boni Digital Services LLC</p>
+                            </div>
+                            <button onclick="copyAccountDetail('+251912345678')" class="p-2.5 bg-white rounded-lg hover:bg-gold/10 text-gray-500 hover:text-gold-dark transition shadow-sm">
+                                <i data-lucide="copy" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+
+                        <!-- CBE Account Card -->
+                        <div class="bg-[#F3F4F6] p-4 rounded-xl flex justify-between items-center border border-gray-200 hover:border-gold/50 transition">
+                            <div class="space-y-1">
+                                <span class="bg-purple-600/10 text-purple-700 text-[9px] px-2 py-0.5 rounded font-bold uppercase tracking-wider">CBE Birr Account</span>
+                                <p class="font-mono text-sm font-bold text-navy tracking-wide">1000 4567 8912 34</p>
+                                <p class="text-[10px] text-gray-400 font-sans">Name: Boni Digital Services LLC</p>
+                            </div>
+                            <button onclick="copyAccountDetail('10004567891234')" class="p-2.5 bg-white rounded-lg hover:bg-gold/10 text-gray-500 hover:text-gold-dark transition shadow-sm">
+                                <i data-lucide="copy" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-gray-100 pt-4 text-xs text-gray-500 space-y-1 italic">
+                        <p>• Make sure the screenshot clearly displays the reference identifier.</p>
+                        <p>• Manual approval and confirmation times range between 15 and 30 minutes.</p>
+                    </div>
+                </div>
+
+                <!-- Receipt attachment form and validation block -->
+                <div class="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm space-y-6 flex flex-col justify-between">
+                    <div>
+                        <h4 class="font-serif text-xl">2. Upload Verification & Sync</h4>
+                        <p class="text-xs text-gray-400 mt-1">Please enter your reference token and drag your mobile screenshot receipt inside the designated region.</p>
+                    </div>
+
+                    <form id="verification-form" onsubmit="handleVerificationSubmission(event)" class="space-y-4">
+                        <!-- ID Input field -->
+                        <div class="space-y-1.5">
+                            <label class="text-xs font-bold uppercase tracking-wider text-gray-500">Transaction Reference ID *</label>
+                            <input type="text" id="transaction-id-input" required placeholder="Paste CBE or Telebirr Txn ID" class="border border-gray-200 rounded-xl px-4 py-3 text-sm w-full focus:outline-none focus:ring-1 focus:ring-gold font-mono uppercase tracking-widest">
+                        </div>
+
+                        <!-- Drag and Drop region -->
+                        <div class="space-y-1.5">
+                            <label class="text-xs font-bold uppercase tracking-wider text-gray-500">Receipt Screenshot *</label>
+                            <div id="dropzone" class="border-2 border-dashed border-gray-200 hover:border-gold/50 rounded-xl p-6 text-center cursor-pointer transition flex flex-col justify-center items-center gap-3 relative min-h-36">
+                                <input type="file" id="file-input" required accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer" onchange="handleFileSelected(this)">
+                                <div id="dropzone-prompt" class="space-y-2">
+                                    <i data-lucide="camera" class="w-8 h-8 mx-auto text-gray-400"></i>
+                                    <p class="text-xs text-gray-500">Tap to snap or upload from gallery</p>
+                                    <p class="text-[10px] text-gray-400">PNG, JPG, JPEG formats are allowed</p>
+                                </div>
+                                <div id="dropzone-preview" class="hidden flex flex-col items-center gap-2">
+                                    <img id="receipt-preview" src="#" alt="Preview" class="max-h-24 max-w-full rounded-lg object-contain shadow-sm border border-gray-200">
+                                    <span id="receipt-filename" class="text-[10px] text-gray-500 font-mono truncate max-w-xs">image.png</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Verification Bridge -->
+                        <div class="pt-4 space-y-3">
+                            <button type="submit" class="w-full bg-gold hover:bg-gold-dark text-navy font-bold py-3.5 rounded-xl transition shadow flex items-center justify-center gap-2">
+                                <i data-lucide="send" class="w-4 h-4"></i> Send verification message
+                            </button>
+                            <div class="flex gap-2">
+                                <button type="button" onclick="launchTelegramBridge()" class="w-1/2 border border-blue-500/30 hover:bg-blue-50/50 text-blue-600 font-bold py-2.5 rounded-lg text-xs transition flex items-center justify-center gap-1.5">
+                                    <i data-lucide="send" class="w-3.5 h-3.5"></i> Telegram Bot
+                                </button>
+                                <button type="button" onclick="launchEmailBridge()" class="w-1/2 border border-red-500/30 hover:bg-red-50/50 text-red-600 font-bold py-2.5 rounded-lg text-xs transition flex items-center justify-center gap-1.5">
+                                    <i data-lucide="mail" class="w-3.5 h-3.5"></i> Email Support
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW: Draw Hub (Live Results & Transparency Ledger) -->
+        <section id="view-draw" class="view-section hidden animate-fade-in py-12 px-4 md:px-8 max-w-6xl mx-auto space-y-8">
+            <div class="grid lg:grid-cols-3 gap-8">
+                <!-- Left Section: Real-time TikTok Live simulation & Player -->
+                <div class="lg:col-span-2 space-y-4">
+                    <div class="bg-navy text-white p-6 rounded-2xl space-y-4 border border-gold/10">
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span>
+                                <h3 class="font-serif text-xl tracking-tight text-white">Live Broadcast Room</h3>
+                            </div>
+                            <span class="bg-red-600 text-white font-bold text-[9px] uppercase tracking-widest px-2 py-0.5 rounded">SIMULATED LIVE</span>
+                        </div>
+
+                        <!-- Embedded video simulation wrapper -->
+                        <div class="relative aspect-video w-full rounded-xl overflow-hidden bg-black flex items-center justify-center border border-navy-light shadow-inner">
+                            <div class="absolute inset-0 opacity-20 bg-[linear-gradient(45deg,#111_25%,transparent_25%),linear-gradient(-45deg,#111_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#111_75%),linear-gradient(-45deg,transparent_75%,#111_75%)] bg-[size:20px_20px]"></div>
+                            
+                            <!-- Static TikTok Live simulator artwork with animation -->
+                            <div class="relative z-10 text-center space-y-3 p-4">
+                                <div class="w-16 h-16 mx-auto rounded-full bg-navy border-4 border-gold-dark flex items-center justify-center text-gold-dark animate-bounce">
+                                    <i data-lucide="tv-2" class="w-8 h-8"></i>
+                                </div>
+                                <h4 class="font-serif text-lg text-gold">TikTok Live Stream Embed</h4>
+                                <p class="text-xs text-gray-300 max-w-sm mx-auto leading-relaxed">During the active selection hour, we stream live from our official handle. Watch our randomized selector spin live for 100% verifiability.</p>
+                                <a href="https://tiktok.com" target="_blank" class="inline-flex items-center gap-1.5 bg-white text-navy font-bold text-xs py-2 px-5 rounded-full hover:bg-gold transition-all shadow-md">
+                                    <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Open TikTok App
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Section: Public Ledger of Active Entries -->
+                <div class="lg:col-span-1 space-y-4">
+                    <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4 h-full flex flex-col justify-between">
+                        <div class="space-y-1">
+                            <h4 class="font-serif text-lg">Public Transparency Ledger</h4>
+                            <p class="text-[10px] text-gray-400">All registered active ticket tokens inside the pool for transparency audits.</p>
+                        </div>
+
+                        <!-- Active Ledger list wrapper -->
+                        <div id="ledger-list-container" class="space-y-2 flex-grow max-h-[280px] overflow-y-auto pr-1 my-3">
+                            <!-- Populated dynamically -->
+                            <div class="text-xs text-gray-400 p-4 text-center italic">No registered entries are in the current draw pool yet. Register on the select page!</div>
+                        </div>
+
+                        <div class="border-t border-gray-100 pt-4 text-center">
+                            <span class="text-[9px] uppercase tracking-wider text-gray-400 block mb-1">Total Verified Active Pool Value</span>
+                            <span id="ledger-pool-value" class="font-mono text-lg font-bold text-navy">0.00 ETB</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Brand compliance and responsible gaming footer -->
+    <footer class="bg-navy text-white py-12 px-6 border-t border-navy-light">
+        <div class="max-w-6xl mx-auto grid md:grid-cols-4 gap-8">
+            <div class="space-y-4 col-span-2">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded bg-gold flex items-center justify-center text-navy font-bold text-lg">B</div>
+                    <span class="font-serif font-bold text-lg tracking-wide">BONI LOTTERY</span>
+                </div>
+                <p class="text-xs text-gray-400 max-w-sm leading-relaxed">This "Manual Bridge" frontend system lets you launch zero-cost, high-trust lotteries directly from GitHub Pages. Elevate transaction security and transition to backend automation with Supabase seamlessly.</p>
+            </div>
+
+            <div class="space-y-2">
+                <h5 class="text-xs font-bold uppercase tracking-widest text-gold">Security Protocols</h5>
+                <ul class="text-xs text-gray-400 space-y-2 font-mono">
+                    <li class="flex items-center gap-1.5"><i data-lucide="shield-check" class="w-3.5 h-3.5 text-gold"></i> SHA-256 Hashes</li>
+                    <li class="flex items-center gap-1.5"><i data-lucide="shield-alert" class="w-3.5 h-3.5 text-gold"></i> Responsible Limit</li>
+                    <li class="flex items-center gap-1.5"><i data-lucide="check-circle" class="w-3.5 h-3.5 text-gold"></i> Live TikTok Audio</li>
+                </ul>
+            </div>
+
+            <div class="space-y-2">
+                <h5 class="text-xs font-bold uppercase tracking-widest text-gold">Disclaimer</h5>
+                <p class="text-[10px] text-gray-400 leading-relaxed">Participation must comply with local jurisdiction licensing laws. Players must be over 18. Please play responsibly.</p>
+            </div>
+        </div>
+
+        <div class="max-w-6xl mx-auto border-t border-navy-light/60 mt-12 pt-6 flex flex-col md:flex-row justify-between items-center text-[10px] text-gray-500 gap-4">
+            <p>© 2026 Boni Digital Services. Deployed via GitHub Pages.</p>
+            <div class="flex gap-4">
+                <a href="#" class="hover:text-gold transition">Terms & Conditions</a>
+                <a href="#" class="hover:text-gold transition">Responsible Gaming</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Global variables state storage
+        let selectedNumbers = [];
+        let ticketPrice = 100; // Base ETB price
+        let activePage = 0; // Pagination page index (1-100 is 0)
+        let activeTickets = []; // Active verified tickets state stored in localStorage
+        let pendingTickets = []; // Tickets awaiting manual verification
+        let currentVerificationTicket = null; // The ticket undergoing current upload/submission
+
+        // Initialize state variables on page load
+        window.onload = function() {
+            // Rehydrate state from LocalStorage for persistence
+            if (localStorage.getItem('boni_active_tickets')) {
+                activeTickets = JSON.parse(localStorage.getItem('boni_active_tickets'));
+            }
+            if (localStorage.getItem('boni_pending_tickets')) {
+                pendingTickets = JSON.parse(localStorage.getItem('boni_pending_tickets'));
+            }
+            if (localStorage.getItem('boni_selected_numbers')) {
+                selectedNumbers = JSON.parse(localStorage.getItem('boni_selected_numbers'));
+            }
+
+            // Sync visual UI elements
+            renderGrid();
+            updateSelectedNumbersUI();
+            updateDashboardTracker();
+            updateLedgerList();
+            startTimer();
+
+            // Initialize Lucide Icons inside the page
+            lucide.createIcons();
+        }
+
+        // Timer controller for Next Draw Event
+        function startTimer() {
+            let hours = 23;
+            let mins = 45;
+            let secs = 12;
+
+            setInterval(() => {
+                secs--;
+                if (secs < 0) {
+                    secs = 59;
+                    mins--;
+                    if (mins < 0) {
+                        mins = 59;
+                        hours--;
+                        if (hours < 0) {
+                            hours = 23;
+                        }
+                    }
+                }
+                document.getElementById('hours-timer').textContent = String(hours).padStart(2, '0');
+                document.getElementById('mins-timer').textContent = String(mins).padStart(2, '0');
+                document.getElementById('secs-timer').textContent = String(secs).padStart(2, '0');
+            }, 1000);
+        }
+
+        // Mobile Menu Toggler
+        function toggleMobileMenu() {
+            const el = document.getElementById('mobile-menu');
+            el.classList.toggle('hidden');
+            el.classList.toggle('flex');
+        }
+
+        // Tab Switching Router
+        function switchTab(viewId) {
+            // Hide all tab views
+            document.querySelectorAll('.view-section').forEach(section => {
+                section.classList.add('hidden');
+            });
+
+            // Deactivate active indicators on buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-gold', 'text-navy');
+                btn.classList.add('hover:text-gold');
+            });
+
+            // Display requested target view
+            document.getElementById(`view-${viewId}`).classList.remove('hidden');
+
+            // Accent target navigational link
+            const targetBtn = document.getElementById(`tab-${viewId}`);
+            if (targetBtn) {
+                targetBtn.classList.add('bg-gold', 'text-navy');
+                targetBtn.classList.remove('hover:text-gold');
+            }
+        }
+
+        // Main Selection Grid Renderer
+        function renderGrid() {
+            const container = document.getElementById('grid-numbers-wrapper');
+            container.innerHTML = '';
+
+            const startRange = activePage * 100 + 1;
+            const endRange = startRange + 99;
+
+            for (let i = startRange; i <= endRange; i++) {
+                const isSelected = selectedNumbers.includes(i);
+                const isActive = activeTickets.some(t => t.numbers.includes(i));
+                const isPending = pendingTickets.some(t => t.numbers.includes(i));
+
+                const btn = document.createElement('button');
+                btn.textContent = i;
+                btn.className = `h-10 text-xs font-mono font-bold border rounded-lg transition-all flex items-center justify-center `;
+
+                if (isActive) {
+                    // Number locked and verified in active draw
+                    btn.className += 'bg-gold-light border-gold text-navy cursor-not-allowed';
+                    btn.disabled = true;
+                    btn.title = "Number sold & verified";
+                } else if (isPending) {
+                    // Number waiting transaction manual verification
+                    btn.className += 'bg-yellow-500/20 border-yellow-400 text-yellow-700 cursor-not-allowed';
+                    btn.disabled = true;
+                    btn.title = "Awaiting verification";
+                } else if (isSelected) {
+                    // Active selection by user in this browser session
+                    btn.className += 'bg-navy text-white border-navy shadow-sm';
+                    btn.onclick = () => toggleNumber(i);
+                } else {
+                    // Standard free selectable space
+                    btn.className += 'bg-white hover:bg-gray-50 border-gray-200 text-navy-light';
+                    btn.onclick = () => toggleNumber(i);
+                }
+
+                container.appendChild(btn);
+            }
+        }
+
+        // Search action to jump immediately to specific page block of range
+        function searchGridNumber() {
+            const val = parseInt(document.getElementById('grid-search-input').value);
+            if (!val || val < 1 || val > 1000) {
+                showToast("Please enter a valid ticket number between 1 and 1000.");
+                return;
+            }
+
+            // Find matching index of pagination block (e.g., 234 is page 2, i.e., 201-300)
+            const matchedPage = Math.floor((val - 1) / 100);
+            changeGridPage(matchedPage);
+
+            // Highlight target element dynamically inside the view scrolling context
+            setTimeout(() => {
+                const btns = document.getElementById('grid-numbers-wrapper').children;
+                const indexOnPage = (val - 1) % 100;
+                if (btns[indexOnPage]) {
+                    btns[indexOnPage].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    btns[indexOnPage].classList.add('ring-4', 'ring-gold', 'scale-105');
+                    setTimeout(() => {
+                        btns[indexOnPage].classList.remove('ring-4', 'ring-gold', 'scale-105');
+                    }, 2500);
+                }
+            }, 100);
+        }
+
+        // Grid Pagination Page changer
+        function changeGridPage(pageIdx) {
+            activePage = pageIdx;
+            
+            // Sync page indicator tabs design
+            const tabs = document.querySelectorAll('.page-tab-btn');
+            tabs.forEach((tab, index) => {
+                if (index === pageIdx) {
+                    tab.className = "page-tab-btn whitespace-nowrap px-3 py-1.5 text-xs font-semibold rounded-lg bg-navy text-white";
+                } else {
+                    tab.className = "page-tab-btn whitespace-nowrap px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200";
+                }
+            });
+
+            renderGrid();
+        }
+
+        // Select or Deselect action toggler
+        function toggleNumber(num) {
+            const index = selectedNumbers.indexOf(num);
+            if (index > -1) {
+                selectedNumbers.splice(index, 1);
+            } else {
+                if (selectedNumbers.length >= 10) {
+                    showToast("You can select up to 10 entry tickets in a single checkout session.");
+                    return;
+                }
+                selectedNumbers.push(num);
+            }
+
+            // Cache current state locally
+            localStorage.setItem('boni_selected_numbers', JSON.stringify(selectedNumbers));
+            
+            // Re-render components and updates
+            renderGrid();
+            updateSelectedNumbersUI();
+            updateDashboardTracker();
+        }
+
+        // Trigger Quick Picks random selection logic
+        function triggerQuickPick(count) {
+            let added = 0;
+            let attempts = 0;
+
+            // Stop logic loop to prevent hanging browsers if nearly all spaces are sold
+            while (added < count && attempts < 200) {
+                attempts++;
+                const candidate = Math.floor(Math.random() * 1000) + 1;
+                
+                // Confirm number selection isn't already active/pending/selected
+                const isTaken = activeTickets.some(t => t.numbers.includes(candidate)) ||
+                                pendingTickets.some(t => t.numbers.includes(candidate)) ||
+                                selectedNumbers.includes(candidate);
+                
+                if (!isTaken) {
+                    selectedNumbers.push(candidate);
+                    added++;
+                }
+            }
+
+            localStorage.setItem('boni_selected_numbers', JSON.stringify(selectedNumbers));
+            renderGrid();
+            updateSelectedNumbersUI();
+            updateDashboardTracker();
+            
+            showToast(`Randomly selected ${added} entry tickets for you!`);
+        }
+
+        // Clear all selected numbers
+        function clearSelectedNumbers() {
+            selectedNumbers = [];
+            localStorage.setItem('boni_selected_numbers', JSON.stringify(selectedNumbers));
+            renderGrid();
+            updateSelectedNumbersUI();
+            updateDashboardTracker();
+        }
+
+        // Sync layout counters and dynamic display metrics
+        function updateSelectedNumbersUI() {
+            const container = document.getElementById('selected-numbers-container');
+            const checkoutBtn = document.getElementById('checkout-button');
+            const selectedBadge = document.getElementById('selected-count-badge');
+            const priceDisplay = document.getElementById('ticket-price-display');
+
+            container.innerHTML = '';
+
+            if (selectedNumbers.length === 0) {
+                container.innerHTML = `<div class="text-xs text-gray-400 p-2 text-center w-full italic">No numbers selected yet. Click any number or use Quick Pick.</div>`;
+                checkoutBtn.disabled = true;
+                checkoutBtn.className = "w-full bg-gray-300 cursor-not-allowed text-gray-600 font-bold py-3.5 rounded-xl transition shadow flex items-center justify-center gap-2";
+                priceDisplay.textContent = "0.00 ETB";
+                selectedBadge.textContent = "0";
+                return;
+            }
+
+            // Show selected entries with click-to-delete support
+            selectedNumbers.sort((a,b) => a-b).forEach(num => {
+                const item = document.createElement('div');
+                item.className = "inline-flex items-center gap-1.5 bg-navy-light text-white text-xs font-mono font-bold px-3 py-1.5 rounded-lg border border-gold/30 hover:bg-red-950 transition-all cursor-pointer";
+                item.innerHTML = `<span>#${num}</span><i data-lucide="x" class="w-3.5 h-3.5 opacity-60"></i>`;
+                item.onclick = () => toggleNumber(num);
+                container.appendChild(item);
+            });
+
+            // Update badge totals
+            const totalTickets = selectedNumbers.length;
+            const computedPrice = totalTickets * ticketPrice;
+            selectedBadge.textContent = totalTickets;
+            priceDisplay.textContent = `${computedPrice.toLocaleString()} ETB`;
+
+            // Enable action button
+            checkoutBtn.disabled = false;
+            checkoutBtn.className = "w-full bg-gold hover:bg-gold-dark text-navy font-bold py-3.5 rounded-xl transition shadow flex items-center justify-center gap-2 cursor-pointer";
+
+            // Re-render icons on new items
+            lucide.createIcons();
+        }
+
+        // Action trigger route from numbers board to Receipt Dashboard page
+        function proceedToVerification() {
+            // Confirm the user has items in their cart
+            if (selectedNumbers.length === 0) return;
+
+            // Route dynamically to Dashboard tab
+            switchTab('dashboard');
+
+            // Set up current pending verification record reference
+            currentVerificationTicket = {
+                id: 'TKT-' + Math.floor(100000 + Math.random() * 900000),
+                numbers: [...selectedNumbers],
+                price: selectedNumbers.length * ticketPrice,
+                status: 'upload_pending',
+                transactionId: '',
+                timestamp: new Date().toLocaleDateString()
+            };
+
+            updateDashboardTracker();
+            showToast("Payment selection registered! Complete transfer details below.");
+        }
+
+        // Update user progress tracking bar and validation triggers
+        function updateDashboardTracker() {
+            const label = document.getElementById('tracker-current-label');
+            const stepSelected = document.getElementById('step-selected');
+            const stepUpload = document.getElementById('step-upload');
+            const stepVerifying = document.getElementById('step-verifying');
+            const stepActive = document.getElementById('step-active');
+            
+            const l1 = document.getElementById('line-1');
+            const l2 = document.getElementById('line-2');
+            const l3 = document.getElementById('line-3');
+
+            // Base clean layout classes reset
+            const normalStep = "flex items-center gap-2 text-gray-400 font-normal";
+            const activeStep = "flex items-center gap-2 text-gold font-bold";
+            const completedStep = "flex items-center gap-2 text-navy font-bold";
+
+            const normalDot = (idx) => `<span class="w-5 h-5 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center font-bold text-[10px]">${idx}</span>`;
+            const activeDot = (idx) => `<span class="w-5 h-5 rounded-full bg-gold text-navy flex items-center justify-center font-bold text-[10px] pulse-gold-active">${idx}</span>`;
+            const completedDot = (idx) => `<span class="w-5 h-5 rounded-full bg-navy text-white flex items-center justify-center font-bold text-[10px]"><i data-lucide="check" class="w-3 h-3"></i></span>`;
+
+            if (selectedNumbers.length > 0 && (!currentVerificationTicket || currentVerificationTicket.status === 'upload_pending')) {
+                // Step 1: Numbers Selected, Awaiting Upload Action
+                label.textContent = "1. Numbers Selected - Ready to Pay";
+                label.className = "bg-yellow-500/10 text-yellow-600 border border-yellow-500/20 text-xs px-2.5 py-1 rounded-full font-bold";
+                
+                stepSelected.className = activeStep;
+                stepSelected.innerHTML = activeDot(1) + " Select";
+                
+                stepUpload.className = normalStep;
+                stepUpload.innerHTML = normalDot(2) + " Upload";
+                stepVerifying.className = normalStep;
+                stepVerifying.innerHTML = normalDot(3) + " Verifying";
+                stepActive.className = normalStep;
+                stepActive.innerHTML = normalDot(4) + " Locked";
+
+                l1.className = "h-0.5 w-6 bg-gray-200";
+                l2.className = "h-0.5 w-6 bg-gray-200";
+                l3.className = "h-0.5 w-6 bg-gray-200";
+
+            } else if (currentVerificationTicket && currentVerificationTicket.status === 'upload_pending' && selectedNumbers.length === 0) {
+                // Transition phase where numbers are being checked out
+                label.textContent = "2. Send Transfer & Receipt";
+                label.className = "bg-yellow-500/10 text-yellow-600 border border-yellow-500/20 text-xs px-2.5 py-1 rounded-full font-bold";
+                
+                stepSelected.className = completedStep;
+                stepSelected.innerHTML = completedDot(1) + " Select";
+                
+                stepUpload.className = activeStep;
+                stepUpload.innerHTML = activeDot(2) + " Upload";
+                
+                stepVerifying.className = normalStep;
+                stepVerifying.innerHTML = normalDot(3) + " Verifying";
+                stepActive.className = normalStep;
+                stepActive.innerHTML = normalDot(4) + " Locked";
+
+                l1.className = "h-0.5 w-6 bg-navy";
+                l2.className = "h-0.5 w-6 bg-gray-200";
+                l3.className = "h-0.5 w-6 bg-gray-200";
+
+            } else if (currentVerificationTicket && currentVerificationTicket.status === 'verifying') {
+                // Step 3: Receipt Uploaded, Awaiting Manual/Admin Verification Check
+                label.textContent = "3. Manual Review Pending";
+                label.className = "bg-blue-500/10 text-blue-600 border border-blue-500/20 text-xs px-2.5 py-1 rounded-full font-bold";
+                
+                stepSelected.className = completedStep;
+                stepSelected.innerHTML = completedDot(1) + " Select";
+                stepUpload.className = completedStep;
+                stepUpload.innerHTML = completedDot(2) + " Upload";
+                
+                stepVerifying.className = activeStep;
+                stepVerifying.innerHTML = activeDot(3) + " Verifying";
+                
+                stepActive.className = normalStep;
+                stepActive.innerHTML = normalDot(4) + " Locked";
+
+                l1.className = "h-0.5 w-6 bg-navy";
+                l2.className = "h-0.5 w-6 bg-navy";
+                l3.className = "h-0.5 w-6 bg-gray-200";
+
+            } else if (currentVerificationTicket && currentVerificationTicket.status === 'active') {
+                // Step 4: Verification Complete, Ticket Locked & Verified
+                label.textContent = "4. Ticket Confirmed & Active";
+                label.className = "bg-green-500/10 text-green-600 border border-green-500/20 text-xs px-2.5 py-1 rounded-full font-bold";
+                
+                stepSelected.className = completedStep;
+                stepSelected.innerHTML = completedDot(1) + " Select";
+                stepUpload.className = completedStep;
+                stepUpload.innerHTML = completedDot(2) + " Upload";
+                stepVerifying.className = completedStep;
+                stepVerifying.innerHTML = completedDot(3) + " Verifying";
+                
+                stepActive.className = completedStep;
+                stepActive.innerHTML = completedDot(4) + " Locked";
+
+                l1.className = "h-0.5 w-6 bg-navy";
+                l2.className = "h-0.5 w-6 bg-navy";
+                l3.className = "h-0.5 w-6 bg-navy";
+            } else {
+                // Fresh default fallback tracker visual state
+                label.textContent = "1. Selection Awaiting";
+                label.className = "bg-gray-100 text-gray-500 border border-gray-200 text-xs px-2.5 py-1 rounded-full font-bold";
+                
+                stepSelected.className = normalStep;
+                stepSelected.innerHTML = normalDot(1) + " Select";
+                stepUpload.className = normalStep;
+                stepUpload.innerHTML = normalDot(2) + " Upload";
+                stepVerifying.className = normalStep;
+                stepVerifying.innerHTML = normalDot(3) + " Verifying";
+                stepActive.className = normalStep;
+                stepActive.innerHTML = normalDot(4) + " Locked";
+
+                l1.className = "h-0.5 w-6 bg-gray-200";
+                l2.className = "h-0.5 w-6 bg-gray-200";
+                l3.className = "h-0.5 w-6 bg-gray-200";
+            }
+
+            lucide.createIcons();
+        }
+
+        // CBE/Telebirr Account details click to clipboard logic
+        function copyAccountDetail(accountNum) {
+            // High efficiency backup implementation for security frames
+            const tempEl = document.createElement('textarea');
+            tempEl.value = accountNum;
+            document.body.appendChild(tempEl);
+            tempEl.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempEl);
+
+            showToast(`Account identifier "${accountNum}" copied directly to clipboard!`);
+        }
+
+        // Handle visual attachment display of receipt photo file
+        function handleFileSelected(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const prompt = document.getElementById('dropzone-prompt');
+            const previewWrap = document.getElementById('dropzone-preview');
+            const img = document.getElementById('receipt-preview');
+            const filename = document.getElementById('receipt-filename');
+
+            filename.textContent = file.name;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                img.src = e.target.result;
+                prompt.classList.add('hidden');
+                previewWrap.classList.remove('hidden');
+            }
+            reader.readAsDataURL(file);
+        }
+
+        // Form submit handler bridging manual transaction communication links
+        function handleVerificationSubmission(event) {
+            event.preventDefault();
+
+            const txnInput = document.getElementById('transaction-id-input').value.trim();
+            if (!txnInput) {
+                showToast("Please enter the unique transaction reference identifier.");
+                return;
+            }
+
+            // Update state record representation
+            if (!currentVerificationTicket) {
+                currentVerificationTicket = {
+                    id: 'TKT-' + Math.floor(100000 + Math.random() * 900000),
+                    numbers: [...selectedNumbers],
+                    price: selectedNumbers.length * ticketPrice,
+                    status: 'upload_pending',
+                    timestamp: new Date().toLocaleDateString()
+                };
+            }
+
+            currentVerificationTicket.transactionId = txnInput;
+            currentVerificationTicket.status = 'verifying';
+
+            // Push current ticket to active pending tracker database
+            pendingTickets.push(currentVerificationTicket);
+            localStorage.setItem('boni_pending_tickets', JSON.stringify(pendingTickets));
+
+            // Clear selected cart queue as tickets transitioned to review state
+            selectedNumbers = [];
+            localStorage.setItem('boni_selected_numbers', JSON.stringify(selectedNumbers));
+
+            updateDashboardTracker();
+            renderGrid();
+            updateSelectedNumbersUI();
+
+            // Trigger simulated SMS confirmation notification to preview Phase 2
+            triggerSMSNotification(`Boni verification alert: Receipt received for tickets [#${currentVerificationTicket.numbers.join(', #')}]. Txn Reference: ${txnInput}. We are manually reviewing your transfer. Review typically completes in 15 mins.`);
+
+            showToast("Receipt registered! Choose Telegram or Email below to transmit receipt manually to Boni administration.");
+        }
+
+        // Deep link construction trigger for instant Telegram verification channel
+        function launchTelegramBridge() {
+            if (!currentVerificationTicket) {
+                showToast("Please select your numbers and input receipt details first.");
+                return;
+            }
+
+            const message = `Hello Boni Admin! I want to verify my ticket receipt.\n\n` +
+                            `• Ticket ID: ${currentVerificationTicket.id}\n` +
+                            `• Selected Numbers: [${currentVerificationTicket.numbers.join(', ')}]\n` +
+                            `• Transaction Ref: ${currentVerificationTicket.transactionId}\n` +
+                            `• Amount Transferred: ${currentVerificationTicket.price} ETB\n\n` +
+                            `I have attached my receipt below. Please confirm and lock my numbers. Thank you!`;
+
+            const cleanMsg = encodeURIComponent(message);
+            // Dynamic deep link redirection to admin telegram
+            window.open(`https://t.me/FitaRegassa?text=${cleanMsg}`, '_blank');
+        }
+
+        // Construct formatting link for default browser Mailto configuration
+        function launchEmailBridge() {
+            if (!currentVerificationTicket) {
+                showToast("Please select your numbers and input receipt details first.");
+                return;
+            }
+
+            const subject = `Boni Ticket Payment Verification - ${currentVerificationTicket.id}`;
+            const body = `Dear Boni Team,\n\nI have successfully initiated my CBE/Telebirr payment. Details are below:\n\n` +
+                         `Ticket ID: ${currentVerificationTicket.id}\n` +
+                         `Numbers: ${currentVerificationTicket.numbers.join(', ')}\n` +
+                         `Transaction ID: ${currentVerificationTicket.transactionId}\n` +
+                         `Price Paid: ${currentVerificationTicket.price} ETB\n\n` +
+                         `I have attached the screenshot confirmation receipt inside this thread. Please verify soon.`;
+
+            const cleanSub = encodeURIComponent(subject);
+            const cleanBody = encodeURIComponent(body);
+
+            window.location.href = `mailto:fita.regassa@gmail.com?subject=${cleanSub}&body=${cleanBody}`;
+        }
+
+        // Simulation Tool: Toggle Verification state inside testing environment (Admin Emulator)
+        function toggleVerificationState() {
+            if (pendingTickets.length === 0 && (!currentVerificationTicket || currentVerificationTicket.status !== 'verifying')) {
+                showToast("Simulation Alert: No pending entries are inside the queue. Select ticket numbers first.");
+                return;
+            }
+
+            // Find current active verification record inside state list
+            let targetTicket = pendingTickets[pendingTickets.length - 1] || currentVerificationTicket;
+
+            if (targetTicket && targetTicket.status === 'verifying') {
+                targetTicket.status = 'active';
+                
+                // Move from pending dataset to verified active tickets array
+                activeTickets.push(targetTicket);
+                localStorage.setItem('boni_active_tickets', JSON.stringify(activeTickets));
+
+                // Clear from pending register queue
+                pendingTickets = pendingTickets.filter(t => t.id !== targetTicket.id);
+                localStorage.setItem('boni_pending_tickets', JSON.stringify(pendingTickets));
+
+                // Update session state models
+                currentVerificationTicket = targetTicket;
+                
+                // Sync elements
+                updateDashboardTracker();
+                renderGrid();
+                updateLedgerList();
+                updateNavigationCounter();
+
+                triggerSMSNotification(`SUCCESS! Your Boni Ticket entries [#${targetTicket.numbers.join(', #')}] have been verified and LOCKED. Good luck for the Live draw on TikTok!`);
+                showToast("Simulation Successful: Ticket approved! Verification changes propagated.");
+            }
+        }
+
+        // Render dynamic changes inside Transparency Ledger component in Draw Hub
+        function updateLedgerList() {
+            const container = document.getElementById('ledger-list-container');
+            const totalValEl = document.getElementById('ledger-pool-value');
+            container.innerHTML = '';
+
+            if (activeTickets.length === 0) {
+                container.innerHTML = `<div class="text-xs text-gray-400 p-4 text-center italic">No registered entries are in the current draw pool yet. Register on the select page!</div>`;
+                totalValEl.textContent = "0.00 ETB";
+                return;
+            }
+
+            let poolSum = 0;
+
+            activeTickets.forEach(ticket => {
+                poolSum += ticket.price;
+
+                const wrapper = document.createElement('div');
+                wrapper.className = "bg-navy-dark text-white p-3.5 rounded-xl border border-gold/10 flex flex-col gap-2 relative overflow-hidden";
+                wrapper.innerHTML = `
+                    <div class="flex justify-between items-center text-[10px]">
+                        <span class="font-mono text-gold-light tracking-wide">${ticket.id}</span>
+                        <span class="bg-green-600/20 text-green-400 border border-green-500/20 px-2 py-0.5 rounded font-mono font-bold">LOCKED</span>
+                    </div>
+                    <div class="flex flex-wrap gap-1">
+                        ${ticket.numbers.map(n => `<span class="bg-navy-light text-white font-mono text-xs font-bold px-1.5 py-0.5 rounded border border-navy-light">${n}</span>`).join('')}
+                    </div>
+                    <div class="flex justify-between items-center text-[9px] border-t border-navy-light/40 pt-1.5 text-gray-400">
+                        <span>Ref: ${ticket.transactionId.substring(0, 8)}...</span>
+                        <span>Value: ${ticket.price} ETB</span>
+                    </div>
+                `;
+                container.appendChild(wrapper);
+            });
+
+            totalValEl.textContent = `${poolSum.toLocaleString()} ETB`;
+        }
+
+        // Update navigational ticket state counts
+        function updateNavigationCounter() {
+            const el = document.getElementById('nav-active-count');
+            el.textContent = `${activeTickets.length} Registered`;
+        }
+
+        // Simulated SMS trigger slide in alert message
+        function triggerSMSNotification(messageText) {
+            const smsBox = document.getElementById('sms-notification');
+            const smsBody = document.getElementById('sms-content');
+
+            smsBody.textContent = messageText;
+            smsBox.classList.remove('translate-x-full', 'pointer-events-none');
+
+            // Autohide trigger interval
+            setTimeout(() => {
+                smsBox.classList.add('translate-x-full', 'pointer-events-none');
+            }, 8000);
+        }
+
+        // Global visual notice banner component replacing alerts
+        function showToast(textMessage) {
+            // Reusing SMS alert layout style seamlessly
+            triggerSMSNotification(textMessage);
+        }
+    </script>
+</body>
+</html>
