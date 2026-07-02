@@ -5,18 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Boni Lottery Platform - Secure, Transparent & Provably Fair</title>
     
-    <!-- Tailwind CSS Engine -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- FontAwesome Vector Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Premium Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&display=swap" rel="stylesheet">
 
-    <!-- Tailwind Typography Configuration -->
     <script>
         tailwind.config = {
             theme: {
@@ -37,55 +29,24 @@
                     },
                     boxShadow: {
                         'glow': '0 0 15px rgba(200, 184, 123, 0.2)',
-                        'glow-lg': '0 0 25px rgba(200, 184, 123, 0.35)',
                     }
                 }
             }
         }
     </script>
 
-    <!-- Custom Decorative CSS Adjustments -->
     <style>
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: rgba(10, 29, 47, 0.5);
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: rgba(200, 184, 123, 0.3);
-            border-radius: 99px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: rgba(200, 184, 123, 0.6);
-        }
-        .glass-panel {
-            background: rgba(15, 39, 61, 0.45);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(200, 184, 123, 0.08);
-        }
-        @keyframes subtle-pulse {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.02); opacity: 0.9; }
-        }
-        .pulse-glow {
-            animation: subtle-pulse 3s infinite ease-in-out;
-        }
-        .text-gradient {
-            background: linear-gradient(135deg, #FFF 30%, #C8B87B 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(10, 29, 47, 0.5); }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(200, 184, 123, 0.3); border-radius: 99px; }
+        .glass-panel { background: rgba(15, 39, 61, 0.45); backdrop-filter: blur(16px); border: 1px solid rgba(200, 184, 123, 0.08); }
+        .text-gradient { background: linear-gradient(135deg, #FFF 30%, #C8B87B 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     </style>
 </head>
 <body class="h-full font-sans antialiased bg-brand-navyback text-slate-100 flex flex-col custom-scrollbar overflow-x-hidden">
 
-    <!-- MAIN NAVIGATION HEADER -->
-    <header class="sticky top-0 z-40 w-full glass-panel border-b border-brand-gold/10 px-4 py-3.5 sm:px-6 lg:px-8">
+    <header class="sticky top-0 z-40 w-full glass-panel border-b border-brand-gold/10 px-4 py-3.5">
         <div class="max-w-7xl mx-auto flex items-center justify-between">
-            <!-- Brand Logotype -->
             <div class="flex items-center space-x-3">
                 <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-brand-gold to-brand-golddark flex items-center justify-center text-brand-navy shadow-glow">
                     <i class="fa-solid fa-trophy text-xl"></i>
@@ -95,132 +56,41 @@
                     <span class="text-xs block tracking-widest text-brand-gold font-bold uppercase -mt-1">LOTTERY</span>
                 </div>
             </div>
-
-            <!-- Horizontal Tab Navigation Bar -->
-            <nav class="flex items-center space-x-1 sm:space-x-2 bg-brand-navy/60 p-1 rounded-2xl border border-brand-gold/5">
-                <button onclick="switchTab('home')" id="tab-home" class="px-3 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-all duration-150 text-brand-gold bg-brand-navycard/85 shadow-sm">
-                    <i class="fa-solid fa-house mr-1 sm:mr-1.5"></i>Home
-                </button>
-                <button onclick="switchTab('play')" id="tab-play" class="px-3 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-all duration-150 text-slate-400 hover:text-white">
-                    <i class="fa-solid fa-ticket mr-1 sm:mr-1.5"></i>Play Grid
-                </button>
-                <button onclick="switchTab('dashboard')" id="tab-dashboard" class="px-3 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-all duration-150 text-slate-400 hover:text-white">
-                    <i class="fa-solid fa-gauge mr-1 sm:mr-1.5"></i>Dashboard
-                </button>
-                <button onclick="switchTab('draws')" id="tab-draws" class="px-3 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-all duration-150 text-slate-400 hover:text-white">
-                    <i class="fa-solid fa-shuffle mr-1 sm:mr-1.5"></i>Draw Hub
-                </button>
-            </nav>
         </div>
     </header>
 
-    <!-- TOAST NOTIFICATION CONTAINER -->
-    <div id="toast-container" class="fixed top-20 right-4 z-50 pointer-events-none space-y-2 max-w-sm w-full"></div>
-
-    <!-- MAIN BODY ROUTER WRAPPER -->
-    <main class="flex-grow max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
-        <!-- HOME, PLAY, DRAWS tabs omitted for brevity to focus on the requested integration, but are preserved in your full structure -->
-        
-        <!-- TAB 3: DASHBOARD & MANUAL BRIDGE VERIFICATION -->
-        <section id="view-dashboard" class="space-y-8 hidden">
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4">
+        <section id="view-dashboard" class="space-y-8">
             <div>
                 <h2 class="font-serif text-3xl font-bold text-white">Your Verification Dashboard</h2>
-                <p class="text-xs sm:text-sm text-slate-400 mt-1">Submit receipts manually here or review your verified system tickets.</p>
             </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-                <div class="lg:col-span-7 space-y-6">
-                    <form id="verification-receipt-form" onsubmit="handleVerificationSubmit(event)" class="glass-panel rounded-3xl p-6 space-y-6">
-                        <!-- Submission Channel Selector -->
-                        <div class="space-y-2">
-                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider font-sans">Choose Submission Channel</label>
-                            <div class="grid grid-cols-3 gap-1 bg-brand-navy/60 p-1 rounded-2xl border border-brand-gold/10">
-                                <button type="button" onclick="setSubmissionMethod('telegram-bot')" id="method-btn-telegram" class="py-2.5 rounded-xl text-[10px] sm:text-xs font-bold transition-all duration-150 bg-gradient-to-r from-brand-gold to-brand-golddark text-brand-navy shadow-md">
-                                    <i class="fa-brands fa-telegram mr-1"></i>Bot (Free)
-                                </button>
-                                <button type="button" onclick="setSubmissionMethod('email-formspree')" id="method-btn-email" class="py-2.5 rounded-xl text-[10px] sm:text-xs font-bold transition-all duration-150 text-slate-400 hover:text-white">
-                                    <i class="fa-solid fa-envelope mr-1"></i>Email (Log)
-                                </button>
-                                <button type="button" onclick="setSubmissionMethod('direct-chat')" id="method-btn-direct" class="py-2.5 rounded-xl text-[10px] sm:text-xs font-bold transition-all duration-150 text-slate-400 hover:text-white">
-                                    <i class="fa-solid fa-comments mr-1"></i>Direct Support
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- SUBMISSION FIELDS -->
-                        <div id="telegram-bot-fields" class="space-y-6">
-                            <!-- ... (Your existing Telegram fields) ... -->
-                        </div>
-
-                        <div id="email-formspree-fields" class="hidden space-y-6">
-                            <!-- ... (Your existing Email fields) ... -->
-                        </div>
-
-                        <!-- DIRECT CHAT SUBMISSION FIELDS -->
-                        <div id="direct-chat-fields" class="hidden space-y-6">
-                            <div class="p-6 bg-gradient-to-br from-brand-navy to-brand-navycard rounded-3xl border border-brand-gold/10 text-center space-y-4">
-                                <i class="fa-brands fa-whatsapp text-4xl text-green-500"></i>
-                                <h4 class="font-bold">Contact Direct Support</h4>
-                                <p class="text-xs text-slate-400">Click the button below to open a direct WhatsApp chat with our verification team.</p>
-                                <a href="https://wa.me/251945792677" target="_blank" class="inline-block px-6 py-3 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-xl transition-all">
-                                    <i class="fa-brands fa-whatsapp mr-2"></i>Message Support
-                                </a>
-                            </div>
-                        </div>
-
-                        <button type="submit" class="w-full py-4 bg-brand-gold text-brand-navy font-black rounded-2xl hover:scale-[1.01] active:scale-95 transition-all shadow-glow">
-                            Submit for Verification
-                        </button>
-                    </form>
-                </div>
-            </div>
+            <form id="verification-receipt-form" class="glass-panel rounded-3xl p-6 space-y-6">
+                <button type="submit" class="w-full py-4 bg-brand-gold text-brand-navy font-black rounded-2xl hover:scale-[1.01] transition-all">
+                    Submit for Verification
+                </button>
+            </form>
         </section>
     </main>
 
-    <script>
-        // Tab Navigation
-        function switchTab(tabId) {
-            document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
-            document.getElementById(`view-${tabId}`).classList.remove('hidden');
-        }
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-analytics.js";
+        import { getFirestore } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
 
-        // Method Toggle
-        function setSubmissionMethod(method) {
-            ['telegram-bot', 'email-formspree', 'direct-chat'].forEach(m => {
-                document.getElementById(`${m}-fields`).classList.add('hidden');
-            });
-            document.getElementById(`${method}-fields`).classList.remove('hidden');
-        }
+        const firebaseConfig = {
+            apiKey: "AIzaSyBW0egtlG4JXjkoWB2Lfu5GcYhZz_oEjbI",
+            authDomain: "boni-lottery-8d0e6.firebaseapp.com",
+            projectId: "boni-lottery-8d0e6",
+            storageBucket: "boni-lottery-8d0e6.firebasestorage.app",
+            messagingSenderId: "479140405683",
+            appId: "1:479140405683:web:20a2205ece9fdcdf076bc6",
+            measurementId: "G-6MG08FXC7V"
+        };
 
-        // Utils
-        function copyToClipboard(text, label) {
-            navigator.clipboard.writeText(text);
-            alert(`${label} copied to clipboard!`);
-        }
-
-        function handleVerificationSubmit(event) {
-            event.preventDefault();
-            alert("Verification submitted successfully!");
-        }
-
-        function processFileSelection(input) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = e => {
-                    document.getElementById('image-upload-preview').src = e.target.result;
-                    document.getElementById('upload-prompt-view').classList.add('hidden');
-                    document.getElementById('upload-preview-view').classList.remove('hidden');
-                };
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-
-        function resetFileSelection(event) {
-            event.preventDefault();
-            document.getElementById('screenshot-file-input').value = '';
-            document.getElementById('upload-prompt-view').classList.remove('hidden');
-            document.getElementById('upload-preview-view').classList.add('hidden');
-        }
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const db = getFirestore(app);
+        console.log("Boni Lottery: Firebase Connected.");
     </script>
 </body>
 </html>
