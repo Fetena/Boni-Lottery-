@@ -31,6 +31,16 @@
   import * as firebaseIntegration from './firebase-integration.js';
   window.firebaseIntegration = firebaseIntegration;
 </script>
+    <!-- Guest Ticketing System Module -->
+<script type="module">
+  import * as guestTicketing from './guest-ticketing.js';
+  window.guestTicketing = guestTicketing;
+  
+  // Show customer form on page load
+  window.addEventListener('load', () => {
+    window.guestTicketing.showCustomerFormModal();
+  });
+</script>
 </head>
 <body class="h-full font-sans antialiased bg-brand-navyback text-slate-100 flex flex-col custom-scrollbar overflow-x-hidden">
     <header class="sticky top-0 z-40 w-full glass-panel border-b border-brand-gold/10 px-4 py-3.5 sm:px-6 lg:px-8">
@@ -57,25 +67,27 @@
   <button onclick="switchTab('draws')" id="tab-draws" class="px-3 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-all duration-150 text-slate-400 hover:text-white">
     <i class="fa-solid fa-shuffle mr-1 sm:mr-1.5"></i>Draw Hub
   </button>
+
   
-  <!-- USER MENU -->
+  <!-- USER MENU 
   <div id="user-menu" class="hidden ml-4 pl-4 border-l border-brand-gold/10 flex items-center space-x-3">
     <span id="user-email-display" class="text-xs text-slate-400"></span>
     <button onclick="handleLogout()" class="px-3 py-2 text-xs font-bold text-red-400 hover:text-red-300 rounded-xl transition-all duration-150">
       <i class="fa-solid fa-sign-out-alt mr-1"></i>Logout
     </button>
   </div>
+                -->
 </nav>
         </div>
     </header>
-    <!-- AUTHENTICATION MODAL -->
+    <!-- AUTHENTICATION MODAL 
 <div id="auth-modal" class="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
   <div class="glass-panel rounded-3xl p-8 max-w-md w-full border border-brand-gold/20 space-y-6">
     <div class="text-center space-y-2">
       <h2 class="text-2xl font-serif font-bold text-white">Welcome to Boni</h2>
       <p class="text-xs text-slate-400">Sign in or create your account</p>
     </div>
-
+-->
     <!-- TAB SWITCHER -->
     <div class="flex items-center bg-brand-navy/60 p-1 rounded-xl border border-brand-gold/10">
       <button onclick="switchAuthMode('login')" id="auth-mode-login" class="flex-1 py-2 rounded-lg text-xs font-bold text-brand-gold bg-brand-navycard/85 transition-all duration-150">
@@ -124,17 +136,78 @@
     <div id="auth-error-message" class="hidden p-3 rounded-xl bg-red-950/50 border border-red-900/30 text-red-300 text-xs text-center font-semibold"></div>
   </div>
 </div>
+    <!-- CUSTOMER CONTACT FORM MODAL -->
+<div id="customer-info-modal" class="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+  <div class="glass-panel rounded-3xl p-8 max-w-md w-full border border-brand-gold/20 space-y-6">
+    <div class="text-center space-y-2">
+      <h2 class="text-2xl font-serif font-bold text-white">Enter Your Details</h2>
+      <p class="text-xs text-slate-400">Quick contact info to lock your ticket selection</p>
+    </div>
+
+    <form id="customer-form" class="space-y-4" onsubmit="window.guestTicketing.handleCustomerSubmit(event)">
+      
+      <div class="space-y-2">
+        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Your Full Name</label>
+        <input 
+          type="text" 
+          id="customer-name" 
+          placeholder="e.g. Abebe Kebede" 
+          required 
+          class="w-full bg-brand-navy/60 border border-brand-gold/15 focus:border-brand-gold rounded-xl py-3 px-4 text-sm text-white placeholder-slate-500 outline-none transition-all duration-200"
+        >
+      </div>
+
+      <div class="space-y-2">
+        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Phone Number</label>
+        <input 
+          type="tel" 
+          id="customer-phone" 
+          placeholder="+251 9XX XXX XXXX" 
+          required 
+          class="w-full bg-brand-navy/60 border border-brand-gold/15 focus:border-brand-gold rounded-xl py-3 px-4 text-sm text-white placeholder-slate-500 outline-none transition-all duration-200"
+        >
+      </div>
+
+      <div class="space-y-2">
+        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Email (Optional)</label>
+        <input 
+          type="email" 
+          id="customer-email" 
+          placeholder="your@email.com" 
+          class="w-full bg-brand-navy/60 border border-brand-gold/15 focus:border-brand-gold rounded-xl py-3 px-4 text-sm text-white placeholder-slate-500 outline-none transition-all duration-200"
+        >
+      </div>
+
+      <div class="p-3 rounded-xl bg-brand-gold/10 border border-brand-gold/25 text-xs space-y-1">
+        <p class="text-brand-goldlight font-semibold">✓ Your info is used to:</p>
+        <ul class="text-slate-300 space-y-0.5 text-[11px]">
+          <li>• Notify you when draw results are announced</li>
+          <li>• Confirm your ticket verification</li>
+          <li>• Contact you if you win a prize</li>
+        </ul>
+      </div>
+
+      <button 
+        type="submit" 
+        class="w-full py-3 bg-gradient-to-r from-brand-gold to-brand-golddark text-brand-navy font-bold rounded-xl hover:scale-[1.01] active:scale-95 transition-all duration-150 shadow-md"
+      >
+        Continue to Select Numbers
+      </button>
+    </form>
+  </div>
+</div>
     <main class="flex-grow max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
         <h1 class="text-white">Welcome to Boni Lottery</h1>
     </main>
     <script>
+        /*
         function switchTab(tab) {
             console.log("Switching to tab:", tab);
             // Add your tab switching logic here
         }
         /* ========== AUTHENTICATION FUNCTIONS ========== */
 
-function switchAuthMode(mode) {
+/*function switchAuthMode(mode) {
   const loginForm = document.getElementById('auth-login-form');
   const signupForm = document.getElementById('auth-signup-form');
   const loginBtn = document.getElementById('auth-mode-login');
@@ -151,7 +224,7 @@ function switchAuthMode(mode) {
     signupBtn.className = "flex-1 py-2 rounded-lg text-xs font-bold text-brand-gold bg-brand-navycard/85 transition-all duration-150";
     loginBtn.className = "flex-1 py-2 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition-all duration-150";
   }
-}
+} 
 
 async function handleAuthSubmit(event, mode) {
   event.preventDefault();
@@ -209,7 +282,7 @@ async function handleLogout() {
 }
 
 /* Update UI based on auth state */
-function updateAuthUI(isLoggedIn) {
+/*function updateAuthUI(isLoggedIn) {
   const authModal = document.getElementById('auth-modal');
   const userMenu = document.getElementById('user-menu');
   const userEmailDisplay = document.getElementById('user-email-display');
@@ -231,7 +304,7 @@ function updateAuthUI(isLoggedIn) {
 }
 
 /* Update handleVerificationSubmit to save to Firestore */
-async function handleVerificationSubmitUpdated(event) {
+/*async function handleVerificationSubmitUpdated(event) {
   event.preventDefault();
 
   if (selectedNumbers.length === 0) {
@@ -297,8 +370,173 @@ async function handleVerificationSubmitUpdated(event) {
 }
 
 /* Replace the old handleVerificationSubmit with this */
-async function handleVerificationSubmit(event) {
+/*async function handleVerificationSubmit(event) {
   return handleVerificationSubmitUpdated(event);
+} 
+    /* Handle the new guest form submission */
+async function handleCustomerSubmit(event) {
+  return window.guestTicketing.handleCustomerSubmit(event);
+}
+
+/* Updated verification submit - saves to Firestore with customer info */
+async function handleVerificationSubmit(event) {
+  event.preventDefault();
+
+  if (selectedNumbers.length === 0) {
+    showNotificationToast("No numbers selected!", "error");
+    return;
+  }
+
+  const totalCost = selectedNumbers.length * ticketPrice;
+  const numbersString = selectedNumbers.map(n => String(n).padStart(3, '0')).join(', ');
+  const generatedTicketId = 'T' + Date.now().toString().slice(-6);
+
+  const submitBtn = document.getElementById('submit-verification-btn');
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin mr-1.5"></i>Submitting...`;
+
+  try {
+    const transInput = document.getElementById('transaction-id-input');
+    const transId = transInput.value.trim().toUpperCase();
+
+    if (!transId) {
+      showNotificationToast("Please enter transaction reference ID!", "error");
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = `<i class="fa-solid fa-shield-check mr-1.5"></i>Submit Verification`;
+      return;
+    }
+
+    // Save to Firestore with customer info
+    const ticketData = {
+      ticketId: generatedTicketId,
+      numbers: selectedNumbers,
+      transactionId: transId,
+      totalCost: totalCost,
+      status: 'Verifying'
+    };
+
+    const docId = await window.guestTicketing.saveTicketToFirestore(ticketData);
+
+    // Upload screenshot if available
+    if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID && currentVerificationTicket) {
+      try {
+        const customerInfo = window.guestTicketing.getCurrentCustomerInfo();
+        const captionText = `📸 Payment Receipt\nTicket: ${generatedTicketId}\nCustomer: ${customerInfo.name}`;
+
+        const botUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`;
+        const formData = new FormData();
+        formData.append('chat_id', TELEGRAM_CHAT_ID);
+        formData.append('photo', currentVerificationTicket);
+        formData.append('caption', captionText);
+
+        await fetch(botUrl, { method: 'POST', body: formData });
+      } catch (err) {
+        console.warn("Screenshot upload skipped");
+      }
+    }
+
+    // Clear
+    selectedNumbers = [];
+    resetFileSelection(null);
+    updateSelectionDrawerUI();
+    generateSelectionGrid();
+    transInput.value = '';
+
+    showNotificationToast(`✅ Ticket submitted! ID: ${generatedTicketId}`);
+
+  } catch (error) {
+    showNotificationToast("Failed to submit: " + error.message, "error");
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = `<i class="fa-solid fa-shield-check mr-1.5"></i>Submit Verification`;
+  }
+}
+
+/* Updated draw execution */
+async function executeProvablyFairDraw() {
+  const serverSeed = document.getElementById('draw-server-seed').value;
+  const clientSeed = document.getElementById('draw-client-seed').value || "BoniLotteryLiveDraw";
+  const triggerBtn = document.getElementById('trigger-draw-btn');
+
+  triggerBtn.disabled = true;
+  triggerBtn.innerHTML = `<i class="fa-solid fa-arrows-spin animate-spin mr-1.5"></i>Running...`;
+
+  const combinedMessage = `${serverSeed}-${clientSeed}`;
+  const hashHex = await calculateSHA256(combinedMessage);
+
+  const subHashHex = hashHex.substring(0, 8);
+  const decimalValue = parseInt(subHashHex, 16);
+  const winningNumber = decimalValue % 1000;
+  const winningString = String(winningNumber).padStart(3, '0');
+
+  const digit0 = document.getElementById('digit-reel-0');
+  const digit1 = document.getElementById('digit-reel-1');
+  const digit2 = document.getElementById('digit-reel-2');
+
+  let steps = 0;
+  const maxSteps = 25;
+  const interval = setInterval(() => {
+    digit0.innerHTML = Math.floor(Math.random() * 10);
+    digit1.innerHTML = Math.floor(Math.random() * 10);
+    digit2.innerHTML = Math.floor(Math.random() * 10);
+    steps++;
+
+    if (steps >= maxSteps) {
+      clearInterval(interval);
+      
+      digit0.innerHTML = winningString[0];
+      digit1.innerHTML = winningString[1];
+      digit2.innerHTML = winningString[2];
+
+      const auditPreview = document.getElementById('audit-equation-preview');
+      auditPreview.innerHTML = 
+        `Server Seed:\n${serverSeed}\n\n` +
+        `Client Seed:\n${clientSeed}\n\n` +
+        `Hash SHA-256:\n${hashHex}\n\n` +
+        `Result => [${winningString}]`;
+
+      // Save to Firestore
+      window.guestTicketing.saveDraw(winningNumber);
+
+      triggerBtn.disabled = false;
+      triggerBtn.innerHTML = `<i class="fa-solid fa-circle-play mr-1.5"></i>Simulate Draw`;
+      showNotificationToast(`Draw Result: #${winningString}`);
+    }
+  }, 80);
+}
+
+/* Updated subscription handler */
+async function handleDrawSubscription(event) {
+  event.preventDefault();
+  const btn = document.getElementById('sub-btn');
+  const name = document.getElementById('notify-name').value;
+  const contact = document.getElementById('notify-contact').value;
+  
+  btn.disabled = true;
+  btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Subscribing...`;
+
+  try {
+    const msg = `🔔 NEW SUBSCRIPTION\nName: ${name}\nContact: ${contact}\nDate: ${new Date().toLocaleString()}`;
+
+    await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: TELEGRAM_CHAT_ID,
+        text: msg,
+        parse_mode: 'Markdown'
+      })
+    });
+
+    showNotificationToast("✅ Subscribed to draw alerts!");
+    document.getElementById('notify-name').value = '';
+    document.getElementById('notify-contact').value = '';
+  } catch (err) {
+    showNotificationToast("Subscription failed - try again", "error");
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `Register for Alerts`;
+  }
 }
     </script>
 </body>
