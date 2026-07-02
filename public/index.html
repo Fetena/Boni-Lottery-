@@ -26,6 +26,11 @@
         .glass-panel { background: rgba(15, 39, 61, 0.45); backdrop-filter: blur(16px); border: 1px solid rgba(200, 184, 123, 0.08); }
         .text-gradient { background: linear-gradient(135deg, #FFF 30%, #C8B87B 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     </style>
+    <!-- Firebase Integration Module -->
+<script type="module">
+  import * as firebaseIntegration from './firebase-integration.js';
+  window.firebaseIntegration = firebaseIntegration;
+</script>
 </head>
 <body class="h-full font-sans antialiased bg-brand-navyback text-slate-100 flex flex-col custom-scrollbar overflow-x-hidden">
     <header class="sticky top-0 z-40 w-full glass-panel border-b border-brand-gold/10 px-4 py-3.5 sm:px-6 lg:px-8">
@@ -40,12 +45,85 @@
                 </div>
             </div>
             <nav class="flex items-center space-x-1 sm:space-x-2 bg-brand-navy/60 p-1 rounded-2xl border border-brand-gold/5">
-                <button onclick="switchTab('home')" class="px-3 py-2 text-xs sm:text-sm font-semibold rounded-xl text-brand-gold bg-brand-navycard/85">Home</button>
-                <button onclick="switchTab('play')" class="px-3 py-2 text-xs sm:text-sm font-semibold rounded-xl text-slate-400 hover:text-white">Play Grid</button>
-                <button onclick="switchTab('dashboard')" class="px-3 py-2 text-xs sm:text-sm font-semibold rounded-xl text-slate-400 hover:text-white">Dashboard</button>
-            </nav>
+  <button onclick="switchTab('home')" id="tab-home" class="px-3 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-all duration-150 text-brand-gold bg-brand-navycard/85 shadow-sm">
+    <i class="fa-solid fa-house mr-1 sm:mr-1.5"></i>Home
+  </button>
+  <button onclick="switchTab('play')" id="tab-play" class="px-3 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-all duration-150 text-slate-400 hover:text-white">
+    <i class="fa-solid fa-ticket mr-1 sm:mr-1.5"></i>Play Grid
+  </button>
+  <button onclick="switchTab('dashboard')" id="tab-dashboard" class="px-3 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-all duration-150 text-slate-400 hover:text-white">
+    <i class="fa-solid fa-gauge mr-1 sm:mr-1.5"></i>Dashboard
+  </button>
+  <button onclick="switchTab('draws')" id="tab-draws" class="px-3 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-all duration-150 text-slate-400 hover:text-white">
+    <i class="fa-solid fa-shuffle mr-1 sm:mr-1.5"></i>Draw Hub
+  </button>
+  
+  <!-- USER MENU -->
+  <div id="user-menu" class="hidden ml-4 pl-4 border-l border-brand-gold/10 flex items-center space-x-3">
+    <span id="user-email-display" class="text-xs text-slate-400"></span>
+    <button onclick="handleLogout()" class="px-3 py-2 text-xs font-bold text-red-400 hover:text-red-300 rounded-xl transition-all duration-150">
+      <i class="fa-solid fa-sign-out-alt mr-1"></i>Logout
+    </button>
+  </div>
+</nav>
         </div>
     </header>
+    <!-- AUTHENTICATION MODAL -->
+<div id="auth-modal" class="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+  <div class="glass-panel rounded-3xl p-8 max-w-md w-full border border-brand-gold/20 space-y-6">
+    <div class="text-center space-y-2">
+      <h2 class="text-2xl font-serif font-bold text-white">Welcome to Boni</h2>
+      <p class="text-xs text-slate-400">Sign in or create your account</p>
+    </div>
+
+    <!-- TAB SWITCHER -->
+    <div class="flex items-center bg-brand-navy/60 p-1 rounded-xl border border-brand-gold/10">
+      <button onclick="switchAuthMode('login')" id="auth-mode-login" class="flex-1 py-2 rounded-lg text-xs font-bold text-brand-gold bg-brand-navycard/85 transition-all duration-150">
+        Sign In
+      </button>
+      <button onclick="switchAuthMode('signup')" id="auth-mode-signup" class="flex-1 py-2 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition-all duration-150">
+        Create Account
+      </button>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <form id="auth-login-form" class="space-y-4" onsubmit="handleAuthSubmit(event, 'login')">
+      <div class="space-y-2">
+        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Email Address</label>
+        <input type="email" id="login-email" placeholder="your@email.com" required class="w-full bg-brand-navy/60 border border-brand-gold/15 focus:border-brand-gold rounded-xl py-3 px-4 text-sm text-white placeholder-slate-500 outline-none">
+      </div>
+      <div class="space-y-2">
+        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Password</label>
+        <input type="password" id="login-password" placeholder="••••••••" required class="w-full bg-brand-navy/60 border border-brand-gold/15 focus:border-brand-gold rounded-xl py-3 px-4 text-sm text-white placeholder-slate-500 outline-none">
+      </div>
+      <button type="submit" id="auth-login-btn" class="w-full py-3 bg-gradient-to-r from-brand-gold to-brand-golddark text-brand-navy font-bold rounded-xl hover:scale-[1.01] active:scale-95 transition-all duration-150 shadow-md">
+        Sign In to Boni
+      </button>
+    </form>
+
+    <!-- SIGNUP FORM -->
+    <form id="auth-signup-form" class="space-y-4 hidden" onsubmit="handleAuthSubmit(event, 'signup')">
+      <div class="space-y-2">
+        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Email Address</label>
+        <input type="email" id="signup-email" placeholder="your@email.com" required class="w-full bg-brand-navy/60 border border-brand-gold/15 focus:border-brand-gold rounded-xl py-3 px-4 text-sm text-white placeholder-slate-500 outline-none">
+      </div>
+      <div class="space-y-2">
+        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Create Password</label>
+        <input type="password" id="signup-password" placeholder="At least 6 characters" minlength="6" required class="w-full bg-brand-navy/60 border border-brand-gold/15 focus:border-brand-gold rounded-xl py-3 px-4 text-sm text-white placeholder-slate-500 outline-none">
+      </div>
+      <div class="space-y-2">
+        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Confirm Password</label>
+        <input type="password" id="signup-password-confirm" placeholder="Confirm password" required class="w-full bg-brand-navy/60 border border-brand-gold/15 focus:border-brand-gold rounded-xl py-3 px-4 text-sm text-white placeholder-slate-500 outline-none">
+      </div>
+      <button type="submit" id="auth-signup-btn" class="w-full py-3 bg-gradient-to-r from-brand-gold to-brand-golddark text-brand-navy font-bold rounded-xl hover:scale-[1.01] active:scale-95 transition-all duration-150 shadow-md">
+        Create My Account
+      </button>
+    </form>
+
+    <!-- ERROR MESSAGE -->
+    <div id="auth-error-message" class="hidden p-3 rounded-xl bg-red-950/50 border border-red-900/30 text-red-300 text-xs text-center font-semibold"></div>
+  </div>
+</div>
     <main class="flex-grow max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
         <h1 class="text-white">Welcome to Boni Lottery</h1>
     </main>
@@ -54,6 +132,174 @@
             console.log("Switching to tab:", tab);
             // Add your tab switching logic here
         }
+        /* ========== AUTHENTICATION FUNCTIONS ========== */
+
+function switchAuthMode(mode) {
+  const loginForm = document.getElementById('auth-login-form');
+  const signupForm = document.getElementById('auth-signup-form');
+  const loginBtn = document.getElementById('auth-mode-login');
+  const signupBtn = document.getElementById('auth-mode-signup');
+
+  if (mode === 'login') {
+    loginForm.classList.remove('hidden');
+    signupForm.classList.add('hidden');
+    loginBtn.className = "flex-1 py-2 rounded-lg text-xs font-bold text-brand-gold bg-brand-navycard/85 transition-all duration-150";
+    signupBtn.className = "flex-1 py-2 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition-all duration-150";
+  } else {
+    loginForm.classList.add('hidden');
+    signupForm.classList.remove('hidden');
+    signupBtn.className = "flex-1 py-2 rounded-lg text-xs font-bold text-brand-gold bg-brand-navycard/85 transition-all duration-150";
+    loginBtn.className = "flex-1 py-2 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition-all duration-150";
+  }
+}
+
+async function handleAuthSubmit(event, mode) {
+  event.preventDefault();
+  const errorDiv = document.getElementById('auth-error-message');
+  errorDiv.classList.add('hidden');
+
+  try {
+    if (mode === 'login') {
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+      const btn = document.getElementById('auth-login-btn');
+
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin mr-1.5"></i>Signing in...`;
+
+      await window.firebaseIntegration.loginUser(email, password);
+      showNotificationToast(`Welcome back, ${email}!`);
+      document.getElementById('auth-modal').classList.add('hidden');
+
+      btn.disabled = false;
+      btn.innerHTML = `Sign In to Boni`;
+      
+    } else if (mode === 'signup') {
+      const email = document.getElementById('signup-email').value;
+      const password = document.getElementById('signup-password').value;
+      const passwordConfirm = document.getElementById('signup-password-confirm').value;
+
+      if (password !== passwordConfirm) {
+        throw new Error("Passwords do not match!");
+      }
+
+      const btn = document.getElementById('auth-signup-btn');
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin mr-1.5"></i>Creating...`;
+
+      await window.firebaseIntegration.signUpUser(email, password);
+      showNotificationToast(`Account created! Welcome to Boni!`);
+      document.getElementById('auth-modal').classList.add('hidden');
+
+      btn.disabled = false;
+      btn.innerHTML = `Create My Account`;
+    }
+  } catch (error) {
+    errorDiv.classList.remove('hidden');
+    errorDiv.textContent = error.message || "Authentication failed!";
+    console.error(error);
+  }
+}
+
+async function handleLogout() {
+  if (confirm("Sign out from Boni?")) {
+    await window.firebaseIntegration.logoutUser();
+    showNotificationToast("You have been signed out.");
+  }
+}
+
+/* Update UI based on auth state */
+function updateAuthUI(isLoggedIn) {
+  const authModal = document.getElementById('auth-modal');
+  const userMenu = document.getElementById('user-menu');
+  const userEmailDisplay = document.getElementById('user-email-display');
+
+  if (isLoggedIn) {
+    authModal.classList.add('hidden');
+    if (userMenu) userMenu.classList.remove('hidden');
+    
+    const currentUser = window.firebaseIntegration.getCurrentUser ? 
+      window.firebaseIntegration.getCurrentUser() : null;
+    
+    if (currentUser && userEmailDisplay) {
+      userEmailDisplay.textContent = currentUser.email;
+    }
+  } else {
+    authModal.classList.remove('hidden');
+    if (userMenu) userMenu.classList.add('hidden');
+  }
+}
+
+/* Update handleVerificationSubmit to save to Firestore */
+async function handleVerificationSubmitUpdated(event) {
+  event.preventDefault();
+
+  if (selectedNumbers.length === 0) {
+    showNotificationToast("No numbers selected!", "error");
+    return;
+  }
+
+  const totalCost = selectedNumbers.length * ticketPrice;
+  const numbersString = selectedNumbers.map(n => String(n).padStart(3, '0')).join(', ');
+  const generatedTicketId = 'T' + Date.now().toString().slice(-6);
+
+  const submitBtn = document.getElementById('submit-verification-btn');
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin mr-1.5"></i>Submitting...`;
+
+  try {
+    const transInput = document.getElementById('transaction-id-input');
+    const transId = transInput.value.trim().toUpperCase();
+
+    // Save to Firestore instead of localStorage
+    const ticketData = {
+      ticketId: generatedTicketId,
+      numbers: selectedNumbers,
+      transactionId: transId,
+      totalCost: totalCost,
+      status: 'Verifying'
+    };
+
+    const docId = await window.firebaseIntegration.saveTicketToFirestore(ticketData);
+    
+    // Also save to Telegram bot
+    if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID && currentVerificationTicket) {
+      const captionText = `🎫 NEW BONI LOTTERY ENTRY\n` +
+                          `Ticket: ${generatedTicketId}\n` +
+                          `Numbers: ${numbersString}\n` +
+                          `Transaction: ${transId}\n` +
+                          `Cost: ${totalCost} ETB`;
+
+      const botUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`;
+      const formData = new FormData();
+      formData.append('chat_id', TELEGRAM_CHAT_ID);
+      formData.append('photo', currentVerificationTicket);
+      formData.append('caption', captionText);
+      formData.append('parse_mode', 'Markdown');
+
+      await fetch(botUrl, { method: 'POST', body: formData });
+    }
+
+    selectedNumbers = [];
+    resetFileSelection(null);
+    updateSelectionDrawerUI();
+    generateSelectionGrid();
+
+    showNotificationToast(`Ticket submitted! ID: ${generatedTicketId}`);
+
+  } catch (error) {
+    showNotificationToast("Failed to submit ticket: " + error.message, "error");
+    console.error(error);
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = `<i class="fa-solid fa-shield-check mr-1.5"></i>Submit Verification`;
+  }
+}
+
+/* Replace the old handleVerificationSubmit with this */
+async function handleVerificationSubmit(event) {
+  return handleVerificationSubmitUpdated(event);
+}
     </script>
 </body>
 </html>
