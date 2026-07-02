@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Boni Lottery Platform - Secure, Transparent & Provably Fair</title>
+    <title>Lottery Ticket Platform - Secure, Transparent & Provably Fair</title>
     
     <!-- Tailwind CSS Engine -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -109,7 +109,7 @@
                     <i class="fa-solid fa-trophy text-xl"></i>
                 </div>
                 <div>
-                    <span class="font-serif font-bold text-xl tracking-wide text-gradient">BONI</span>
+                    <span class="font-serif font-bold text-xl tracking-wide text-gradient">Lottery Ticket</span>
                     <span class="text-xs block tracking-widest text-brand-gold font-bold uppercase -mt-1">LOTTERY</span>
                 </div>
             </div>
@@ -150,7 +150,7 @@
             <input 
               type="text" 
               id="customer-name" 
-              placeholder="e.g. Abebe Kebede" 
+              placeholder="e.g. Name" 
               required 
               class="w-full bg-brand-navy/60 border border-brand-gold/15 focus:border-brand-gold rounded-xl py-3 px-4 text-sm text-white placeholder-slate-500 outline-none transition-all duration-200"
             >
@@ -217,7 +217,7 @@
                         <span class="text-brand-gold font-serif italic">Secure Your Future</span>
                     </h1>
                     <p class="text-slate-300 text-sm sm:text-base max-w-xl leading-relaxed">
-                        Welcome to Boni Lottery, where transparency is guaranteed. Select your personal lucky numbers, verify your checkout instantly, and tune into our TikTok Live stream to verify outcomes using our audited cryptographic generator.
+                        Welcome to Lottery Ticket, where transparency is guaranteed. Select your personal lucky numbers, verify your checkout instantly, and tune into our TikTok Live stream to verify outcomes using our audited cryptographic generator.
                     </p>
                     <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
                         <button onclick="switchTab('play')" class="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-brand-gold via-brand-golddark to-brand-gold text-brand-navy font-bold rounded-2xl hover:scale-[1.01] active:scale-95 transition-all duration-150 shadow-lg shadow-brand-gold/20 flex items-center justify-center space-x-2">
@@ -379,7 +379,7 @@
                             </div>
                             <div>
                                 <span class="text-[10px] text-sky-200 uppercase tracking-wider block font-semibold">ACCOUNT OWNER NAME</span>
-                                <span class="text-sm font-bold text-white block">Boni Digital Services LLC</span>
+                                <span class="text-sm font-bold text-white block">Lottery Ticke Digital Services LLC</span>
                                 <span class="text-[10px] text-sky-200 uppercase tracking-wider block font-semibold mt-3">TELEBIRR PHONE NUMBER</span>
                                 <div class="flex items-center justify-between mt-1 bg-black/20 p-2.5 rounded-xl border border-white/5">
                                     <span class="text-lg font-mono font-bold text-white">0945792677</span>
@@ -399,7 +399,7 @@
                             </div>
                             <div>
                                 <span class="text-[10px] text-purple-200 uppercase tracking-wider block font-semibold">BANK OWNER NAME</span>
-                                <span class="text-sm font-bold text-white block">Boni Digital Services LLC</span>
+                                <span class="text-sm font-bold text-white block">Lottery Ticke Digital Services LLC</span>
                                 <span class="text-[10px] text-purple-200 uppercase tracking-wider block font-semibold mt-3">CBE PHONE NUMBER</span>
                                 <div class="flex items-center justify-between mt-1 bg-black/20 p-2.5 rounded-xl border border-white/5">
                                     <span class="text-lg font-mono font-bold text-white">0945792677</span>
@@ -644,7 +644,7 @@
                                 </div>
                                 <div class="space-y-1.5">
                                     <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Public Client Seed (e.g. TikTok Live Chat)</label>
-                                    <input type="text" id="draw-client-seed" placeholder="Type chat phrase / block hash..." value="BoniLotteryLiveDraw" class="w-full bg-brand-navy border border-brand-gold/20 focus:border-brand-gold rounded-xl py-2 px-3 text-xs font-mono text-white outline-none">
+                                    <input type="text" id="draw-client-seed" placeholder="Type chat phrase / block hash..." value="LotteryLiveDraw" class="w-full bg-brand-navy border border-brand-gold/20 focus:border-brand-gold rounded-xl py-2 px-3 text-xs font-mono text-white outline-none">
                                 </div>
                             </div>
                         </div>
@@ -695,7 +695,7 @@
     <!-- FOOTER SIGNATURE PANEL -->
     <footer class="w-full glass-panel border-t border-brand-gold/10 px-4 py-6 text-center text-xs text-slate-500 mt-auto">
         <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-            <span class="font-serif text-brand-gold/80 font-semibold tracking-wide">© 2026 Boni Lottery. All Rights Reserved.</span>
+            <span class="font-serif text-brand-gold/80 font-semibold tracking-wide">© 2026 Lottery Ticke. All Rights Reserved.</span>
             <div class="flex items-center space-x-4">
                 <a href="#" class="hover:text-slate-300 transition-colors">Privacy Policy</a>
                 <a href="#" class="hover:text-slate-300 transition-colors">Provably Fair Document</a>
@@ -1122,7 +1122,7 @@
         /* Updated draw execution */
         async function executeProvablyFairDraw() {
             const serverSeed = document.getElementById('draw-server-seed').value;
-            const clientSeed = document.getElementById('draw-client-seed').value || "BoniLotteryLiveDraw";
+            const clientSeed = document.getElementById('draw-client-seed').value || "LotteryLiveDraw";
             const triggerBtn = document.getElementById('trigger-draw-btn');
 
             triggerBtn.disabled = true;
@@ -1253,14 +1253,14 @@
 
         /* Storage mechanics */
         function saveTicketsToStorage() {
-            localStorage.setItem('boni_pending_tickets', JSON.stringify(pendingTickets));
-            localStorage.setItem('boni_active_tickets', JSON.stringify(activeTickets));
+            localStorage.setItem('pending_tickets', JSON.stringify(pendingTickets));
+            localStorage.setItem('active_tickets', JSON.stringify(activeTickets));
         }
 
         function loadSavedTickets() {
             try {
-                const savedPending = localStorage.getItem('boni_pending_tickets');
-                const savedActive = localStorage.getItem('boni_active_tickets');
+                const savedPending = localStorage.getItem('pending_tickets');
+                const savedActive = localStorage.getItem('active_tickets');
                 if (savedPending) pendingTickets = JSON.parse(savedPending);
                 if (savedActive) activeTickets = JSON.parse(savedActive);
             } catch (e) {
