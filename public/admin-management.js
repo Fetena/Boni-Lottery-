@@ -13,10 +13,13 @@ import {
   doc,
   query,
   where,
-  serverTimestamp,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+import { 
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut
+} from "https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js";
 
 // Permission levels
 const PERMISSION_LEVELS = {
