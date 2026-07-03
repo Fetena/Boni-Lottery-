@@ -63,9 +63,10 @@
     </script>
 
     <!-- Guest Ticketing System -->
+    <!-- Simple Admin Login -->
     <script type="module">
-      import * as guestTicketing from './guest-ticketing.js';
-      window.guestTicketing = guestTicketing;
+      import * as simpleAdmin from './simple-admin.js';
+      window.simpleAdmin = simpleAdmin;
     </script>
 
     <!-- Admin Management -->
@@ -396,14 +397,14 @@
 
         // Admin Login
         async function handleAdminLogin(event) {
-            event.preventDefault();
-            const email = document.getElementById('admin-email').value;
-            const password = document.getElementById('admin-password').value;
-            const errorDiv = document.getElementById('admin-error-msg');
+    event.preventDefault();
+    const email = document.getElementById('admin-email').value;
+    const password = document.getElementById('admin-password').value;
+    const errorDiv = document.getElementById('admin-error-msg');
 
-            try {
-                errorDiv.classList.add('hidden');
-                const adminData = await window.adminManagement.adminLogin(email, password);
+    try {
+        errorDiv.classList.add('hidden');
+        const adminData = await window.simpleAdminLogin(email, password);
                 
                 currentAdminUser = adminData;
                 localStorage.setItem('adminUser', JSON.stringify(adminData));
