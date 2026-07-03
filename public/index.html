@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Boni Lottery - Admin Portal</title>
+    <title>Boni Lottery - Win Big, Play Fair</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -54,7 +54,7 @@
       window.auth = auth;
     </script>
 
-    <!-- Simple Admin -->
+    <!-- Simple Admin Login -->
     <script type="module">
       import * as simpleAdmin from './simple-admin.js';
       window.simpleAdmin = simpleAdmin;
@@ -66,28 +66,21 @@
     <div id="toast-container" class="fixed top-20 right-4 z-50 pointer-events-none space-y-2 max-w-sm w-full"></div>
 
     <!-- ========================================================
-         ADMIN LOGIN MODAL
+         LOGIN MODAL (Integrated into Homepage)
          ======================================================== -->
-    <div id="admin-login-modal" class="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4">
+    <div id="admin-login-modal" class="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4 hidden">
         <div class="glass-panel rounded-3xl p-8 max-w-md w-full border border-brand-gold/20 space-y-6">
-            <div class="text-center">
-                <div class="h-16 w-16 rounded-2xl bg-gradient-to-br from-brand-gold to-brand-golddark flex items-center justify-center mx-auto text-brand-navy mb-4">
-                    <i class="fa-solid fa-shield-halved text-2xl"></i>
-                </div>
+            <div class="flex items-center justify-between">
                 <h2 class="text-2xl font-serif font-bold text-white">Admin Portal</h2>
-                <p class="text-xs text-slate-400 mt-2">Secure Access</p>
+                <button onclick="closeLoginModal()" class="text-slate-400 hover:text-white text-2xl">
+                    <i class="fa-solid fa-times"></i>
+                </button>
             </div>
 
             <form id="admin-login-form" onsubmit="handleAdminLogin(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-2">Email</label>
-                    <input type="email" id="admin-email" placeholder="fita.regassa@gmail.com" required class="w-full bg-brand-navy/60 border border-brand-gold/15 focus:border-brand-gold rounded-xl py-3 px-4 text-sm text-white outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-2">Password</label>
-                    <input type="password" id="admin-password" placeholder="••••••••" required class="w-full bg-brand-navy/60 border border-brand-gold/15 focus:border-brand-gold rounded-xl py-3 px-4 text-sm text-white outline-none">
-                </div>
-                <button type="submit" class="w-full py-3 bg-gradient-to-r from-brand-gold to-brand-golddark text-brand-navy font-bold rounded-xl hover:scale-[1.01] transition-all">
+                <input type="email" id="admin-email" placeholder="Admin Email" required class="w-full bg-brand-navy/60 border border-brand-gold/15 focus:border-brand-gold rounded-xl py-3 px-4 text-sm text-white outline-none">
+                <input type="password" id="admin-password" placeholder="Password" required class="w-full bg-brand-navy/60 border border-brand-gold/15 focus:border-brand-gold rounded-xl py-3 px-4 text-sm text-white outline-none">
+                <button type="submit" class="w-full py-3 bg-gradient-to-r from-brand-gold to-brand-golddark text-brand-navy font-bold rounded-xl">
                     <i class="fa-solid fa-arrow-right-to-bracket mr-1.5"></i>Login
                 </button>
             </form>
@@ -97,11 +90,11 @@
     </div>
 
     <!-- ========================================================
-         ADMIN DASHBOARD
+         ADMIN DASHBOARD (Hidden by default)
          ======================================================== -->
-    <div id="admin-dashboard" class="hidden h-full flex flex-col">
+    <div id="admin-dashboard-view" class="hidden h-full flex flex-col">
         
-        <!-- Header -->
+        <!-- Admin Header -->
         <header class="sticky top-0 z-40 w-full glass-panel border-b border-brand-gold/10 px-6 py-4">
             <div class="max-w-7xl mx-auto flex items-center justify-between">
                 <div class="flex items-center space-x-3">
@@ -110,7 +103,7 @@
                     </div>
                     <div>
                         <h1 class="font-serif text-xl font-bold text-gradient">BONI ADMIN</h1>
-                        <p class="text-xs text-slate-400" id="admin-welcome">Welcome</p>
+                        <p class="text-xs text-slate-400" id="admin-user-name">Admin</p>
                     </div>
                 </div>
                 <button onclick="adminLogout()" class="px-4 py-2 bg-red-950/30 hover:bg-red-950/50 text-red-400 text-xs font-bold rounded-xl border border-red-900/30">
@@ -119,39 +112,57 @@
             </div>
         </header>
 
-        <!-- Dynamic Navigation Tabs (Based on Permissions) -->
+        <!-- Admin Navigation -->
         <nav id="admin-nav-tabs" class="flex gap-2 px-6 py-4 border-b border-brand-gold/10 bg-brand-navy/20 overflow-x-auto custom-scrollbar">
-            <!-- Tabs will be generated based on admin permissions -->
+            <!-- Tabs generated dynamically -->
         </nav>
 
-        <!-- Content Area -->
+        <!-- Admin Content -->
         <main class="flex-grow overflow-y-auto custom-scrollbar p-6">
             <div class="max-w-7xl mx-auto space-y-6">
 
-                <!-- DASHBOARD TAB (All Admins see this) -->
+                <!-- DASHBOARD TAB - ALL PLATFORM ACTIVITY -->
                 <section id="admin-view-dashboard" class="space-y-6 block">
-                    <h2 class="text-3xl font-serif font-bold text-white">Admin Dashboard</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10">
-                            <span class="text-xs text-slate-400 font-semibold uppercase">Pending Payments</span>
-                            <p class="text-3xl font-bold text-yellow-500 mt-2">0</p>
-                        </div>
+                    <h2 class="text-3xl font-serif font-bold text-white">Platform Dashboard</h2>
+                    
+                    <!-- Real-time Stats -->
+                    <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
                         <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10">
                             <span class="text-xs text-slate-400 font-semibold uppercase">Active Tickets</span>
-                            <p class="text-3xl font-bold text-emerald-500 mt-2">0</p>
+                            <p id="stat-active-tickets" class="text-3xl font-bold text-emerald-500 mt-2">0</p>
+                        </div>
+                        <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10">
+                            <span class="text-xs text-slate-400 font-semibold uppercase">Pending Payments</span>
+                            <p id="stat-pending-payments" class="text-3xl font-bold text-yellow-500 mt-2">0</p>
                         </div>
                         <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10">
                             <span class="text-xs text-slate-400 font-semibold uppercase">Total Customers</span>
-                            <p class="text-3xl font-bold text-blue-500 mt-2">0</p>
+                            <p id="stat-total-customers" class="text-3xl font-bold text-blue-500 mt-2">0</p>
+                        </div>
+                        <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10">
+                            <span class="text-xs text-slate-400 font-semibold uppercase">Total Revenue</span>
+                            <p id="stat-total-revenue" class="text-3xl font-bold text-purple-500 mt-2">0 ETB</p>
                         </div>
                         <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10">
                             <span class="text-xs text-slate-400 font-semibold uppercase">Total Admins</span>
-                            <p class="text-3xl font-bold text-purple-500 mt-2">0</p>
+                            <p id="stat-total-admins" class="text-3xl font-bold text-pink-500 mt-2">0</p>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity Feed -->
+                    <div class="glass-panel rounded-2xl overflow-hidden border border-brand-gold/10">
+                        <div class="p-4 border-b border-brand-gold/10 bg-brand-navy/60">
+                            <h3 class="font-bold text-lg"><i class="fa-solid fa-clock mr-2 text-brand-gold"></i>Real-time Platform Activity</h3>
+                        </div>
+                        <div class="divide-y divide-brand-gold/5 max-h-96 overflow-y-auto custom-scrollbar">
+                            <div id="activity-feed" class="space-y-0">
+                                <div class="p-4 text-center text-slate-400">Loading activity...</div>
+                            </div>
                         </div>
                     </div>
                 </section>
 
-                <!-- PAYMENT TAB (Only if permission granted) -->
+                <!-- PAYMENT TAB -->
                 <section id="admin-view-payment" class="space-y-6 hidden">
                     <h2 class="text-3xl font-serif font-bold text-white">Payment Verification</h2>
                     <div class="glass-panel rounded-2xl overflow-hidden border border-brand-gold/10">
@@ -160,19 +171,19 @@
                                 <tr>
                                     <th class="p-4">Customer</th>
                                     <th class="p-4">Amount</th>
-                                    <th class="p-4">Method</th>
+                                    <th class="p-4">Ref ID</th>
                                     <th class="p-4">Date</th>
-                                    <th class="p-4">Action</th>
+                                    <th class="p-4">Status</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-brand-gold/5">
-                                <tr><td colspan="5" class="p-4 text-center text-slate-400">No pending payments</td></tr>
+                            <tbody id="payments-table" class="divide-y divide-brand-gold/5">
+                                <tr><td colspan="5" class="p-4 text-center text-slate-400">No payments yet</td></tr>
                             </tbody>
                         </table>
                     </div>
                 </section>
 
-                <!-- TICKET TAB (Only if permission granted) -->
+                <!-- TICKET TAB -->
                 <section id="admin-view-ticket" class="space-y-6 hidden">
                     <h2 class="text-3xl font-serif font-bold text-white">Ticket Management</h2>
                     <div class="glass-panel rounded-2xl overflow-hidden border border-brand-gold/10">
@@ -186,37 +197,36 @@
                                     <th class="p-4">Status</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-brand-gold/5">
+                            <tbody id="tickets-table" class="divide-y divide-brand-gold/5">
                                 <tr><td colspan="5" class="p-4 text-center text-slate-400">No tickets yet</td></tr>
                             </tbody>
                         </table>
                     </div>
                 </section>
 
-                <!-- CUSTOMER TAB (Only if permission granted) -->
+                <!-- CUSTOMER TAB -->
                 <section id="admin-view-customer" class="space-y-6 hidden">
-                    <h2 class="text-3xl font-serif font-bold text-white">Customer Management</h2>
+                    <h2 class="text-3xl font-serif font-bold text-white">Customers</h2>
                     <div class="glass-panel rounded-2xl overflow-hidden border border-brand-gold/10">
                         <table class="w-full text-left text-xs">
                             <thead class="bg-brand-navy text-slate-300 border-b border-brand-gold/10 font-semibold">
                                 <tr>
                                     <th class="p-4">Name</th>
                                     <th class="p-4">Phone</th>
-                                    <th class="p-4">Email</th>
                                     <th class="p-4">Tickets</th>
                                     <th class="p-4">Total Spent</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-brand-gold/5">
-                                <tr><td colspan="5" class="p-4 text-center text-slate-400">No customers yet</td></tr>
+                            <tbody id="customers-table" class="divide-y divide-brand-gold/5">
+                                <tr><td colspan="4" class="p-4 text-center text-slate-400">No customers yet</td></tr>
                             </tbody>
                         </table>
                     </div>
                 </section>
 
-                <!-- AUDIT TAB (Only if permission granted) -->
+                <!-- AUDIT TAB -->
                 <section id="admin-view-audit" class="space-y-6 hidden">
-                    <h2 class="text-3xl font-serif font-bold text-white">Activity Log</h2>
+                    <h2 class="text-3xl font-serif font-bold text-white">Activity Audit Log</h2>
                     <div class="glass-panel rounded-2xl overflow-hidden border border-brand-gold/10">
                         <table class="w-full text-left text-xs">
                             <thead class="bg-brand-navy text-slate-300 border-b border-brand-gold/10 font-semibold">
@@ -224,88 +234,73 @@
                                     <th class="p-4">Admin</th>
                                     <th class="p-4">Action</th>
                                     <th class="p-4">Details</th>
-                                    <th class="p-4">Timestamp</th>
+                                    <th class="p-4">Time</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-brand-gold/5">
+                            <tbody id="audit-table" class="divide-y divide-brand-gold/5">
                                 <tr><td colspan="4" class="p-4 text-center text-slate-400">No activity yet</td></tr>
                             </tbody>
                         </table>
                     </div>
                 </section>
 
-                <!-- MANAGE ADMINS TAB (Only for Main Admin) -->
+                <!-- MANAGE ADMINS TAB (Main Admin Only) -->
                 <section id="admin-view-manage-admins" class="space-y-6 hidden">
                     <div class="flex items-center justify-between">
-                        <h2 class="text-3xl font-serif font-bold text-white">Manage Admin Access</h2>
+                        <h2 class="text-3xl font-serif font-bold text-white">Admin Management</h2>
                         <button onclick="showCreateAdminForm()" class="px-4 py-2 bg-gradient-to-r from-brand-gold to-brand-golddark text-brand-navy font-bold rounded-xl text-xs">
                             <i class="fa-solid fa-plus mr-1.5"></i>Create Admin
                         </button>
                     </div>
 
-                    <!-- Create Admin Form -->
                     <div id="create-admin-form" class="glass-panel rounded-2xl p-6 border border-brand-gold/10 space-y-4 hidden">
-                        <h3 class="text-lg font-bold">Create New Admin Account</h3>
+                        <h3 class="text-lg font-bold">Create New Admin</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <input type="text" id="new-admin-name" placeholder="Admin Name" class="bg-brand-navy/60 border border-brand-gold/15 rounded-xl py-2 px-4 text-sm text-white outline-none">
+                            <input type="text" id="new-admin-name" placeholder="Name" class="bg-brand-navy/60 border border-brand-gold/15 rounded-xl py-2 px-4 text-sm text-white outline-none">
                             <input type="email" id="new-admin-email" placeholder="Email" class="bg-brand-navy/60 border border-brand-gold/15 rounded-xl py-2 px-4 text-sm text-white outline-none">
                             <input type="password" id="new-admin-password" placeholder="Password" class="bg-brand-navy/60 border border-brand-gold/15 rounded-xl py-2 px-4 text-sm text-white outline-none">
                         </div>
-
-                        <div class="space-y-3">
-                            <label class="block text-sm font-bold text-slate-300">Grant Tab Permissions:</label>
-                            <div class="grid grid-cols-2 gap-3">
-                                <label class="flex items-center space-x-2 cursor-pointer">
+                        <div class="space-y-2">
+                            <label class="text-sm font-bold text-slate-300">Permissions:</label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <label class="flex items-center space-x-2">
                                     <input type="checkbox" id="perm-payment" class="w-4 h-4 rounded accent-brand-gold">
-                                    <span class="text-xs text-slate-300">Payment Verification</span>
+                                    <span class="text-xs">Payment</span>
                                 </label>
-                                <label class="flex items-center space-x-2 cursor-pointer">
+                                <label class="flex items-center space-x-2">
                                     <input type="checkbox" id="perm-ticket" class="w-4 h-4 rounded accent-brand-gold">
-                                    <span class="text-xs text-slate-300">Ticket Management</span>
+                                    <span class="text-xs">Ticket</span>
                                 </label>
-                                <label class="flex items-center space-x-2 cursor-pointer">
+                                <label class="flex items-center space-x-2">
                                     <input type="checkbox" id="perm-customer" class="w-4 h-4 rounded accent-brand-gold">
-                                    <span class="text-xs text-slate-300">Customer Management</span>
+                                    <span class="text-xs">Customer</span>
                                 </label>
-                                <label class="flex items-center space-x-2 cursor-pointer">
+                                <label class="flex items-center space-x-2">
                                     <input type="checkbox" id="perm-audit" class="w-4 h-4 rounded accent-brand-gold">
-                                    <span class="text-xs text-slate-300">Activity Log</span>
-                                </label>
-                                <label class="flex items-center space-x-2 cursor-pointer">
-                                    <input type="checkbox" id="perm-draw" class="w-4 h-4 rounded accent-brand-gold">
-                                    <span class="text-xs text-slate-300">Draw Operator</span>
+                                    <span class="text-xs">Audit</span>
                                 </label>
                             </div>
                         </div>
-
                         <div class="flex gap-2">
-                            <button onclick="createNewAdmin()" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs">
-                                <i class="fa-solid fa-check mr-1.5"></i>Create
-                            </button>
-                            <button onclick="hideCreateAdminForm()" type="button" class="flex-1 py-2 bg-slate-600 hover:bg-slate-700 text-white font-bold rounded-xl text-xs">
-                                <i class="fa-solid fa-times mr-1.5"></i>Cancel
-                            </button>
+                            <button onclick="createNewAdmin()" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs">Create</button>
+                            <button onclick="hideCreateAdminForm()" class="flex-1 py-2 bg-slate-600 hover:bg-slate-700 text-white font-bold rounded-xl text-xs">Cancel</button>
                         </div>
                     </div>
 
-                    <!-- Admins List -->
                     <div class="glass-panel rounded-2xl overflow-hidden border border-brand-gold/10">
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left text-xs">
-                                <thead class="bg-brand-navy text-slate-300 border-b border-brand-gold/10 font-semibold">
-                                    <tr>
-                                        <th class="p-4">Name</th>
-                                        <th class="p-4">Email</th>
-                                        <th class="p-4">Permissions</th>
-                                        <th class="p-4">Status</th>
-                                        <th class="p-4">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="admins-list-table" class="divide-y divide-brand-gold/5">
-                                    <tr><td colspan="5" class="p-4 text-center text-slate-400">Loading admins...</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-brand-navy text-slate-300 border-b border-brand-gold/10 font-semibold">
+                                <tr>
+                                    <th class="p-4">Name</th>
+                                    <th class="p-4">Email</th>
+                                    <th class="p-4">Permissions</th>
+                                    <th class="p-4">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admins-table" class="divide-y divide-brand-gold/5">
+                                <tr><td colspan="4" class="p-4 text-center text-slate-400">Loading admins...</td></tr>
+                            </tbody>
+                        </table>
                     </div>
                 </section>
 
@@ -313,12 +308,99 @@
         </main>
     </div>
 
+    <!-- ========================================================
+         PUBLIC HOMEPAGE (Default View)
+         ======================================================== -->
+    <div id="public-homepage" class="h-full flex flex-col">
+        
+        <!-- Header with Login Button -->
+        <header class="sticky top-0 z-40 w-full glass-panel border-b border-brand-gold/10 px-4 py-4 sm:px-6 lg:px-8">
+            <div class="max-w-7xl mx-auto flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-brand-gold to-brand-golddark flex items-center justify-center text-brand-navy">
+                        <i class="fa-solid fa-trophy text-xl"></i>
+                    </div>
+                    <div>
+                        <span class="font-serif font-bold text-xl text-gradient">BONI</span>
+                        <span class="text-xs text-brand-gold font-bold uppercase">LOTTERY</span>
+                    </div>
+                </div>
+
+                <button onclick="openLoginModal()" class="px-4 py-2 bg-gradient-to-r from-brand-gold/20 to-brand-golddark/20 hover:from-brand-gold/40 hover:to-brand-golddark/40 border border-brand-gold/30 text-brand-gold font-bold text-xs rounded-xl transition-all flex items-center space-x-2">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span>Admin Login</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Hero Section -->
+        <main class="flex-grow max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+            <div class="relative rounded-3xl overflow-hidden glass-panel border border-brand-gold/15 p-6 sm:p-10 lg:p-12 flex flex-col lg:flex-row items-center gap-8 shadow-lg">
+                <div class="absolute -top-12 -left-12 w-64 h-64 bg-brand-gold/5 rounded-full blur-3xl pointer-events-none"></div>
+
+                <div class="flex-1 space-y-6 z-10 text-center lg:text-left">
+                    <span class="inline-flex items-center space-x-2 bg-brand-gold/10 text-brand-goldlight text-xs font-bold px-3.5 py-1.5 rounded-full border border-brand-gold/20">
+                        <span class="h-2 w-2 rounded-full bg-emerald-500 animate-ping"></span>
+                        <span>LIVE DRAWS DAILY</span>
+                    </span>
+                    
+                    <h1 class="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-white leading-tight">
+                        Choose Your Numbers,<br class="hidden sm:inline">
+                        <span class="text-brand-gold">Win Big</span>
+                    </h1>
+                    
+                    <p class="text-slate-300 text-sm sm:text-base max-w-xl leading-relaxed">
+                        Welcome to Boni Lottery. Play fair, win transparently. Daily draws with provably fair randomization.
+                    </p>
+
+                    <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
+                        <button onclick="alert('Coming Soon')" class="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-brand-gold via-brand-golddark to-brand-gold text-brand-navy font-bold rounded-2xl hover:scale-[1.01] active:scale-95 transition-all shadow-lg shadow-brand-gold/20 flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-gamepad text-lg"></i>
+                            <span>Play Now</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="w-full lg:w-96 flex flex-col gap-4 z-10">
+                    <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10">
+                        <span class="text-xs font-bold text-slate-400 tracking-wider uppercase">Current Jackpot</span>
+                        <div class="text-4xl sm:text-5xl font-serif font-black text-brand-gold mt-1.5 flex items-baseline">
+                            <span>150,000</span>
+                            <span class="text-lg font-sans font-bold text-slate-400 ml-2">ETB</span>
+                        </div>
+                    </div>
+
+                    <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10">
+                        <span class="text-xs font-bold text-slate-400 tracking-wider uppercase">Next Draw</span>
+                        <div id="countdown-timer" class="text-2xl font-mono font-bold text-white mt-1.5">00:00:00</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="w-full glass-panel border-t border-brand-gold/10 px-4 py-6 text-center text-xs text-slate-500">
+            <span class="font-serif text-brand-gold/80 font-semibold">© 2026 Boni Lottery. Fair. Transparent. Rewarding.</span>
+        </footer>
+    </div>
+
     <!-- JAVASCRIPT -->
     <script>
         let currentAdminUser = null;
         let currentAdminPermissions = [];
 
-        // ==================== ADMIN LOGIN ====================
+        // ==================== LOGIN FUNCTIONS ====================
+
+        function openLoginModal() {
+            document.getElementById('admin-login-modal').classList.remove('hidden');
+        }
+
+        function closeLoginModal() {
+            document.getElementById('admin-login-modal').classList.add('hidden');
+            document.getElementById('admin-email').value = '';
+            document.getElementById('admin-password').value = '';
+            document.getElementById('admin-error-msg').classList.add('hidden');
+        }
 
         async function handleAdminLogin(event) {
             event.preventDefault();
@@ -335,6 +417,7 @@
 
                 localStorage.setItem('adminUser', JSON.stringify(adminData));
                 
+                closeLoginModal();
                 showAdminDashboard();
                 showNotificationToast(`Welcome, ${adminData.name}!`);
 
@@ -345,95 +428,139 @@
         }
 
         function showAdminDashboard() {
-            document.getElementById('admin-login-modal').classList.add('hidden');
-            document.getElementById('admin-dashboard').classList.remove('hidden');
-            document.getElementById('admin-welcome').textContent = `Welcome, ${currentAdminUser.name}`;
+            document.getElementById('public-homepage').classList.add('hidden');
+            document.getElementById('admin-dashboard-view').classList.remove('hidden');
+            document.getElementById('admin-user-name').textContent = `Welcome, ${currentAdminUser.name}`;
             
             buildAdminNavigation();
             switchAdminTab('dashboard');
+            loadDashboardData();
+            startRealtimeUpdates();
         }
 
-        // ==================== DYNAMIC NAVIGATION ====================
+        // ==================== NAVIGATION ====================
 
         function buildAdminNavigation() {
             const navContainer = document.getElementById('admin-nav-tabs');
             navContainer.innerHTML = '';
 
-            // Dashboard - everyone sees this
             addNavTab('dashboard', 'Dashboard', 'fa-chart-line');
 
-            // Payment - if permission granted
             if (currentAdminPermissions.includes('payment')) {
                 addNavTab('payment', 'Payments', 'fa-credit-card');
             }
 
-            // Ticket - if permission granted
             if (currentAdminPermissions.includes('ticket')) {
                 addNavTab('ticket', 'Tickets', 'fa-ticket');
             }
 
-            // Customer - if permission granted
             if (currentAdminPermissions.includes('customer')) {
                 addNavTab('customer', 'Customers', 'fa-people-group');
             }
 
-            // Audit - if permission granted
             if (currentAdminPermissions.includes('audit')) {
-                addNavTab('audit', 'Activity Log', 'fa-history');
+                addNavTab('audit', 'Audit Log', 'fa-history');
             }
 
-            // Draw - if permission granted
-            if (currentAdminPermissions.includes('draw')) {
-                addNavTab('draw', 'Draw Operator', 'fa-dice');
-            }
-
-            // Manage Admins - ONLY for main_admin
             if (currentAdminUser.permissionLevel === 'main_admin') {
                 addNavTab('manage-admins', 'Manage Admins', 'fa-users-cog');
             }
         }
 
         function addNavTab(id, label, icon) {
-            const navContainer = document.getElementById('admin-nav-tabs');
             const btn = document.createElement('button');
             btn.id = `tab-${id}`;
             btn.className = "px-4 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white whitespace-nowrap transition-all";
             btn.innerHTML = `<i class="fa-solid fa-${icon} mr-1.5"></i>${label}`;
             btn.onclick = () => switchAdminTab(id);
-            navContainer.appendChild(btn);
+            document.getElementById('admin-nav-tabs').appendChild(btn);
         }
 
         function switchAdminTab(tabName) {
-            // Hide all views
             const views = ['dashboard', 'payment', 'ticket', 'customer', 'audit', 'manage-admins'];
             views.forEach(v => {
                 const view = document.getElementById(`admin-view-${v}`);
-                if (view) {
-                    view.classList.add('hidden');
-                }
+                if (view) view.classList.add('hidden');
                 const tab = document.getElementById(`tab-${v}`);
-                if (tab) {
-                    tab.className = "px-4 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white whitespace-nowrap transition-all";
-                }
+                if (tab) tab.className = "px-4 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white whitespace-nowrap transition-all";
             });
 
-            // Show selected view
             const selectedView = document.getElementById(`admin-view-${tabName}`);
-            if (selectedView) {
-                selectedView.classList.remove('hidden');
-            }
+            if (selectedView) selectedView.classList.remove('hidden');
             const selectedTab = document.getElementById(`tab-${tabName}`);
-            if (selectedTab) {
-                selectedTab.className = "px-4 py-2 text-xs font-bold rounded-lg bg-brand-gold text-brand-navy whitespace-nowrap";
-            }
+            if (selectedTab) selectedTab.className = "px-4 py-2 text-xs font-bold rounded-lg bg-brand-gold text-brand-navy whitespace-nowrap";
 
-            // Load data for tab
             if (tabName === 'manage-admins') {
                 loadAdminsList();
             }
         }
 
-        // ==================== MANAGE ADMINS (Main Admin Only) ====================
+        // ==================== DASHBOARD DATA ====================
+
+        async function loadDashboardData() {
+            try {
+                const { getDocs, collection } = await import("https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js");
+                
+                // Load tickets
+                const ticketsSnapshot = await getDocs(collection(window.db, "tickets"));
+                document.getElementById('stat-active-tickets').textContent = ticketsSnapshot.size;
+
+                // Load payments
+                const paymentsSnapshot = await getDocs(collection(window.db, "payments"));
+                document.getElementById('stat-pending-payments').textContent = paymentsSnapshot.size;
+
+                // Calculate stats
+                let totalRevenue = 0;
+                paymentsSnapshot.forEach(doc => {
+                    totalRevenue += doc.data().amount || 0;
+                });
+                document.getElementById('stat-total-revenue').textContent = totalRevenue.toLocaleString() + ' ETB';
+
+                // Load customers
+                const customersSnapshot = await getDocs(collection(window.db, "customers"));
+                document.getElementById('stat-total-customers').textContent = customersSnapshot.size;
+
+                // Load admins
+                const adminsSnapshot = await getDocs(collection(window.db, "admins"));
+                document.getElementById('stat-total-admins').textContent = adminsSnapshot.size;
+
+                // Load activity feed
+                const activitySnapshot = await getDocs(collection(window.db, "activity_logs"));
+                const feedContainer = document.getElementById('activity-feed');
+                feedContainer.innerHTML = '';
+
+                if (activitySnapshot.empty) {
+                    feedContainer.innerHTML = '<div class="p-4 text-center text-slate-400">No activity yet</div>';
+                    return;
+                }
+
+                const activities = [];
+                activitySnapshot.forEach(doc => activities.push(doc.data()));
+                activities.reverse().slice(0, 20).forEach(activity => {
+                    const div = document.createElement('div');
+                    div.className = "p-4 hover:bg-brand-navy/20 transition-colors border-b border-brand-gold/5 last:border-0";
+                    div.innerHTML = `
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <p class="text-sm font-semibold text-brand-gold">${activity.action}</p>
+                                <p class="text-xs text-slate-400 mt-1">${activity.details || 'N/A'}</p>
+                            </div>
+                            <span class="text-xs text-slate-500">${new Date(activity.timestamp).toLocaleTimeString()}</span>
+                        </div>
+                    `;
+                    feedContainer.appendChild(div);
+                });
+
+            } catch (error) {
+                console.error("Error loading data:", error);
+            }
+        }
+
+        function startRealtimeUpdates() {
+            setInterval(loadDashboardData, 5000); // Refresh every 5 seconds
+        }
+
+        // ==================== ADMIN MANAGEMENT ====================
 
         function showCreateAdminForm() {
             document.getElementById('create-admin-form').classList.remove('hidden');
@@ -441,10 +568,6 @@
 
         function hideCreateAdminForm() {
             document.getElementById('create-admin-form').classList.add('hidden');
-            document.getElementById('new-admin-name').value = '';
-            document.getElementById('new-admin-email').value = '';
-            document.getElementById('new-admin-password').value = '';
-            document.querySelectorAll('input[id^="perm-"]').forEach(el => el.checked = false);
         }
 
         async function createNewAdmin() {
@@ -457,32 +580,27 @@
                 return;
             }
 
-            // Get selected permissions
             const permissions = [];
             if (document.getElementById('perm-payment').checked) permissions.push('payment');
             if (document.getElementById('perm-ticket').checked) permissions.push('ticket');
             if (document.getElementById('perm-customer').checked) permissions.push('customer');
             if (document.getElementById('perm-audit').checked) permissions.push('audit');
-            if (document.getElementById('perm-draw').checked) permissions.push('draw');
 
             try {
                 const { addDoc, collection } = await import("https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js");
                 
                 await addDoc(collection(window.db, "admins"), {
-                    name: name,
-                    email: email,
-                    password: password,
+                    name, email, password,
                     permissionLevel: 'sub_admin',
-                    permissions: permissions,
+                    permissions,
                     isActive: true,
                     createdAt: new Date(),
                     createdBy: currentAdminUser.name
                 });
 
-                showNotificationToast(`✅ Admin "${name}" created with permissions!`);
+                showNotificationToast(`Admin "${name}" created!`);
                 hideCreateAdminForm();
                 loadAdminsList();
-
             } catch (error) {
                 showNotificationToast(error.message, "error");
             }
@@ -493,75 +611,38 @@
                 const { getDocs, collection } = await import("https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js");
                 
                 const snapshot = await getDocs(collection(window.db, "admins"));
-                const tbody = document.getElementById('admins-list-table');
+                const tbody = document.getElementById('admins-table');
                 tbody.innerHTML = '';
-
-                if (snapshot.empty) {
-                    tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-slate-400">No admins found</td></tr>';
-                    return;
-                }
 
                 snapshot.forEach(doc => {
                     const admin = doc.data();
-                    const perms = (admin.permissions || []).map(p => {
-                        const labels = { payment: 'Payment', ticket: 'Ticket', customer: 'Customer', audit: 'Audit', draw: 'Draw' };
-                        return labels[p] || p;
-                    }).join(', ');
-
+                    const perms = (admin.permissions || []).map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(', ');
+                    
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td class="p-4 font-semibold">${admin.name}</td>
                         <td class="p-4 text-xs">${admin.email}</td>
-                        <td class="p-4 text-xs">${admin.permissionLevel === 'main_admin' ? '🔴 MAIN ADMIN (All)' : perms || 'None'}</td>
-                        <td class="p-4">${admin.isActive ? '<span class="text-emerald-400">✓ Active</span>' : '<span class="text-red-400">✗ Inactive</span>'}</td>
-                        <td class="p-4 space-x-2">
-                            <button onclick="editAdminPermissions('${doc.id}')" class="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 rounded">Edit</button>
-                            <button onclick="deactivateAdmin('${doc.id}')" class="px-2 py-1 text-xs bg-red-600 hover:bg-red-700 rounded">Deactivate</button>
-                        </td>
+                        <td class="p-4 text-xs">${admin.permissionLevel === 'main_admin' ? '🔴 All Access' : perms || 'None'}</td>
+                        <td class="p-4">${admin.isActive ? '<span class="text-emerald-400">✓</span>' : '<span class="text-red-400">✗</span>'}</td>
                     `;
                     tbody.appendChild(row);
                 });
-
             } catch (error) {
                 console.error("Error loading admins:", error);
             }
         }
 
-        function editAdminPermissions(adminId) {
-            showNotificationToast("Click admin row to edit permissions");
-        }
-
-        async function deactivateAdmin(adminId) {
-            if (!confirm("Deactivate this admin?")) return;
-
-            try {
-                const { updateDoc, doc } = await import("https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js");
-                
-                await updateDoc(doc(window.db, "admins", adminId), {
-                    isActive: false
-                });
-
-                showNotificationToast("Admin deactivated");
-                loadAdminsList();
-            } catch (error) {
-                showNotificationToast(error.message, "error");
-            }
-        }
-
-        // ==================== ADMIN LOGOUT ====================
+        // ==================== LOGOUT ====================
 
         function adminLogout() {
             if (confirm("Logout?")) {
                 currentAdminUser = null;
-                currentAdminPermissions = [];
                 localStorage.removeItem('adminUser');
                 
-                document.getElementById('admin-dashboard').classList.add('hidden');
-                document.getElementById('admin-login-modal').classList.remove('hidden');
-                document.getElementById('admin-email').value = '';
-                document.getElementById('admin-password').value = '';
+                document.getElementById('admin-dashboard-view').classList.add('hidden');
+                document.getElementById('public-homepage').classList.remove('hidden');
                 
-                showNotificationToast("You have been logged out");
+                showNotificationToast("Logged out");
             }
         }
 
@@ -589,14 +670,33 @@
             }, 4000);
         }
 
-        // Check if admin is logged in on load
+        // Countdown timer
+        function startCountdown() {
+            setInterval(() => {
+                const now = new Date();
+                const nextDraw = new Date();
+                nextDraw.setHours(20, 0, 0, 0);
+                if (now.getHours() >= 20) nextDraw.setDate(nextDraw.getDate() + 1);
+                
+                const delta = nextDraw - now;
+                const hours = Math.floor(delta / 3600000);
+                const minutes = Math.floor((delta % 3600000) / 60000);
+                const seconds = Math.floor((delta % 60000) / 1000);
+                
+                document.getElementById('countdown-timer').textContent = 
+                    `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        // On load
         window.addEventListener('load', () => {
-            const savedAdmin = localStorage.getItem('adminUser');
-            if (savedAdmin) {
-                currentAdminUser = JSON.parse(savedAdmin);
+            const saved = localStorage.getItem('adminUser');
+            if (saved) {
+                currentAdminUser = JSON.parse(saved);
                 currentAdminPermissions = currentAdminUser.permissions || [];
                 showAdminDashboard();
             }
+            startCountdown();
         });
     </script>
 </body>
