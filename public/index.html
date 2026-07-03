@@ -47,14 +47,12 @@
         }
     </style>
 
-    <!-- Firebase -->
     <script type="module">
       import { db, auth } from './firebase-config.js';
       window.db = db;
       window.auth = auth;
     </script>
 
-    <!-- Simple Admin Login -->
     <script type="module">
       import * as simpleAdmin from './simple-admin.js';
       window.simpleAdmin = simpleAdmin;
@@ -62,11 +60,10 @@
 </head>
 <body class="h-full font-sans antialiased bg-brand-navyback text-slate-100 flex flex-col overflow-x-hidden">
 
-    <!-- TOAST -->
     <div id="toast-container" class="fixed top-20 right-4 z-50 pointer-events-none space-y-2 max-w-sm w-full"></div>
 
     <!-- ========================================================
-         LOGIN MODAL (Integrated into Homepage)
+         ADMIN LOGIN MODAL
          ======================================================== -->
     <div id="admin-login-modal" class="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4 hidden">
         <div class="glass-panel rounded-3xl p-8 max-w-md w-full border border-brand-gold/20 space-y-6">
@@ -81,6 +78,543 @@
                 <input type="email" id="admin-email" placeholder="Admin Email" required class="w-full bg-brand-navy/60 border border-brand-gold/15 focus:border-brand-gold rounded-xl py-3 px-4 text-sm text-white outline-none">
                 <input type="password" id="admin-password" placeholder="Password" required class="w-full bg-brand-navy/60 border border-brand-gold/15 focus:border-brand-gold rounded-xl py-3 px-4 text-sm text-white outline-none">
                 <button type="submit" class="w-full py-3 bg-gradient-to-r from-brand-gold to-brand-golddark text-brand-navy font-bold rounded-xl">
+                    <i class="fa-solid fa-arrow-right-to-bracket mr-1.5"></i>Login
+                </button>
+            </form>
+
+            <div id="admin-error-msg" class="hidden p-3 rounded-xl bg-red-950/50 border border-red-900/30 text-red-300 text-xs text-center font-semibold"></div>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         ADMIN DASHBOARD (Hidden by default)
+         ======================================================== -->
+    <div id="admin-dashboard-view" class="hidden h-full flex flex-col bg-brand-navyback">
+        <!-- Admin header and content here - same as before -->
+        <header class="sticky top-0 z-40 w-full glass-panel border-b border-brand-gold/10 px-6 py-4">
+            <div class="max-w-7xl mx-auto flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-brand-gold to-brand-golddark flex items-center justify-center text-brand-navy">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-serif text-xl font-bold text-gradient">BONI ADMIN</h1>
+                        <p class="text-xs text-slate-400" id="admin-user-name">Admin</p>
+                    </div>
+                </div>
+                <button onclick="adminLogout()" class="px-4 py-2 bg-red-950/30 hover:bg-red-950/50 text-red-400 text-xs font-bold rounded-xl border border-red-900/30">
+                    <i class="fa-solid fa-sign-out-alt mr-1.5"></i>Logout
+                </button>
+            </div>
+        </header>
+
+        <nav id="admin-nav-tabs" class="flex gap-2 px-6 py-4 border-b border-brand-gold/10 bg-brand-navy/20 overflow-x-auto custom-scrollbar"></nav>
+
+        <main class="flex-grow overflow-y-auto custom-scrollbar p-6">
+            <div class="max-w-7xl mx-auto space-y-6">
+                <section id="admin-view-dashboard" class="space-y-6 block">
+                    <h2 class="text-3xl font-serif font-bold text-white">Platform Dashboard</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                        <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10">
+                            <span class="text-xs text-slate-400 font-semibold uppercase">Active Tickets</span>
+                            <p id="stat-active-tickets" class="text-3xl font-bold text-emerald-500 mt-2">0</p>
+                        </div>
+                        <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10">
+                            <span class="text-xs text-slate-400 font-semibold uppercase">Pending Payments</span>
+                            <p id="stat-pending-payments" class="text-3xl font-bold text-yellow-500 mt-2">0</p>
+                        </div>
+                        <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10">
+                            <span class="text-xs text-slate-400 font-semibold uppercase">Total Customers</span>
+                            <p id="stat-total-customers" class="text-3xl font-bold text-blue-500 mt-2">0</p>
+                        </div>
+                        <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10">
+                            <span class="text-xs text-slate-400 font-semibold uppercase">Total Revenue</span>
+                            <p id="stat-total-revenue" class="text-3xl font-bold text-purple-500 mt-2">0 ETB</p>
+                        </div>
+                        <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10">
+                            <span class="text-xs text-slate-400 font-semibold uppercase">Total Admins</span>
+                            <p id="stat-total-admins" class="text-3xl font-bold text-pink-500 mt-2">0</p>
+                        </div>
+                    </div>
+                    <div class="glass-panel rounded-2xl overflow-hidden border border-brand-gold/10">
+                        <div class="p-4 border-b border-brand-gold/10 bg-brand-navy/60">
+                            <h3 class="font-bold text-lg"><i class="fa-solid fa-clock mr-2 text-brand-gold"></i>Real-time Activity</h3>
+                        </div>
+                        <div id="activity-feed" class="divide-y divide-brand-gold/5 max-h-96 overflow-y-auto custom-scrollbar">
+                            <div class="p-4 text-center text-slate-400">Loading...</div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- ========================================================
+         PUBLIC HOMEPAGE (Default View)
+         ======================================================== -->
+    <div id="public-platform" class="h-full flex flex-col">
+        
+        <!-- Navigation Header -->
+        <header class="sticky top-0 z-40 w-full glass-panel border-b border-brand-gold/10 px-4 py-4 sm:px-6 lg:px-8">
+            <div class="max-w-7xl mx-auto flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-brand-gold to-brand-golddark flex items-center justify-center text-brand-navy">
+                        <i class="fa-solid fa-trophy text-xl"></i>
+                    </div>
+                    <div>
+                        <span class="font-serif font-bold text-xl text-gradient">BONI</span>
+                        <span class="text-xs text-brand-gold font-bold uppercase">LOTTERY</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <nav class="hidden sm:flex items-center space-x-1">
+                        <button onclick="scrollToSection('how-it-works')" class="px-3 py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition-all">How It Works</button>
+                        <button onclick="scrollToSection('live-stream')" class="px-3 py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition-all">TikTok Live</button>
+                        <button onclick="scrollToSection('faq')" class="px-3 py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition-all">FAQ</button>
+                    </nav>
+
+                    <button onclick="openLoginModal()" class="px-4 py-2 bg-gradient-to-r from-brand-gold/20 to-brand-golddark/20 hover:from-brand-gold/40 hover:to-brand-golddark/40 border border-brand-gold/30 text-brand-gold font-bold text-xs rounded-xl flex items-center space-x-2">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <span>Admin Login</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="flex-grow overflow-y-auto custom-scrollbar">
+            
+            <!-- HERO SECTION -->
+            <section class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+                <div class="relative rounded-3xl overflow-hidden glass-panel border border-brand-gold/15 p-6 sm:p-10 lg:p-12 flex flex-col lg:flex-row items-center gap-8 shadow-lg">
+                    <div class="absolute -top-12 -left-12 w-64 h-64 bg-brand-gold/5 rounded-full blur-3xl pointer-events-none"></div>
+
+                    <div class="flex-1 space-y-6 z-10 text-center lg:text-left">
+                        <span class="inline-flex items-center space-x-2 bg-brand-gold/10 text-brand-goldlight text-xs font-bold px-3.5 py-1.5 rounded-full border border-brand-gold/20">
+                            <span class="h-2 w-2 rounded-full bg-emerald-500 animate-ping"></span>
+                            <span>LIVE DRAWS DAILY AT 8 PM</span>
+                        </span>
+                        
+                        <h1 class="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-white leading-tight">
+                            Choose Your Numbers,<br class="hidden sm:inline">
+                            <span class="text-brand-gold">Win Big</span>
+                        </h1>
+                        
+                        <p class="text-slate-300 text-sm sm:text-base max-w-xl leading-relaxed">
+                            Fair. Transparent. Rewarding. Play responsibly and win with confidence.
+                        </p>
+
+                        <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
+                            <button onclick="showPlaySection()" class="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-brand-gold via-brand-golddark to-brand-gold text-brand-navy font-bold rounded-2xl hover:scale-[1.01] active:scale-95 transition-all shadow-lg shadow-brand-gold/20 flex items-center justify-center space-x-2">
+                                <i class="fa-solid fa-gamepad text-lg"></i>
+                                <span>Play Now</span>
+                            </button>
+
+                            <a href="https://www.tiktok.com/@bonilottery" target="_blank" class="w-full sm:w-auto px-8 py-4 bg-brand-navycard/70 border border-brand-gold/20 hover:border-brand-gold/50 text-slate-200 hover:text-white font-semibold rounded-2xl transition-all flex items-center justify-center space-x-2">
+                                <i class="fa-brands fa-tiktok text-lg text-brand-gold"></i>
+                                <span>Watch Live</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="w-full lg:w-96 flex flex-col gap-4 z-10">
+                        <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10">
+                            <span class="text-xs font-bold text-slate-400 tracking-wider uppercase">Current Jackpot</span>
+                            <div class="text-4xl sm:text-5xl font-serif font-black text-brand-gold mt-1.5 flex items-baseline">
+                                <span>150,000</span>
+                                <span class="text-lg font-sans font-bold text-slate-400 ml-2">ETB</span>
+                            </div>
+                        </div>
+
+                        <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10">
+                            <span class="text-xs font-bold text-slate-400 tracking-wider uppercase">Next Draw</span>
+                            <div id="countdown-timer" class="text-2xl font-mono font-bold text-white mt-1.5">00:00:00</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- HOW IT WORKS -->
+            <section id="how-it-works" class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
+                <div class="text-center max-w-xl mx-auto space-y-2">
+                    <h2 class="font-serif text-3xl font-bold">How It Works</h2>
+                    <p class="text-xs sm:text-sm text-slate-400">Simple steps to play and win</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div class="glass-panel rounded-2xl p-6 border border-brand-gold/5 hover:border-brand-gold/15 transition-all space-y-4">
+                        <div class="h-12 w-12 rounded-xl bg-brand-gold/10 text-brand-gold flex items-center justify-center font-bold text-xl">1</div>
+                        <h3 class="text-lg font-bold">Choose Numbers</h3>
+                        <p class="text-xs sm:text-sm text-slate-400">Select your lucky numbers (1-1000)</p>
+                    </div>
+
+                    <div class="glass-panel rounded-2xl p-6 border border-brand-gold/5 hover:border-brand-gold/15 transition-all space-y-4">
+                        <div class="h-12 w-12 rounded-xl bg-brand-gold/10 text-brand-gold flex items-center justify-center font-bold text-xl">2</div>
+                        <h3 class="text-lg font-bold">Pay Entry Fee</h3>
+                        <p class="text-xs sm:text-sm text-slate-400">100 ETB per ticket via Telebirr/CBE</p>
+                    </div>
+
+                    <div class="glass-panel rounded-2xl p-6 border border-brand-gold/5 hover:border-brand-gold/15 transition-all space-y-4">
+                        <div class="h-12 w-12 rounded-xl bg-brand-gold/10 text-brand-gold flex items-center justify-center font-bold text-xl">3</div>
+                        <h3 class="text-lg font-bold">Verify Payment</h3>
+                        <p class="text-xs sm:text-sm text-slate-400">Upload receipt and transaction ID</p>
+                    </div>
+
+                    <div class="glass-panel rounded-2xl p-6 border border-brand-gold/5 hover:border-brand-gold/15 transition-all space-y-4">
+                        <div class="h-12 w-12 rounded-xl bg-brand-gold/10 text-brand-gold flex items-center justify-center font-bold text-xl">4</div>
+                        <h3 class="text-lg font-bold">Watch & Win</h3>
+                        <p class="text-xs sm:text-sm text-slate-400">Tune in to daily TikTok live draw</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PAYMENT METHODS -->
+            <section class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
+                <div class="text-center max-w-xl mx-auto space-y-2">
+                    <h2 class="font-serif text-3xl font-bold">Payment Methods</h2>
+                    <p class="text-xs sm:text-sm text-slate-400">Multiple ways to play</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10 space-y-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="h-12 w-12 rounded-xl bg-blue-600/20 flex items-center justify-center text-blue-400 text-2xl">
+                                <i class="fa-solid fa-mobile-screen-button"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-lg">Telebirr</h3>
+                                <p class="text-xs text-slate-400">Fast & Secure</p>
+                            </div>
+                        </div>
+                        <div class="p-3 rounded-lg bg-brand-navy/60 border border-brand-gold/10">
+                            <p class="text-xs text-slate-400">Account:</p>
+                            <p class="text-sm font-mono font-bold text-white">0945792677</p>
+                        </div>
+                    </div>
+
+                    <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10 space-y-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="h-12 w-12 rounded-xl bg-purple-600/20 flex items-center justify-center text-purple-400 text-2xl">
+                                <i class="fa-solid fa-building-columns"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-lg">CBE Birr</h3>
+                                <p class="text-xs text-slate-400">Bank Transfer</p>
+                            </div>
+                        </div>
+                        <div class="p-3 rounded-lg bg-brand-navy/60 border border-brand-gold/10">
+                            <p class="text-xs text-slate-400">Account:</p>
+                            <p class="text-sm font-mono font-bold text-white">0945792677</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TIKTOK LIVE STREAM -->
+            <section id="live-stream" class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+                <div class="text-center max-w-xl mx-auto space-y-2">
+                    <h2 class="font-serif text-3xl font-bold">Watch Live Draws</h2>
+                    <p class="text-xs sm:text-sm text-slate-400">Daily at 8:00 PM on TikTok</p>
+                </div>
+
+                <div class="glass-panel rounded-2xl overflow-hidden border border-brand-gold/10 aspect-video flex items-center justify-center relative">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-6 z-10">
+                        <span class="inline-flex items-center space-x-2 bg-red-600/95 text-white font-extrabold text-[10px] uppercase tracking-wider px-3 py-1 rounded-full border border-red-500/25 w-fit">
+                            <span class="h-2 w-2 rounded-full bg-white animate-ping"></span>
+                            <span>LIVE</span>
+                        </span>
+                        <h3 class="text-2xl font-bold text-white mt-3 font-serif">Boni Lottery Live Draw</h3>
+                    </div>
+
+                    <div class="text-center space-y-4 z-0">
+                        <div class="h-24 w-24 mx-auto rounded-3xl bg-brand-navy flex items-center justify-center border-2 border-brand-gold/25">
+                            <i class="fa-brands fa-tiktok text-brand-gold text-5xl"></i>
+                        </div>
+                        <p class="text-slate-400">Click below to join our TikTok live stream</p>
+                        <a href="https://www.tiktok.com/@bonilottery" target="_blank" class="inline-block px-6 py-3 bg-gradient-to-r from-brand-gold to-brand-golddark text-brand-navy font-bold rounded-xl hover:scale-[1.01] transition-all">
+                            <i class="fa-brands fa-tiktok mr-2"></i>Follow on TikTok
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- FAQ SECTION -->
+            <section id="faq" class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
+                <div class="text-center max-w-xl mx-auto space-y-2">
+                    <h2 class="font-serif text-3xl font-bold">Frequently Asked Questions</h2>
+                    <p class="text-xs sm:text-sm text-slate-400">Everything you need to know</p>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10">
+                        <h3 class="font-bold text-lg text-brand-gold mb-2">How much does it cost to play?</h3>
+                        <p class="text-sm text-slate-300">Each ticket costs 100 ETB. You can select multiple numbers per ticket.</p>
+                    </div>
+
+                    <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10">
+                        <h3 class="font-bold text-lg text-brand-gold mb-2">When are the draws?</h3>
+                        <p class="text-sm text-slate-300">Live draws happen daily at 8:00 PM on our TikTok channel. Winners are announced immediately.</p>
+                    </div>
+
+                    <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10">
+                        <h3 class="font-bold text-lg text-brand-gold mb-2">How is the winning number selected?</h3>
+                        <p class="text-sm text-slate-300">We use a provably fair cryptographic algorithm (SHA-256) combined with live viewer participation to ensure complete transparency and fairness.</p>
+                    </div>
+
+                    <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10">
+                        <h3 class="font-bold text-lg text-brand-gold mb-2">How will I get paid if I win?</h3>
+                        <p class="text-sm text-slate-300">Winners will be contacted via the phone number and email they provided during registration. Prize distribution happens within 24-48 hours.</p>
+                    </div>
+
+                    <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10">
+                        <h3 class="font-bold text-lg text-brand-gold mb-2">Is the game safe and fair?</h3>
+                        <p class="text-sm text-slate-300">Yes! We use blockchain-verified random number generation and transparent draw mechanics. No admin interference possible.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- WINNERS SECTION -->
+            <section class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
+                <div class="text-center max-w-xl mx-auto space-y-2">
+                    <h2 class="font-serif text-3xl font-bold">Recent Winners</h2>
+                    <p class="text-xs sm:text-sm text-slate-400">Congratulations to our lucky winners</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-brand-gold uppercase">Winner #001</span>
+                            <i class="fa-solid fa-trophy text-brand-gold text-xl"></i>
+                        </div>
+                        <p class="font-semibold text-white">Abebe K.</p>
+                        <p class="text-2xl font-bold text-brand-gold">45,000 ETB</p>
+                        <p class="text-xs text-slate-400">Number: 742</p>
+                    </div>
+
+                    <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-brand-gold uppercase">Winner #002</span>
+                            <i class="fa-solid fa-trophy text-brand-gold text-xl"></i>
+                        </div>
+                        <p class="font-semibold text-white">Fatima H.</p>
+                        <p class="text-2xl font-bold text-brand-gold">38,500 ETB</p>
+                        <p class="text-xs text-slate-400">Number: 156</p>
+                    </div>
+
+                    <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-brand-gold uppercase">Winner #003</span>
+                            <i class="fa-solid fa-trophy text-brand-gold text-xl"></i>
+                        </div>
+                        <p class="font-semibold text-white">Ahmed M.</p>
+                        <p class="text-2xl font-bold text-brand-gold">52,000 ETB</p>
+                        <p class="text-xs text-slate-400">Number: 891</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="w-full glass-panel border-t border-brand-gold/10 px-4 py-8 text-center text-xs text-slate-500 mt-auto">
+            <div class="max-w-7xl mx-auto space-y-4">
+                <div class="flex items-center justify-center space-x-6 flex-wrap">
+                    <a href="https://www.tiktok.com/@bonilottery" target="_blank" class="text-slate-400 hover:text-brand-gold transition-colors">
+                        <i class="fa-brands fa-tiktok text-xl"></i>
+                    </a>
+                    <a href="#" class="hover:text-slate-300 transition-colors">Privacy Policy</a>
+                    <a href="#" class="hover:text-slate-300 transition-colors">Terms & Conditions</a>
+                    <a href="#" class="hover:text-slate-300 transition-colors">Responsible Gaming</a>
+                    <a href="#" class="hover:text-slate-300 transition-colors">Support</a>
+                </div>
+                <p class="font-serif text-brand-gold/80 font-semibold">© 2026 Boni Lottery. Fair. Transparent. Rewarding.</p>
+                <p>Disclaimer: Play responsibly. Must be 18+. This is for entertainment purposes only.</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- ========================================================
+         PLAY SECTION (Appears when user clicks Play Now)
+         ======================================================== -->
+    <div id="play-section" class="hidden h-full flex flex-col bg-brand-navyback">
+        <header class="sticky top-0 z-40 w-full glass-panel border-b border-brand-gold/10 px-6 py-4">
+            <div class="max-w-7xl mx-auto flex items-center justify-between">
+                <h1 class="font-serif text-2xl font-bold text-gradient">Select Your Numbers</h1>
+                <button onclick="hidePlaySection()" class="px-4 py-2 bg-red-950/30 text-red-400 text-xs font-bold rounded-xl">
+                    <i class="fa-solid fa-arrow-left mr-1.5"></i>Back
+                </button>
+            </div>
+        </header>
+
+        <main class="flex-grow overflow-y-auto custom-scrollbar p-6">
+            <div class="max-w-7xl mx-auto space-y-6">
+                <p class="text-slate-400 text-center">Select numbers from 1 to 1000. Each ticket costs 100 ETB.</p>
+
+                <div class="glass-panel rounded-3xl p-6 border border-brand-gold/10">
+                    <div id="numbers-grid" class="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-3">
+                        <!-- Numbers generated by JS -->
+                    </div>
+                </div>
+
+                <div id="selection-info" class="glass-panel rounded-2xl p-6 border border-brand-gold/10 hidden">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p id="selected-count" class="text-lg font-bold">0 Numbers Selected</p>
+                            <p id="total-cost" class="text-brand-gold font-bold">0 ETB Total</p>
+                        </div>
+                        <button onclick="proceedToCheckout()" class="px-6 py-3 bg-gradient-to-r from-brand-gold to-brand-golddark text-brand-navy font-bold rounded-xl">
+                            Proceed to Checkout
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let selectedNumbers = [];
+        const ticketPrice = 100;
+
+        function openLoginModal() {
+            document.getElementById('admin-login-modal').classList.remove('hidden');
+        }
+
+        function closeLoginModal() {
+            document.getElementById('admin-login-modal').classList.add('hidden');
+        }
+
+        function showPlaySection() {
+            document.getElementById('public-platform').classList.add('hidden');
+            document.getElementById('play-section').classList.remove('hidden');
+            generateNumbersGrid();
+        }
+
+        function hidePlaySection() {
+            document.getElementById('play-section').classList.add('hidden');
+            document.getElementById('public-platform').classList.remove('hidden');
+            selectedNumbers = [];
+        }
+
+        function generateNumbersGrid() {
+            const grid = document.getElementById('numbers-grid');
+            grid.innerHTML = '';
+
+            for (let i = 1; i <= 1000; i++) {
+                const btn = document.createElement('button');
+                btn.className = `aspect-square rounded-lg text-xs font-bold border transition-all ${
+                    selectedNumbers.includes(i)
+                        ? 'bg-brand-gold border-brand-gold text-brand-navy shadow-lg'
+                        : 'bg-brand-navycard/40 hover:bg-brand-navycard border-brand-gold/15 text-slate-300'
+                }`;
+                btn.innerHTML = String(i).padStart(3, '0');
+                btn.onclick = () => toggleNumber(i);
+                grid.appendChild(btn);
+            }
+        }
+
+        function toggleNumber(num) {
+            const idx = selectedNumbers.indexOf(num);
+            if (idx > -1) {
+                selectedNumbers.splice(idx, 1);
+            } else {
+                selectedNumbers.push(num);
+            }
+            updateUI();
+            generateNumbersGrid();
+        }
+
+        function updateUI() {
+            const info = document.getElementById('selection-info');
+            if (selectedNumbers.length > 0) {
+                info.classList.remove('hidden');
+                document.getElementById('selected-count').textContent = `${selectedNumbers.length} Number${selectedNumbers.length > 1 ? 's' : ''} Selected`;
+                document.getElementById('total-cost').textContent = `${selectedNumbers.length * ticketPrice} ETB Total`;
+            } else {
+                info.classList.add('hidden');
+            }
+        }
+
+        function proceedToCheckout() {
+            alert(`You selected ${selectedNumbers.length} numbers (${selectedNumbers.length * ticketPrice} ETB). Coming soon: Payment & verification page!`);
+        }
+
+        function scrollToSection(sectionId) {
+            const element = document.getElementById(sectionId);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        async function handleAdminLogin(event) {
+            event.preventDefault();
+            const email = document.getElementById('admin-email').value;
+            const password = document.getElementById('admin-password').value;
+            const errorDiv = document.getElementById('admin-error-msg');
+
+            try {
+                errorDiv.classList.add('hidden');
+                const adminData = await window.simpleAdminLogin(email, password);
+                localStorage.setItem('adminUser', JSON.stringify(adminData));
+                closeLoginModal();
+
+                document.getElementById('public-platform').classList.add('hidden');
+                document.getElementById('admin-dashboard-view').classList.remove('hidden');
+                showNotificationToast(`Welcome, ${adminData.name}!`);
+            } catch (error) {
+                errorDiv.classList.remove('hidden');
+                errorDiv.textContent = error.message;
+            }
+        }
+
+        function adminLogout() {
+            if (confirm("Logout?")) {
+                localStorage.removeItem('adminUser');
+                document.getElementById('admin-dashboard-view').classList.add('hidden');
+                document.getElementById('public-platform').classList.remove('hidden');
+                showNotificationToast("Logged out");
+            }
+        }
+
+        function showNotificationToast(message) {
+            const toast = document.createElement('div');
+            toast.className = "flex items-center space-x-3 p-4 rounded-xl shadow-lg bg-brand-navy border border-brand-gold/30 text-brand-goldlight text-xs font-semibold";
+            toast.innerHTML = `<i class="fa-solid fa-circle-check text-brand-gold"></i><span>${message}</span>`;
+            document.getElementById('toast-container').appendChild(toast);
+            setTimeout(() => {
+                toast.remove();
+            }, 4000);
+        }
+
+        function startCountdown() {
+            setInterval(() => {
+                const now = new Date();
+                const nextDraw = new Date();
+                nextDraw.setHours(20, 0, 0, 0);
+                if (now.getHours() >= 20) nextDraw.setDate(nextDraw.getDate() + 1);
+                
+                const delta = nextDraw - now;
+                const hours = Math.floor(delta / 3600000);
+                const minutes = Math.floor((delta % 3600000) / 60000);
+                const seconds = Math.floor((delta % 60000) / 1000);
+                
+                const timer = document.getElementById('countdown-timer');
+                if (timer) {
+                    timer.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                }
+            }, 1000);
+        }
+
+        window.addEventListener('load', () => {
+            startCountdown();
+            const saved = localStorage.getItem('adminUser');
+            if (saved) {
+                document.getElementById('public-platform').classList.add('hidden');
+                document.getElementById('admin-dashboard-view').classList.remove('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
                     <i class="fa-solid fa-arrow-right-to-bracket mr-1.5"></i>Login
                 </button>
             </form>
