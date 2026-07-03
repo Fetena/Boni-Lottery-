@@ -3,12 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Boni Lottery Platform - Admin & Customer Portal</title>
+    <title>Boni Lottery - Admin Portal</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&display=swap" rel="stylesheet">
 
     <script>
@@ -28,10 +26,6 @@
                             golddark: '#A39050',
                             goldlight: '#EAD99E',
                         }
-                    },
-                    boxShadow: {
-                        'glow': '0 0 15px rgba(200, 184, 123, 0.2)',
-                        'glow-lg': '0 0 25px rgba(200, 184, 123, 0.35)',
                     }
                 }
             }
@@ -39,8 +33,7 @@
     </script>
 
     <style>
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(10, 29, 47, 0.5); }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(200, 184, 123, 0.3); border-radius: 99px; }
         .glass-panel {
             background: rgba(15, 39, 61, 0.45);
@@ -54,71 +47,48 @@
         }
     </style>
 
-    <!-- Firebase Config -->
+    <!-- Firebase -->
     <script type="module">
       import { db, auth } from './firebase-config.js';
       window.db = db;
       window.auth = auth;
-      console.log("✅ Firebase Connected!");
     </script>
 
-    <!-- Guest Ticketing System -->
+    <!-- Simple Admin -->
     <script type="module">
-      import * as guestTicketing from './guest-ticketing.js';
-      window.guestTicketing = guestTicketing;
-    </script>
-
-    <!-- Admin Management -->
-    <script type="module">
-      import * as adminManagement from './admin-management.js';
-      window.adminManagement = adminManagement;
-    </script>
-
-    <!-- Payment System -->
-    <script type="module">
-      import * as paymentSystem from './payment-automation.js';
-      window.paymentSystem = paymentSystem;
+      import * as simpleAdmin from './simple-admin.js';
+      window.simpleAdmin = simpleAdmin;
     </script>
 </head>
-<body class="h-full font-sans antialiased bg-brand-navyback text-slate-100 flex flex-col custom-scrollbar overflow-x-hidden">
+<body class="h-full font-sans antialiased bg-brand-navyback text-slate-100 flex flex-col overflow-x-hidden">
 
-    <!-- TOAST NOTIFICATION -->
+    <!-- TOAST -->
     <div id="toast-container" class="fixed top-20 right-4 z-50 pointer-events-none space-y-2 max-w-sm w-full"></div>
 
     <!-- ========================================================
-         ADMIN LOGIN PAGE (Shows initially if not logged in)
+         ADMIN LOGIN MODAL
          ======================================================== -->
-    <div id="admin-login-page" class="fixed inset-0 z-[9999] bg-brand-navyback flex items-center justify-center p-4">
-        <div class="glass-panel rounded-3xl p-8 max-w-md w-full border border-brand-gold/20 space-y-8">
-            <div class="text-center space-y-2">
-                <div class="h-16 w-16 rounded-2xl bg-gradient-to-br from-brand-gold to-brand-golddark flex items-center justify-center mx-auto text-brand-navy shadow-glow">
+    <div id="admin-login-modal" class="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4">
+        <div class="glass-panel rounded-3xl p-8 max-w-md w-full border border-brand-gold/20 space-y-6">
+            <div class="text-center">
+                <div class="h-16 w-16 rounded-2xl bg-gradient-to-br from-brand-gold to-brand-golddark flex items-center justify-center mx-auto text-brand-navy mb-4">
                     <i class="fa-solid fa-shield-halved text-2xl"></i>
                 </div>
-                <h1 class="text-2xl font-serif font-bold text-white">Boni Admin</h1>
-                <p class="text-xs text-slate-400">Admin Portal Access</p>
+                <h2 class="text-2xl font-serif font-bold text-white">Admin Portal</h2>
+                <p class="text-xs text-slate-400 mt-2">Secure Access</p>
             </div>
 
-            <div class="flex gap-2 bg-brand-navy/60 p-1 rounded-xl border border-brand-gold/10">
-                <button onclick="switchAdminMode('admin')" id="admin-mode-btn" class="flex-1 py-2 rounded-lg text-xs font-bold text-brand-gold bg-brand-navycard/85">
-                    <i class="fa-solid fa-user-shield mr-1"></i>Admin
-                </button>
-                <button onclick="switchAdminMode('customer')" id="customer-mode-btn" class="flex-1 py-2 rounded-lg text-xs font-bold text-slate-400 hover:text-white">
-                    <i class="fa-solid fa-user mr-1"></i>Customer
-                </button>
-            </div>
-
-            <!-- ADMIN LOGIN FORM -->
             <form id="admin-login-form" onsubmit="handleAdminLogin(event)" class="space-y-4">
-                <div class="space-y-2">
-                    <label class="block text-xs font-semibold text-slate-400 uppercase">Admin Email</label>
-                    <input type="email" id="admin-email" placeholder="admin@boni.com" required class="w-full bg-brand-navy/60 border border-brand-gold/15 focus:border-brand-gold rounded-xl py-3 px-4 text-sm text-white outline-none">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-2">Email</label>
+                    <input type="email" id="admin-email" placeholder="fita.regassa@gmail.com" required class="w-full bg-brand-navy/60 border border-brand-gold/15 focus:border-brand-gold rounded-xl py-3 px-4 text-sm text-white outline-none">
                 </div>
-                <div class="space-y-2">
-                    <label class="block text-xs font-semibold text-slate-400 uppercase">Password</label>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-2">Password</label>
                     <input type="password" id="admin-password" placeholder="••••••••" required class="w-full bg-brand-navy/60 border border-brand-gold/15 focus:border-brand-gold rounded-xl py-3 px-4 text-sm text-white outline-none">
                 </div>
-                <button type="submit" class="w-full py-3 bg-gradient-to-r from-brand-gold to-brand-golddark text-brand-navy font-bold rounded-xl hover:scale-[1.01] active:scale-95 transition-all">
-                    <i class="fa-solid fa-arrow-right-to-bracket mr-1.5"></i>Admin Login
+                <button type="submit" class="w-full py-3 bg-gradient-to-r from-brand-gold to-brand-golddark text-brand-navy font-bold rounded-xl hover:scale-[1.01] transition-all">
+                    <i class="fa-solid fa-arrow-right-to-bracket mr-1.5"></i>Login
                 </button>
             </form>
 
@@ -127,84 +97,148 @@
     </div>
 
     <!-- ========================================================
-         ADMIN DASHBOARD WRAPPER
+         ADMIN DASHBOARD
          ======================================================== -->
-    <div id="admin-dashboard-wrapper" class="hidden h-full flex flex-col bg-brand-navyback">
+    <div id="admin-dashboard" class="hidden h-full flex flex-col">
         
-        <!-- Admin Header -->
+        <!-- Header -->
         <header class="sticky top-0 z-40 w-full glass-panel border-b border-brand-gold/10 px-6 py-4">
             <div class="max-w-7xl mx-auto flex items-center justify-between">
                 <div class="flex items-center space-x-3">
-                    <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-brand-gold to-brand-golddark flex items-center justify-center text-brand-navy shadow-glow">
+                    <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-brand-gold to-brand-golddark flex items-center justify-center text-brand-navy">
                         <i class="fa-solid fa-shield-halved"></i>
                     </div>
                     <div>
                         <h1 class="font-serif text-xl font-bold text-gradient">BONI ADMIN</h1>
-                        <p class="text-xs text-slate-400" id="admin-welcome-text">Welcome, Admin</p>
+                        <p class="text-xs text-slate-400" id="admin-welcome">Welcome</p>
                     </div>
                 </div>
-                <button onclick="adminLogout()" class="px-4 py-2 bg-red-950/30 hover:bg-red-950/50 text-red-400 text-xs font-bold rounded-xl border border-red-900/30 transition-all">
+                <button onclick="adminLogout()" class="px-4 py-2 bg-red-950/30 hover:bg-red-950/50 text-red-400 text-xs font-bold rounded-xl border border-red-900/30">
                     <i class="fa-solid fa-sign-out-alt mr-1.5"></i>Logout
                 </button>
             </div>
         </header>
 
-        <!-- Admin Navigation -->
-        <nav class="flex gap-2 px-6 py-4 border-b border-brand-gold/10 bg-brand-navy/20 overflow-x-auto custom-scrollbar">
-            <button onclick="switchAdminTab('dashboard')" id="tab-dashboard" class="px-4 py-2 text-xs font-bold rounded-lg bg-brand-gold text-brand-navy whitespace-nowrap">
-                <i class="fa-solid fa-chart-line mr-1.5"></i>Dashboard
-            </button>
-            <button onclick="switchAdminTab('manage-admins')" id="tab-manage-admins" class="px-4 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white whitespace-nowrap">
-                <i class="fa-solid fa-users mr-1.5"></i>Manage Admins
-            </button>
-            <button onclick="switchAdminTab('payments')" id="tab-payments" class="px-4 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white whitespace-nowrap">
-                <i class="fa-solid fa-credit-card mr-1.5"></i>Payments
-            </button>
-            <button onclick="switchAdminTab('tickets')" id="tab-tickets" class="px-4 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white whitespace-nowrap">
-                <i class="fa-solid fa-ticket mr-1.5"></i>Tickets
-            </button>
-            <button onclick="switchAdminTab('customers')" id="tab-customers" class="px-4 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white whitespace-nowrap">
-                <i class="fa-solid fa-people mr-1.5"></i>Customers
-            </button>
-            <button onclick="switchAdminTab('activity')" id="tab-activity" class="px-4 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white whitespace-nowrap">
-                <i class="fa-solid fa-history mr-1.5"></i>Activity Log
-            </button>
+        <!-- Dynamic Navigation Tabs (Based on Permissions) -->
+        <nav id="admin-nav-tabs" class="flex gap-2 px-6 py-4 border-b border-brand-gold/10 bg-brand-navy/20 overflow-x-auto custom-scrollbar">
+            <!-- Tabs will be generated based on admin permissions -->
         </nav>
 
-        <!-- Admin Content Area -->
+        <!-- Content Area -->
         <main class="flex-grow overflow-y-auto custom-scrollbar p-6">
             <div class="max-w-7xl mx-auto space-y-6">
 
-                <!-- DASHBOARD TAB -->
+                <!-- DASHBOARD TAB (All Admins see this) -->
                 <section id="admin-view-dashboard" class="space-y-6 block">
                     <h2 class="text-3xl font-serif font-bold text-white">Admin Dashboard</h2>
-                    
-                    <!-- Stats Grid -->
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10 space-y-2">
-                            <span class="text-xs text-slate-400 font-semibold uppercase">Total Admins</span>
-                            <p id="stat-total-admins" class="text-3xl font-bold text-brand-gold">0</p>
-                        </div>
-                        <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10 space-y-2">
+                        <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10">
                             <span class="text-xs text-slate-400 font-semibold uppercase">Pending Payments</span>
-                            <p id="stat-pending-payments" class="text-3xl font-bold text-yellow-500">0</p>
+                            <p class="text-3xl font-bold text-yellow-500 mt-2">0</p>
                         </div>
-                        <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10 space-y-2">
+                        <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10">
                             <span class="text-xs text-slate-400 font-semibold uppercase">Active Tickets</span>
-                            <p id="stat-active-tickets" class="text-3xl font-bold text-emerald-500">0</p>
+                            <p class="text-3xl font-bold text-emerald-500 mt-2">0</p>
                         </div>
-                        <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10 space-y-2">
+                        <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10">
                             <span class="text-xs text-slate-400 font-semibold uppercase">Total Customers</span>
-                            <p id="stat-total-customers" class="text-3xl font-bold text-blue-500">0</p>
+                            <p class="text-3xl font-bold text-blue-500 mt-2">0</p>
+                        </div>
+                        <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10">
+                            <span class="text-xs text-slate-400 font-semibold uppercase">Total Admins</span>
+                            <p class="text-3xl font-bold text-purple-500 mt-2">0</p>
                         </div>
                     </div>
                 </section>
 
-                <!-- MANAGE ADMINS TAB -->
+                <!-- PAYMENT TAB (Only if permission granted) -->
+                <section id="admin-view-payment" class="space-y-6 hidden">
+                    <h2 class="text-3xl font-serif font-bold text-white">Payment Verification</h2>
+                    <div class="glass-panel rounded-2xl overflow-hidden border border-brand-gold/10">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-brand-navy text-slate-300 border-b border-brand-gold/10 font-semibold">
+                                <tr>
+                                    <th class="p-4">Customer</th>
+                                    <th class="p-4">Amount</th>
+                                    <th class="p-4">Method</th>
+                                    <th class="p-4">Date</th>
+                                    <th class="p-4">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-brand-gold/5">
+                                <tr><td colspan="5" class="p-4 text-center text-slate-400">No pending payments</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- TICKET TAB (Only if permission granted) -->
+                <section id="admin-view-ticket" class="space-y-6 hidden">
+                    <h2 class="text-3xl font-serif font-bold text-white">Ticket Management</h2>
+                    <div class="glass-panel rounded-2xl overflow-hidden border border-brand-gold/10">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-brand-navy text-slate-300 border-b border-brand-gold/10 font-semibold">
+                                <tr>
+                                    <th class="p-4">Ticket ID</th>
+                                    <th class="p-4">Customer</th>
+                                    <th class="p-4">Numbers</th>
+                                    <th class="p-4">Amount</th>
+                                    <th class="p-4">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-brand-gold/5">
+                                <tr><td colspan="5" class="p-4 text-center text-slate-400">No tickets yet</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- CUSTOMER TAB (Only if permission granted) -->
+                <section id="admin-view-customer" class="space-y-6 hidden">
+                    <h2 class="text-3xl font-serif font-bold text-white">Customer Management</h2>
+                    <div class="glass-panel rounded-2xl overflow-hidden border border-brand-gold/10">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-brand-navy text-slate-300 border-b border-brand-gold/10 font-semibold">
+                                <tr>
+                                    <th class="p-4">Name</th>
+                                    <th class="p-4">Phone</th>
+                                    <th class="p-4">Email</th>
+                                    <th class="p-4">Tickets</th>
+                                    <th class="p-4">Total Spent</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-brand-gold/5">
+                                <tr><td colspan="5" class="p-4 text-center text-slate-400">No customers yet</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- AUDIT TAB (Only if permission granted) -->
+                <section id="admin-view-audit" class="space-y-6 hidden">
+                    <h2 class="text-3xl font-serif font-bold text-white">Activity Log</h2>
+                    <div class="glass-panel rounded-2xl overflow-hidden border border-brand-gold/10">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-brand-navy text-slate-300 border-b border-brand-gold/10 font-semibold">
+                                <tr>
+                                    <th class="p-4">Admin</th>
+                                    <th class="p-4">Action</th>
+                                    <th class="p-4">Details</th>
+                                    <th class="p-4">Timestamp</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-brand-gold/5">
+                                <tr><td colspan="4" class="p-4 text-center text-slate-400">No activity yet</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- MANAGE ADMINS TAB (Only for Main Admin) -->
                 <section id="admin-view-manage-admins" class="space-y-6 hidden">
                     <div class="flex items-center justify-between">
-                        <h2 class="text-3xl font-serif font-bold text-white">Manage Admin Accounts</h2>
-                        <button onclick="showCreateAdminForm()" class="px-4 py-2 bg-gradient-to-r from-brand-gold to-brand-golddark text-brand-navy font-bold rounded-xl">
+                        <h2 class="text-3xl font-serif font-bold text-white">Manage Admin Access</h2>
+                        <button onclick="showCreateAdminForm()" class="px-4 py-2 bg-gradient-to-r from-brand-gold to-brand-golddark text-brand-navy font-bold rounded-xl text-xs">
                             <i class="fa-solid fa-plus mr-1.5"></i>Create Admin
                         </button>
                     </div>
@@ -216,19 +250,39 @@
                             <input type="text" id="new-admin-name" placeholder="Admin Name" class="bg-brand-navy/60 border border-brand-gold/15 rounded-xl py-2 px-4 text-sm text-white outline-none">
                             <input type="email" id="new-admin-email" placeholder="Email" class="bg-brand-navy/60 border border-brand-gold/15 rounded-xl py-2 px-4 text-sm text-white outline-none">
                             <input type="password" id="new-admin-password" placeholder="Password" class="bg-brand-navy/60 border border-brand-gold/15 rounded-xl py-2 px-4 text-sm text-white outline-none">
-                            <select id="new-admin-permission" class="bg-brand-navy/60 border border-brand-gold/15 rounded-xl py-2 px-4 text-sm text-white outline-none">
-                                <option value="">Select Permission Level</option>
-                                <option value="ticket_manager">Ticket Manager</option>
-                                <option value="payment_verifier">Payment Verifier</option>
-                                <option value="customer_support">Customer Support</option>
-                                <option value="draw_operator">Draw Operator</option>
-                            </select>
                         </div>
+
+                        <div class="space-y-3">
+                            <label class="block text-sm font-bold text-slate-300">Grant Tab Permissions:</label>
+                            <div class="grid grid-cols-2 gap-3">
+                                <label class="flex items-center space-x-2 cursor-pointer">
+                                    <input type="checkbox" id="perm-payment" class="w-4 h-4 rounded accent-brand-gold">
+                                    <span class="text-xs text-slate-300">Payment Verification</span>
+                                </label>
+                                <label class="flex items-center space-x-2 cursor-pointer">
+                                    <input type="checkbox" id="perm-ticket" class="w-4 h-4 rounded accent-brand-gold">
+                                    <span class="text-xs text-slate-300">Ticket Management</span>
+                                </label>
+                                <label class="flex items-center space-x-2 cursor-pointer">
+                                    <input type="checkbox" id="perm-customer" class="w-4 h-4 rounded accent-brand-gold">
+                                    <span class="text-xs text-slate-300">Customer Management</span>
+                                </label>
+                                <label class="flex items-center space-x-2 cursor-pointer">
+                                    <input type="checkbox" id="perm-audit" class="w-4 h-4 rounded accent-brand-gold">
+                                    <span class="text-xs text-slate-300">Activity Log</span>
+                                </label>
+                                <label class="flex items-center space-x-2 cursor-pointer">
+                                    <input type="checkbox" id="perm-draw" class="w-4 h-4 rounded accent-brand-gold">
+                                    <span class="text-xs text-slate-300">Draw Operator</span>
+                                </label>
+                            </div>
+                        </div>
+
                         <div class="flex gap-2">
-                            <button onclick="createNewAdmin()" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl">
+                            <button onclick="createNewAdmin()" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs">
                                 <i class="fa-solid fa-check mr-1.5"></i>Create
                             </button>
-                            <button onclick="hideCreateAdminForm()" class="flex-1 py-2 bg-slate-600 hover:bg-slate-700 text-white font-bold rounded-xl">
+                            <button onclick="hideCreateAdminForm()" type="button" class="flex-1 py-2 bg-slate-600 hover:bg-slate-700 text-white font-bold rounded-xl text-xs">
                                 <i class="fa-solid fa-times mr-1.5"></i>Cancel
                             </button>
                         </div>
@@ -242,114 +296,13 @@
                                     <tr>
                                         <th class="p-4">Name</th>
                                         <th class="p-4">Email</th>
-                                        <th class="p-4">Permission Level</th>
+                                        <th class="p-4">Permissions</th>
                                         <th class="p-4">Status</th>
-                                        <th class="p-4">Last Login</th>
                                         <th class="p-4">Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody id="admins-table-body" class="divide-y divide-brand-gold/5">
-                                    <tr><td colspan="6" class="p-4 text-center text-slate-400">Loading admins...</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- PAYMENTS TAB -->
-                <section id="admin-view-payments" class="space-y-6 hidden">
-                    <h2 class="text-3xl font-serif font-bold text-white">Payment Verification</h2>
-                    
-                    <!-- Pending Payments -->
-                    <div class="glass-panel rounded-2xl overflow-hidden border border-brand-gold/10">
-                        <div class="p-4 border-b border-brand-gold/10 bg-brand-navy/60">
-                            <h3 class="font-bold text-lg"><i class="fa-solid fa-hourglass-half mr-2 text-yellow-500"></i>Pending Payments</h3>
-                        </div>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left text-xs">
-                                <thead class="bg-brand-navy text-slate-300 border-b border-brand-gold/10 font-semibold">
-                                    <tr>
-                                        <th class="p-4">Ticket ID</th>
-                                        <th class="p-4">Customer</th>
-                                        <th class="p-4">Amount</th>
-                                        <th class="p-4">Transaction Ref</th>
-                                        <th class="p-4">Method</th>
-                                        <th class="p-4">Date</th>
-                                        <th class="p-4">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="pending-payments-table" class="divide-y divide-brand-gold/5">
-                                    <tr><td colspan="7" class="p-4 text-center text-slate-400">Loading payments...</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- TICKETS TAB -->
-                <section id="admin-view-tickets" class="space-y-6 hidden">
-                    <h2 class="text-3xl font-serif font-bold text-white">Ticket Management</h2>
-                    <div class="glass-panel rounded-2xl overflow-hidden border border-brand-gold/10">
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left text-xs">
-                                <thead class="bg-brand-navy text-slate-300 border-b border-brand-gold/10 font-semibold">
-                                    <tr>
-                                        <th class="p-4">Ticket ID</th>
-                                        <th class="p-4">Customer</th>
-                                        <th class="p-4">Numbers</th>
-                                        <th class="p-4">Amount</th>
-                                        <th class="p-4">Status</th>
-                                        <th class="p-4">Date</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tickets-table-body" class="divide-y divide-brand-gold/5">
-                                    <tr><td colspan="6" class="p-4 text-center text-slate-400">Loading tickets...</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- CUSTOMERS TAB -->
-                <section id="admin-view-customers" class="space-y-6 hidden">
-                    <h2 class="text-3xl font-serif font-bold text-white">Customer Management</h2>
-                    <div class="glass-panel rounded-2xl overflow-hidden border border-brand-gold/10">
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left text-xs">
-                                <thead class="bg-brand-navy text-slate-300 border-b border-brand-gold/10 font-semibold">
-                                    <tr>
-                                        <th class="p-4">Name</th>
-                                        <th class="p-4">Phone</th>
-                                        <th class="p-4">Email</th>
-                                        <th class="p-4">Total Tickets</th>
-                                        <th class="p-4">Total Spent</th>
-                                        <th class="p-4">Joined</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="customers-table-body" class="divide-y divide-brand-gold/5">
-                                    <tr><td colspan="6" class="p-4 text-center text-slate-400">Loading customers...</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- ACTIVITY LOG TAB -->
-                <section id="admin-view-activity" class="space-y-6 hidden">
-                    <h2 class="text-3xl font-serif font-bold text-white">Admin Activity Log</h2>
-                    <div class="glass-panel rounded-2xl overflow-hidden border border-brand-gold/10">
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left text-xs">
-                                <thead class="bg-brand-navy text-slate-300 border-b border-brand-gold/10 font-semibold">
-                                    <tr>
-                                        <th class="p-4">Admin</th>
-                                        <th class="p-4">Action</th>
-                                        <th class="p-4">Details</th>
-                                        <th class="p-4">Timestamp</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="activity-log-body" class="divide-y divide-brand-gold/5">
-                                    <tr><td colspan="4" class="p-4 text-center text-slate-400">Loading activity...</td></tr>
+                                <tbody id="admins-list-table" class="divide-y divide-brand-gold/5">
+                                    <tr><td colspan="5" class="p-4 text-center text-slate-400">Loading admins...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -360,41 +313,13 @@
         </main>
     </div>
 
-    <!-- ========================================================
-         CUSTOMER AREA (Original Lottery Platform)
-         ======================================================== -->
-    <div id="customer-area" class="hidden h-full flex flex-col">
-        <!-- Customer content will be loaded here -->
-        <div class="flex-grow flex items-center justify-center">
-            <div class="text-center space-y-4">
-                <div class="h-20 w-20 mx-auto rounded-3xl bg-brand-gold/10 flex items-center justify-center">
-                    <i class="fa-solid fa-loading text-brand-gold text-4xl animate-spin"></i>
-                </div>
-                <p class="text-slate-400">Loading customer platform...</p>
-            </div>
-        </div>
-    </div>
-
     <!-- JAVASCRIPT -->
     <script>
-        let currentAdminMode = 'admin';
-        let currentAdminTab = 'dashboard';
         let currentAdminUser = null;
+        let currentAdminPermissions = [];
 
-        // Show/Hide Admin Login
-        function switchAdminMode(mode) {
-            currentAdminMode = mode;
-            
-            if (mode === 'admin') {
-                document.getElementById('admin-mode-btn').className = "flex-1 py-2 rounded-lg text-xs font-bold text-brand-gold bg-brand-navycard/85";
-                document.getElementById('customer-mode-btn').className = "flex-1 py-2 rounded-lg text-xs font-bold text-slate-400 hover:text-white";
-            } else {
-                document.getElementById('customer-mode-btn').className = "flex-1 py-2 rounded-lg text-xs font-bold text-brand-gold bg-brand-navycard/85";
-                document.getElementById('admin-mode-btn').className = "flex-1 py-2 rounded-lg text-xs font-bold text-slate-400 hover:text-white";
-            }
-        }
+        // ==================== ADMIN LOGIN ====================
 
-        // Admin Login
         async function handleAdminLogin(event) {
             event.preventDefault();
             const email = document.getElementById('admin-email').value;
@@ -403,18 +328,15 @@
 
             try {
                 errorDiv.classList.add('hidden');
-                const adminData = await window.adminManagement.adminLogin(email, password);
+                const adminData = await window.simpleAdminLogin(email, password);
                 
                 currentAdminUser = adminData;
+                currentAdminPermissions = adminData.permissions || [];
+
                 localStorage.setItem('adminUser', JSON.stringify(adminData));
                 
-                // Show admin dashboard
-                document.getElementById('admin-login-page').classList.add('hidden');
-                document.getElementById('admin-dashboard-wrapper').classList.remove('hidden');
-                document.getElementById('admin-welcome-text').innerHTML = `Welcome, ${adminData.name}`;
-                
-                showNotificationToast(`Welcome back, ${adminData.name}!`);
-                loadAdminDashboard();
+                showAdminDashboard();
+                showNotificationToast(`Welcome, ${adminData.name}!`);
 
             } catch (error) {
                 errorDiv.classList.remove('hidden');
@@ -422,94 +344,179 @@
             }
         }
 
-        // Admin Logout
-        function adminLogout() {
-            if (confirm("Are you sure you want to logout?")) {
-                currentAdminUser = null;
-                localStorage.removeItem('adminUser');
-                document.getElementById('admin-login-page').classList.remove('hidden');
-                document.getElementById('admin-dashboard-wrapper').classList.add('hidden');
-                document.getElementById('admin-email').value = '';
-                document.getElementById('admin-password').value = '';
-                showNotificationToast("You have been logged out");
+        function showAdminDashboard() {
+            document.getElementById('admin-login-modal').classList.add('hidden');
+            document.getElementById('admin-dashboard').classList.remove('hidden');
+            document.getElementById('admin-welcome').textContent = `Welcome, ${currentAdminUser.name}`;
+            
+            buildAdminNavigation();
+            switchAdminTab('dashboard');
+        }
+
+        // ==================== DYNAMIC NAVIGATION ====================
+
+        function buildAdminNavigation() {
+            const navContainer = document.getElementById('admin-nav-tabs');
+            navContainer.innerHTML = '';
+
+            // Dashboard - everyone sees this
+            addNavTab('dashboard', 'Dashboard', 'fa-chart-line');
+
+            // Payment - if permission granted
+            if (currentAdminPermissions.includes('payment')) {
+                addNavTab('payment', 'Payments', 'fa-credit-card');
+            }
+
+            // Ticket - if permission granted
+            if (currentAdminPermissions.includes('ticket')) {
+                addNavTab('ticket', 'Tickets', 'fa-ticket');
+            }
+
+            // Customer - if permission granted
+            if (currentAdminPermissions.includes('customer')) {
+                addNavTab('customer', 'Customers', 'fa-people-group');
+            }
+
+            // Audit - if permission granted
+            if (currentAdminPermissions.includes('audit')) {
+                addNavTab('audit', 'Activity Log', 'fa-history');
+            }
+
+            // Draw - if permission granted
+            if (currentAdminPermissions.includes('draw')) {
+                addNavTab('draw', 'Draw Operator', 'fa-dice');
+            }
+
+            // Manage Admins - ONLY for main_admin
+            if (currentAdminUser.permissionLevel === 'main_admin') {
+                addNavTab('manage-admins', 'Manage Admins', 'fa-users-cog');
             }
         }
 
-        // Switch Admin Tab
+        function addNavTab(id, label, icon) {
+            const navContainer = document.getElementById('admin-nav-tabs');
+            const btn = document.createElement('button');
+            btn.id = `tab-${id}`;
+            btn.className = "px-4 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white whitespace-nowrap transition-all";
+            btn.innerHTML = `<i class="fa-solid fa-${icon} mr-1.5"></i>${label}`;
+            btn.onclick = () => switchAdminTab(id);
+            navContainer.appendChild(btn);
+        }
+
         function switchAdminTab(tabName) {
-            currentAdminTab = tabName;
-            
             // Hide all views
-            const views = ['dashboard', 'manage-admins', 'payments', 'tickets', 'customers', 'activity'];
+            const views = ['dashboard', 'payment', 'ticket', 'customer', 'audit', 'manage-admins'];
             views.forEach(v => {
-                document.getElementById(`admin-view-${v}`).classList.add('hidden');
-                document.getElementById(`tab-${v}`).classList.remove('!bg-brand-gold', '!text-brand-navy');
-                document.getElementById(`tab-${v}`).className = document.getElementById(`tab-${v}`).className.replace('bg-brand-gold text-brand-navy', '');
+                const view = document.getElementById(`admin-view-${v}`);
+                if (view) {
+                    view.classList.add('hidden');
+                }
+                const tab = document.getElementById(`tab-${v}`);
+                if (tab) {
+                    tab.className = "px-4 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white whitespace-nowrap transition-all";
+                }
             });
 
             // Show selected view
-            document.getElementById(`admin-view-${tabName}`).classList.remove('hidden');
-            document.getElementById(`tab-${tabName}`).className = "px-4 py-2 text-xs font-bold rounded-lg bg-brand-gold text-brand-navy whitespace-nowrap";
+            const selectedView = document.getElementById(`admin-view-${tabName}`);
+            if (selectedView) {
+                selectedView.classList.remove('hidden');
+            }
+            const selectedTab = document.getElementById(`tab-${tabName}`);
+            if (selectedTab) {
+                selectedTab.className = "px-4 py-2 text-xs font-bold rounded-lg bg-brand-gold text-brand-navy whitespace-nowrap";
+            }
 
             // Load data for tab
-            loadAdminTabData(tabName);
-        }
-
-        // Load Admin Dashboard Data
-        async function loadAdminDashboard() {
-            try {
-                // Get stats
-                const adminCount = (await window.adminManagement.getAllAdmins()).length;
-                const paymentStats = await window.paymentSystem.getPaymentStats();
-                
-                document.getElementById('stat-total-admins').textContent = adminCount;
-                document.getElementById('stat-pending-payments').textContent = paymentStats?.pending || 0;
-                document.getElementById('stat-active-tickets').textContent = '0';
-                document.getElementById('stat-total-customers').textContent = '0';
-
-            } catch (error) {
-                console.error("Error loading dashboard:", error);
-            }
-        }
-
-        // Load Admin Tab Data
-        async function loadAdminTabData(tabName) {
             if (tabName === 'manage-admins') {
                 loadAdminsList();
-            } else if (tabName === 'payments') {
-                loadPendingPayments();
-            } else if (tabName === 'tickets') {
-                loadTicketsData();
-            } else if (tabName === 'customers') {
-                loadCustomersData();
-            } else if (tabName === 'activity') {
-                loadActivityLogs();
             }
         }
 
-        // Load Admins List
+        // ==================== MANAGE ADMINS (Main Admin Only) ====================
+
+        function showCreateAdminForm() {
+            document.getElementById('create-admin-form').classList.remove('hidden');
+        }
+
+        function hideCreateAdminForm() {
+            document.getElementById('create-admin-form').classList.add('hidden');
+            document.getElementById('new-admin-name').value = '';
+            document.getElementById('new-admin-email').value = '';
+            document.getElementById('new-admin-password').value = '';
+            document.querySelectorAll('input[id^="perm-"]').forEach(el => el.checked = false);
+        }
+
+        async function createNewAdmin() {
+            const name = document.getElementById('new-admin-name').value;
+            const email = document.getElementById('new-admin-email').value;
+            const password = document.getElementById('new-admin-password').value;
+
+            if (!name || !email || !password) {
+                showNotificationToast("Fill all fields", "error");
+                return;
+            }
+
+            // Get selected permissions
+            const permissions = [];
+            if (document.getElementById('perm-payment').checked) permissions.push('payment');
+            if (document.getElementById('perm-ticket').checked) permissions.push('ticket');
+            if (document.getElementById('perm-customer').checked) permissions.push('customer');
+            if (document.getElementById('perm-audit').checked) permissions.push('audit');
+            if (document.getElementById('perm-draw').checked) permissions.push('draw');
+
+            try {
+                const { addDoc, collection } = await import("https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js");
+                
+                await addDoc(collection(window.db, "admins"), {
+                    name: name,
+                    email: email,
+                    password: password,
+                    permissionLevel: 'sub_admin',
+                    permissions: permissions,
+                    isActive: true,
+                    createdAt: new Date(),
+                    createdBy: currentAdminUser.name
+                });
+
+                showNotificationToast(`✅ Admin "${name}" created with permissions!`);
+                hideCreateAdminForm();
+                loadAdminsList();
+
+            } catch (error) {
+                showNotificationToast(error.message, "error");
+            }
+        }
+
         async function loadAdminsList() {
             try {
-                const admins = await window.adminManagement.getAllAdmins();
-                const tbody = document.getElementById('admins-table-body');
+                const { getDocs, collection } = await import("https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js");
+                
+                const snapshot = await getDocs(collection(window.db, "admins"));
+                const tbody = document.getElementById('admins-list-table');
                 tbody.innerHTML = '';
 
-                if (admins.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400">No admins yet</td></tr>';
+                if (snapshot.empty) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-slate-400">No admins found</td></tr>';
                     return;
                 }
 
-                admins.forEach(admin => {
+                snapshot.forEach(doc => {
+                    const admin = doc.data();
+                    const perms = (admin.permissions || []).map(p => {
+                        const labels = { payment: 'Payment', ticket: 'Ticket', customer: 'Customer', audit: 'Audit', draw: 'Draw' };
+                        return labels[p] || p;
+                    }).join(', ');
+
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td class="p-4">${admin.name}</td>
-                        <td class="p-4 font-mono text-xs">${admin.email}</td>
-                        <td class="p-4"><span class="px-2 py-1 rounded text-xs font-bold bg-brand-gold/20 text-brand-gold">${admin.permissionLevel}</span></td>
-                        <td class="p-4">${admin.isActive ? '<span class="text-emerald-400">Active</span>' : '<span class="text-red-400">Inactive</span>'}</td>
-                        <td class="p-4 text-slate-400">${admin.lastLogin ? new Date(admin.lastLogin).toLocaleDateString() : 'Never'}</td>
+                        <td class="p-4 font-semibold">${admin.name}</td>
+                        <td class="p-4 text-xs">${admin.email}</td>
+                        <td class="p-4 text-xs">${admin.permissionLevel === 'main_admin' ? '🔴 MAIN ADMIN (All)' : perms || 'None'}</td>
+                        <td class="p-4">${admin.isActive ? '<span class="text-emerald-400">✓ Active</span>' : '<span class="text-red-400">✗ Inactive</span>'}</td>
                         <td class="p-4 space-x-2">
-                            <button onclick="editAdminPermissions('${admin.id}')" class="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 rounded">Edit</button>
-                            <button onclick="deactivateAdminAccount('${admin.id}')" class="px-2 py-1 text-xs bg-red-600 hover:bg-red-700 rounded">Deactivate</button>
+                            <button onclick="editAdminPermissions('${doc.id}')" class="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 rounded">Edit</button>
+                            <button onclick="deactivateAdmin('${doc.id}')" class="px-2 py-1 text-xs bg-red-600 hover:bg-red-700 rounded">Deactivate</button>
                         </td>
                     `;
                     tbody.appendChild(row);
@@ -520,56 +527,20 @@
             }
         }
 
-        // Create Admin Form
-        function showCreateAdminForm() {
-            document.getElementById('create-admin-form').classList.remove('hidden');
+        function editAdminPermissions(adminId) {
+            showNotificationToast("Click admin row to edit permissions");
         }
 
-        function hideCreateAdminForm() {
-            document.getElementById('create-admin-form').classList.add('hidden');
-            document.getElementById('new-admin-name').value = '';
-            document.getElementById('new-admin-email').value = '';
-            document.getElementById('new-admin-password').value = '';
-            document.getElementById('new-admin-permission').value = '';
-        }
-
-        // Create New Admin
-        async function createNewAdmin() {
-            const name = document.getElementById('new-admin-name').value;
-            const email = document.getElementById('new-admin-email').value;
-            const password = document.getElementById('new-admin-password').value;
-            const permission = document.getElementById('new-admin-permission').value;
-
-            if (!name || !email || !password || !permission) {
-                showNotificationToast("Please fill all fields", "error");
-                return;
-            }
+        async function deactivateAdmin(adminId) {
+            if (!confirm("Deactivate this admin?")) return;
 
             try {
-                await window.adminManagement.createAdminAccount(email, password, name, permission);
-                showNotificationToast(`Admin ${name} created successfully!`);
-                hideCreateAdminForm();
-                loadAdminsList();
+                const { updateDoc, doc } = await import("https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js");
+                
+                await updateDoc(doc(window.db, "admins", adminId), {
+                    isActive: false
+                });
 
-                // Log activity
-                await window.adminManagement.logAdminActivity(
-                    currentAdminUser.id,
-                    currentAdminUser.name,
-                    'CREATE_ADMIN',
-                    `Created admin: ${name} with permission: ${permission}`
-                );
-
-            } catch (error) {
-                showNotificationToast(error.message, "error");
-            }
-        }
-
-        // Deactivate Admin
-        async function deactivateAdminAccount(adminId) {
-            if (!confirm("Are you sure you want to deactivate this admin?")) return;
-
-            try {
-                await window.adminManagement.deactivateAdmin(adminId);
                 showNotificationToast("Admin deactivated");
                 loadAdminsList();
             } catch (error) {
@@ -577,124 +548,25 @@
             }
         }
 
-        // Load Pending Payments
-        async function loadPendingPayments() {
-            try {
-                const payments = await window.paymentSystem.getPendingPayments();
-                const tbody = document.getElementById('pending-payments-table');
-                tbody.innerHTML = '';
+        // ==================== ADMIN LOGOUT ====================
 
-                if (payments.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-slate-400">No pending payments</td></tr>';
-                    return;
-                }
-
-                payments.forEach(payment => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td class="p-4 font-mono text-xs">${payment.ticketId || 'N/A'}</td>
-                        <td class="p-4">${payment.customerName || 'Unknown'}</td>
-                        <td class="p-4 font-bold">${payment.amount} ETB</td>
-                        <td class="p-4 font-mono text-xs">${payment.transactionRef}</td>
-                        <td class="p-4 text-xs uppercase">${payment.paymentMethod}</td>
-                        <td class="p-4 text-xs text-slate-400">${new Date(payment.createdAt).toLocaleDateString()}</td>
-                        <td class="p-4 space-x-1">
-                            <button onclick="verifyPaymentNow('${payment.id}')" class="px-2 py-1 text-xs bg-emerald-600 hover:bg-emerald-700 rounded">✓ Verify</button>
-                            <button onclick="rejectPaymentNow('${payment.id}')" class="px-2 py-1 text-xs bg-red-600 hover:bg-red-700 rounded">✗ Reject</button>
-                        </td>
-                    `;
-                    tbody.appendChild(row);
-                });
-
-            } catch (error) {
-                console.error("Error loading payments:", error);
+        function adminLogout() {
+            if (confirm("Logout?")) {
+                currentAdminUser = null;
+                currentAdminPermissions = [];
+                localStorage.removeItem('adminUser');
+                
+                document.getElementById('admin-dashboard').classList.add('hidden');
+                document.getElementById('admin-login-modal').classList.remove('hidden');
+                document.getElementById('admin-email').value = '';
+                document.getElementById('admin-password').value = '';
+                
+                showNotificationToast("You have been logged out");
             }
         }
 
-        // Verify Payment
-        async function verifyPaymentNow(paymentId) {
-            try {
-                await window.paymentSystem.verifyPayment(paymentId, currentAdminUser.id, currentAdminUser.name);
-                showNotificationToast("Payment verified successfully");
-                loadPendingPayments();
+        // ==================== UTILITIES ====================
 
-                // Log activity
-                await window.adminManagement.logAdminActivity(
-                    currentAdminUser.id,
-                    currentAdminUser.name,
-                    'VERIFY_PAYMENT',
-                    `Verified payment: ${paymentId}`
-                );
-
-            } catch (error) {
-                showNotificationToast(error.message, "error");
-            }
-        }
-
-        // Reject Payment
-        async function rejectPaymentNow(paymentId) {
-            const reason = prompt("Enter rejection reason:");
-            if (!reason) return;
-
-            try {
-                await window.paymentSystem.rejectPayment(paymentId, currentAdminUser.id, currentAdminUser.name, reason);
-                showNotificationToast("Payment rejected");
-                loadPendingPayments();
-            } catch (error) {
-                showNotificationToast(error.message, "error");
-            }
-        }
-
-        // Load Tickets Data
-        async function loadTicketsData() {
-            try {
-                // This would load from Firestore
-                const tbody = document.getElementById('tickets-table-body');
-                tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400">Loading tickets...</td></tr>';
-            } catch (error) {
-                console.error("Error loading tickets:", error);
-            }
-        }
-
-        // Load Customers Data
-        async function loadCustomersData() {
-            try {
-                const tbody = document.getElementById('customers-table-body');
-                tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400">Loading customers...</td></tr>';
-            } catch (error) {
-                console.error("Error loading customers:", error);
-            }
-        }
-
-        // Load Activity Logs
-        async function loadActivityLogs() {
-            try {
-                const logs = await window.adminManagement.getAdminActivityLogs();
-                const tbody = document.getElementById('activity-log-body');
-                tbody.innerHTML = '';
-
-                if (logs.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-slate-400">No activity yet</td></tr>';
-                    return;
-                }
-
-                logs.reverse().forEach(log => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td class="p-4">${log.adminName}</td>
-                        <td class="p-4"><span class="px-2 py-1 rounded text-xs font-bold bg-blue-600/20 text-blue-300">${log.action}</span></td>
-                        <td class="p-4 text-xs text-slate-400">${log.details}</td>
-                        <td class="p-4 text-xs text-slate-400">${new Date(log.timestamp).toLocaleString()}</td>
-                    `;
-                    tbody.appendChild(row);
-                });
-
-            } catch (error) {
-                console.error("Error loading activity logs:", error);
-            }
-        }
-
-        // Show Notifications
         function showNotificationToast(message, type = "success") {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
@@ -705,31 +577,25 @@
             }`;
             
             toast.innerHTML = `
-                <i class="${type === 'success' ? 'fa-solid fa-circle-check text-brand-gold' : 'fa-solid fa-circle-xmark text-red-400'} text-base"></i>
-                <span class="flex-grow">${message}</span>
+                <i class="${type === 'success' ? 'fa-solid fa-circle-check text-brand-gold' : 'fa-solid fa-circle-xmark text-red-400'}"></i>
+                <span>${message}</span>
             `;
             
             container.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.classList.remove('translate-y-2', 'opacity-0');
-            }, 10);
-            
+            setTimeout(() => toast.classList.remove('translate-y-2', 'opacity-0'), 10);
             setTimeout(() => {
                 toast.classList.add('translate-y-2', 'opacity-0');
                 setTimeout(() => toast.remove(), 300);
             }, 4000);
         }
 
-        // Initialize
+        // Check if admin is logged in on load
         window.addEventListener('load', () => {
             const savedAdmin = localStorage.getItem('adminUser');
             if (savedAdmin) {
                 currentAdminUser = JSON.parse(savedAdmin);
-                document.getElementById('admin-login-page').classList.add('hidden');
-                document.getElementById('admin-dashboard-wrapper').classList.remove('hidden');
-                document.getElementById('admin-welcome-text').innerHTML = `Welcome, ${currentAdminUser.name}`;
-                loadAdminDashboard();
+                currentAdminPermissions = currentAdminUser.permissions || [];
+                showAdminDashboard();
             }
         });
     </script>
