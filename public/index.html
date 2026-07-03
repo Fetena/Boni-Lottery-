@@ -396,7 +396,28 @@
         }
 
         // Admin Login
-        async function handleAdminLogin(event) {
+        // --- 1. ADDED PERMISSION LOGIC ---
+function applyPermissions(adminData) {
+    // Matches your 'permissionLevel' field
+    const level = adminData.permissionLevel || 'staff'; 
+    const views = {
+        'tab-manage-admins': ['super_admin'],
+        'tab-activity': ['super_admin'],
+        'tab-payments': ['super_admin', 'payment_verifier'],
+        'tab-tickets': ['super_admin', 'ticket_manager']
+    };
+    
+    Object.keys(views).forEach(tabId => {
+        const btn = document.getElementById(tabId);
+        if (btn) {
+            // Using 'flex' or 'block' based on your layout needs
+            btn.style.display = views[tabId].includes(level) ? 'flex' : 'none';
+        }
+    });
+}
+
+// --- 2. YOUR EXACT LOGIN FUNCTION UPDATED ---
+async function handleAdminLogin(event) {
     event.preventDefault();
     const email = document.getElementById('admin-email').value;
     const password = document.getElementById('admin-password').value;
@@ -404,24 +425,28 @@
 
     try {
         errorDiv.classList.add('hidden');
-        const adminData = await window.simpleAdminLogin(email, password);
-                
-                currentAdminUser = adminData;
-                localStorage.setItem('adminUser', JSON.stringify(adminData));
-                
-                // Show admin dashboard
-                document.getElementById('admin-login-page').classList.add('hidden');
-                document.getElementById('admin-dashboard-wrapper').classList.remove('hidden');
-                document.getElementById('admin-welcome-text').innerHTML = `Welcome, ${adminData.name}`;
-                
-                showNotificationToast(`Welcome back, ${adminData.name}!`);
-                loadAdminDashboard();
+        // Using window.simpleAdmin.login to match your original script
+        const adminData = await window.simpleAdmin.login(email, password);
+        
+        currentAdminUser = adminData;
+        localStorage.setItem('adminUser', JSON.stringify(adminData));
+        
+        // --- Apply the permissions immediately ---
+        applyPermissions(adminData);
+        
+        // Show admin dashboard
+        document.getElementById('admin-login-page').classList.add('hidden');
+        document.getElementById('admin-dashboard-wrapper').classList.remove('hidden');
+        document.getElementById('admin-welcome-text').innerHTML = `Welcome, ${adminData.name}`;
+        
+        showNotificationToast(`Welcome back, ${adminData.name}!`);
+        loadAdminDashboard();
 
-            } catch (error) {
-                errorDiv.classList.remove('hidden');
-                errorDiv.textContent = error.message;
-            }
-        }
+    } catch (error) {
+        errorDiv.classList.remove('hidden');
+        errorDiv.textContent = error.message;
+    }
+}
 
         // Admin Logout
         function adminLogout() {
@@ -733,6 +758,11 @@
                 loadAdminDashboard();
             }
         });
+        // Add this at the end of your script to handle page refreshes
+const savedAdmin = localStorage.getItem('adminUser');
+if (savedAdmin) {
+    applyPermissions(JSON.parse(savedAdmin));
+}
     </script>
 </body>
 </html>
