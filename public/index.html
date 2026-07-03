@@ -398,20 +398,31 @@
         // Admin Login
         // --- 1. ADDED PERMISSION LOGIC ---
 function applyPermissions(adminData) {
-    // Matches your 'permissionLevel' field
-    const level = adminData.permissionLevel || 'staff'; 
-    const views = {
+    // 1. If this is the "Main Admin" (e.g., check by email or a specific role field), 
+    // grant them everything.
+    const isMainAdmin = adminData.email === "mainadmin@boni.com"; 
+
+    // 2. Define the permissions object
+    const permissions = {
         'tab-manage-admins': ['super_admin'],
         'tab-activity': ['super_admin'],
         'tab-payments': ['super_admin', 'payment_verifier'],
         'tab-tickets': ['super_admin', 'ticket_manager']
     };
+
+    // 3. Loop through all tabs to set visibility
+    const allTabs = ['tab-manage-admins', 'tab-activity', 'tab-payments', 'tab-tickets'];
     
-    Object.keys(views).forEach(tabId => {
+    allTabs.forEach(tabId => {
         const btn = document.getElementById(tabId);
-        if (btn) {
-            // Using 'flex' or 'block' based on your layout needs
-            btn.style.display = views[tabId].includes(level) ? 'flex' : 'none';
+        if (!btn) return;
+
+        if (isMainAdmin) {
+            btn.style.display = 'flex'; // Main admin sees everything
+        } else {
+            // Otherwise, only show if the user's level is in the allowed list
+            const allowedRoles = permissions[tabId] || [];
+            btn.style.display = allowedRoles.includes(adminData.permissionLevel) ? 'flex' : 'none';
         }
     });
 }
@@ -426,7 +437,7 @@ async function handleAdminLogin(event) {
     try {
         errorDiv.classList.add('hidden');
         // Using window.simpleAdmin.login to match your original script
-        const adminData = await window.simpleAdmin.login(email, password);
+        const adminData = await window.simpleAdminLogin(email, password);
         
         currentAdminUser = adminData;
         localStorage.setItem('adminUser', JSON.stringify(adminData));
