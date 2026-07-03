@@ -63,10 +63,9 @@
     </script>
 
     <!-- Guest Ticketing System -->
-    <!-- Simple Admin Login -->
     <script type="module">
-      import * as simpleAdmin from './simple-admin.js';
-      window.simpleAdmin = simpleAdmin;
+      import * as guestTicketing from './guest-ticketing.js';
+      window.guestTicketing = guestTicketing;
     </script>
 
     <!-- Admin Management -->
@@ -396,68 +395,32 @@
         }
 
         // Admin Login
-        // --- 1. ADDED PERMISSION LOGIC ---
-function applyPermissions(adminData) {
-    // 1. If this is the "Main Admin" (e.g., check by email or a specific role field), 
-    // grant them everything.
-    const isMainAdmin = adminData.email === "mainadmin@boni.com"; 
+        async function handleAdminLogin(event) {
+            event.preventDefault();
+            const email = document.getElementById('admin-email').value;
+            const password = document.getElementById('admin-password').value;
+            const errorDiv = document.getElementById('admin-error-msg');
 
-    // 2. Define the permissions object
-    const permissions = {
-        'tab-manage-admins': ['super_admin'],
-        'tab-activity': ['super_admin'],
-        'tab-payments': ['super_admin', 'payment_verifier'],
-        'tab-tickets': ['super_admin', 'ticket_manager']
-    };
+            try {
+                errorDiv.classList.add('hidden');
+                const adminData = await window.adminManagement.adminLogin(email, password);
+                
+                currentAdminUser = adminData;
+                localStorage.setItem('adminUser', JSON.stringify(adminData));
+                
+                // Show admin dashboard
+                document.getElementById('admin-login-page').classList.add('hidden');
+                document.getElementById('admin-dashboard-wrapper').classList.remove('hidden');
+                document.getElementById('admin-welcome-text').innerHTML = `Welcome, ${adminData.name}`;
+                
+                showNotificationToast(`Welcome back, ${adminData.name}!`);
+                loadAdminDashboard();
 
-    // 3. Loop through all tabs to set visibility
-    const allTabs = ['tab-manage-admins', 'tab-activity', 'tab-payments', 'tab-tickets'];
-    
-    allTabs.forEach(tabId => {
-        const btn = document.getElementById(tabId);
-        if (!btn) return;
-
-        if (isMainAdmin) {
-            btn.style.display = 'flex'; // Main admin sees everything
-        } else {
-            // Otherwise, only show if the user's level is in the allowed list
-            const allowedRoles = permissions[tabId] || [];
-            btn.style.display = allowedRoles.includes(adminData.permissionLevel) ? 'flex' : 'none';
+            } catch (error) {
+                errorDiv.classList.remove('hidden');
+                errorDiv.textContent = error.message;
+            }
         }
-    });
-}
-
-// --- 2. YOUR EXACT LOGIN FUNCTION UPDATED ---
-async function handleAdminLogin(event) {
-    event.preventDefault();
-    const email = document.getElementById('admin-email').value;
-    const password = document.getElementById('admin-password').value;
-    const errorDiv = document.getElementById('admin-error-msg');
-
-    try {
-        errorDiv.classList.add('hidden');
-        // Using window.simpleAdmin.login to match your original script
-        const adminData = await window.simpleAdminLogin(email, password);
-        
-        currentAdminUser = adminData;
-        localStorage.setItem('adminUser', JSON.stringify(adminData));
-        
-        // --- Apply the permissions immediately ---
-        applyPermissions(adminData);
-        
-        // Show admin dashboard
-        document.getElementById('admin-login-page').classList.add('hidden');
-        document.getElementById('admin-dashboard-wrapper').classList.remove('hidden');
-        document.getElementById('admin-welcome-text').innerHTML = `Welcome, ${adminData.name}`;
-        
-        showNotificationToast(`Welcome back, ${adminData.name}!`);
-        loadAdminDashboard();
-
-    } catch (error) {
-        errorDiv.classList.remove('hidden');
-        errorDiv.textContent = error.message;
-    }
-}
 
         // Admin Logout
         function adminLogout() {
@@ -769,11 +732,6 @@ async function handleAdminLogin(event) {
                 loadAdminDashboard();
             }
         });
-        // Add this at the end of your script to handle page refreshes
-const savedAdmin = localStorage.getItem('adminUser');
-if (savedAdmin) {
-    applyPermissions(JSON.parse(savedAdmin));
-}
     </script>
 </body>
 </html>
