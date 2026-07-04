@@ -3,55 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Boni Lottery - Win Big, Play Fair</title>
+    <title>Boni Lottery</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&display=swap" rel="stylesheet">
-
     <style>
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(200, 184, 123, 0.3); border-radius: 99px; }
+        .hidden { display: none !important; }
         .glass-panel { background: rgba(15, 39, 61, 0.45); backdrop-filter: blur(16px); border: 1px solid rgba(200, 184, 123, 0.08); }
-        .text-gradient { background: linear-gradient(135deg, #FFF 30%, #C8B87B 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     </style>
 </head>
-<body class="h-full font-sans antialiased bg-brand-navyback text-slate-100">
+<body class="h-full font-sans antialiased">
 
-    <div id="app-wrapper" class="h-full">
+    <div id="app-wrapper" class="h-full w-full">
+        
+        <div id="public-platform">
+            <h1>Public Lottery Page</h1>
+        </div>
 
-        <div id="admin-login-modal" class="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4 hidden">
-            </div>
+        <div id="admin-dashboard-view" class="hidden">
+            <h1>Admin Dashboard</h1>
+        </div>
+    </div>
 
-        <div id="admin-dashboard-view" class="hidden h-full flex-col bg-brand-navyback">
-            </div>
-
-        <div id="public-platform" class="flex flex-col h-full">
-            </div>
-
-        <div id="play-section" class="hidden h-full flex-col bg-brand-navyback">
-            </div>
-
+    <div id="admin-login-modal" class="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center hidden">
+        <div class="glass-panel p-8 rounded-xl w-96">
+            <input type="email" id="admin-email" placeholder="Email" class="w-full p-2 mb-2 bg-slate-800 rounded">
+            <input type="password" id="admin-password" placeholder="Password" class="w-full p-2 mb-4 bg-slate-800 rounded">
+            <button onclick="handleLoginAttempt()" class="w-full bg-yellow-600 p-2 rounded">Login</button>
+            <div id="login-error" class="text-red-500 mt-2 text-sm hidden"></div>
+        </div>
     </div>
 
     <script>
-        // Use this function to swap between views
+        // CORE LOGIC: This ensures the page doesn't break
         function switchView(viewId) {
-            document.getElementById('admin-dashboard-view').classList.add('hidden');
             document.getElementById('public-platform').classList.add('hidden');
-            document.getElementById('play-section').classList.add('hidden');
-            
-            const target = document.getElementById(viewId);
-            if (target) {
-                target.classList.remove('hidden');
-                target.classList.add('flex');
-            }
+            document.getElementById('admin-dashboard-view').classList.add('hidden');
+            document.getElementById(viewId).classList.remove('hidden');
         }
 
-        // Logic triggers
-        function openLoginModal() { document.getElementById('admin-login-modal').classList.remove('hidden'); }
-        function closeLoginModal() { document.getElementById('admin-login-modal').classList.add('hidden'); }
-        function showPlaySection() { switchView('play-section'); }
-        function hidePlaySection() { switchView('public-platform'); }
+        async function handleLoginAttempt() {
+            const email = document.getElementById('admin-email').value;
+            const password = document.getElementById('admin-password').value;
+            const errorDiv = document.getElementById('login-error');
+
+            try {
+                // Check if the external function exists
+                if (typeof window.simpleAdminLogin === 'function') {
+                    await window.simpleAdminLogin(email, password);
+                    document.getElementById('admin-login-modal').classList.add('hidden');
+                    switchView('admin-dashboard-view');
+                } else {
+                    throw new Error("Login system not loaded yet.");
+                }
+            } catch (err) {
+                errorDiv.innerText = err.message;
+                errorDiv.classList.remove('hidden');
+            }
+        }
     </script>
+    
+    <script src="simple-admin.js"></script>
 </body>
 </html>
