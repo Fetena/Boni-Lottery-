@@ -1922,31 +1922,32 @@
         // ==================== NAVIGATION ====================
 
         function buildAdminNavigation() {
-            const navContainer = document.getElementById('admin-nav-tabs');
-            navContainer.innerHTML = '';
+    const navContainer = document.getElementById('admin-nav-tabs');
+    navContainer.innerHTML = '';
 
-            addNavTab('dashboard', 'Dashboard', 'fa-chart-line');
+    addNavTab('dashboard', 'Dashboard', 'fa-chart-line');
 
-            if (currentAdminPermissions.includes('payment')) {
-                addNavTab('payment', 'Payments', 'fa-credit-card');
-            }
-
-            if (currentAdminPermissions.includes('ticket')) {
-                addNavTab('ticket', 'Tickets', 'fa-ticket');
-            }
-
-            if (currentAdminPermissions.includes('customer')) {
-                addNavTab('customer', 'Customers', 'fa-people-group');
-            }
-
-            if (currentAdminPermissions.includes('audit')) {
-                addNavTab('audit', 'Audit Log', 'fa-history');
-            }
-
-            if (currentAdminUser.permissionLevel === 'main_admin') {
-                addNavTab('manage-admins', 'Manage Admins', 'fa-users-cog');
-            }
-        }
+    // ✅ IF MAIN ADMIN: Show ALL tabs
+    if (currentAdminUser.permissionLevel === 'main_admin') {
+        addNavTab('payment', 'Payments', 'fa-credit-card');
+        addNavTab('ticket', 'Tickets', 'fa-ticket');
+        addNavTab('customer', 'Customers', 'fa-people-group');
+        addNavTab('audit', 'Audit Log', 'fa-history');
+        addNavTab('draw', 'Draw Operator', 'fa-dice');
+        addNavTab('manage-admins', 'Manage Admins', 'fa-users-cog');
+        console.log('✅ MAIN ADMIN - All tabs visible');
+    } 
+    // ✅ IF SUB-ADMIN: Show only granted tabs
+    else {
+        const perms = currentAdminUser.permissions || [];
+        
+        if (perms.includes('payment')) addNavTab('payment', 'Payments', 'fa-credit-card');
+        if (perms.includes('ticket')) addNavTab('ticket', 'Tickets', 'fa-ticket');
+        if (perms.includes('customer')) addNavTab('customer', 'Customers', 'fa-people-group');
+        if (perms.includes('audit')) addNavTab('audit', 'Audit Log', 'fa-history');
+        if (perms.includes('draw')) addNavTab('draw', 'Draw Operator', 'fa-dice');
+    }
+}
 
         function addNavTab(id, label, icon) {
             const btn = document.createElement('button');
