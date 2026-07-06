@@ -3,37 +3,332 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Boni Lottery - Complete System</title>
-    
+    <title>Boni Lottery</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body { background: #020c1b; color: #e2e8f0; }
+        .glass-panel {
+            background: rgba(15, 39, 61, 0.45);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(200, 184, 123, 0.08);
+        }
+        .text-gradient {
+            background: linear-gradient(135deg, #FFF 30%, #C8B87B 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- PUBLIC PAGE -->
+    <div id="public-page" class="min-h-screen bg-brand-navyback flex flex-col">
+        <header class="sticky top-0 z-40 w-full glass-panel border-b border-brand-gold/10 px-6 py-4">
+            <div class="max-w-7xl mx-auto flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center text-black">
+                        <i class="fa-solid fa-trophy"></i>
+                    </div>
+                    <div>
+                        <span class="font-bold text-xl text-gradient">BONI</span>
+                        <span class="text-xs text-yellow-400 font-bold">LOTTERY</span>
+                    </div>
+                </div>
+                <button onclick="showLoginModal()" class="px-6 py-2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">
+                    <i class="fa-solid fa-sign-in-alt mr-2"></i>Login
+                </button>
+            </div>
+        </header>
+
+        <main class="flex-grow p-6">
+            <div class="max-w-7xl mx-auto">
+                <div class="rounded-3xl glass-panel border border-yellow-400/20 p-12 text-center space-y-6 mb-12">
+                    <h1 class="text-5xl font-bold text-white">
+                        Multi-Branch<br>
+                        <span class="text-yellow-400">Lottery System</span>
+                    </h1>
+                    <p class="text-slate-300">Complete lottery management platform</p>
+                    <button onclick="showLoginModal()" class="px-8 py-4 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-2xl">
+                        Get Started
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                        <i class="fa-solid fa-book text-2xl text-yellow-400 mb-3"></i>
+                        <h3 class="font-bold">Library</h3>
+                        <p class="text-sm text-slate-400 mt-2">Learn lottery rules</p>
+                    </div>
+                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                        <i class="fa-solid fa-calendar text-2xl text-yellow-400 mb-3"></i>
+                        <h3 class="font-bold">Appointments</h3>
+                        <p class="text-sm text-slate-400 mt-2">Book meetings with admin</p>
+                    </div>
+                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                        <i class="fa-solid fa-ticket text-2xl text-yellow-400 mb-3"></i>
+                        <h3 class="font-bold">Tickets</h3>
+                        <p class="text-sm text-slate-400 mt-2">Buy lottery numbers</p>
+                    </div>
+                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                        <i class="fa-solid fa-bell text-2xl text-yellow-400 mb-3"></i>
+                        <h3 class="font-bold">Notifications</h3>
+                        <p class="text-sm text-slate-400 mt-2">Instant updates</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- LOGIN MODAL -->
+    <div id="login-modal" class="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4 hidden">
+        <div class="glass-panel rounded-3xl p-8 max-w-md w-full border border-yellow-400/20 space-y-6">
+            <div class="text-center">
+                <h2 class="text-2xl font-bold text-white">Login</h2>
+                <p class="text-xs text-slate-400 mt-2">Customer • Admin • Main Admin</p>
+            </div>
+
+            <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4">
+                <input type="email" id="login-email" placeholder="Email" required class="w-full bg-black/40 border border-yellow-400/20 focus:border-yellow-400 rounded-xl py-3 px-4 text-sm text-white outline-none">
+                <input type="password" id="login-password" placeholder="Password" required class="w-full bg-black/40 border border-yellow-400/20 focus:border-yellow-400 rounded-xl py-3 px-4 text-sm text-white outline-none">
+                <button type="submit" class="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">
+                    Login
+                </button>
+            </form>
+
+            <div id="login-error" class="hidden p-3 rounded-xl bg-red-950/50 text-red-300 text-xs text-center"></div>
+
+            <button onclick="closeLoginModal()" class="w-full text-slate-400 font-semibold text-xs">Close</button>
+        </div>
+    </div>
+
+    <!-- CUSTOMER DASHBOARD -->
+    <div id="customer-dashboard" class="hidden min-h-screen bg-black flex flex-col">
+        <header class="sticky top-0 z-40 w-full glass-panel border-b border-yellow-400/10 px-6 py-4">
+            <div class="max-w-7xl mx-auto flex items-center justify-between">
+                <h1 class="font-bold text-xl text-white">Customer Dashboard</h1>
+                <button onclick="logout()" class="px-4 py-2 bg-red-950/30 text-red-400 text-xs font-bold rounded-xl">Logout</button>
+            </div>
+        </header>
+
+        <main class="flex-grow p-6">
+            <div class="max-w-7xl mx-auto space-y-6">
+                <h2 class="text-3xl font-bold text-white" id="cust-welcome">Welcome!</h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                        <p class="text-xs text-slate-400">Admin</p>
+                        <p id="cust-admin" class="text-2xl font-bold text-yellow-400 mt-2">-</p>
+                    </div>
+                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                        <p class="text-xs text-slate-400">Range</p>
+                        <p id="cust-range" class="text-xl font-bold text-yellow-400 mt-2">-</p>
+                    </div>
+                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                        <p class="text-xs text-slate-400">Tickets</p>
+                        <p id="cust-tickets" class="text-2xl font-bold text-blue-400 mt-2">0</p>
+                    </div>
+                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                        <p class="text-xs text-slate-400">Spent</p>
+                        <p id="cust-spent" class="text-2xl font-bold text-emerald-400 mt-2">0 ETB</p>
+                    </div>
+                </div>
+
+                <button onclick="alert('Payment system ready!')" class="w-full py-4 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-2xl text-lg">
+                    <i class="fa-solid fa-ticket mr-2"></i>Buy Lottery Ticket
+                </button>
+
+                <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                    <h3 class="text-lg font-bold text-white mb-4">Your Tickets</h3>
+                    <p class="text-slate-400 text-center">No tickets yet</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ADMIN DASHBOARD -->
+    <div id="admin-dashboard" class="hidden min-h-screen bg-black flex flex-col">
+        <header class="sticky top-0 z-40 w-full glass-panel border-b border-yellow-400/10 px-6 py-4">
+            <div class="max-w-7xl mx-auto flex items-center justify-between">
+                <h1 class="font-bold text-xl text-white">Admin Dashboard</h1>
+                <button onclick="logout()" class="px-4 py-2 bg-red-950/30 text-red-400 text-xs font-bold rounded-xl">Logout</button>
+            </div>
+        </header>
+
+        <main class="flex-grow p-6">
+            <div class="max-w-7xl mx-auto space-y-6">
+                <h2 class="text-3xl font-bold text-white" id="admin-welcome">Branch Admin</h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                        <p class="text-xs text-slate-400">My Range</p>
+                        <p id="admin-range" class="text-2xl font-bold text-yellow-400 mt-2">-</p>
+                    </div>
+                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                        <p class="text-xs text-slate-400">Customers</p>
+                        <p id="admin-custs" class="text-2xl font-bold text-blue-400 mt-2">0</p>
+                    </div>
+                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                        <p class="text-xs text-slate-400">Tickets</p>
+                        <p id="admin-tix" class="text-2xl font-bold text-emerald-400 mt-2">0</p>
+                    </div>
+                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                        <p class="text-xs text-slate-400">Revenue</p>
+                        <p id="admin-rev" class="text-2xl font-bold text-purple-400 mt-2">0 ETB</p>
+                    </div>
+                </div>
+
+                <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                    <h3 class="text-lg font-bold text-white mb-4">Admin Features Ready</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        <button class="p-3 bg-yellow-400/10 rounded-lg text-yellow-400 text-xs font-bold hover:bg-yellow-400/20">👥 Manage Customers</button>
+                        <button class="p-3 bg-yellow-400/10 rounded-lg text-yellow-400 text-xs font-bold hover:bg-yellow-400/20">🎫 Manage Tickets</button>
+                        <button class="p-3 bg-yellow-400/10 rounded-lg text-yellow-400 text-xs font-bold hover:bg-yellow-400/20">💳 Verify Payments</button>
+                        <button class="p-3 bg-yellow-400/10 rounded-lg text-yellow-400 text-xs font-bold hover:bg-yellow-400/20">📅 Appointments</button>
+                        <button class="p-3 bg-yellow-400/10 rounded-lg text-yellow-400 text-xs font-bold hover:bg-yellow-400/20">🔔 Send Notifications</button>
+                        <button class="p-3 bg-yellow-400/10 rounded-lg text-yellow-400 text-xs font-bold hover:bg-yellow-400/20">📊 View Revenue</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MAIN ADMIN DASHBOARD -->
+    <div id="main-admin-dashboard" class="hidden min-h-screen bg-black flex flex-col">
+        <header class="sticky top-0 z-40 w-full glass-panel border-b border-yellow-400/10 px-6 py-4">
+            <div class="max-w-7xl mx-auto flex items-center justify-between">
+                <h1 class="font-bold text-xl text-gradient">MAIN ADMIN HQ</h1>
+                <button onclick="logout()" class="px-4 py-2 bg-red-950/30 text-red-400 text-xs font-bold rounded-xl">Logout</button>
+            </div>
+        </header>
+
+        <main class="flex-grow p-6">
+            <div class="max-w-7xl mx-auto space-y-6">
+                <h2 class="text-3xl font-bold text-white">Platform Control Center</h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                        <p class="text-xs text-slate-400">Total Admins</p>
+                        <p id="main-admins" class="text-3xl font-bold text-yellow-400 mt-2">0</p>
+                    </div>
+                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                        <p class="text-xs text-slate-400">Total Customers</p>
+                        <p id="main-custs" class="text-3xl font-bold text-blue-400 mt-2">0</p>
+                    </div>
+                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                        <p class="text-xs text-slate-400">Total Tickets</p>
+                        <p id="main-tix" class="text-3xl font-bold text-emerald-400 mt-2">0</p>
+                    </div>
+                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                        <p class="text-xs text-slate-400">Total Revenue</p>
+                        <p id="main-rev" class="text-3xl font-bold text-purple-400 mt-2">0 ETB</p>
+                    </div>
+                </div>
+
+                <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                    <h3 class="text-lg font-bold text-white mb-4">Main Admin Controls</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <button onclick="showSetRangeForm()" class="p-3 bg-yellow-400/10 rounded-lg text-yellow-400 text-xs font-bold hover:bg-yellow-400/20">🎯 Set Ranges</button>
+                        <button class="p-3 bg-yellow-400/10 rounded-lg text-yellow-400 text-xs font-bold hover:bg-yellow-400/20">👤 Manage Admins</button>
+                        <button class="p-3 bg-yellow-400/10 rounded-lg text-yellow-400 text-xs font-bold hover:bg-yellow-400/20">👥 View Customers</button>
+                        <button class="p-3 bg-yellow-400/10 rounded-lg text-yellow-400 text-xs font-bold hover:bg-yellow-400/20">🎫 View Tickets</button>
+                    </div>
+                </div>
+
+                <div id="range-form" class="hidden glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
+                    <h3 class="text-lg font-bold text-white">Set Range for Admin</h3>
+                    <input type="text" placeholder="Admin name" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-3 px-4 text-sm text-white outline-none">
+                    <input type="number" placeholder="Start number (e.g., 1)" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-3 px-4 text-sm text-white outline-none">
+                    <input type="number" placeholder="End number (e.g., 300)" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-3 px-4 text-sm text-white outline-none">
+                    <button onclick="alert('Range setting ready!')" class="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">Save Range</button>
+                </div>
+            </div>
+        </main>
+    </div>
 
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        serif: ['Playfair Display', 'serif'],
-                    },
-                    colors: {
-                        brand: {
-                            navy: '#0A1D2F',
-                            navycard: '#0f273d',
-                            navyback: '#020c1b',
-                            gold: '#C8B87B',
-                            golddark: '#A39050',
-                            goldlight: '#EAD99E',
-                        }
-                    }
-                }
+        let currentUser = null;
+
+        function showLoginModal() {
+            document.getElementById('login-modal').classList.remove('hidden');
+        }
+
+        function closeLoginModal() {
+            document.getElementById('login-modal').classList.add('hidden');
+            document.getElementById('login-error').classList.add('hidden');
+        }
+
+        function handleLogin(event) {
+            event.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            // Demo credentials
+            if (email === 'ahmed@company.com' && password === 'Ahmed123') {
+                currentUser = { type: 'admin', name: 'Ahmed Mohamed', email };
+                showAdminDashboard();
+            } else if (email === 'fita.regassa@gmail.com' && password === 'MainAdmin123') {
+                currentUser = { type: 'main_admin', name: 'Main Admin', email };
+                showMainAdminDashboard();
+            } else if (email === 'm@email.com' && password === 'Pass123') {
+                currentUser = { type: 'customer', name: 'Mohammed', email };
+                showCustomerDashboard();
+            } else {
+                document.getElementById('login-error').textContent = 'Invalid credentials';
+                document.getElementById('login-error').classList.remove('hidden');
+            }
+        }
+
+        function showCustomerDashboard() {
+            document.getElementById('public-page').classList.add('hidden');
+            document.getElementById('login-modal').classList.add('hidden');
+            document.getElementById('customer-dashboard').classList.remove('hidden');
+            document.getElementById('cust-welcome').textContent = `Welcome, ${currentUser.name}!`;
+            document.getElementById('cust-admin').textContent = 'Ahmed Mohamed';
+            document.getElementById('cust-range').textContent = '1 - 300';
+        }
+
+        function showAdminDashboard() {
+            document.getElementById('public-page').classList.add('hidden');
+            document.getElementById('login-modal').classList.add('hidden');
+            document.getElementById('admin-dashboard').classList.remove('hidden');
+            document.getElementById('admin-welcome').textContent = currentUser.name;
+            document.getElementById('admin-range').textContent = '1 - 300';
+            document.getElementById('admin-custs').textContent = '45';
+            document.getElementById('admin-tix').textContent = '120';
+            document.getElementById('admin-rev').textContent = '12,000 ETB';
+        }
+
+        function showMainAdminDashboard() {
+            document.getElementById('public-page').classList.add('hidden');
+            document.getElementById('login-modal').classList.add('hidden');
+            document.getElementById('main-admin-dashboard').classList.remove('hidden');
+            document.getElementById('main-admins').textContent = '3';
+            document.getElementById('main-custs').textContent = '165';
+            document.getElementById('main-tix').textContent = '410';
+            document.getElementById('main-rev').textContent = '41,000 ETB';
+        }
+
+        function showSetRangeForm() {
+            document.getElementById('range-form').classList.toggle('hidden');
+        }
+
+        function logout() {
+            if (confirm('Logout?')) {
+                currentUser = null;
+                document.getElementById('public-page').classList.remove('hidden');
+                document.getElementById('customer-dashboard').classList.add('hidden');
+                document.getElementById('admin-dashboard').classList.add('hidden');
+                document.getElementById('main-admin-dashboard').classList.add('hidden');
+                document.getElementById('login-email').value = '';
+                document.getElementById('login-password').value = '';
+                alert('Logged out successfully!');
             }
         }
     </script>
-
-    <style>
-        * { box-sizing: border-box; }
+</body>
+</html>
         html, body { margin: 0; padding: 0; }
         body { background: #020c1b; color: #e2e8f0; }
         .glass-panel {
