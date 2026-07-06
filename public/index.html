@@ -60,7 +60,7 @@
     <div id="toast-container" class="fixed top-20 right-4 z-50 pointer-events-none space-y-2"></div>
 
     <!-- ============================================
-         PUBLIC HOMEPAGE (Customers & Admin Login)
+         PUBLIC HOMEPAGE (Everyone)
          ============================================ -->
     <div id="public-page" class="min-h-screen flex flex-col bg-brand-navyback">
         
@@ -76,14 +76,9 @@
                     </div>
                 </div>
 
-                <div class="flex gap-3">
-                    <button onclick="showCustomerLoginModal()" class="px-4 py-2 bg-brand-gold/20 border border-brand-gold/30 text-brand-gold font-bold text-xs rounded-xl hover:bg-brand-gold/30">
-                        <i class="fa-solid fa-user mr-1.5"></i>Customer Login
-                    </button>
-                    <button onclick="showAdminLoginModal()" class="px-4 py-2 bg-brand-gold/20 border border-brand-gold/30 text-brand-gold font-bold text-xs rounded-xl hover:bg-brand-gold/30">
-                        <i class="fa-solid fa-shield-halved mr-1.5"></i>Admin
-                    </button>
-                </div>
+                <button onclick="showLoginModal()" class="px-6 py-2 bg-gradient-to-r from-brand-gold to-brand-golddark text-brand-navy font-bold rounded-xl hover:scale-105 transition-all">
+                    <i class="fa-solid fa-sign-in-alt mr-2"></i>Login
+                </button>
             </div>
         </header>
 
@@ -92,41 +87,46 @@
                 <!-- HERO -->
                 <div class="rounded-3xl glass-panel border border-brand-gold/15 p-12 text-center space-y-6 mb-12">
                     <h1 class="font-serif text-5xl font-bold text-white leading-tight">
-                        Your Lottery,<br>
-                        <span class="text-brand-gold">Your Branch</span>
+                        Multi-Branch<br>
+                        <span class="text-brand-gold">Lottery System</span>
                     </h1>
                     <p class="text-slate-300 max-w-2xl mx-auto">
-                        Multi-branch lottery platform. Register, choose your admin, and start winning!
+                        Complete lottery management platform with customer accounts, admin branches, and dynamic ticket ranges.
                     </p>
-                    <button onclick="showCustomerLoginModal()" class="inline-block px-8 py-4 bg-gradient-to-r from-brand-gold to-brand-golddark text-brand-navy font-bold rounded-2xl">
+                    <button onclick="showLoginModal()" class="inline-block px-8 py-4 bg-gradient-to-r from-brand-gold to-brand-golddark text-brand-navy font-bold rounded-2xl">
                         <i class="fa-solid fa-gamepad mr-2"></i>Get Started
                     </button>
                 </div>
 
-                <!-- HOW IT WORKS -->
-                <div class="space-y-8">
-                    <h2 class="text-3xl font-serif font-bold text-center">How It Works</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                        <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10 space-y-4">
-                            <div class="h-12 w-12 rounded-xl bg-brand-gold/10 text-brand-gold flex items-center justify-center font-bold">1</div>
-                            <h3 class="font-bold">Register</h3>
-                            <p class="text-sm text-slate-400">Create your account with email & password</p>
+                <!-- FEATURES -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10 space-y-4">
+                        <div class="h-12 w-12 rounded-xl bg-brand-gold/10 text-brand-gold flex items-center justify-center">
+                            <i class="fa-solid fa-user text-xl"></i>
                         </div>
-                        <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10 space-y-4">
-                            <div class="h-12 w-12 rounded-xl bg-brand-gold/10 text-brand-gold flex items-center justify-center font-bold">2</div>
-                            <h3 class="font-bold">Choose Branch</h3>
-                            <p class="text-sm text-slate-400">Select your admin/branch to work with</p>
+                        <h3 class="font-bold">Customer Accounts</h3>
+                        <p class="text-sm text-slate-400">Create accounts & choose your branch admin</p>
+                    </div>
+                    <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10 space-y-4">
+                        <div class="h-12 w-12 rounded-xl bg-brand-gold/10 text-brand-gold flex items-center justify-center">
+                            <i class="fa-solid fa-sitemap text-xl"></i>
                         </div>
-                        <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10 space-y-4">
-                            <div class="h-12 w-12 rounded-xl bg-brand-gold/10 text-brand-gold flex items-center justify-center font-bold">3</div>
-                            <h3 class="font-bold">Pick Numbers</h3>
-                            <p class="text-sm text-slate-400">Choose from your admin's ticket range</p>
+                        <h3 class="font-bold">Multi-Branch</h3>
+                        <p class="text-sm text-slate-400">Manage multiple admin branches independently</p>
+                    </div>
+                    <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10 space-y-4">
+                        <div class="h-12 w-12 rounded-xl bg-brand-gold/10 text-brand-gold flex items-center justify-center">
+                            <i class="fa-solid fa-key text-xl"></i>
                         </div>
-                        <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10 space-y-4">
-                            <div class="h-12 w-12 rounded-xl bg-brand-gold/10 text-brand-gold flex items-center justify-center font-bold">4</div>
-                            <h3 class="font-bold">Win Big!</h3>
-                            <p class="text-sm text-slate-400">Daily draws at 8 PM on TikTok</p>
+                        <h3 class="font-bold">Smart Ranges</h3>
+                        <p class="text-sm text-slate-400">Allocate ticket ranges to each branch admin</p>
+                    </div>
+                    <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10 space-y-4">
+                        <div class="h-12 w-12 rounded-xl bg-brand-gold/10 text-brand-gold flex items-center justify-center">
+                            <i class="fa-solid fa-chart-line text-xl"></i>
                         </div>
+                        <h3 class="font-bold">Full Control</h3>
+                        <p class="text-sm text-slate-400">Main admin oversees everything</p>
                     </div>
                 </div>
             </div>
@@ -134,84 +134,86 @@
     </div>
 
     <!-- ============================================
-         CUSTOMER LOGIN MODAL
+         UNIFIED LOGIN MODAL
          ============================================ -->
-    <div id="customer-login-modal" class="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4 hidden">
+    <div id="login-modal" class="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4 hidden">
         <div class="glass-panel rounded-3xl p-8 max-w-md w-full border border-brand-gold/20 space-y-6">
             <div class="text-center">
                 <div class="h-16 w-16 rounded-2xl bg-gradient-to-br from-brand-gold to-brand-golddark flex items-center justify-center mx-auto text-brand-navy mb-4">
-                    <i class="fa-solid fa-user text-2xl"></i>
+                    <i class="fa-solid fa-sign-in-alt text-2xl"></i>
                 </div>
-                <h2 class="text-2xl font-serif font-bold text-white">Customer Portal</h2>
-                <p class="text-xs text-slate-400 mt-2">Login or Register</p>
+                <h2 class="text-2xl font-serif font-bold text-white">Login</h2>
+                <p class="text-xs text-slate-400 mt-2">Customer • Branch Admin • Main Admin</p>
             </div>
 
-            <div id="customer-login-form-section" class="space-y-4">
+            <!-- CUSTOMER LOGIN -->
+            <div id="customer-section" class="space-y-4">
+                <p class="text-xs font-bold text-brand-gold uppercase">CUSTOMER</p>
                 <form id="customer-login-form" onsubmit="handleCustomerLogin(event)" class="space-y-4">
-                    <input type="email" id="cust-email" placeholder="Email" required class="w-full bg-brand-navy/60 border border-brand-gold/15 focus:border-brand-gold rounded-xl py-3 px-4 text-sm text-white outline-none">
-                    <input type="password" id="cust-password" placeholder="Password" required class="w-full bg-brand-navy/60 border border-brand-gold/15 focus:border-brand-gold rounded-xl py-3 px-4 text-sm text-white outline-none">
-                    <button type="submit" class="w-full py-3 bg-gradient-to-r from-brand-gold to-brand-golddark text-brand-navy font-bold rounded-xl">
-                        Login
+                    <input type="email" id="cust-email" placeholder="Email" class="w-full bg-brand-navy/60 border border-brand-gold/15 focus:border-brand-gold rounded-xl py-3 px-4 text-sm text-white outline-none">
+                    <input type="password" id="cust-password" placeholder="Password" class="w-full bg-brand-navy/60 border border-brand-gold/15 focus:border-brand-gold rounded-xl py-3 px-4 text-sm text-white outline-none">
+                    <button type="submit" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl">
+                        Login as Customer
                     </button>
                 </form>
-                <button onclick="showCustomerRegisterForm()" class="w-full py-3 border border-brand-gold/30 text-brand-gold font-bold rounded-xl">
-                    <i class="fa-solid fa-user-plus mr-1.5"></i>Create Account
+                <button onclick="showCustomerRegisterForm()" class="w-full py-2 text-brand-gold text-xs font-bold">
+                    No account? Create one
                 </button>
             </div>
 
-            <div id="customer-register-form-section" class="space-y-4 hidden">
-                <form id="customer-register-form" onsubmit="handleCustomerRegister(event)" class="space-y-4">
-                    <input type="text" id="reg-name" placeholder="Full Name" required class="w-full bg-brand-navy/60 border border-brand-gold/15 focus:border-brand-gold rounded-xl py-3 px-4 text-sm text-white outline-none">
-                    <input type="email" id="reg-email" placeholder="Email" required class="w-full bg-brand-navy/60 border border-brand-gold/15 focus:border-brand-gold rounded-xl py-3 px-4 text-sm text-white outline-none">
-                    <input type="tel" id="reg-phone" placeholder="Phone (251...)" required class="w-full bg-brand-navy/60 border border-brand-gold/15 focus:border-brand-gold rounded-xl py-3 px-4 text-sm text-white outline-none">
-                    <input type="password" id="reg-password" placeholder="Password" required class="w-full bg-brand-navy/60 border border-brand-gold/15 focus:border-brand-gold rounded-xl py-3 px-4 text-sm text-white outline-none">
-                    
-                    <select id="reg-admin-id" required class="w-full bg-brand-navy/60 border border-brand-gold/15 focus:border-brand-gold rounded-xl py-3 px-4 text-sm text-white outline-none">
-                        <option value="">Select Your Admin/Branch</option>
-                        <!-- Will be populated by JS -->
-                    </select>
+            <div class="border-t border-brand-gold/10"></div>
 
-                    <button type="submit" class="w-full py-3 bg-gradient-to-r from-brand-gold to-brand-golddark text-brand-navy font-bold rounded-xl">
-                        Create Account
+            <!-- ADMIN LOGIN -->
+            <div id="admin-section" class="space-y-4">
+                <p class="text-xs font-bold text-brand-gold uppercase">BRANCH ADMIN</p>
+                <form id="admin-login-form" onsubmit="handleAdminLogin(event)" class="space-y-4">
+                    <input type="email" id="admin-email" placeholder="Email" class="w-full bg-brand-navy/60 border border-brand-gold/15 focus:border-brand-gold rounded-xl py-3 px-4 text-sm text-white outline-none">
+                    <input type="password" id="admin-password" placeholder="Password" class="w-full bg-brand-navy/60 border border-brand-gold/15 focus:border-brand-gold rounded-xl py-3 px-4 text-sm text-white outline-none">
+                    <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl">
+                        Login as Branch Admin
                     </button>
                 </form>
-                <button onclick="showCustomerLoginForm()" class="w-full py-3 border border-brand-gold/30 text-brand-gold font-bold rounded-xl">
-                    Back to Login
-                </button>
             </div>
 
-            <div id="customer-error-msg" class="hidden p-3 rounded-xl bg-red-950/50 border border-red-900/30 text-red-300 text-xs text-center font-semibold"></div>
+            <div id="login-error" class="hidden p-3 rounded-xl bg-red-950/50 border border-red-900/30 text-red-300 text-xs text-center font-semibold"></div>
 
-            <button onclick="closeCustomerLoginModal()" class="w-full text-slate-400 hover:text-white font-semibold text-xs">
-                <i class="fa-solid fa-times mr-1.5"></i>Close
+            <button onclick="closeLoginModal()" class="w-full text-slate-400 hover:text-white font-semibold text-xs py-2">
+                Close
             </button>
         </div>
     </div>
 
     <!-- ============================================
-         ADMIN LOGIN MODAL
+         CUSTOMER REGISTRATION MODAL
          ============================================ -->
-    <div id="admin-login-modal" class="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4 hidden">
-        <div class="glass-panel rounded-3xl p-8 max-w-md w-full border border-brand-gold/20 space-y-6">
+    <div id="register-modal" class="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4 hidden overflow-y-auto">
+        <div class="glass-panel rounded-3xl p-8 max-w-md w-full border border-brand-gold/20 space-y-6 my-8">
             <div class="text-center">
-                <div class="h-16 w-16 rounded-2xl bg-gradient-to-br from-brand-gold to-brand-golddark flex items-center justify-center mx-auto text-brand-navy mb-4">
-                    <i class="fa-solid fa-shield-halved text-2xl"></i>
-                </div>
-                <h2 class="text-2xl font-serif font-bold text-white">Admin Portal</h2>
+                <h2 class="text-2xl font-serif font-bold text-white">Create Account</h2>
+                <p class="text-xs text-slate-400 mt-2">Join a branch and start playing!</p>
             </div>
 
-            <form id="admin-login-form" onsubmit="handleAdminLogin(event)" class="space-y-4">
-                <input type="email" id="admin-email" placeholder="Admin Email" required class="w-full bg-brand-navy/60 border border-brand-gold/15 focus:border-brand-gold rounded-xl py-3 px-4 text-sm text-white outline-none">
-                <input type="password" id="admin-password" placeholder="Password" required class="w-full bg-brand-navy/60 border border-brand-gold/15 focus:border-brand-gold rounded-xl py-3 px-4 text-sm text-white outline-none">
+            <form id="register-form" onsubmit="handleCustomerRegister(event)" class="space-y-4">
+                <input type="text" id="reg-name" placeholder="Full Name" required class="w-full bg-brand-navy/60 border border-brand-gold/15 focus:border-brand-gold rounded-xl py-3 px-4 text-sm text-white outline-none">
+                <input type="email" id="reg-email" placeholder="Email" required class="w-full bg-brand-navy/60 border border-brand-gold/15 focus:border-brand-gold rounded-xl py-3 px-4 text-sm text-white outline-none">
+                <input type="tel" id="reg-phone" placeholder="Phone (251...)" required class="w-full bg-brand-navy/60 border border-brand-gold/15 focus:border-brand-gold rounded-xl py-3 px-4 text-sm text-white outline-none">
+                <input type="password" id="reg-password" placeholder="Password" required class="w-full bg-brand-navy/60 border border-brand-gold/15 focus:border-brand-gold rounded-xl py-3 px-4 text-sm text-white outline-none">
+                
+                <div>
+                    <label class="text-xs text-slate-400 font-bold block mb-2">SELECT YOUR BRANCH ADMIN</label>
+                    <select id="reg-admin-id" required class="w-full bg-brand-navy/60 border border-brand-gold/15 focus:border-brand-gold rounded-xl py-3 px-4 text-sm text-white outline-none">
+                        <option value="">Choose Branch Admin...</option>
+                        <!-- Populated by JS -->
+                    </select>
+                </div>
+
                 <button type="submit" class="w-full py-3 bg-gradient-to-r from-brand-gold to-brand-golddark text-brand-navy font-bold rounded-xl">
-                    Login
+                    Create Account
                 </button>
             </form>
 
-            <div id="admin-error-msg" class="hidden p-3 rounded-xl bg-red-950/50 border border-red-900/30 text-red-300 text-xs text-center font-semibold"></div>
-
-            <button onclick="closeAdminLoginModal()" class="w-full text-slate-400 hover:text-white font-semibold text-xs">
-                Close
+            <button onclick="backToLogin()" class="w-full text-slate-400 hover:text-white font-semibold text-xs">
+                Back to Login
             </button>
         </div>
     </div>
@@ -225,11 +227,11 @@
                 <div class="flex items-center space-x-3">
                     <i class="fa-solid fa-user text-brand-gold text-2xl"></i>
                     <div>
-                        <h1 class="font-serif text-xl font-bold text-white">Your Dashboard</h1>
-                        <p class="text-xs text-slate-400" id="cust-welcome">Welcome</p>
+                        <h1 class="font-serif text-xl font-bold text-white" id="cust-title">Dashboard</h1>
+                        <p class="text-xs text-slate-400" id="cust-subtitle">Welcome</p>
                     </div>
                 </div>
-                <button onclick="customerLogout()" class="px-4 py-2 bg-red-950/30 text-red-400 text-xs font-bold rounded-xl">
+                <button onclick="logout()" class="px-4 py-2 bg-red-950/30 text-red-400 text-xs font-bold rounded-xl">
                     <i class="fa-solid fa-sign-out-alt mr-1.5"></i>Logout
                 </button>
             </div>
@@ -237,39 +239,37 @@
 
         <main class="flex-grow p-6">
             <div class="max-w-7xl mx-auto space-y-6">
-                <h2 class="text-3xl font-serif font-bold">Customer Dashboard</h2>
+                <h2 class="text-3xl font-serif font-bold">Your Dashboard</h2>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10">
-                        <span class="text-xs text-slate-400 font-semibold uppercase">Your Admin</span>
-                        <p id="cust-admin-name" class="text-2xl font-bold text-brand-gold mt-2">-</p>
+                        <span class="text-xs text-slate-400 font-semibold">YOUR ADMIN</span>
+                        <p id="cust-admin" class="text-2xl font-bold text-brand-gold mt-2">-</p>
                     </div>
                     <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10">
-                        <span class="text-xs text-slate-400 font-semibold uppercase">Ticket Range</span>
-                        <p id="cust-ticket-range" class="text-2xl font-bold text-brand-gold mt-2">-</p>
+                        <span class="text-xs text-slate-400 font-semibold">TICKET RANGE</span>
+                        <p id="cust-range" class="text-xl font-bold text-brand-gold mt-2">-</p>
                     </div>
                     <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10">
-                        <span class="text-xs text-slate-400 font-semibold uppercase">Your Tickets</span>
-                        <p id="cust-ticket-count" class="text-2xl font-bold text-brand-gold mt-2">0</p>
+                        <span class="text-xs text-slate-400 font-semibold">YOUR TICKETS</span>
+                        <p id="cust-ticket-count" class="text-2xl font-bold text-blue-500 mt-2">0</p>
                     </div>
                 </div>
 
-                <button onclick="showNumberSelector()" class="w-full py-4 bg-gradient-to-r from-brand-gold to-brand-golddark text-brand-navy font-bold rounded-2xl text-lg">
+                <button onclick="alert('Payment system coming soon!')" class="w-full py-4 bg-gradient-to-r from-brand-gold to-brand-golddark text-brand-navy font-bold rounded-2xl text-lg hover:scale-105 transition-all">
                     <i class="fa-solid fa-gamepad mr-2"></i>Pick Lottery Numbers
                 </button>
 
-                <div id="cust-tickets-section" class="glass-panel rounded-2xl p-6 border border-brand-gold/10">
+                <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10">
                     <h3 class="text-lg font-bold text-white mb-4">Your Tickets</h3>
-                    <div id="cust-tickets-list" class="space-y-3">
-                        <p class="text-slate-400 text-center">No tickets yet</p>
-                    </div>
+                    <p class="text-slate-400 text-center">Coming soon</p>
                 </div>
             </div>
         </main>
     </div>
 
     <!-- ============================================
-         ADMIN DASHBOARD (With Range Management)
+         BRANCH ADMIN DASHBOARD
          ============================================ -->
     <div id="admin-dashboard" class="hidden min-h-screen bg-brand-navyback flex flex-col">
         <header class="sticky top-0 z-40 w-full glass-panel border-b border-brand-gold/10 px-6 py-4">
@@ -277,11 +277,11 @@
                 <div class="flex items-center space-x-3">
                     <i class="fa-solid fa-shield-halved text-brand-gold text-2xl"></i>
                     <div>
-                        <h1 class="font-serif text-xl font-bold text-white">Admin Dashboard</h1>
-                        <p class="text-xs text-slate-400" id="admin-welcome">Admin</p>
+                        <h1 class="font-serif text-xl font-bold text-white" id="admin-title">Branch Admin</h1>
+                        <p class="text-xs text-slate-400" id="admin-subtitle">Your Branch</p>
                     </div>
                 </div>
-                <button onclick="adminLogout()" class="px-4 py-2 bg-red-950/30 text-red-400 text-xs font-bold rounded-xl">
+                <button onclick="logout()" class="px-4 py-2 bg-red-950/30 text-red-400 text-xs font-bold rounded-xl">
                     <i class="fa-solid fa-sign-out-alt mr-1.5"></i>Logout
                 </button>
             </div>
@@ -289,32 +289,25 @@
 
         <main class="flex-grow p-6">
             <div class="max-w-7xl mx-auto space-y-6">
-                <h2 class="text-3xl font-serif font-bold">Admin Control Panel</h2>
-
-                <!-- MAIN ADMIN ONLY: Allocate Ranges -->
-                <div id="main-admin-section" class="hidden space-y-6">
-                    <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10">
-                        <h3 class="text-xl font-bold text-white mb-4"><i class="fa-solid fa-sliders mr-2 text-brand-gold"></i>Allocate Ticket Ranges</h3>
-                        <p class="text-sm text-slate-400 mb-4">Set ticket number ranges for each admin</p>
-                        <div id="admin-ranges-list" class="space-y-3">
-                            <!-- Populated by JS -->
-                        </div>
-                    </div>
-                </div>
+                <h2 class="text-3xl font-serif font-bold">Branch Control Panel</h2>
 
                 <!-- STATS -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10">
-                        <span class="text-xs text-slate-400 font-semibold uppercase">My Customers</span>
-                        <p id="admin-customer-count" class="text-3xl font-bold text-blue-500 mt-2">0</p>
+                        <span class="text-xs text-slate-400 font-semibold">MY RANGE</span>
+                        <p id="admin-range" class="text-2xl font-bold text-brand-gold mt-2">-</p>
                     </div>
                     <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10">
-                        <span class="text-xs text-slate-400 font-semibold uppercase">My Tickets</span>
-                        <p id="admin-ticket-count" class="text-3xl font-bold text-emerald-500 mt-2">0</p>
+                        <span class="text-xs text-slate-400 font-semibold">CUSTOMERS</span>
+                        <p id="admin-customer-count" class="text-2xl font-bold text-blue-500 mt-2">0</p>
                     </div>
                     <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10">
-                        <span class="text-xs text-slate-400 font-semibold uppercase">My Ticket Range</span>
-                        <p id="admin-ticket-range" class="text-xl font-bold text-brand-gold mt-2">-</p>
+                        <span class="text-xs text-slate-400 font-semibold">TICKETS ISSUED</span>
+                        <p id="admin-ticket-count" class="text-2xl font-bold text-emerald-500 mt-2">0</p>
+                    </div>
+                    <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10">
+                        <span class="text-xs text-slate-400 font-semibold">REVENUE</span>
+                        <p id="admin-revenue" class="text-2xl font-bold text-purple-500 mt-2">0 ETB</p>
                     </div>
                 </div>
 
@@ -329,12 +322,11 @@
                                 <th class="p-4">Name</th>
                                 <th class="p-4">Email</th>
                                 <th class="p-4">Phone</th>
-                                <th class="p-4">Tickets</th>
                                 <th class="p-4">Join Date</th>
                             </tr>
                         </thead>
-                        <tbody id="admin-customers-table" class="divide-y divide-brand-gold/5">
-                            <tr><td colspan="5" class="p-4 text-center text-slate-400">Loading customers...</td></tr>
+                        <tbody id="admin-customers-list" class="divide-y divide-brand-gold/5">
+                            <tr><td colspan="4" class="p-4 text-center text-slate-400">No customers yet</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -349,13 +341,12 @@
                             <tr>
                                 <th class="p-4">Ticket ID</th>
                                 <th class="p-4">Customer</th>
-                                <th class="p-4">Numbers</th>
                                 <th class="p-4">Cost</th>
                                 <th class="p-4">Status</th>
                             </tr>
                         </thead>
-                        <tbody id="admin-tickets-table" class="divide-y divide-brand-gold/5">
-                            <tr><td colspan="5" class="p-4 text-center text-slate-400">No tickets yet</td></tr>
+                        <tbody id="admin-tickets-list" class="divide-y divide-brand-gold/5">
+                            <tr><td colspan="4" class="p-4 text-center text-slate-400">No tickets yet</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -364,75 +355,222 @@
     </div>
 
     <!-- ============================================
-         NUMBER SELECTOR (For Customers)
+         MAIN ADMIN DASHBOARD (Complete Control)
          ============================================ -->
-    <div id="number-selector-modal" class="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4 hidden overflow-y-auto">
-        <div class="glass-panel rounded-3xl p-8 max-w-2xl w-full border border-brand-gold/20 my-8">
-            <div class="flex items-center justify-between mb-6">
-                <h2 class="text-2xl font-serif font-bold text-white">Pick Your Numbers</h2>
-                <button onclick="closeNumberSelector()" class="text-slate-400 hover:text-white text-2xl">
-                    <i class="fa-solid fa-times"></i>
+    <div id="main-admin-dashboard" class="hidden min-h-screen bg-brand-navyback flex flex-col">
+        <header class="sticky top-0 z-40 w-full glass-panel border-b border-brand-gold/10 px-6 py-4">
+            <div class="max-w-7xl mx-auto flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <i class="fa-solid fa-crown text-brand-gold text-2xl"></i>
+                    <div>
+                        <h1 class="font-serif text-xl font-bold text-gradient">MAIN ADMIN HQ</h1>
+                        <p class="text-xs text-slate-400">Complete Platform Control</p>
+                    </div>
+                </div>
+                <button onclick="logout()" class="px-4 py-2 bg-red-950/30 text-red-400 text-xs font-bold rounded-xl">
+                    <i class="fa-solid fa-sign-out-alt mr-1.5"></i>Logout
                 </button>
             </div>
+        </header>
 
-            <p class="text-sm text-slate-400 mb-4">Select from your admin's range: <span id="selector-range" class="text-brand-gold font-bold">-</span></p>
+        <main class="flex-grow p-6 overflow-y-auto custom-scrollbar">
+            <div class="max-w-7xl mx-auto space-y-8">
 
-            <div id="numbers-grid" class="grid grid-cols-6 sm:grid-cols-8 gap-2 mb-6 max-h-96 overflow-y-auto">
-                <!-- Generated by JS -->
+                <!-- NAVIGATION TABS -->
+                <div class="flex gap-2 border-b border-brand-gold/10 pb-4 overflow-x-auto">
+                    <button onclick="showMainAdminTab('dashboard')" class="px-4 py-2 text-xs font-bold text-brand-gold border-b-2 border-brand-gold whitespace-nowrap">
+                        Dashboard
+                    </button>
+                    <button onclick="showMainAdminTab('ranges')" class="px-4 py-2 text-xs font-bold text-slate-400 hover:text-white whitespace-nowrap">
+                        Set Ranges
+                    </button>
+                    <button onclick="showMainAdminTab('admins')" class="px-4 py-2 text-xs font-bold text-slate-400 hover:text-white whitespace-nowrap">
+                        Manage Admins
+                    </button>
+                    <button onclick="showMainAdminTab('customers')" class="px-4 py-2 text-xs font-bold text-slate-400 hover:text-white whitespace-nowrap">
+                        All Customers
+                    </button>
+                    <button onclick="showMainAdminTab('tickets')" class="px-4 py-2 text-xs font-bold text-slate-400 hover:text-white whitespace-nowrap">
+                        All Tickets
+                    </button>
+                </div>
+
+                <!-- TAB: DASHBOARD -->
+                <div id="tab-dashboard" class="space-y-6">
+                    <h2 class="text-3xl font-serif font-bold">Platform Statistics</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10">
+                            <span class="text-xs text-slate-400 font-semibold">TOTAL ADMINS</span>
+                            <p id="main-admin-count" class="text-3xl font-bold text-brand-gold mt-2">0</p>
+                        </div>
+                        <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10">
+                            <span class="text-xs text-slate-400 font-semibold">TOTAL CUSTOMERS</span>
+                            <p id="main-customer-count" class="text-3xl font-bold text-blue-500 mt-2">0</p>
+                        </div>
+                        <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10">
+                            <span class="text-xs text-slate-400 font-semibold">TOTAL TICKETS</span>
+                            <p id="main-ticket-count" class="text-3xl font-bold text-emerald-500 mt-2">0</p>
+                        </div>
+                        <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10">
+                            <span class="text-xs text-slate-400 font-semibold">TOTAL REVENUE</span>
+                            <p id="main-revenue-total" class="text-3xl font-bold text-purple-500 mt-2">0 ETB</p>
+                        </div>
+                    </div>
+
+                    <div class="glass-panel rounded-2xl p-6 border border-brand-gold/10">
+                        <h3 class="text-lg font-bold text-white mb-4">Branch Overview</h3>
+                        <div id="main-branches-overview" class="space-y-3">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: SET RANGES -->
+                <div id="tab-ranges" class="hidden space-y-6">
+                    <h2 class="text-3xl font-serif font-bold">Allocate Ticket Ranges</h2>
+                    <p class="text-slate-400">Assign ticket number ranges to each branch admin</p>
+
+                    <div id="ranges-list" class="space-y-4">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- TAB: MANAGE ADMINS -->
+                <div id="tab-admins" class="hidden space-y-6">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-3xl font-serif font-bold">Manage Admins</h2>
+                        <button onclick="showCreateAdminForm()" class="px-4 py-2 bg-gradient-to-r from-brand-gold to-brand-golddark text-brand-navy font-bold rounded-xl text-xs">
+                            <i class="fa-solid fa-plus mr-1.5"></i>Create Admin
+                        </button>
+                    </div>
+
+                    <div id="create-admin-modal" class="hidden glass-panel rounded-2xl p-6 border border-brand-gold/10 space-y-4">
+                        <h3 class="text-lg font-bold">Create New Branch Admin</h3>
+                        <div class="space-y-4">
+                            <input type="text" id="new-admin-name" placeholder="Full Name" class="w-full bg-brand-navy/60 border border-brand-gold/15 rounded-xl py-3 px-4 text-sm text-white outline-none">
+                            <input type="email" id="new-admin-email" placeholder="Email" class="w-full bg-brand-navy/60 border border-brand-gold/15 rounded-xl py-3 px-4 text-sm text-white outline-none">
+                            <input type="password" id="new-admin-password" placeholder="Password" class="w-full bg-brand-navy/60 border border-brand-gold/15 rounded-xl py-3 px-4 text-sm text-white outline-none">
+                            <div class="flex gap-2">
+                                <button onclick="createNewAdmin()" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm">
+                                    Create
+                                </button>
+                                <button onclick="hideCreateAdminForm()" class="flex-1 py-3 bg-slate-600 hover:bg-slate-700 text-white font-bold rounded-xl text-sm">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass-panel rounded-2xl overflow-hidden border border-brand-gold/10">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-brand-navy text-slate-300 border-b border-brand-gold/10 font-semibold">
+                                <tr>
+                                    <th class="p-4">Name</th>
+                                    <th class="p-4">Email</th>
+                                    <th class="p-4">Ticket Range</th>
+                                    <th class="p-4">Customers</th>
+                                    <th class="p-4">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="main-admins-list" class="divide-y divide-brand-gold/5">
+                                <tr><td colspan="5" class="p-4 text-center text-slate-400">Loading admins...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TAB: ALL CUSTOMERS -->
+                <div id="tab-customers" class="hidden space-y-6">
+                    <h2 class="text-3xl font-serif font-bold">All Customers</h2>
+                    
+                    <div class="glass-panel rounded-2xl overflow-hidden border border-brand-gold/10">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-brand-navy text-slate-300 border-b border-brand-gold/10 font-semibold">
+                                <tr>
+                                    <th class="p-4">Name</th>
+                                    <th class="p-4">Email</th>
+                                    <th class="p-4">Admin Branch</th>
+                                    <th class="p-4">Join Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="main-customers-list" class="divide-y divide-brand-gold/5">
+                                <tr><td colspan="4" class="p-4 text-center text-slate-400">Loading customers...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TAB: ALL TICKETS -->
+                <div id="tab-tickets" class="hidden space-y-6">
+                    <h2 class="text-3xl font-serif font-bold">All Tickets</h2>
+                    
+                    <div class="glass-panel rounded-2xl overflow-hidden border border-brand-gold/10">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-brand-navy text-slate-300 border-b border-brand-gold/10 font-semibold">
+                                <tr>
+                                    <th class="p-4">Ticket ID</th>
+                                    <th class="p-4">Customer</th>
+                                    <th class="p-4">Branch Admin</th>
+                                    <th class="p-4">Cost</th>
+                                    <th class="p-4">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="main-tickets-list" class="divide-y divide-brand-gold/5">
+                                <tr><td colspan="5" class="p-4 text-center text-slate-400">Loading tickets...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
             </div>
-
-            <div class="glass-panel rounded-2xl p-4 border border-brand-gold/10 mb-6">
-                <p id="selector-info" class="text-sm text-slate-400">Select numbers to continue</p>
-                <p id="selector-cost" class="text-lg font-bold text-brand-gold mt-2">0 ETB</p>
-            </div>
-
-            <button onclick="proceedToPayment()" class="w-full py-3 bg-gradient-to-r from-brand-gold to-brand-golddark text-brand-navy font-bold rounded-xl">
-                <i class="fa-solid fa-check mr-2"></i>Proceed to Payment
-            </button>
-        </div>
+        </main>
     </div>
 
     <script>
-        let currentCustomer = null;
-        let currentAdmin = null;
-        let selectedNumbers = [];
-        const TICKET_PRICE = 100;
+        let currentUser = null;
+        let userRole = null; // "customer", "admin", "main_admin"
 
-        // ==================== CUSTOMER LOGIN ====================
+        // ==================== MODALS ====================
 
-        function showCustomerLoginModal() {
-            document.getElementById('customer-login-modal').classList.remove('hidden');
+        function showLoginModal() {
+            document.getElementById('login-modal').classList.remove('hidden');
             loadAdminBranchesForRegistration();
         }
 
-        function closeCustomerLoginModal() {
-            document.getElementById('customer-login-modal').classList.add('hidden');
+        function closeLoginModal() {
+            document.getElementById('login-modal').classList.add('hidden');
+            document.getElementById('login-error').classList.add('hidden');
         }
 
         function showCustomerRegisterForm() {
-            document.getElementById('customer-login-form-section').classList.add('hidden');
-            document.getElementById('customer-register-form-section').classList.remove('hidden');
+            closeLoginModal();
+            document.getElementById('register-modal').classList.remove('hidden');
         }
 
-        function showCustomerLoginForm() {
-            document.getElementById('customer-register-form-section').classList.add('hidden');
-            document.getElementById('customer-login-form-section').classList.remove('hidden');
+        function backToLogin() {
+            document.getElementById('register-modal').classList.add('hidden');
+            showLoginModal();
         }
+
+        // ==================== CUSTOMER AUTH ====================
 
         async function loadAdminBranchesForRegistration() {
             try {
-                const { getDocs, collection } = await import("https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js");
-                const snapshot = await getDocs(collection(window.db, "admins"));
+                const { getDocs, collection, query, where } = await import("https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js");
+                
+                const q = query(collection(window.db, "admins"), where("permissionLevel", "==", "sub_admin"));
+                const snapshot = await getDocs(q);
+                
                 const select = document.getElementById('reg-admin-id');
+                select.innerHTML = '<option value="">Choose Branch Admin...</option>';
                 
                 snapshot.forEach(doc => {
                     const admin = doc.data();
-                    if (admin.permissionLevel === 'sub_admin' || admin.permissionLevel === 'main_admin') {
-                        const option = document.createElement('option');
-                        option.value = doc.id;
-                        option.textContent = `${admin.name}`;
-                        select.appendChild(option);
-                    }
+                    const option = document.createElement('option');
+                    option.value = doc.id;
+                    option.textContent = admin.name;
+                    select.appendChild(option);
                 });
             } catch (error) {
                 console.error("Error loading admins:", error);
@@ -448,29 +586,25 @@
             const adminId = document.getElementById('reg-admin-id').value;
 
             if (!adminId) {
-                showToast('Please select an admin/branch', 'error');
+                showToast('Please select a branch admin', 'error');
                 return;
             }
 
             try {
                 const { addDoc, collection } = await import("https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js");
                 
-                const customerRef = await addDoc(collection(window.db, "customers"), {
-                    name: name,
-                    email: email,
-                    phone: phone,
-                    password: password, // In production, use proper authentication
-                    adminId: adminId,
+                const ref = await addDoc(collection(window.db, "customers"), {
+                    name, email, phone, password, adminId,
                     createdAt: new Date()
                 });
 
-                currentCustomer = { id: customerRef.id, name, email, phone, adminId };
-                localStorage.setItem('customerUser', JSON.stringify(currentCustomer));
+                currentUser = { id: ref.id, name, email, adminId, type: "customer" };
+                userRole = "customer";
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
                 
+                document.getElementById('register-modal').classList.add('hidden');
                 showCustomerDashboard();
-                closeCustomerLoginModal();
                 showToast(`Welcome, ${name}!`);
-
             } catch (error) {
                 showToast(error.message, 'error');
             }
@@ -480,7 +614,6 @@
             event.preventDefault();
             const email = document.getElementById('cust-email').value;
             const password = document.getElementById('cust-password').value;
-            const errorDiv = document.getElementById('customer-error-msg');
 
             try {
                 const { getDocs, collection, query, where } = await import("https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js");
@@ -488,146 +621,53 @@
                 const q = query(collection(window.db, "customers"), where("email", "==", email));
                 const snapshot = await getDocs(q);
 
-                if (snapshot.empty) {
-                    errorDiv.classList.remove('hidden');
-                    errorDiv.textContent = 'Customer not found';
+                if (snapshot.empty || snapshot.docs[0].data().password !== password) {
+                    showLoginError('Invalid credentials');
                     return;
                 }
 
                 const doc = snapshot.docs[0];
-                const customer = doc.data();
-
-                if (customer.password !== password) {
-                    errorDiv.classList.remove('hidden');
-                    errorDiv.textContent = 'Incorrect password';
-                    return;
-                }
-
-                currentCustomer = { id: doc.id, ...customer };
-                localStorage.setItem('customerUser', JSON.stringify(currentCustomer));
+                currentUser = { id: doc.id, ...doc.data(), type: "customer" };
+                userRole = "customer";
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
                 
+                closeLoginModal();
                 showCustomerDashboard();
-                closeCustomerLoginModal();
-                showToast(`Welcome back, ${customer.name}!`);
-
+                showToast('Login successful!');
             } catch (error) {
-                showToast(error.message, 'error');
+                showLoginError(error.message);
             }
         }
 
         async function showCustomerDashboard() {
             document.getElementById('public-page').classList.add('hidden');
             document.getElementById('customer-dashboard').classList.remove('hidden');
-            document.getElementById('cust-welcome').textContent = `Welcome, ${currentCustomer.name}`;
+            document.getElementById('cust-subtitle').textContent = `Welcome, ${currentUser.name}`;
 
-            // Load admin info
             try {
                 const { getDoc, doc } = await import("https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js");
-                const adminDoc = await getDoc(doc(window.db, "admins", currentCustomer.adminId));
-                const admin = adminDoc.data();
                 
-                document.getElementById('cust-admin-name').textContent = admin.name;
-                
-                // Load admin's range
-                const rangeDoc = await getDoc(doc(window.db, "admin_ranges", currentCustomer.adminId));
+                const adminDoc = await getDoc(doc(window.db, "admins", currentUser.adminId));
+                if (adminDoc.exists()) {
+                    document.getElementById('cust-admin').textContent = adminDoc.data().name;
+                }
+
+                const rangeDoc = await getDoc(doc(window.db, "admin_ranges", currentUser.adminId));
                 if (rangeDoc.exists()) {
                     const range = rangeDoc.data();
-                    document.getElementById('cust-ticket-range').textContent = `${range.start} - ${range.end}`;
+                    document.getElementById('cust-range').textContent = `${range.start} - ${range.end}`;
                 }
             } catch (error) {
-                console.error("Error loading admin info:", error);
+                console.error("Error loading dashboard:", error);
             }
         }
 
-        function showNumberSelector() {
-            document.getElementById('number-selector-modal').classList.remove('hidden');
-            generateNumbersGrid();
-        }
-
-        function closeNumberSelector() {
-            document.getElementById('number-selector-modal').classList.add('hidden');
-            selectedNumbers = [];
-        }
-
-        async function generateNumbersGrid() {
-            try {
-                const { getDoc, doc } = await import("https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js");
-                
-                const rangeDoc = await getDoc(doc(window.db, "admin_ranges", currentCustomer.adminId));
-                if (!rangeDoc.exists()) return;
-
-                const range = rangeDoc.data();
-                const grid = document.getElementById('numbers-grid');
-                grid.innerHTML = '';
-
-                document.getElementById('selector-range').textContent = `${range.start} - ${range.end}`;
-
-                for (let i = range.start; i <= range.end; i++) {
-                    const btn = document.createElement('button');
-                    btn.type = 'button';
-                    btn.className = `aspect-square rounded-lg text-xs font-bold border transition-all ${
-                        selectedNumbers.includes(i)
-                            ? 'bg-brand-gold border-brand-gold text-brand-navy'
-                            : 'bg-brand-navycard/40 hover:bg-brand-navycard border-brand-gold/15 text-slate-300'
-                    }`;
-                    btn.innerHTML = String(i).padStart(3, '0');
-                    btn.onclick = () => toggleNumber(i);
-                    grid.appendChild(btn);
-                }
-            } catch (error) {
-                console.error("Error generating grid:", error);
-            }
-        }
-
-        function toggleNumber(num) {
-            const idx = selectedNumbers.indexOf(num);
-            if (idx > -1) {
-                selectedNumbers.splice(idx, 1);
-            } else {
-                selectedNumbers.push(num);
-            }
-            updateNumberSelectorUI();
-            generateNumbersGrid();
-        }
-
-        function updateNumberSelectorUI() {
-            const cost = selectedNumbers.length * TICKET_PRICE;
-            document.getElementById('selector-info').textContent = `${selectedNumbers.length} number(s) selected`;
-            document.getElementById('selector-cost').textContent = `${cost} ETB`;
-        }
-
-        function proceedToPayment() {
-            if (selectedNumbers.length === 0) {
-                showToast('Please select at least one number', 'error');
-                return;
-            }
-            showToast('Payment system coming soon!');
-            closeNumberSelector();
-        }
-
-        function customerLogout() {
-            currentCustomer = null;
-            localStorage.removeItem('customerUser');
-            document.getElementById('customer-dashboard').classList.add('hidden');
-            document.getElementById('public-page').classList.remove('hidden');
-            showToast('Logged out');
-        }
-
-        // ==================== ADMIN LOGIN ====================
-
-        function showAdminLoginModal() {
-            document.getElementById('admin-login-modal').classList.remove('hidden');
-        }
-
-        function closeAdminLoginModal() {
-            document.getElementById('admin-login-modal').classList.add('hidden');
-        }
+        // ==================== ADMIN AUTH ====================
 
         async function handleAdminLogin(event) {
             event.preventDefault();
             const email = document.getElementById('admin-email').value;
             const password = document.getElementById('admin-password').value;
-            const errorDiv = document.getElementById('admin-error-msg');
 
             try {
                 const { getDocs, collection, query, where } = await import("https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js");
@@ -636,8 +676,7 @@
                 const snapshot = await getDocs(q);
 
                 if (snapshot.empty) {
-                    errorDiv.classList.remove('hidden');
-                    errorDiv.textContent = 'Admin not found';
+                    showLoginError('Admin not found');
                     return;
                 }
 
@@ -645,112 +684,375 @@
                 const admin = doc.data();
 
                 if (admin.password !== password) {
-                    errorDiv.classList.remove('hidden');
-                    errorDiv.textContent = 'Incorrect password';
+                    showLoginError('Invalid credentials');
                     return;
                 }
 
-                currentAdmin = { id: doc.id, ...admin };
-                localStorage.setItem('adminUser', JSON.stringify(currentAdmin));
+                currentUser = { id: doc.id, ...admin, type: admin.permissionLevel };
+                userRole = admin.permissionLevel;
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
                 
-                showAdminDashboard();
-                closeAdminLoginModal();
+                closeLoginModal();
+                
+                if (admin.permissionLevel === "main_admin") {
+                    showMainAdminDashboard();
+                } else {
+                    showAdminDashboard();
+                }
+                
                 showToast(`Welcome, ${admin.name}!`);
-
             } catch (error) {
-                showToast(error.message, 'error');
+                showLoginError(error.message);
             }
         }
 
         async function showAdminDashboard() {
             document.getElementById('public-page').classList.add('hidden');
             document.getElementById('admin-dashboard').classList.remove('hidden');
-            document.getElementById('admin-welcome').textContent = `Welcome, ${currentAdmin.name}`;
+            document.getElementById('admin-title').textContent = currentUser.name;
+            document.getElementById('admin-subtitle').textContent = 'Branch Admin';
 
-            // Show main admin section if main_admin
-            if (currentAdmin.permissionLevel === 'main_admin') {
-                document.getElementById('main-admin-section').classList.remove('hidden');
-                loadAdminRanges();
-            }
-
-            loadAdminData();
-        }
-
-        async function loadAdminRanges() {
             try {
-                const { getDocs, collection } = await import("https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js");
+                const { getDoc, doc, getDocs, collection, query, where } = await import("https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js");
                 
-                const snapshot = await getDocs(collection(window.db, "admins"));
-                const rangesList = document.getElementById('admin-ranges-list');
-                rangesList.innerHTML = '';
+                // Load range
+                const rangeDoc = await getDoc(doc(window.db, "admin_ranges", currentUser.id));
+                if (rangeDoc.exists()) {
+                    const range = rangeDoc.data();
+                    document.getElementById('admin-range').textContent = `${range.start} - ${range.end}`;
+                }
 
-                snapshot.forEach(doc => {
-                    const admin = doc.data();
-                    if (admin.permissionLevel === 'sub_admin') {
-                        const div = document.createElement('div');
-                        div.className = 'p-4 rounded-lg bg-brand-navy/60 border border-brand-gold/10 flex items-center justify-between';
-                        div.innerHTML = `
-                            <div>
-                                <p class="font-bold text-white">${admin.name}</p>
-                                <p class="text-xs text-slate-400">Set their ticket range</p>
-                            </div>
-                            <button onclick="editAdminRange('${doc.id}', '${admin.name}')" class="px-4 py-2 bg-brand-gold text-brand-navy font-bold rounded-lg text-xs">
-                                Set Range
-                            </button>
-                        `;
-                        rangesList.appendChild(div);
-                    }
-                });
-            } catch (error) {
-                console.error("Error loading ranges:", error);
-            }
-        }
-
-        async function loadAdminData() {
-            try {
-                const { getDocs, collection, query, where } = await import("https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js");
-                
                 // Load customers
-                const custQuery = query(collection(window.db, "customers"), where("adminId", "==", currentAdmin.id));
+                const custQuery = query(collection(window.db, "customers"), where("adminId", "==", currentUser.id));
                 const custSnapshot = await getDocs(custQuery);
                 document.getElementById('admin-customer-count').textContent = custSnapshot.size;
 
-                const custTable = document.getElementById('admin-customers-table');
-                custTable.innerHTML = '';
+                const custList = document.getElementById('admin-customers-list');
+                custList.innerHTML = '';
                 custSnapshot.forEach(doc => {
-                    const customer = doc.data();
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td class="p-4">${customer.name}</td>
-                        <td class="p-4">${customer.email}</td>
-                        <td class="p-4">${customer.phone}</td>
-                        <td class="p-4">0</td>
-                        <td class="p-4">${new Date(customer.createdAt.toDate()).toLocaleDateString()}</td>
+                    const cust = doc.data();
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="p-4">${cust.name}</td>
+                        <td class="p-4">${cust.email}</td>
+                        <td class="p-4">${cust.phone}</td>
+                        <td class="p-4">${new Date(cust.createdAt).toLocaleDateString()}</td>
                     `;
-                    custTable.appendChild(row);
+                    custList.appendChild(tr);
                 });
 
-                // Load ticket range
-                const { getDoc, doc } = await import("https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js");
-                const rangeDoc = await getDoc(doc(window.db, "admin_ranges", currentAdmin.id));
-                if (rangeDoc.exists()) {
-                    const range = rangeDoc.data();
-                    document.getElementById('admin-ticket-range').textContent = `${range.start} - ${range.end}`;
-                }
+                // Load tickets
+                const tickQuery = query(collection(window.db, "tickets"), where("adminId", "==", currentUser.id));
+                const tickSnapshot = await getDocs(tickQuery);
+                document.getElementById('admin-ticket-count').textContent = tickSnapshot.size;
+
+                const tickList = document.getElementById('admin-tickets-list');
+                tickList.innerHTML = '';
+                tickSnapshot.forEach(doc => {
+                    const tick = doc.data();
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="p-4">${tick.ticketId}</td>
+                        <td class="p-4">${tick.customerName}</td>
+                        <td class="p-4">${tick.totalCost} ETB</td>
+                        <td class="p-4"><span class="text-emerald-400">Active</span></td>
+                    `;
+                    tickList.appendChild(tr);
+                });
             } catch (error) {
-                console.error("Error loading admin data:", error);
+                console.error("Error loading admin dashboard:", error);
             }
         }
 
-        function adminLogout() {
-            currentAdmin = null;
-            localStorage.removeItem('adminUser');
-            document.getElementById('admin-dashboard').classList.add('hidden');
-            document.getElementById('public-page').classList.remove('hidden');
-            showToast('Logged out');
+        // ==================== MAIN ADMIN ====================
+
+        async function showMainAdminDashboard() {
+            document.getElementById('public-page').classList.add('hidden');
+            document.getElementById('main-admin-dashboard').classList.remove('hidden');
+            loadMainAdminData();
+        }
+
+        function showMainAdminTab(tab) {
+            ['dashboard', 'ranges', 'admins', 'customers', 'tickets'].forEach(t => {
+                document.getElementById(`tab-${t}`)?.classList.add('hidden');
+            });
+            document.getElementById(`tab-${tab}`)?.classList.remove('hidden');
+
+            if (tab === 'ranges') loadRangesTab();
+            if (tab === 'admins') loadAdminsTab();
+            if (tab === 'customers') loadCustomersTab();
+            if (tab === 'tickets') loadTicketsTab();
+        }
+
+        async function loadMainAdminData() {
+            try {
+                const { getDocs, collection, query, where } = await import("https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js");
+                
+                // Admins
+                const adminQuery = query(collection(window.db, "admins"), where("permissionLevel", "==", "sub_admin"));
+                const adminSnapshot = await getDocs(adminQuery);
+                document.getElementById('main-admin-count').textContent = adminSnapshot.size;
+
+                // Customers
+                const custSnapshot = await getDocs(collection(window.db, "customers"));
+                document.getElementById('main-customer-count').textContent = custSnapshot.size;
+
+                // Tickets
+                const tickSnapshot = await getDocs(collection(window.db, "tickets"));
+                document.getElementById('main-ticket-count').textContent = tickSnapshot.size;
+                document.getElementById('main-revenue-total').textContent = `${tickSnapshot.size * 100} ETB`;
+
+                // Branch overview
+                const overview = document.getElementById('main-branches-overview');
+                overview.innerHTML = '';
+                adminSnapshot.forEach(doc => {
+                    const admin = doc.data();
+                    const card = document.createElement('div');
+                    card.className = 'p-4 rounded-lg bg-brand-navy/60 border border-brand-gold/10';
+                    card.innerHTML = `
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="font-bold text-white">${admin.name}</p>
+                                <p class="text-xs text-slate-400">Branch Manager</p>
+                            </div>
+                            <button onclick="editAdminRange('${doc.id}')" class="px-3 py-1 bg-brand-gold text-brand-navy font-bold rounded text-xs">
+                                Edit Range
+                            </button>
+                        </div>
+                    `;
+                    overview.appendChild(card);
+                });
+            } catch (error) {
+                console.error("Error loading main admin data:", error);
+            }
+        }
+
+        async function loadRangesTab() {
+            try {
+                const { getDocs, collection, query, where } = await import("https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js");
+                
+                const adminQuery = query(collection(window.db, "admins"), where("permissionLevel", "==", "sub_admin"));
+                const adminSnapshot = await getDocs(adminQuery);
+                
+                const rangesList = document.getElementById('ranges-list');
+                rangesList.innerHTML = '';
+
+                adminSnapshot.forEach(doc => {
+                    const admin = doc.data();
+                    const card = document.createElement('div');
+                    card.className = 'glass-panel rounded-2xl p-6 border border-brand-gold/10';
+                    card.innerHTML = `
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-bold text-white">${admin.name}</h3>
+                            <button onclick="openRangeModal('${doc.id}', '${admin.name}')" class="px-4 py-2 bg-brand-gold text-brand-navy font-bold rounded-xl text-xs">
+                                <i class="fa-solid fa-edit mr-1.5"></i>Set Range
+                            </button>
+                        </div>
+                        <div id="range-${doc.id}" class="text-slate-400">
+                            <p class="text-sm">No range set yet</p>
+                        </div>
+                    `;
+                    rangesList.appendChild(card);
+
+                    // Load existing range
+                    loadAdminRangeDisplay(doc.id);
+                });
+            } catch (error) {
+                console.error("Error loading ranges tab:", error);
+            }
+        }
+
+        async function loadAdminRangeDisplay(adminId) {
+            try {
+                const { getDoc, doc } = await import("https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js");
+                
+                const rangeDoc = await getDoc(doc(window.db, "admin_ranges", adminId));
+                const display = document.getElementById(`range-${adminId}`);
+                
+                if (rangeDoc.exists()) {
+                    const range = rangeDoc.data();
+                    display.innerHTML = `
+                        <p class="text-lg font-bold text-brand-gold">${range.start} - ${range.end}</p>
+                        <p class="text-xs text-slate-400 mt-1">Total: ${range.totalNumbers} numbers | Used: ${range.usedNumbers}</p>
+                    `;
+                }
+            } catch (error) {
+                console.error("Error loading range:", error);
+            }
+        }
+
+        async function openRangeModal(adminId, adminName) {
+            const start = prompt(`Set start number for ${adminName}:`);
+            if (!start || isNaN(start)) return;
+
+            const end = prompt(`Set end number for ${adminName}:`);
+            if (!end || isNaN(end)) return;
+
+            const startNum = parseInt(start);
+            const endNum = parseInt(end);
+
+            if (startNum >= endNum) {
+                showToast('Start must be less than end', 'error');
+                return;
+            }
+
+            try {
+                const { setDoc, doc, serverTimestamp } = await import("https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js");
+                
+                await setDoc(doc(window.db, "admin_ranges", adminId), {
+                    adminId, adminName,
+                    start: startNum,
+                    end: endNum,
+                    totalNumbers: endNum - startNum + 1,
+                    usedNumbers: 0,
+                    allocatedAt: serverTimestamp()
+                });
+
+                showToast(`Range ${startNum}-${endNum} set for ${adminName}!`);
+                loadAdminRangeDisplay(adminId);
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+
+        async function loadAdminsTab() {
+            try {
+                const { getDocs, collection, query, where } = await import("https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js");
+                
+                const q = query(collection(window.db, "admins"), where("permissionLevel", "==", "sub_admin"));
+                const snapshot = await getDocs(q);
+                
+                const list = document.getElementById('main-admins-list');
+                list.innerHTML = '';
+
+                snapshot.forEach(doc => {
+                    const admin = doc.data();
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="p-4">${admin.name}</td>
+                        <td class="p-4">${admin.email}</td>
+                        <td class="p-4">-</td>
+                        <td class="p-4">0</td>
+                        <td class="p-4"><span class="text-emerald-400">Active</span></td>
+                    `;
+                    list.appendChild(tr);
+                });
+            } catch (error) {
+                console.error("Error loading admins tab:", error);
+            }
+        }
+
+        async function loadCustomersTab() {
+            try {
+                const { getDocs, collection, doc, getDoc } = await import("https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js");
+                
+                const snapshot = await getDocs(collection(window.db, "customers"));
+                const list = document.getElementById('main-customers-list');
+                list.innerHTML = '';
+
+                snapshot.forEach(async (custDoc) => {
+                    const cust = custDoc.data();
+                    const adminDoc = await getDoc(doc(window.db, "admins", cust.adminId));
+                    const adminName = adminDoc.exists() ? adminDoc.data().name : "Unknown";
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="p-4">${cust.name}</td>
+                        <td class="p-4">${cust.email}</td>
+                        <td class="p-4">${adminName}</td>
+                        <td class="p-4">${new Date(cust.createdAt).toLocaleDateString()}</td>
+                    `;
+                    list.appendChild(tr);
+                });
+            } catch (error) {
+                console.error("Error loading customers tab:", error);
+            }
+        }
+
+        async function loadTicketsTab() {
+            try {
+                const { getDocs, collection, doc, getDoc } = await import("https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js");
+                
+                const snapshot = await getDocs(collection(window.db, "tickets"));
+                const list = document.getElementById('main-tickets-list');
+                list.innerHTML = '';
+
+                snapshot.forEach(async (tickDoc) => {
+                    const tick = tickDoc.data();
+                    const adminDoc = await getDoc(doc(window.db, "admins", tick.adminId));
+                    const adminName = adminDoc.exists() ? adminDoc.data().name : "Unknown";
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="p-4">${tick.ticketId}</td>
+                        <td class="p-4">${tick.customerName}</td>
+                        <td class="p-4">${adminName}</td>
+                        <td class="p-4">${tick.totalCost} ETB</td>
+                        <td class="p-4"><span class="text-emerald-400">Active</span></td>
+                    `;
+                    list.appendChild(tr);
+                });
+            } catch (error) {
+                console.error("Error loading tickets tab:", error);
+            }
+        }
+
+        function showCreateAdminForm() {
+            document.getElementById('create-admin-modal').classList.remove('hidden');
+        }
+
+        function hideCreateAdminForm() {
+            document.getElementById('create-admin-modal').classList.add('hidden');
+        }
+
+        async function createNewAdmin() {
+            const name = document.getElementById('new-admin-name').value;
+            const email = document.getElementById('new-admin-email').value;
+            const password = document.getElementById('new-admin-password').value;
+
+            if (!name || !email || !password) {
+                showToast('Please fill all fields', 'error');
+                return;
+            }
+
+            try {
+                const { addDoc, collection } = await import("https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js");
+                
+                await addDoc(collection(window.db, "admins"), {
+                    name, email, password,
+                    permissionLevel: "sub_admin",
+                    permissions: ["ticket", "payment"],
+                    isActive: true,
+                    createdAt: new Date()
+                });
+
+                showToast(`Admin ${name} created!`);
+                hideCreateAdminForm();
+                document.getElementById('create-admin-modal').innerHTML = `
+                    <h3 class="text-lg font-bold">Create New Branch Admin</h3>
+                    <div class="space-y-4">
+                        <input type="text" id="new-admin-name" placeholder="Full Name" class="w-full bg-brand-navy/60 border border-brand-gold/15 rounded-xl py-3 px-4 text-sm text-white outline-none">
+                        <input type="email" id="new-admin-email" placeholder="Email" class="w-full bg-brand-navy/60 border border-brand-gold/15 rounded-xl py-3 px-4 text-sm text-white outline-none">
+                        <input type="password" id="new-admin-password" placeholder="Password" class="w-full bg-brand-navy/60 border border-brand-gold/15 rounded-xl py-3 px-4 text-sm text-white outline-none">
+                        <div class="flex gap-2">
+                            <button onclick="createNewAdmin()" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm">Create</button>
+                            <button onclick="hideCreateAdminForm()" class="flex-1 py-3 bg-slate-600 hover:bg-slate-700 text-white font-bold rounded-xl text-sm">Cancel</button>
+                        </div>
+                    </div>
+                `;
+                loadAdminsTab();
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
         }
 
         // ==================== UTILITIES ====================
+
+        function showLoginError(msg) {
+            const errorDiv = document.getElementById('login-error');
+            errorDiv.textContent = msg;
+            errorDiv.classList.remove('hidden');
+        }
 
         function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container');
@@ -761,27 +1063,43 @@
                     : 'bg-red-950/90 border-red-900/30 text-red-300'
             }`;
             
-            toast.innerHTML = `
-                <i class="${type === 'success' ? 'fa-solid fa-check' : 'fa-solid fa-times'}"></i>
-                <span>${message}</span>
-            `;
-            
+            toast.innerHTML = `<span>${message}</span>`;
             container.appendChild(toast);
             setTimeout(() => toast.remove(), 3000);
+        }
+
+        function logout() {
+            if (confirm('Logout?')) {
+                currentUser = null;
+                userRole = null;
+                localStorage.removeItem('currentUser');
+                document.getElementById('customer-dashboard')?.classList.add('hidden');
+                document.getElementById('admin-dashboard')?.classList.add('hidden');
+                document.getElementById('main-admin-dashboard')?.classList.add('hidden');
+                document.getElementById('public-page').classList.remove('hidden');
+                document.getElementById('cust-email').value = '';
+                document.getElementById('cust-password').value = '';
+                document.getElementById('admin-email').value = '';
+                document.getElementById('admin-password').value = '';
+                showToast('Logged out');
+            }
         }
 
         // ==================== INIT ====================
 
         window.addEventListener('load', () => {
-            const savedCustomer = localStorage.getItem('customerUser');
-            const savedAdmin = localStorage.getItem('adminUser');
+            const saved = localStorage.getItem('currentUser');
+            if (saved) {
+                currentUser = JSON.parse(saved);
+                userRole = currentUser.type;
 
-            if (savedCustomer) {
-                currentCustomer = JSON.parse(savedCustomer);
-                showCustomerDashboard();
-            } else if (savedAdmin) {
-                currentAdmin = JSON.parse(savedAdmin);
-                showAdminDashboard();
+                if (userRole === 'customer') {
+                    showCustomerDashboard();
+                } else if (userRole === 'sub_admin') {
+                    showAdminDashboard();
+                } else if (userRole === 'main_admin') {
+                    showMainAdminDashboard();
+                }
             }
         });
     </script>
