@@ -226,22 +226,65 @@
                     </div>
                 </div>
 
-                <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-6">
                     <h3 class="text-lg font-bold text-white mb-4">Main Admin Controls</h3>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        <button onclick="showSetRangeForm()" class="p-3 bg-yellow-400/10 rounded-lg text-yellow-400 text-xs font-bold hover:bg-yellow-400/20">🎯 Set Ranges</button>
-                        <button class="p-3 bg-yellow-400/10 rounded-lg text-yellow-400 text-xs font-bold hover:bg-yellow-400/20">👤 Manage Admins</button>
-                        <button class="p-3 bg-yellow-400/10 rounded-lg text-yellow-400 text-xs font-bold hover:bg-yellow-400/20">👥 View Customers</button>
-                        <button class="p-3 bg-yellow-400/10 rounded-lg text-yellow-400 text-xs font-bold hover:bg-yellow-400/20">🎫 View Tickets</button>
+                    
+                    <!-- SET RANGES SECTION -->
+                    <div class="border-t border-yellow-400/10 pt-6">
+                        <h4 class="text-lg font-bold text-white mb-3">🎯 Set Ticket Ranges</h4>
+                        <p class="text-sm text-slate-400 mb-4">Allocate ticket number ranges to branch admins</p>
+                        <div class="space-y-3">
+                            <div class="p-3 rounded-lg bg-yellow-400/10 border border-yellow-400/20">
+                                <p class="text-white font-bold">Ahmed Mohamed</p>
+                                <p class="text-xs text-slate-400 mt-1">Current Range: 1-300</p>
+                                <button onclick="editAdminRange('Ahmed Mohamed', 1, 300)" class="mt-2 px-3 py-1 bg-yellow-400 text-black text-xs font-bold rounded">Edit Range</button>
+                            </div>
+                            <div class="p-3 rounded-lg bg-yellow-400/10 border border-yellow-400/20">
+                                <p class="text-white font-bold">Fatima Ahmed</p>
+                                <p class="text-xs text-slate-400 mt-1">Current Range: Not Set</p>
+                                <button onclick="editAdminRange('Fatima Ahmed', null, null)" class="mt-2 px-3 py-1 bg-yellow-400 text-black text-xs font-bold rounded">Set Range</button>
+                            </div>
+                        </div>
                     </div>
-                </div>
 
-                <div id="range-form" class="hidden glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
-                    <h3 class="text-lg font-bold text-white">Set Range for Admin</h3>
-                    <input type="text" placeholder="Admin name" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-3 px-4 text-sm text-white outline-none">
-                    <input type="number" placeholder="Start number (e.g., 1)" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-3 px-4 text-sm text-white outline-none">
-                    <input type="number" placeholder="End number (e.g., 300)" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-3 px-4 text-sm text-white outline-none">
-                    <button onclick="alert('Range setting ready!')" class="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">Save Range</button>
+                    <!-- MANAGE ADMINS SECTION -->
+                    <div class="border-t border-yellow-400/10 pt-6">
+                        <h4 class="text-lg font-bold text-white mb-3">👤 Manage Admins</h4>
+                        <p class="text-sm text-slate-400 mb-4">Create and manage branch admins</p>
+                        <button onclick="showCreateAdminForm()" class="w-full px-4 py-2 bg-yellow-400 text-black font-bold rounded-xl mb-3">+ Create New Admin</button>
+                        <div id="admin-list" class="space-y-2">
+                            <div class="p-3 rounded-lg bg-yellow-400/10">
+                                <p class="text-white font-bold">Ahmed Mohamed</p>
+                                <p class="text-xs text-slate-400">ahmed@company.com • Active • Range: 1-300</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- VIEW CUSTOMERS SECTION -->
+                    <div class="border-t border-yellow-400/10 pt-6">
+                        <h4 class="text-lg font-bold text-white mb-3">👥 View All Customers</h4>
+                        <p class="text-sm text-slate-400 mb-4">View customers from all branches</p>
+                        <button onclick="showAllCustomers()" class="w-full px-4 py-2 bg-yellow-400 text-black font-bold rounded-xl">View All Customers</button>
+                        <div id="customers-list" class="hidden mt-3 space-y-2">
+                            <div class="p-3 rounded-lg bg-slate-800">
+                                <p class="text-white font-bold">Mohammed Ali</p>
+                                <p class="text-xs text-slate-400">m@email.com • Ahmed's Branch • 5 tickets</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- VIEW TICKETS SECTION -->
+                    <div class="border-t border-yellow-400/10 pt-6">
+                        <h4 class="text-lg font-bold text-white mb-3">🎫 View All Tickets</h4>
+                        <p class="text-sm text-slate-400 mb-4">View tickets from all branches</p>
+                        <button onclick="showAllTickets()" class="w-full px-4 py-2 bg-yellow-400 text-black font-bold rounded-xl">View All Tickets</button>
+                        <div id="tickets-list" class="hidden mt-3 space-y-2">
+                            <div class="p-3 rounded-lg bg-slate-800">
+                                <p class="text-white font-bold">Ticket: TK12345</p>
+                                <p class="text-xs text-slate-400">Customer: Mohammed Ali • Numbers: 1,50,100,200,300 • Cost: 500 ETB</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
@@ -268,7 +311,7 @@
             if (email === 'ahmed@company.com' && password === 'Ahmed123') {
                 currentUser = { type: 'admin', name: 'Ahmed Mohamed', email };
                 showAdminDashboard();
-            } else if (email === 'fita.regassa77@gmail.com' && password === 'MainAdmin123') {
+            } else if (email === 'fita.regassa@gmail.com' && password === 'MainAdmin123') {
                 currentUser = { type: 'main_admin', name: 'Main Admin', email };
                 showMainAdminDashboard();
             } else if (email === 'm@email.com' && password === 'Pass123') {
@@ -310,8 +353,52 @@
             document.getElementById('main-rev').textContent = '41,000 ETB';
         }
 
-        function showSetRangeForm() {
-            document.getElementById('range-form').classList.toggle('hidden');
+        function editAdminRange(adminName, start, end) {
+            const newStart = prompt(`Enter START number for ${adminName}:`, start || '1');
+            if (!newStart) return;
+            
+            const newEnd = prompt(`Enter END number for ${adminName}:`, end || '300');
+            if (!newEnd) return;
+            
+            if (parseInt(newStart) >= parseInt(newEnd)) {
+                alert('Start must be less than end!');
+                return;
+            }
+            
+            alert(`✅ Range set for ${adminName}: ${newStart} - ${newEnd}`);
+        }
+
+        function showCreateAdminForm() {
+            const name = prompt('Enter admin full name:');
+            if (!name) return;
+            
+            const email = prompt('Enter admin email:');
+            if (!email) return;
+            
+            const password = prompt('Enter admin password:');
+            if (!password) return;
+            
+            alert(`✅ Admin created!\n\nName: ${name}\nEmail: ${email}\nPassword: ${password}`);
+            
+            // Add to list
+            const list = document.getElementById('admin-list');
+            const newAdmin = document.createElement('div');
+            newAdmin.className = 'p-3 rounded-lg bg-yellow-400/10';
+            newAdmin.innerHTML = `
+                <p class="text-white font-bold">${name}</p>
+                <p class="text-xs text-slate-400">${email} • Active • Range: Not Set</p>
+            `;
+            list.appendChild(newAdmin);
+        }
+
+        function showAllCustomers() {
+            const list = document.getElementById('customers-list');
+            list.classList.toggle('hidden');
+        }
+
+        function showAllTickets() {
+            const list = document.getElementById('tickets-list');
+            list.classList.toggle('hidden');
         }
 
         function logout() {
