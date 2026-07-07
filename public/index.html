@@ -402,17 +402,18 @@
         }
 
         function logout() {
-            if (confirm('Logout?')) {
-                currentUser = null;
-                document.getElementById('public-page').classList.remove('hidden');
-                document.getElementById('customer-dashboard').classList.add('hidden');
-                document.getElementById('admin-dashboard').classList.add('hidden');
-                document.getElementById('main-admin-dashboard').classList.add('hidden');
-                document.getElementById('login-email').value = '';
-                document.getElementById('login-password').value = '';
-                alert('Logged out successfully!');
-            }
-        }
+    currentUser = null;
+    
+    // Reset Visibility
+    document.getElementById('public-page').classList.remove('hidden');
+    document.getElementById('customer-dashboard').classList.add('hidden');
+    document.getElementById('admin-dashboard').classList.add('hidden');
+    document.getElementById('main-admin-dashboard').classList.add('hidden');
+    
+    // Clear Inputs
+    document.getElementById('login-email').value = '';
+    document.getElementById('login-password').value = '';
+}
     </script>
 </body>
 </html>
