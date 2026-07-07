@@ -3,417 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lottery Ticket</title>
+    <title>Boni Lottery Platform</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { box-sizing: border-box; }
         body { background: #020c1b; color: #e2e8f0; }
-        .glass-panel {
-            background: rgba(15, 39, 61, 0.45);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(200, 184, 123, 0.08);
-        }
-        .text-gradient {
-            background: linear-gradient(135deg, #FFF 30%, #C8B87B 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
+        .glass-panel { background: rgba(15, 39, 61, 0.45); backdrop-filter: blur(16px); border: 1px solid rgba(200, 184, 123, 0.08); }
+        .text-gradient { background: linear-gradient(135deg, #FFF 30%, #C8B87B 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     </style>
 </head>
 <body class="antialiased">
 
     <!-- PUBLIC PAGE -->
-    <div id="public-page" class="min-h-screen bg-brand-navyback flex flex-col">
-        <header class="sticky top-0 z-40 w-full glass-panel border-b border-brand-gold/10 px-6 py-4">
+    <div id="public-page" class="min-h-screen flex flex-col">
+        <header class="glass-panel border-b border-yellow-400/10 px-6 py-4">
             <div class="max-w-7xl mx-auto flex items-center justify-between">
                 <div class="flex items-center space-x-3">
                     <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center text-black">
                         <i class="fa-solid fa-trophy"></i>
                     </div>
-                    <div>
-                        <span class="font-bold text-xs text-gradient"></span>
-                        <span class="text-xl text-yellow-400 font-bold">LOTTERY TICKET</span>
-                    </div>
+                    <span class="text-xl text-yellow-400 font-bold">BONI LOTTERY</span>
                 </div>
-                <button onclick="showLoginModal()" class="px-6 py-2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">
-                    <i class="fa-solid fa-sign-in-alt mr-2"></i>Login
-                </button>
+                <button onclick="showLoginModal()" class="px-6 py-2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">Login</button>
             </div>
         </header>
-
-        <main class="flex-grow p-6">
-            <div class="max-w-7xl mx-auto">
-                <div class="rounded-3xl glass-panel border border-yellow-400/20 p-12 text-center space-y-6 mb-12">
-                    <h1 class="text-5xl font-bold text-white">
-                        Multi-Branch<br>
-                        <span class="text-yellow-400">Lottery System</span>
-                    </h1>
-                    <p class="text-slate-300">Complete lottery management platform</p>
-                    <button onclick="showLoginModal()" class="px-8 py-4 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-2xl">
-                        Get Started
-                    </button>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                        <i class="fa-solid fa-book text-2xl text-yellow-400 mb-3"></i>
-                        <h3 class="font-bold">Library</h3>
-                        <p class="text-sm text-slate-400 mt-2">Learn lottery rules</p>
-                    </div>
-                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                        <i class="fa-solid fa-calendar text-2xl text-yellow-400 mb-3"></i>
-                        <h3 class="font-bold">Appointments</h3>
-                        <p class="text-sm text-slate-400 mt-2">Book meetings with admin</p>
-                    </div>
-                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                        <i class="fa-solid fa-ticket text-2xl text-yellow-400 mb-3"></i>
-                        <h3 class="font-bold">Tickets</h3>
-                        <p class="text-sm text-slate-400 mt-2">Buy lottery numbers</p>
-                    </div>
-                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                        <i class="fa-solid fa-bell text-2xl text-yellow-400 mb-3"></i>
-                        <h3 class="font-bold">Notifications</h3>
-                        <p class="text-sm text-slate-400 mt-2">Instant updates</p>
-                    </div>
-                </div>
-            </div>
+        <main class="flex-grow p-6 text-center">
+            <h1 class="text-5xl font-bold text-white mt-20">Multi-Branch <span class="text-yellow-400">Lottery System</span></h1>
         </main>
     </div>
 
     <!-- LOGIN MODAL -->
     <div id="login-modal" class="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4 hidden">
-        <div class="glass-panel rounded-3xl p-8 max-w-md w-full border border-yellow-400/20 space-y-6">
-            <div class="text-center">
-                <h2 class="text-2xl font-bold text-white">Login</h2>
-                <p class="text-xs text-slate-400 mt-2">Customer • Admin • Main Admin</p>
-            </div>
-
-            <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4">
-                <input type="email" id="login-email" placeholder="Email" required class="w-full bg-black/40 border border-yellow-400/20 focus:border-yellow-400 rounded-xl py-3 px-4 text-sm text-white outline-none">
-                <input type="password" id="login-password" placeholder="Password" required class="w-full bg-black/40 border border-yellow-400/20 focus:border-yellow-400 rounded-xl py-3 px-4 text-sm text-white outline-none">
-                <button type="submit" class="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">
-                    Login
-                </button>
+        <div class="glass-panel rounded-3xl p-8 max-w-md w-full border border-yellow-400/20">
+            <h2 class="text-2xl font-bold text-white text-center mb-6">Login</h2>
+            <form id="login-form" class="space-y-4">
+                <input type="email" placeholder="Email" required class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-3 px-4 outline-none">
+                <input type="password" placeholder="Password" required class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-3 px-4 outline-none">
+                <button type="submit" class="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">Login</button>
             </form>
-
-            <div id="login-error" class="hidden p-3 rounded-xl bg-red-950/50 text-red-300 text-xs text-center"></div>
-
-            <button onclick="closeLoginModal()" class="w-full text-slate-400 font-semibold text-xs">Close</button>
+            <button onclick="closeLoginModal()" class="w-full mt-4 text-slate-400 text-xs">Close</button>
         </div>
     </div>
 
-    <!-- CUSTOMER DASHBOARD -->
-    <div id="customer-dashboard" class="hidden min-h-screen bg-black flex flex-col">
-        <header class="sticky top-0 z-40 w-full glass-panel border-b border-yellow-400/10 px-6 py-4">
-            <div class="max-w-7xl mx-auto flex items-center justify-between">
-                <h1 class="font-bold text-xl text-white">Customer Dashboard</h1>
-                <button onclick="logout()" class="px-4 py-2 bg-red-950/30 text-red-400 text-xs font-bold rounded-xl">Logout</button>
+    <!-- CUSTOMER DASHBOARD (Role: User) -->
+    <div id="customer-dashboard" class="hidden p-6 max-w-7xl mx-auto">
+        <h2 class="text-3xl font-bold text-white mb-6">Customer Dashboard</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="glass-panel p-6 rounded-2xl">
+                <h3 class="font-bold text-yellow-400 mb-2">Library</h3>
+                <ul class="text-sm space-y-2 text-slate-400"><li>Lottery Rules</li><li>How to Play</li><li>FAQ</li></ul>
             </div>
-        </header>
-
-        <main class="flex-grow p-6">
-            <div class="max-w-7xl mx-auto space-y-6">
-                <h2 class="text-3xl font-bold text-white" id="cust-welcome">Welcome!</h2>
-
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                        <p class="text-xs text-slate-400">Admin</p>
-                        <p id="cust-admin" class="text-2xl font-bold text-yellow-400 mt-2">-</p>
-                    </div>
-                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                        <p class="text-xs text-slate-400">Range</p>
-                        <p id="cust-range" class="text-xl font-bold text-yellow-400 mt-2">-</p>
-                    </div>
-                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                        <p class="text-xs text-slate-400">Tickets</p>
-                        <p id="cust-tickets" class="text-2xl font-bold text-blue-400 mt-2">0</p>
-                    </div>
-                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                        <p class="text-xs text-slate-400">Spent</p>
-                        <p id="cust-spent" class="text-2xl font-bold text-emerald-400 mt-2">0 ETB</p>
-                    </div>
-                </div>
-
-                <button onclick="alert('Payment system ready!')" class="w-full py-4 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-2xl text-lg">
-                    <i class="fa-solid fa-ticket mr-2"></i>Buy Lottery Ticket
-                </button>
-
-                <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                    <h3 class="text-lg font-bold text-white mb-4">Your Tickets</h3>
-                    <p class="text-slate-400 text-center">No tickets yet</p>
-                </div>
+            <div class="glass-panel p-6 rounded-2xl">
+                <h3 class="font-bold text-yellow-400 mb-2">My Tickets</h3>
+                <button class="w-full py-2 bg-yellow-400/10 text-yellow-400 rounded-lg">Buy New Ticket</button>
             </div>
-        </main>
+            <div class="glass-panel p-6 rounded-2xl">
+                <h3 class="font-bold text-yellow-400 mb-2">Appointments</h3>
+                <button class="w-full py-2 bg-yellow-400/10 text-yellow-400 rounded-lg">Book Support</button>
+            </div>
+        </div>
     </div>
 
-    <!-- ADMIN DASHBOARD -->
-    <div id="admin-dashboard" class="hidden min-h-screen bg-black flex flex-col">
-        <header class="sticky top-0 z-40 w-full glass-panel border-b border-yellow-400/10 px-6 py-4">
-            <div class="max-w-7xl mx-auto flex items-center justify-between">
-                <h1 class="font-bold text-xl text-white">Admin Dashboard</h1>
-                <button onclick="logout()" class="px-4 py-2 bg-red-950/30 text-red-400 text-xs font-bold rounded-xl">Logout</button>
-            </div>
-        </header>
-
-        <main class="flex-grow p-6">
-            <div class="max-w-7xl mx-auto space-y-6">
-                <h2 class="text-3xl font-bold text-white" id="admin-welcome">Branch Admin</h2>
-
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                        <p class="text-xs text-slate-400">My Range</p>
-                        <p id="admin-range" class="text-2xl font-bold text-yellow-400 mt-2">-</p>
-                    </div>
-                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                        <p class="text-xs text-slate-400">Customers</p>
-                        <p id="admin-custs" class="text-2xl font-bold text-blue-400 mt-2">0</p>
-                    </div>
-                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                        <p class="text-xs text-slate-400">Tickets</p>
-                        <p id="admin-tix" class="text-2xl font-bold text-emerald-400 mt-2">0</p>
-                    </div>
-                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                        <p class="text-xs text-slate-400">Revenue</p>
-                        <p id="admin-rev" class="text-2xl font-bold text-purple-400 mt-2">0 ETB</p>
-                    </div>
-                </div>
-
-                <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                    <h3 class="text-lg font-bold text-white mb-4">Admin Features Ready</h3>
-                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-                        <button class="p-3 bg-yellow-400/10 rounded-lg text-yellow-400 text-xs font-bold hover:bg-yellow-400/20">👥 Manage Customers</button>
-                        <button class="p-3 bg-yellow-400/10 rounded-lg text-yellow-400 text-xs font-bold hover:bg-yellow-400/20">🎫 Manage Tickets</button>
-                        <button class="p-3 bg-yellow-400/10 rounded-lg text-yellow-400 text-xs font-bold hover:bg-yellow-400/20">💳 Verify Payments</button>
-                        <button class="p-3 bg-yellow-400/10 rounded-lg text-yellow-400 text-xs font-bold hover:bg-yellow-400/20">📅 Appointments</button>
-                        <button class="p-3 bg-yellow-400/10 rounded-lg text-yellow-400 text-xs font-bold hover:bg-yellow-400/20">🔔 Send Notifications</button>
-                        <button class="p-3 bg-yellow-400/10 rounded-lg text-yellow-400 text-xs font-bold hover:bg-yellow-400/20">📊 View Revenue</button>
-                    </div>
-                </div>
-            </div>
-        </main>
+    <!-- BRANCH ADMIN DASHBOARD (Role: Sub-Admin) -->
+    <div id="admin-dashboard" class="hidden p-6 max-w-7xl mx-auto">
+        <h2 class="text-3xl font-bold text-white mb-6">Branch Admin Panel</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <button class="p-4 bg-yellow-400/10 rounded-xl text-yellow-400 font-bold border border-yellow-400/20">💳 Payments</button>
+            <button class="p-4 bg-yellow-400/10 rounded-xl text-yellow-400 font-bold border border-yellow-400/20">🎫 Tickets</button>
+            <button class="p-4 bg-yellow-400/10 rounded-xl text-yellow-400 font-bold border border-yellow-400/20">👥 Customers</button>
+            <button class="p-4 bg-yellow-400/10 rounded-xl text-yellow-400 font-bold border border-yellow-400/20">📊 Revenue</button>
+        </div>
     </div>
 
-    <!-- MAIN ADMIN DASHBOARD -->
-    <div id="main-admin-dashboard" class="hidden min-h-screen bg-black flex flex-col">
-        <header class="sticky top-0 z-40 w-full glass-panel border-b border-yellow-400/10 px-6 py-4">
-            <div class="max-w-7xl mx-auto flex items-center justify-between">
-                <h1 class="font-bold text-xl text-gradient">MAIN ADMIN HQ</h1>
-                <button onclick="logout()" class="px-4 py-2 bg-red-950/30 text-red-400 text-xs font-bold rounded-xl">Logout</button>
+    <!-- MAIN ADMIN DASHBOARD (Role: Main-Admin) -->
+    <div id="main-admin-dashboard" class="hidden p-6 max-w-7xl mx-auto">
+        <h2 class="text-3xl font-bold text-gradient mb-6">Main Admin Control Center</h2>
+        <div class="glass-panel p-6 rounded-2xl border border-yellow-400/20">
+            <h3 class="text-lg font-bold text-white mb-4">Platform Master Controls</h3>
+            <div class="space-y-4">
+                <button class="w-full p-3 bg-yellow-400/10 text-white rounded-lg text-left">🎯 Set Ticket Ranges (Admin Allocation)</button>
+                <button class="w-full p-3 bg-yellow-400/10 text-white rounded-lg text-left">👤 Manage Branch Admins</button>
+                <button class="w-full p-3 bg-yellow-400/10 text-white rounded-lg text-left">📢 Global Notifications</button>
+                <button class="w-full p-3 bg-yellow-400/10 text-white rounded-lg text-left">⚙️ System Settings</button>
             </div>
-        </header>
-
-        <main class="flex-grow p-6">
-            <div class="max-w-7xl mx-auto space-y-6">
-                <h2 class="text-3xl font-bold text-white">Platform Control Center</h2>
-
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                        <p class="text-xs text-slate-400">Total Admins</p>
-                        <p id="main-admins" class="text-3xl font-bold text-yellow-400 mt-2">0</p>
-                    </div>
-                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                        <p class="text-xs text-slate-400">Total Customers</p>
-                        <p id="main-custs" class="text-3xl font-bold text-blue-400 mt-2">0</p>
-                    </div>
-                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                        <p class="text-xs text-slate-400">Total Tickets</p>
-                        <p id="main-tix" class="text-3xl font-bold text-emerald-400 mt-2">0</p>
-                    </div>
-                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                        <p class="text-xs text-slate-400">Total Revenue</p>
-                        <p id="main-rev" class="text-3xl font-bold text-purple-400 mt-2">0 ETB</p>
-                    </div>
-                </div>
-
-                <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-6">
-                    <h3 class="text-lg font-bold text-white mb-4">Main Admin Controls</h3>
-                    
-                    <!-- SET RANGES SECTION -->
-                    <div class="border-t border-yellow-400/10 pt-6">
-                        <h4 class="text-lg font-bold text-white mb-3">🎯 Set Ticket Ranges</h4>
-                        <p class="text-sm text-slate-400 mb-4">Allocate ticket number ranges to branch admins</p>
-                        <div class="space-y-3">
-                            <div class="p-3 rounded-lg bg-yellow-400/10 border border-yellow-400/20">
-                                <p class="text-white font-bold">Ab</p>
-                                <p class="text-xs text-slate-400 mt-1">Current Range: 1-300</p>
-                                <button onclick="editAdminRange('Ab', 1, 300)" class="mt-2 px-3 py-1 bg-yellow-400 text-black text-xs font-bold rounded">Edit Range</button>
-                            </div>
-                            <div class="p-3 rounded-lg bg-yellow-400/10 border border-yellow-400/20">
-                                <p class="text-white font-bold">Abb</p>
-                                <p class="text-xs text-slate-400 mt-1">Current Range: Not Set</p>
-                                <button onclick="editAdminRange('Abb', null, null)" class="mt-2 px-3 py-1 bg-yellow-400 text-black text-xs font-bold rounded">Set Range</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- MANAGE ADMINS SECTION -->
-                    <div class="border-t border-yellow-400/10 pt-6">
-                        <h4 class="text-lg font-bold text-white mb-3">👤 Manage Admins</h4>
-                        <p class="text-sm text-slate-400 mb-4">Create and manage branch admins</p>
-                        <button onclick="showCreateAdminForm()" class="w-full px-4 py-2 bg-yellow-400 text-black font-bold rounded-xl mb-3">+ Create New Admin</button>
-                        <div id="admin-list" class="space-y-2">
-                            <div class="p-3 rounded-lg bg-yellow-400/10">
-                                <p class="text-white font-bold">Ab</p>
-                                <p class="text-xs text-slate-400">ab@gmail.com • Active • Range: 1-300</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- VIEW CUSTOMERS SECTION -->
-                    <div class="border-t border-yellow-400/10 pt-6">
-                        <h4 class="text-lg font-bold text-white mb-3">👥 View All Customers</h4>
-                        <p class="text-sm text-slate-400 mb-4">View customers from all branches</p>
-                        <button onclick="showAllCustomers()" class="w-full px-4 py-2 bg-yellow-400 text-black font-bold rounded-xl">View All Customers</button>
-                        <div id="customers-list" class="hidden mt-3 space-y-2">
-                            <div class="p-3 rounded-lg bg-slate-800">
-                                <p class="text-white font-bold">Abb</p>
-                                <p class="text-xs text-slate-400">abb@gmail.com • Ab's Branch • 5 tickets</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- VIEW TICKETS SECTION -->
-                    <div class="border-t border-yellow-400/10 pt-6">
-                        <h4 class="text-lg font-bold text-white mb-3">🎫 View All Tickets</h4>
-                        <p class="text-sm text-slate-400 mb-4">View tickets from all branches</p>
-                        <button onclick="showAllTickets()" class="w-full px-4 py-2 bg-yellow-400 text-black font-bold rounded-xl">View All Tickets</button>
-                        <div id="tickets-list" class="hidden mt-3 space-y-2">
-                            <div class="p-3 rounded-lg bg-slate-800">
-                                <p class="text-white font-bold">Ticket: TK12345</p>
-                                <p class="text-xs text-slate-400">Customer: Abb • Numbers: 1,50,100,200,300 • Cost: 500 ETB</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </main>
+        </div>
     </div>
 
     <script>
-        let currentUser = null;
-
-        function showLoginModal() {
-            document.getElementById('login-modal').classList.remove('hidden');
-        }
-
-        function closeLoginModal() {
-            document.getElementById('login-modal').classList.add('hidden');
-            document.getElementById('login-error').classList.add('hidden');
-        }
-
-        function handleLogin(event) {
-            event.preventDefault();
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
-
-            // Demo credentials
-            if (email === 'ab@gmail.com' && password === '123456') {
-                currentUser = { type: 'admin', name: 'Ab', email };
-                showAdminDashboard();
-            } else if (email === 'fita.regassa@gmail.com' && password === '123456') {
-                currentUser = { type: 'main_admin', name: 'Main Admin', email };
-                showMainAdminDashboard();
-            } else if (email === 'abb@gmail.com' && password === '123456') {
-                currentUser = { type: 'customer', name: 'Abb', email };
-                showCustomerDashboard();
-            } else {
-                document.getElementById('login-error').textContent = 'Invalid credentials - Check credentials below';
-                document.getElementById('login-error').classList.remove('hidden');
-            }
-        }
-
-        function showCustomerDashboard() {
-            document.getElementById('public-page').classList.add('hidden');
-            document.getElementById('login-modal').classList.add('hidden');
-            document.getElementById('customer-dashboard').classList.remove('hidden');
-            document.getElementById('cust-welcome').textContent = `Welcome, ${currentUser.name}!`;
-            document.getElementById('cust-admin').textContent = 'Ab';
-            document.getElementById('cust-range').textContent = '1 - 300';
-        }
-
-        function showAdminDashboard() {
-            document.getElementById('public-page').classList.add('hidden');
-            document.getElementById('login-modal').classList.add('hidden');
-            document.getElementById('admin-dashboard').classList.remove('hidden');
-            document.getElementById('admin-welcome').textContent = currentUser.name;
-            document.getElementById('admin-range').textContent = '1 - 300';
-            document.getElementById('admin-custs').textContent = '45';
-            document.getElementById('admin-tix').textContent = '120';
-            document.getElementById('admin-rev').textContent = '12,000 ETB';
-        }
-
-        function showMainAdminDashboard() {
-            document.getElementById('public-page').classList.add('hidden');
-            document.getElementById('login-modal').classList.add('hidden');
-            document.getElementById('main-admin-dashboard').classList.remove('hidden');
-            document.getElementById('main-admins').textContent = '3';
-            document.getElementById('main-custs').textContent = '165';
-            document.getElementById('main-tix').textContent = '410';
-            document.getElementById('main-rev').textContent = '41,000 ETB';
-        }
-
-        function editAdminRange(adminName, start, end) {
-            const newStart = prompt(`Enter START number for ${adminName}:`, start || '1');
-            if (!newStart) return;
-            
-            const newEnd = prompt(`Enter END number for ${adminName}:`, end || '300');
-            if (!newEnd) return;
-            
-            if (parseInt(newStart) >= parseInt(newEnd)) {
-                alert('Start must be less than end!');
-                return;
-            }
-            
-            alert(`✅ Range set for ${adminName}: ${newStart} - ${newEnd}`);
-        }
-
-        function showCreateAdminForm() {
-            const name = prompt('Enter admin full name:');
-            if (!name) return;
-            
-            const email = prompt('Enter admin email:');
-            if (!email) return;
-            
-            const password = prompt('Enter admin password:');
-            if (!password) return;
-            
-            alert(`✅ Admin created!\n\nName: ${name}\nEmail: ${email}\nPassword: ${password}`);
-            
-            // Add to list
-            const list = document.getElementById('admin-list');
-            const newAdmin = document.createElement('div');
-            newAdmin.className = 'p-3 rounded-lg bg-yellow-400/10';
-            newAdmin.innerHTML = `
-                <p class="text-white font-bold">${name}</p>
-                <p class="text-xs text-slate-400">${email} • Active • Range: Not Set</p>
-            `;
-            list.appendChild(newAdmin);
-        }
-
-        function showAllCustomers() {
-            const list = document.getElementById('customers-list');
-            list.classList.toggle('hidden');
-        }
-
-        function showAllTickets() {
-            const list = document.getElementById('tickets-list');
-            list.classList.toggle('hidden');
-        }
-
-        function logout() {
-    currentUser = null;
-    
-    // Reset Visibility
-    document.getElementById('public-page').classList.remove('hidden');
-    document.getElementById('customer-dashboard').classList.add('hidden');
-    document.getElementById('admin-dashboard').classList.add('hidden');
-    document.getElementById('main-admin-dashboard').classList.add('hidden');
-    
-    // Clear Inputs
-    document.getElementById('login-email').value = '';
-    document.getElementById('login-password').value = '';
-}
+        function showLoginModal() { document.getElementById('login-modal').classList.remove('hidden'); }
+        function closeLoginModal() { document.getElementById('login-modal').classList.add('hidden'); }
+        function logout() { location.reload(); }
     </script>
 </body>
 </html>
