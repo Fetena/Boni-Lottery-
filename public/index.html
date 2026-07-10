@@ -3,744 +3,726 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Boni Lottery - Enhanced System</title>
+    <title>Boni Lottery - Complete System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { box-sizing: border-box; }
-        body { background: #020c1b; color: #e2e8f0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .glass-panel {
-            background: rgba(15, 39, 61, 0.45);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(200, 184, 123, 0.08);
-        }
-        .text-gradient {
-            background: linear-gradient(135deg, #FFF 30%, #C8B87B 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        .tab-button.active {
-            border-bottom: 2px solid #FCD34D;
-            color: #FCD34D;
-        }
-        .tab-button { border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.3s; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        
-        /* NOTIFICATION POP-UP STYLES */
-        .notification-toast {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            min-width: 300px;
-            padding: 16px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            z-index: 10000;
-            animation: slideIn 0.3s ease;
-        }
-        .notification-toast.success { background: #10b981; color: white; }
-        .notification-toast.error { background: #ef4444; color: white; }
-        .notification-toast.info { background: #3b82f6; color: white; }
-        .notification-toast.warning { background: #f59e0b; color: white; }
-        @keyframes slideIn {
-            from { transform: translateX(400px); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        @keyframes slideOut {
-            from { transform: translateX(0); opacity: 1; }
-            to { transform: translateX(400px); opacity: 0; }
-        }
-        .notification-toast.exit { animation: slideOut 0.3s ease; }
-
-        /* MODAL STYLES */
-        .modal { display: none; position: fixed; inset: 0; z-index: 9999; }
+        body { background: #020c1b; color: #e2e8f0; font-family: 'Segoe UI'; }
+        .glass { background: rgba(15, 39, 61, 0.45); backdrop-filter: blur(16px); border: 1px solid rgba(200, 184, 123, 0.08); }
+        .text-gradient { background: linear-gradient(135deg, #FFF 30%, #C8B87B 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .tab { display: none; } .tab.active { display: block; }
+        .tab-btn { cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.3s; padding: 8px 12px; }
+        .tab-btn.active { border-color: #FCD34D; color: #FCD34D; }
+        .notification { position: fixed; top: 20px; right: 20px; padding: 16px; border-radius: 8px; z-index: 10000; animation: slideIn 0.3s; }
+        .notification.success { background: #10b981; } .notification.error { background: #ef4444; } .notification.info { background: #3b82f6; }
+        @keyframes slideIn { from { transform: translateX(400px); } to { transform: translateX(0); } }
+        .modal { display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,0.8); }
         .modal.active { display: flex; }
-        .modal-overlay { background: rgba(0,0,0,0.8); flex: 1; }
-        .modal-content { background: rgba(15, 39, 61, 0.95); border: 1px solid rgba(200, 184, 123, 0.2); border-radius: 12px; max-width: 500px; max-height: 80vh; overflow-y-auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid rgba(200,184,123,0.1); }
+        th { background: rgba(200,184,123,0.05); }
     </style>
 </head>
 <body class="antialiased">
 
-    <!-- NOTIFICATION CONTAINER -->
-    <div id="notification-container"></div>
+<div id="notifications"></div>
 
-    <!-- PUBLIC PAGE -->
-    <div id="public-page" class="min-h-screen bg-black flex flex-col">
-        <header class="sticky top-0 z-40 w-full glass-panel border-b border-yellow-400/10 px-6 py-4">
-            <div class="max-w-7xl mx-auto flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                    <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center text-black font-bold text-lg">🏆</div>
-                    <div><span class="font-bold text-xl text-gradient">BONI</span><span class="text-xs text-yellow-400 font-bold">LOTTERY</span></div>
-                </div>
-                <button onclick="openLoginModal()" class="px-6 py-2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl hover:shadow-lg transition">Login</button>
-            </div>
-        </header>
-        <main class="flex-grow p-6">
-            <div class="max-w-7xl mx-auto">
-                <div class="rounded-3xl glass-panel border border-yellow-400/20 p-12 text-center space-y-6 mb-12">
-                    <h1 class="text-5xl font-bold text-white">Multi-Branch<br><span class="text-yellow-400">Lottery System</span></h1>
-                    <p class="text-slate-300">Complete lottery management platform</p>
-                    <button onclick="openLoginModal()" class="px-8 py-4 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-2xl">Get Started →</button>
-                </div>
-            </div>
-        </main>
-    </div>
-
-    <!-- LOGIN MODAL -->
-    <div id="login-modal" class="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4 hidden">
-        <div class="glass-panel rounded-3xl p-8 max-w-md w-full border border-yellow-400/20 space-y-6">
-            <div class="text-center">
-                <h2 class="text-2xl font-bold text-white">Login</h2>
-                <p class="text-xs text-slate-400 mt-2">Customer • Admin • Main Admin</p>
-            </div>
-            <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4">
-                <input type="email" id="login-email" placeholder="Email" required class="w-full bg-black/40 border border-yellow-400/20 focus:border-yellow-400 rounded-xl py-3 px-4 text-sm text-white outline-none">
-                <input type="password" id="login-password" placeholder="Password" required class="w-full bg-black/40 border border-yellow-400/20 focus:border-yellow-400 rounded-xl py-3 px-4 text-sm text-white outline-none">
-                <button type="submit" class="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">Login</button>
-            </form>
-            <div class="border-t border-yellow-400/20 pt-4">
-                <p class="text-xs text-slate-400 text-center mb-3 font-bold">TEST CREDENTIALS:</p>
-                <div class="space-y-2 text-xs text-slate-300 bg-black/30 p-3 rounded-lg">
-                    <p><strong>Main Admin:</strong><br>fita.regassa@gmail.com / MainAdmin@123</p>
-                    <p><strong>Admin:</strong><br>ahmed@company.com / Ahmed123</p>
-                    <p><strong>Customer:</strong><br>m@email.com / Pass123</p>
-                </div>
-            </div>
-            <button onclick="closeLoginModal()" class="w-full text-slate-400 font-semibold text-xs">Close</button>
+<!-- LOGIN PAGE -->
+<div id="login-page" class="min-h-screen bg-black flex items-center justify-center p-4">
+    <div class="glass rounded-3xl p-8 max-w-md w-full space-y-6 border border-yellow-400/20">
+        <div class="text-center">
+            <div class="text-5xl mb-4">🏆</div>
+            <h1 class="text-3xl font-bold text-white">BONI LOTTERY</h1>
+            <p class="text-yellow-400 text-sm mt-2">Complete Management System</p>
+        </div>
+        <form onsubmit="login(event)" class="space-y-4">
+            <input type="email" id="email" placeholder="Email" required class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-3 px-4 text-white outline-none">
+            <input type="password" id="password" placeholder="Password" required class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-3 px-4 text-white outline-none">
+            <button type="submit" class="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">Login</button>
+        </form>
+        <div class="border-t border-yellow-400/20 pt-4 text-xs text-slate-300">
+            <p class="mb-2 font-bold">Test Accounts:</p>
+            <p><strong>Main Admin:</strong> fita.regassa@gmail.com / MainAdmin@123</p>
+            <p><strong>Admin:</strong> ahmed@company.com / Ahmed123</p>
+            <p><strong>Customer:</strong> m@email.com / Pass123</p>
         </div>
     </div>
+</div>
 
-    <!-- CUSTOMER DASHBOARD -->
-    <div id="customer-dashboard" class="hidden min-h-screen bg-black flex flex-col">
-        <header class="sticky top-0 z-40 w-full glass-panel border-b border-yellow-400/10 px-6 py-4">
-            <div class="max-w-7xl mx-auto flex items-center justify-between">
-                <h1 class="font-bold text-xl text-gradient">👤 Customer Dashboard</h1>
-                <button onclick="logout()" class="px-4 py-2 bg-red-950/30 text-red-400 text-xs font-bold rounded-xl">Logout</button>
+<!-- CUSTOMER DASHBOARD -->
+<div id="customer-page" class="hidden min-h-screen bg-black flex flex-col">
+    <header class="glass border-b border-yellow-400/10 px-6 py-4 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-gradient">👤 Customer Dashboard</h1>
+            <button onclick="logout()" class="px-4 py-2 bg-red-950/30 text-red-400 text-xs font-bold rounded-xl">Logout</button>
+        </div>
+    </header>
+
+    <main class="flex-grow overflow-y-auto p-6">
+        <div class="max-w-7xl mx-auto space-y-6">
+            <h2 class="text-3xl font-bold">Welcome, <span id="cust-name">Customer</span>! 👋</h2>
+
+            <!-- CUSTOMER TABS -->
+            <div class="flex gap-2 border-b border-yellow-400/10 pb-2 overflow-x-auto">
+                <button onclick="switchTab('c', 'profile')" class="tab-btn active">Profile</button>
+                <button onclick="switchTab('c', 'library')" class="tab-btn">📖 Library</button>
+                <button onclick="switchTab('c', 'buytickets')" class="tab-btn">🎫 Buy</button>
+                <button onclick="switchTab('c', 'mytickets')" class="tab-btn">My Tickets</button>
+                <button onclick="switchTab('c', 'appointments')" class="tab-btn">📅 Appointments</button>
+                <button onclick="switchTab('c', 'drawings')" class="tab-btn">🎰 Drawings</button>
+                <button onclick="switchTab('c', 'notifications')" class="tab-btn">🔔 Notifications</button>
+                <button onclick="switchTab('c', 'settings')" class="tab-btn">⚙️ Settings</button>
             </div>
-        </header>
-        <main class="flex-grow p-6 overflow-y-auto">
-            <div class="max-w-7xl mx-auto space-y-6">
-                <h2 class="text-3xl font-bold text-white">Welcome, <span id="cust-name">Customer</span>! 👋</h2>
-                
-                <!-- TABS -->
-                <div class="flex gap-2 border-b border-yellow-400/10 pb-2 overflow-x-auto">
-                    <button onclick="switchTab('cust', 'profile')" class="tab-button active px-4 py-2 text-xs font-bold text-yellow-400">Profile</button>
-                    <button onclick="switchTab('cust', 'buytickets')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🎫 Buy</button>
-                    <button onclick="switchTab('cust', 'mytickets')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">My Tickets</button>
-                    <button onclick="switchTab('cust', 'drawings')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🎰 Drawings</button>
-                </div>
 
-                <!-- PROFILE TAB -->
-                <div id="cust-profile" class="tab-content active space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                        <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                            <p class="text-xs text-slate-400">Admin</p>
-                            <p class="text-xl font-bold text-yellow-400 mt-2">Ahmed Mohamed</p>
-                        </div>
-                        <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                            <p class="text-xs text-slate-400">Range</p>
-                            <p class="text-xl font-bold text-blue-400 mt-2">1 - 300</p>
-                        </div>
-                        <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                            <p class="text-xs text-slate-400">Tickets</p>
-                            <p class="text-xl font-bold text-emerald-400 mt-2" id="cust-ticket-count">0</p>
-                        </div>
-                        <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                            <p class="text-xs text-slate-400">Spent</p>
-                            <p class="text-xl font-bold text-purple-400 mt-2" id="cust-spent">0 ETB</p>
-                        </div>
+            <!-- PROFILE TAB -->
+            <div id="c-profile" class="tab active space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div class="glass rounded-2xl p-6 border border-yellow-400/10">
+                        <p class="text-xs text-slate-400">Admin</p>
+                        <p class="text-xl font-bold text-yellow-400 mt-2" id="c-admin">Ahmed Mohamed</p>
                     </div>
-                    
-                    <!-- DRAWING STATUS WITH TIKTOK -->
-                    <div class="glass-panel rounded-2xl p-8 border border-yellow-400/10 text-center space-y-4">
-                        <h4 class="text-2xl font-bold text-white">Next Drawing</h4>
-                        <p class="text-yellow-400 font-bold text-xl">Sunday, 8:00 PM</p>
-                        <p id="draw-status" class="text-slate-300">Coming soon...</p>
-                        <button onclick="openTikTok()" class="px-6 py-2 bg-yellow-400 text-black font-bold rounded-xl inline-block">📱 Watch Live on TikTok</button>
+                    <div class="glass rounded-2xl p-6 border border-yellow-400/10">
+                        <p class="text-xs text-slate-400">Range</p>
+                        <p class="text-xl font-bold text-blue-400 mt-2">1-300</p>
                     </div>
-
-                    <button onclick="switchTab('cust', 'buytickets')" class="w-full py-4 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-2xl text-lg">🎫 BUY TICKET</button>
-                </div>
-
-                <!-- BUY TICKETS TAB -->
-                <div id="cust-buytickets" class="tab-content space-y-4">
-                    <h3 class="text-2xl font-bold text-white">🎫 Buy Lottery Ticket</h3>
-                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
-                        <div class="grid grid-cols-10 gap-2 max-h-64 overflow-y-auto p-4 bg-black/30 rounded-xl">
-                            <div id="numbers-grid"></div>
-                        </div>
-                        <div class="bg-black/30 p-4 rounded-xl border border-yellow-400/10">
-                            <p class="text-yellow-400 font-bold text-lg">Selected: <span id="selected-count">0</span> × 100 = <span id="ticket-cost">0</span> ETB</p>
-                        </div>
-                        <select id="payment-method" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
-                            <option>Telebirr (0945792677)</option>
-                            <option>CBE Birr (0945792677)</option>
-                        </select>
-                        <input type="text" id="transaction-id" placeholder="Transaction ID" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
-                        <button onclick="submitTicket()" class="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">Submit</button>
+                    <div class="glass rounded-2xl p-6 border border-yellow-400/10">
+                        <p class="text-xs text-slate-400">Tickets</p>
+                        <p class="text-xl font-bold text-emerald-400 mt-2" id="c-tickets">0</p>
+                    </div>
+                    <div class="glass rounded-2xl p-6 border border-yellow-400/10">
+                        <p class="text-xs text-slate-400">Total Spent</p>
+                        <p class="text-xl font-bold text-purple-400 mt-2" id="c-spent">0 ETB</p>
                     </div>
                 </div>
-
-                <!-- MY TICKETS TAB -->
-                <div id="cust-mytickets" class="tab-content space-y-4">
-                    <h3 class="text-2xl font-bold text-white">My Tickets</h3>
-                    <div id="cust-tickets-list" class="space-y-3">
-                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10 text-slate-400 text-center py-6">No tickets yet</div>
-                    </div>
-                </div>
-
-                <!-- DRAWINGS TAB -->
-                <div id="cust-drawings" class="tab-content space-y-4">
-                    <h3 class="text-2xl font-bold text-white">🎰 Lottery Drawings</h3>
-                    <div class="glass-panel rounded-2xl p-8 border border-yellow-400/10 text-center space-y-4">
-                        <div class="text-6xl">👑</div>
-                        <h4 class="text-2xl font-bold text-white">Live Drawing</h4>
-                        <p class="text-slate-300">Watch our live drawing on TikTok every Sunday at 8 PM</p>
-                        <button onclick="openTikTok()" class="px-6 py-2 bg-yellow-400 text-black font-bold rounded-xl inline-block">📱 @BoniLottery Live</button>
-                    </div>
+                <div class="glass rounded-2xl p-8 border border-yellow-400/10 text-center space-y-4">
+                    <h3 class="text-2xl font-bold text-white">Next Drawing</h3>
+                    <p class="text-yellow-400 font-bold text-xl">Sunday 8:00 PM</p>
+                    <button onclick="notify('info', '📱 Opening TikTok Live')" class="px-6 py-2 bg-yellow-400 text-black font-bold rounded-xl inline-block">📱 Watch Live</button>
                 </div>
             </div>
-        </main>
-    </div>
 
-    <!-- ADMIN DASHBOARD -->
-    <div id="admin-dashboard" class="hidden min-h-screen bg-black flex flex-col">
-        <header class="sticky top-0 z-40 w-full glass-panel border-b border-yellow-400/10 px-6 py-4">
-            <div class="max-w-7xl mx-auto flex items-center justify-between">
-                <h1 class="font-bold text-xl text-gradient">🛡️ ADMIN CONTROL</h1>
-                <button onclick="logout()" class="px-4 py-2 bg-red-950/30 text-red-400 text-xs font-bold rounded-xl">Logout</button>
+            <!-- LIBRARY TAB -->
+            <div id="c-library" class="tab space-y-6">
+                <h3 class="text-2xl font-bold">📖 Lottery Library</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="glass rounded-2xl p-6 border border-yellow-400/10">
+                        <h4 class="font-bold text-yellow-400 text-lg mb-2">How to Play</h4>
+                        <ol class="text-sm text-slate-300 space-y-2">
+                            <li>1. Select 1-10 numbers from 1-300</li>
+                            <li>2. Pay 100 ETB per number</li>
+                            <li>3. Upload payment receipt</li>
+                            <li>4. Admin verifies payment</li>
+                            <li>5. Wait for Sunday 8 PM draw</li>
+                        </ol>
+                    </div>
+                    <div class="glass rounded-2xl p-6 border border-yellow-400/10">
+                        <h4 class="font-bold text-yellow-400 text-lg mb-2">Rules</h4>
+                        <ul class="text-sm text-slate-300 space-y-2">
+                            <li>✓ Min: 1 number, Max: 10</li>
+                            <li>✓ Cost: 100 ETB/number</li>
+                            <li>✓ Prize Pool: 70% revenue</li>
+                            <li>✓ Draws: Every Sunday 8 PM</li>
+                            <li>✓ Live on TikTok @BoniLottery</li>
+                        </ul>
+                    </div>
+                    <div class="glass rounded-2xl p-6 border border-yellow-400/10">
+                        <h4 class="font-bold text-yellow-400 text-lg mb-2">Prize Distribution</h4>
+                        <div class="text-sm text-slate-300 space-y-1">
+                            <p><strong>Example:</strong> 100 tickets (10,000 ETB)</p>
+                            <p>Prize Pool (70%) = 7,000 ETB</p>
+                            <p>Admin Fee (30%) = 3,000 ETB</p>
+                            <p>Per Winner = 7,000 ÷ Winners</p>
+                        </div>
+                    </div>
+                    <div class="glass rounded-2xl p-6 border border-yellow-400/10">
+                        <h4 class="font-bold text-yellow-400 text-lg mb-2">Payment Methods</h4>
+                        <div class="text-sm text-slate-300">
+                            <p>📱 <strong>Telebirr:</strong> 0945792677</p>
+                            <p>🏦 <strong>CBE Birr:</strong> 0945792677</p>
+                            <p class="text-xs mt-2">Account: Boni Digital</p>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </header>
-        <main class="flex-grow p-6 overflow-y-auto">
-            <div class="max-w-7xl mx-auto space-y-6">
-                <h2 class="text-3xl font-bold text-white" id="admin-name">Admin Dashboard</h2>
-                
-                <div class="flex gap-2 border-b border-yellow-400/10 pb-2 overflow-x-auto">
-                    <button onclick="switchTab('admin', 'dashboard')" class="tab-button active px-4 py-2 text-xs font-bold text-yellow-400">Dashboard</button>
-                    <button onclick="switchTab('admin', 'customers')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">👥 Customers</button>
-                    <button onclick="switchTab('admin', 'payments')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">💳 Payments</button>
-                    <button onclick="switchTab('admin', 'draws')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🎰 Draws</button>
-                    <button onclick="switchTab('admin', 'settings')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">⚙️ Settings</button>
-                    <button onclick="switchTab('admin', 'appointments')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📅 Main Admin</button>
+
+            <!-- BUY TICKETS TAB -->
+            <div id="c-buytickets" class="tab space-y-4">
+                <h3 class="text-2xl font-bold">🎫 Buy Lottery Ticket</h3>
+                <div class="glass rounded-2xl p-6 border border-yellow-400/10 space-y-4">
+                    <div class="grid grid-cols-10 gap-2 max-h-64 overflow-y-auto p-4 bg-black/30 rounded-xl border border-yellow-400/10">
+                        <div id="number-grid"></div>
+                    </div>
+                    <div class="bg-black/30 p-4 rounded-xl text-yellow-400 font-bold">
+                        Selected: <span id="c-count">0</span> × 100 = <span id="c-cost">0</span> ETB
+                    </div>
+                    <select class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white outline-none">
+                        <option>Telebirr (0945792677)</option>
+                        <option>CBE Birr (0945792677)</option>
+                    </select>
+                    <input type="text" placeholder="Transaction ID" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white outline-none">
+                    <button onclick="submitTicket()" class="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">Submit Ticket</button>
                 </div>
+            </div>
 
-                <!-- DASHBOARD TAB -->
-                <div id="admin-dashboard-tab" class="tab-content active space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                        <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                            <p class="text-xs text-slate-400">My Range</p>
-                            <p class="text-3xl font-bold text-yellow-400 mt-2">1-300</p>
-                        </div>
-                        <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                            <p class="text-xs text-slate-400">Customers</p>
-                            <p class="text-3xl font-bold text-blue-400 mt-2" id="admin-cust-count">8</p>
-                        </div>
-                        <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                            <p class="text-xs text-slate-400">Tickets</p>
-                            <p class="text-3xl font-bold text-emerald-400 mt-2" id="admin-ticket-count">25</p>
-                        </div>
-                        <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                            <p class="text-xs text-slate-400">Revenue</p>
-                            <p class="text-3xl font-bold text-purple-400 mt-2" id="admin-revenue">2,500 ETB</p>
-                        </div>
+            <!-- MY TICKETS TAB -->
+            <div id="c-mytickets" class="tab space-y-4">
+                <h3 class="text-2xl font-bold">My Tickets</h3>
+                <div id="c-tickets-list" class="glass rounded-lg p-4 border border-yellow-400/10 text-center text-slate-400">No tickets yet</div>
+            </div>
+
+            <!-- APPOINTMENTS TAB -->
+            <div id="c-appointments" class="tab space-y-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-2xl font-bold">📅 Appointments</h3>
+                    <button onclick="openBookAppt()" class="px-4 py-2 bg-yellow-400 text-black font-bold rounded-xl text-xs">+ Book</button>
+                </div>
+                <div id="c-appt-form" class="hidden glass rounded-2xl p-6 border border-yellow-400/10 space-y-3">
+                    <input type="date" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white outline-none">
+                    <select class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white outline-none">
+                        <option>10:00 AM</option><option>11:00 AM</option><option>2:00 PM</option><option>3:00 PM</option><option>4:00 PM</option>
+                    </select>
+                    <select class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white outline-none">
+                        <option>Support</option><option>Complaint</option><option>Payment</option><option>Other</option>
+                    </select>
+                    <button onclick="bookAppt()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl">Book</button>
+                </div>
+                <div id="c-appts-list" class="glass rounded-lg p-4 border border-yellow-400/10 text-center text-slate-400">No appointments</div>
+            </div>
+
+            <!-- DRAWINGS TAB -->
+            <div id="c-drawings" class="tab space-y-4">
+                <h3 class="text-2xl font-bold">🎰 Lottery Drawings</h3>
+                <div class="glass rounded-2xl p-8 border border-yellow-400/10 text-center">
+                    <div class="text-6xl mb-4">👑</div>
+                    <p class="text-2xl font-bold text-white mb-2">Next Drawing</p>
+                    <p class="text-yellow-400 font-bold mb-4">Sunday 8 PM Live</p>
+                    <button onclick="notify('info', '📱 Opening TikTok')" class="px-6 py-2 bg-yellow-400 text-black font-bold rounded-xl">📱 Watch Live</button>
+                </div>
+            </div>
+
+            <!-- NOTIFICATIONS TAB -->
+            <div id="c-notifications" class="tab space-y-4">
+                <h3 class="text-2xl font-bold">🔔 Notifications</h3>
+                <div id="c-notifs" class="space-y-2">
+                    <div class="glass rounded-lg p-4 border border-yellow-400/10">
+                        <p class="text-white font-bold">✅ Payment Verified</p>
+                        <p class="text-xs text-slate-400 mt-1">Your ticket has been verified</p>
                     </div>
+                </div>
+            </div>
 
-                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                        <h4 class="font-bold text-white mb-3">Recent Activity</h4>
-                        <div class="space-y-2 text-sm">
-                            <p class="text-slate-300">✅ New customer: Mohammed Ali</p>
-                            <p class="text-slate-300">💳 Payment verified: 500 ETB</p>
-                            <p class="text-slate-300">🎫 New ticket created</p>
+            <!-- SETTINGS TAB -->
+            <div id="c-settings" class="tab space-y-4">
+                <h3 class="text-2xl font-bold">⚙️ Settings</h3>
+                <div class="glass rounded-2xl p-6 border border-yellow-400/10 space-y-4">
+                    <div>
+                        <label class="text-sm text-slate-400">Phone Number</label>
+                        <input type="text" value="0911223344" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white outline-none mt-1">
+                    </div>
+                    <button onclick="notify('success', '✅ Settings saved')" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl">Save</button>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- ADMIN DASHBOARD -->
+<div id="admin-page" class="hidden min-h-screen bg-black flex flex-col">
+    <header class="glass border-b border-yellow-400/10 px-6 py-4 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-gradient">🛡️ Admin Control</h1>
+            <button onclick="logout()" class="px-4 py-2 bg-red-950/30 text-red-400 text-xs font-bold rounded-xl">Logout</button>
+        </div>
+    </header>
+
+    <main class="flex-grow overflow-y-auto p-6">
+        <div class="max-w-7xl mx-auto space-y-6">
+            <h2 class="text-3xl font-bold" id="admin-title">Admin Dashboard</h2>
+
+            <!-- ADMIN TABS -->
+            <div class="flex gap-2 border-b border-yellow-400/10 pb-2 overflow-x-auto">
+                <button onclick="switchTab('a', 'dashboard')" class="tab-btn active">Dashboard</button>
+                <button onclick="switchTab('a', 'customers')" class="tab-btn">👥 Customers</button>
+                <button onclick="switchTab('a', 'tickets')" class="tab-btn">🎫 Tickets</button>
+                <button onclick="switchTab('a', 'payments')" class="tab-btn">💳 Payments</button>
+                <button onclick="switchTab('a', 'appointments')" class="tab-btn">📅 Appointments</button>
+                <button onclick="switchTab('a', 'notifications')" class="tab-btn">🔔 Notify</button>
+                <button onclick="switchTab('a', 'draws')" class="tab-btn">🎰 Draws</button>
+                <button onclick="switchTab('a', 'revenue')" class="tab-btn">💹 Revenue</button>
+                <button onclick="switchTab('a', 'logs')" class="tab-btn">📋 Logs</button>
+                <button onclick="switchTab('a', 'settings')" class="tab-btn">⚙️ Settings</button>
+            </div>
+
+            <!-- ADMIN DASHBOARD -->
+            <div id="a-dashboard" class="tab active space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div class="glass rounded-2xl p-6 border border-yellow-400/10">
+                        <p class="text-xs text-slate-400">My Range</p>
+                        <p class="text-3xl font-bold text-yellow-400 mt-2">1-300</p>
+                    </div>
+                    <div class="glass rounded-2xl p-6 border border-yellow-400/10">
+                        <p class="text-xs text-slate-400">Customers</p>
+                        <p class="text-3xl font-bold text-blue-400 mt-2" id="a-custs">8</p>
+                    </div>
+                    <div class="glass rounded-2xl p-6 border border-yellow-400/10">
+                        <p class="text-xs text-slate-400">Tickets</p>
+                        <p class="text-3xl font-bold text-emerald-400 mt-2" id="a-tickets">24</p>
+                    </div>
+                    <div class="glass rounded-2xl p-6 border border-yellow-400/10">
+                        <p class="text-xs text-slate-400">Revenue</p>
+                        <p class="text-3xl font-bold text-purple-400 mt-2">2,400 ETB</p>
+                    </div>
+                </div>
+                <div class="glass rounded-2xl p-6 border border-yellow-400/10">
+                    <h4 class="font-bold text-white mb-3">Recent Activity</h4>
+                    <div class="space-y-2 text-sm text-slate-300">
+                        <p>✅ New customer added</p>
+                        <p>💳 Payment verified</p>
+                        <p>🎫 Ticket created</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CUSTOMERS -->
+            <div id="a-customers" class="tab space-y-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-2xl font-bold">👥 My Customers</h3>
+                    <button onclick="openAddCustomer()" class="px-4 py-2 bg-yellow-400 text-black font-bold rounded-xl text-xs">+ Add</button>
+                </div>
+                <div id="a-cust-form" class="hidden glass rounded-2xl p-6 border border-yellow-400/10 space-y-3">
+                    <input type="text" placeholder="Name" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white outline-none">
+                    <input type="email" placeholder="Email" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white outline-none">
+                    <input type="text" placeholder="Phone" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white outline-none">
+                    <button onclick="addCustomer()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl">Add Customer</button>
+                </div>
+                <div id="a-custs-list" class="space-y-2">
+                    <div class="glass rounded-lg p-4 border border-yellow-400/10">
+                        <p class="font-bold text-white">Mohammed Ali</p>
+                        <p class="text-xs text-slate-400">m@email.com • 0911223344 • 3 tickets</p>
+                        <div class="flex gap-2 mt-2">
+                            <button class="text-xs px-2 py-1 bg-yellow-400/20 text-yellow-400 rounded">Edit</button>
+                            <button onclick="delCustomer(this)" class="text-xs px-2 py-1 bg-red-400/20 text-red-400 rounded">Delete</button>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- CUSTOMERS TAB -->
-                <div id="admin-customers" class="tab-content space-y-4">
-                    <div class="flex justify-between items-center">
-                        <h3 class="text-2xl font-bold text-white">👥 My Customers</h3>
-                        <button onclick="openCustomerModal()" class="px-4 py-2 bg-yellow-400 text-black font-bold rounded-xl text-xs">+ Add Customer</button>
-                    </div>
-                    <div id="admin-customers-list" class="space-y-2">
-                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
-                            <p class="font-bold text-white">Mohammed Ali</p>
-                            <p class="text-xs text-slate-400">m@email.com • 0911223344 • 5 tickets</p>
-                            <div class="flex gap-2 mt-2">
-                                <button onclick="editCustomer('Mohammed')" class="text-xs px-2 py-1 bg-yellow-400/20 text-yellow-400 rounded">Edit</button>
-                                <button onclick="deleteCustomer(this)" class="text-xs px-2 py-1 bg-red-400/20 text-red-400 rounded">Delete</button>
+            <!-- TICKETS -->
+            <div id="a-tickets" class="tab space-y-4">
+                <h3 class="text-2xl font-bold">🎫 Tickets</h3>
+                <div class="glass rounded-lg p-4 border border-yellow-400/10 overflow-x-auto">
+                    <table>
+                        <tr><th>ID</th><th>Customer</th><th>Numbers</th><th>Cost</th><th>Status</th><th>Actions</th></tr>
+                        <tr><td>TK001</td><td>Mohammed</td><td>1,50,100</td><td>300 ETB</td><td><span class="text-emerald-400">Active</span></td><td><button class="text-xs text-yellow-400">Verify</button></td></tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- PAYMENTS -->
+            <div id="a-payments" class="tab space-y-4">
+                <h3 class="text-2xl font-bold">💳 Payments</h3>
+                <div class="space-y-2">
+                    <div class="glass rounded-lg p-4 border border-yellow-400/10">
+                        <div class="flex justify-between items-center">
+                            <div><p class="font-bold text-white">Mohammed - 300 ETB</p><p class="text-xs text-slate-400">Telebirr • Pending</p></div>
+                            <div class="flex gap-2">
+                                <button onclick="approvePayment(this)" class="px-2 py-1 bg-emerald-600 text-white text-xs rounded">Approve</button>
+                                <button onclick="rejectPayment(this)" class="px-2 py-1 bg-red-600 text-white text-xs rounded">Reject</button>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- PAYMENTS TAB -->
-                <div id="admin-payments" class="tab-content space-y-4">
-                    <h3 class="text-2xl font-bold text-white">💳 Payments</h3>
-                    <div class="space-y-2">
-                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
-                            <div class="flex justify-between items-center">
-                                <div><p class="font-bold text-white">Mohammed - 500 ETB</p><p class="text-xs text-slate-400">Telebirr</p></div>
-                                <div class="space-x-2">
-                                    <button onclick="approvePayment(this)" class="px-2 py-1 bg-emerald-600 text-white text-xs rounded">Approve</button>
-                                    <button onclick="rejectPayment(this)" class="px-2 py-1 bg-red-600 text-white text-xs rounded">Reject</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- DRAWS TAB -->
-                <div id="admin-draws" class="tab-content space-y-4">
-                    <h3 class="text-2xl font-bold text-white">🎰 Draw Management</h3>
-                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
-                        <div>
-                            <label class="text-sm text-slate-400">Drawing Date</label>
-                            <input type="date" id="draw-date" value="2026-07-13" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
-                        </div>
-                        <div>
-                            <label class="text-sm text-slate-400">Drawing Time</label>
-                            <input type="time" id="draw-time" value="20:00" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
-                        </div>
-                        <button onclick="generateWinner()" class="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">🎲 Generate Winner Now</button>
-                    </div>
-                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                        <h4 class="font-bold text-white mb-3">Last Draw</h4>
-                        <p class="text-slate-300">July 6, 2026 - Winner: <span class="text-yellow-400 font-bold">742</span></p>
-                    </div>
-                </div>
-
-                <!-- SETTINGS TAB -->
-                <div id="admin-settings" class="tab-content space-y-4">
-                    <h3 class="text-2xl font-bold text-white">⚙️ Payment Settings</h3>
-                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
-                        <div>
-                            <label class="text-sm text-slate-400">Telebirr Phone Number</label>
-                            <input type="text" id="telebirr-phone" value="0945792677" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
-                        </div>
-                        <div>
-                            <label class="text-sm text-slate-400">CBE Birr Account</label>
-                            <input type="text" id="cbe-account" value="0945792677" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
-                        </div>
-                        <button onclick="savePaymentSettings()" class="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">Save Settings</button>
-                    </div>
-                </div>
-
-                <!-- APPOINTMENTS TAB -->
-                <div id="admin-appointments" class="tab-content space-y-4">
-                    <h3 class="text-2xl font-bold text-white">📅 Book Appointment with Main Admin</h3>
-                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
-                        <div>
-                            <label class="text-sm text-slate-400">Appointment Date</label>
-                            <input type="date" id="admin-appt-date" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
-                        </div>
-                        <div>
-                            <label class="text-sm text-slate-400">Time Slot (Auto-scheduled)</label>
-                            <select id="admin-appt-time" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
-                                <option>10:00 AM</option>
-                                <option>11:00 AM</option>
-                                <option>2:00 PM</option>
-                                <option>3:00 PM</option>
-                                <option>4:00 PM</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="text-sm text-slate-400">Purpose</label>
-                            <select id="admin-appt-purpose" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
-                                <option>Discussion</option>
-                                <option>Report</option>
-                                <option>Issue</option>
-                                <option>Other</option>
-                            </select>
-                        </div>
-                        <button onclick="bookAdminAppointment()" class="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">Book Appointment</button>
+            <!-- APPOINTMENTS -->
+            <div id="a-appointments" class="tab space-y-4">
+                <h3 class="text-2xl font-bold">📅 Appointments</h3>
+                <div class="space-y-2">
+                    <div class="glass rounded-lg p-4 border border-yellow-400/10">
+                        <p class="font-bold text-white">Mohammed - July 10, 2PM</p>
+                        <p class="text-xs text-slate-400">Support • Pending</p>
+                        <button onclick="confirmAppt(this)" class="text-xs px-2 py-1 bg-yellow-400 text-black rounded mt-2">Confirm</button>
                     </div>
                 </div>
             </div>
-        </main>
-    </div>
 
-    <!-- MAIN ADMIN DASHBOARD -->
-    <div id="main-admin-dashboard" class="hidden min-h-screen bg-black flex flex-col">
-        <header class="sticky top-0 z-40 w-full glass-panel border-b border-yellow-400/10 px-6 py-4">
-            <div class="max-w-7xl mx-auto flex items-center justify-between">
-                <h1 class="font-bold text-xl text-gradient">👑 MAIN ADMIN</h1>
-                <button onclick="logout()" class="px-4 py-2 bg-red-950/30 text-red-400 text-xs font-bold rounded-xl">Logout</button>
+            <!-- NOTIFICATIONS -->
+            <div id="a-notifications" class="tab space-y-4">
+                <h3 class="text-2xl font-bold">🔔 Send Notifications</h3>
+                <div class="glass rounded-2xl p-6 border border-yellow-400/10 space-y-3">
+                    <select class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white outline-none">
+                        <option>Payment Reminder</option><option>Drawing Reminder</option><option>Custom</option>
+                    </select>
+                    <textarea placeholder="Message..." rows="3" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white outline-none"></textarea>
+                    <div class="flex gap-3">
+                        <label class="text-sm text-slate-300"><input type="checkbox" class="mr-2"> Telegram</label>
+                        <label class="text-sm text-slate-300"><input type="checkbox" class="mr-2"> Email</label>
+                    </div>
+                    <button onclick="notify('success', '✅ Notifications sent!')" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl">Send</button>
+                </div>
             </div>
-        </header>
-        <main class="flex-grow p-6 overflow-y-auto">
-            <div class="max-w-7xl mx-auto space-y-6">
-                <h2 class="text-3xl font-bold text-white">Platform Control Center</h2>
-                
-                <div class="flex gap-2 border-b border-yellow-400/10 pb-2 overflow-x-auto">
-                    <button onclick="switchTab('main', 'dashboard')" class="tab-button active px-4 py-2 text-xs font-bold text-yellow-400">Dashboard</button>
-                    <button onclick="switchTab('main', 'admins')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">👨‍💼 Admins</button>
-                    <button onclick="switchTab('main', 'ranges')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📍 Ranges</button>
-                    <button onclick="switchTab('main', 'payments')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">💳 Payments</button>
-                    <button onclick="switchTab('main', 'transactions')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📋 Transactions</button>
-                    <button onclick="switchTab('main', 'settings')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">⚙️ Settings</button>
-                    <button onclick="switchTab('main', 'notifications')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🔔 Notify</button>
-                </div>
 
-                <!-- DASHBOARD TAB -->
-                <div id="main-dashboard" class="tab-content active space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                        <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                            <p class="text-xs text-slate-400">Total Admins</p>
-                            <p class="text-3xl font-bold text-yellow-400 mt-2">3</p>
-                        </div>
-                        <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                            <p class="text-xs text-slate-400">Total Customers</p>
-                            <p class="text-3xl font-bold text-blue-400 mt-2">24</p>
-                        </div>
-                        <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                            <p class="text-xs text-slate-400">Total Tickets</p>
-                            <p class="text-3xl font-bold text-emerald-400 mt-2">75</p>
-                        </div>
-                        <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                            <p class="text-xs text-slate-400">Platform Revenue</p>
-                            <p class="text-3xl font-bold text-purple-400 mt-2">7,500 ETB</p>
-                        </div>
+            <!-- DRAWS -->
+            <div id="a-draws" class="tab space-y-4">
+                <h3 class="text-2xl font-bold">🎰 Draw Management</h3>
+                <div class="glass rounded-2xl p-6 border border-yellow-400/10 space-y-3">
+                    <div>
+                        <label class="text-sm text-slate-400">Drawing Date</label>
+                        <input type="date" value="2026-07-13" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white outline-none mt-1">
                     </div>
+                    <div>
+                        <label class="text-sm text-slate-400">Drawing Time</label>
+                        <input type="time" value="20:00" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white outline-none mt-1">
+                    </div>
+                    <button onclick="generateWinner()" class="w-full py-2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">🎲 Generate Winner</button>
                 </div>
+            </div>
 
-                <!-- ADMINS TAB -->
-                <div id="main-admins" class="tab-content space-y-4">
-                    <div class="flex justify-between items-center">
-                        <h3 class="text-2xl font-bold text-white">👨‍💼 Manage Admins</h3>
-                        <button onclick="openCreateAdminModal()" class="px-4 py-2 bg-yellow-400 text-black font-bold rounded-xl text-xs">+ Create</button>
-                    </div>
-                    <div id="admin-list" class="space-y-2">
-                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
-                            <div class="flex justify-between items-start">
-                                <div><p class="font-bold text-white">Ahmed Mohamed</p><p class="text-xs text-slate-400">ahmed@company.com • Range: 1-300</p></div>
-                                <div class="flex gap-1">
-                                    <button onclick="editAdminInfo('Ahmed')" class="px-2 py-1 bg-yellow-400/20 text-yellow-400 text-xs rounded">Edit</button>
-                                    <button onclick="toggleAdminStatus(this)" class="px-2 py-1 bg-blue-400/20 text-blue-400 text-xs rounded">Disable</button>
-                                    <button onclick="deleteAdmin(this)" class="px-2 py-1 bg-red-400/20 text-red-400 text-xs rounded">Delete</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- RANGES TAB -->
-                <div id="main-ranges" class="tab-content space-y-4">
-                    <h3 class="text-2xl font-bold text-white">📍 Ticket Ranges</h3>
-                    <div id="ranges-list" class="space-y-2">
-                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
-                            <div class="flex justify-between items-center">
-                                <div><p class="font-bold text-white">Ahmed Mohamed</p><p class="text-xs text-slate-400">Current: 1 - 300</p></div>
-                                <button onclick="openModifyRangeModal('Ahmed', 1, 300)" class="px-3 py-1 bg-yellow-400 text-black text-xs font-bold rounded">Modify</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- PAYMENTS TAB -->
-                <div id="main-payments" class="tab-content space-y-4">
-                    <h3 class="text-2xl font-bold text-white">💳 Payment Accounts</h3>
-                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
-                        <div>
-                            <label class="text-sm text-slate-400">Telebirr Account</label>
-                            <input type="text" id="main-telebirr" value="0945792677" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
-                        </div>
-                        <div>
-                            <label class="text-sm text-slate-400">CBE Birr Account</label>
-                            <input type="text" id="main-cbe" value="0945792677" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
-                        </div>
-                        <button onclick="saveMainPaymentSettings()" class="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">Save</button>
-                    </div>
-                </div>
-
-                <!-- TRANSACTIONS TAB -->
-                <div id="main-transactions" class="tab-content space-y-4">
-                    <h3 class="text-2xl font-bold text-white">📋 Transaction History (View Only)</h3>
+            <!-- REVENUE -->
+            <div id="a-revenue" class="tab space-y-4">
+                <h3 class="text-2xl font-bold">💹 Revenue</h3>
+                <div class="glass rounded-2xl p-6 border border-yellow-400/10">
                     <div class="space-y-2 text-sm">
-                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
-                            <p class="text-slate-300"><strong>July 8, 14:30</strong> - Mohammed Ali paid 500 ETB via Telebirr (TXN123456) - Ahmed's Branch</p>
-                        </div>
-                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
-                            <p class="text-slate-300"><strong>July 7, 10:15</strong> - Zainab paid 300 ETB via CBE (TXN123457) - Fatima's Branch</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- SETTINGS TAB -->
-                <div id="main-settings" class="tab-content space-y-4">
-                    <h3 class="text-2xl font-bold text-white">⚙️ System Configuration</h3>
-                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
-                        <div>
-                            <label class="text-sm text-slate-400">Ticket Price (ETB)</label>
-                            <input type="number" value="100" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
-                        </div>
-                        <div>
-                            <label class="text-sm text-slate-400">Prize Pool %</label>
-                            <input type="number" value="70" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
-                        </div>
-                        <button onclick="notify('success', 'Settings saved!')" class="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">Save</button>
-                    </div>
-                </div>
-
-                <!-- NOTIFICATIONS TAB -->
-                <div id="main-notifications" class="tab-content space-y-4">
-                    <h3 class="text-2xl font-bold text-white">🔔 Send Notifications</h3>
-                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
-                        <div>
-                            <label class="text-sm text-slate-400">Send To</label>
-                            <select id="notify-target" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
-                                <option>All Customers</option>
-                                <option>Specific Admin's Customers</option>
-                                <option>Specific Customer</option>
-                                <option>All Admins</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="text-sm text-slate-400">Message</label>
-                            <textarea placeholder="Type message..." rows="3" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1"></textarea>
-                        </div>
-                        <div class="flex gap-3">
-                            <label class="flex items-center text-sm text-slate-300"><input type="checkbox" class="mr-2"> Telegram</label>
-                            <label class="flex items-center text-sm text-slate-300"><input type="checkbox" class="mr-2"> Email</label>
-                            <label class="flex items-center text-sm text-slate-300"><input type="checkbox" class="mr-2"> SMS</label>
-                        </div>
-                        <button onclick="sendNotification()" class="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">Send</button>
+                        <p>Total: <span class="text-yellow-400 font-bold">2,400 ETB</span></p>
+                        <p>This Month: <span class="text-yellow-400 font-bold">800 ETB</span></p>
+                        <p>This Week: <span class="text-yellow-400 font-bold">200 ETB</span></p>
+                        <p class="mt-3">By Method: Telebirr: 1,440 ETB | CBE: 960 ETB</p>
                     </div>
                 </div>
             </div>
-        </main>
-    </div>
 
-    <!-- MODALS -->
-    <div id="customer-modal" class="modal">
-        <div class="modal-overlay" onclick="closeModal('customer-modal')"></div>
-        <div class="modal-content p-6 m-auto">
-            <h3 class="text-xl font-bold text-white mb-4">Add Customer</h3>
-            <div class="space-y-3">
-                <input type="text" id="cust-name-input" placeholder="Customer Name" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
-                <input type="email" id="cust-email-input" placeholder="Email" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
-                <input type="text" id="cust-phone-input" placeholder="Phone" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
-                <button onclick="addCustomer()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl">Add</button>
-                <button onclick="closeModal('customer-modal')" class="w-full py-2 bg-slate-700 text-white rounded-xl">Cancel</button>
+            <!-- LOGS -->
+            <div id="a-logs" class="tab space-y-4">
+                <h3 class="text-2xl font-bold">📋 Activity Log</h3>
+                <div id="a-logs-list" class="space-y-2 text-sm">
+                    <div class="glass rounded-lg p-3 border border-yellow-400/10 text-slate-300">
+                        <p><strong>2 hours ago:</strong> Payment verified - 300 ETB</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SETTINGS -->
+            <div id="a-settings" class="tab space-y-4">
+                <h3 class="text-2xl font-bold">⚙️ Payment Settings</h3>
+                <div class="glass rounded-2xl p-6 border border-yellow-400/10 space-y-3">
+                    <div>
+                        <label class="text-sm text-slate-400">Telebirr</label>
+                        <input type="text" value="0945792677" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white outline-none mt-1">
+                    </div>
+                    <div>
+                        <label class="text-sm text-slate-400">CBE Birr</label>
+                        <input type="text" value="0945792677" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white outline-none mt-1">
+                    </div>
+                    <button onclick="notify('success', '✅ Settings saved!')" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl">Save</button>
+                </div>
             </div>
         </div>
-    </div>
+    </main>
+</div>
 
-    <div id="admin-modal" class="modal">
-        <div class="modal-overlay" onclick="closeModal('admin-modal')"></div>
-        <div class="modal-content p-6 m-auto">
-            <h3 class="text-xl font-bold text-white mb-4">Create Admin</h3>
-            <div class="space-y-3">
-                <input type="text" id="admin-name-input" placeholder="Name" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
-                <input type="email" id="admin-email-input" placeholder="Email" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
-                <input type="password" id="admin-pass-input" placeholder="Password" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
-                <button onclick="createAdmin()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl">Create</button>
-                <button onclick="closeModal('admin-modal')" class="w-full py-2 bg-slate-700 text-white rounded-xl">Cancel</button>
+<!-- MAIN ADMIN DASHBOARD -->
+<div id="main-page" class="hidden min-h-screen bg-black flex flex-col">
+    <header class="glass border-b border-yellow-400/10 px-6 py-4 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-gradient">👑 MAIN ADMIN</h1>
+            <button onclick="logout()" class="px-4 py-2 bg-red-950/30 text-red-400 text-xs font-bold rounded-xl">Logout</button>
+        </div>
+    </header>
+
+    <main class="flex-grow overflow-y-auto p-6">
+        <div class="max-w-7xl mx-auto space-y-6">
+            <h2 class="text-3xl font-bold">Platform Control Center</h2>
+
+            <!-- MAIN ADMIN TABS -->
+            <div class="flex gap-2 border-b border-yellow-400/10 pb-2 overflow-x-auto">
+                <button onclick="switchTab('m', 'dashboard')" class="tab-btn active">Dashboard</button>
+                <button onclick="switchTab('m', 'admins')" class="tab-btn">👨‍💼 Admins</button>
+                <button onclick="switchTab('m', 'ranges')" class="tab-btn">📍 Ranges</button>
+                <button onclick="switchTab('m', 'customers')" class="tab-btn">👥 Customers</button>
+                <button onclick="switchTab('m', 'tickets')" class="tab-btn">🎫 Tickets</button>
+                <button onclick="switchTab('m', 'payments')" class="tab-btn">💳 Payments</button>
+                <button onclick="switchTab('m', 'transactions')" class="tab-btn">📊 Transactions</button>
+                <button onclick="switchTab('m', 'notifications')" class="tab-btn">🔔 Notify</button>
+                <button onclick="switchTab('m', 'draws')" class="tab-btn">🎰 Draws</button>
+                <button onclick="switchTab('m', 'analytics')" class="tab-btn">📈 Analytics</button>
+                <button onclick="switchTab('m', 'audit')" class="tab-btn">🔐 Audit</button>
+                <button onclick="switchTab('m', 'settings')" class="tab-btn">⚙️ Settings</button>
+            </div>
+
+            <!-- MAIN DASHBOARD -->
+            <div id="m-dashboard" class="tab active space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div class="glass rounded-2xl p-6 border border-yellow-400/10">
+                        <p class="text-xs text-slate-400">Total Admins</p>
+                        <p class="text-3xl font-bold text-yellow-400 mt-2">3</p>
+                    </div>
+                    <div class="glass rounded-2xl p-6 border border-yellow-400/10">
+                        <p class="text-xs text-slate-400">Total Customers</p>
+                        <p class="text-3xl font-bold text-blue-400 mt-2">24</p>
+                    </div>
+                    <div class="glass rounded-2xl p-6 border border-yellow-400/10">
+                        <p class="text-xs text-slate-400">Total Tickets</p>
+                        <p class="text-3xl font-bold text-emerald-400 mt-2">72</p>
+                    </div>
+                    <div class="glass rounded-2xl p-6 border border-yellow-400/10">
+                        <p class="text-xs text-slate-400">Total Revenue</p>
+                        <p class="text-3xl font-bold text-purple-400 mt-2">7,200 ETB</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ADMINS -->
+            <div id="m-admins" class="tab space-y-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-2xl font-bold">👨‍💼 Manage Admins</h3>
+                    <button onclick="openCreateAdmin()" class="px-4 py-2 bg-yellow-400 text-black font-bold rounded-xl text-xs">+ Create</button>
+                </div>
+                <div id="m-admin-form" class="hidden glass rounded-2xl p-6 border border-yellow-400/10 space-y-3">
+                    <input type="text" placeholder="Name" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white outline-none">
+                    <input type="email" placeholder="Email" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white outline-none">
+                    <input type="password" placeholder="Password" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white outline-none">
+                    <button onclick="createAdmin()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl">Create Admin</button>
+                </div>
+                <div id="m-admins-list" class="space-y-2">
+                    <div class="glass rounded-lg p-4 border border-yellow-400/10">
+                        <div class="flex justify-between items-start">
+                            <div><p class="font-bold text-white">Ahmed Mohamed</p><p class="text-xs text-slate-400">ahmed@company.com • Range: 1-300</p></div>
+                            <div class="flex gap-1">
+                                <button class="text-xs px-2 py-1 bg-yellow-400/20 text-yellow-400 rounded">Edit</button>
+                                <button class="text-xs px-2 py-1 bg-blue-400/20 text-blue-400 rounded">Disable</button>
+                                <button onclick="delAdmin(this)" class="text-xs px-2 py-1 bg-red-400/20 text-red-400 rounded">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RANGES -->
+            <div id="m-ranges" class="tab space-y-4">
+                <h3 class="text-2xl font-bold">📍 Ticket Ranges</h3>
+                <div id="m-ranges-list" class="space-y-2">
+                    <div class="glass rounded-lg p-4 border border-yellow-400/10">
+                        <div class="flex justify-between items-center">
+                            <div><p class="font-bold text-white">Ahmed Mohamed</p><p class="text-xs text-slate-400">Current: 1 - 300</p></div>
+                            <button onclick="openEditRange()" class="px-3 py-1 bg-yellow-400 text-black text-xs font-bold rounded">Modify</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CUSTOMERS -->
+            <div id="m-customers" class="tab space-y-4">
+                <h3 class="text-2xl font-bold">👥 All Customers</h3>
+                <div id="m-custs-list" class="space-y-2">
+                    <div class="glass rounded-lg p-4 border border-yellow-400/10 text-sm">
+                        <p class="font-bold text-white">Mohammed Ali - Ahmed's Branch</p>
+                        <p class="text-xs text-slate-400">m@email.com • 3 tickets • 300 ETB</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TICKETS -->
+            <div id="m-tickets" class="tab space-y-4">
+                <h3 class="text-2xl font-bold">🎫 All Tickets</h3>
+                <div class="glass rounded-lg p-4 border border-yellow-400/10 overflow-x-auto">
+                    <table>
+                        <tr><th>ID</th><th>Customer</th><th>Branch</th><th>Numbers</th><th>Status</th></tr>
+                        <tr><td>TK001</td><td>Mohammed</td><td>Ahmed</td><td>1,50,100</td><td><span class="text-emerald-400">Active</span></td></tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- PAYMENTS -->
+            <div id="m-payments" class="tab space-y-4">
+                <h3 class="text-2xl font-bold">💳 Payment Accounts</h3>
+                <div class="glass rounded-2xl p-6 border border-yellow-400/10 space-y-3">
+                    <div>
+                        <label class="text-sm text-slate-400">Telebirr</label>
+                        <input type="text" value="0945792677" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white outline-none mt-1">
+                    </div>
+                    <div>
+                        <label class="text-sm text-slate-400">CBE Birr</label>
+                        <input type="text" value="0945792677" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white outline-none mt-1">
+                    </div>
+                    <button onclick="notify('success', '✅ Accounts saved!')" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl">Save</button>
+                </div>
+            </div>
+
+            <!-- TRANSACTIONS -->
+            <div id="m-transactions" class="tab space-y-4">
+                <h3 class="text-2xl font-bold">📊 Transaction History (View Only)</h3>
+                <div class="space-y-2 text-sm">
+                    <div class="glass rounded-lg p-4 border border-yellow-400/10 text-slate-300">
+                        <p><strong>July 8, 2PM</strong> - Mohammed paid 300 ETB • Telebirr • Ahmed's Branch</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NOTIFICATIONS -->
+            <div id="m-notifications" class="tab space-y-4">
+                <h3 class="text-2xl font-bold">🔔 Send Notifications</h3>
+                <div class="glass rounded-2xl p-6 border border-yellow-400/10 space-y-3">
+                    <select class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white outline-none">
+                        <option>All Customers</option><option>Specific Branch</option><option>Specific Admin</option>
+                    </select>
+                    <textarea placeholder="Message to send..." rows="3" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white outline-none"></textarea>
+                    <button onclick="notify('success', '✅ Sent to all!')" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl">Send</button>
+                </div>
+            </div>
+
+            <!-- DRAWS -->
+            <div id="m-draws" class="tab space-y-4">
+                <h3 class="text-2xl font-bold">🎰 Draw Operator</h3>
+                <div class="glass rounded-2xl p-6 border border-yellow-400/10 space-y-3">
+                    <input type="date" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white outline-none">
+                    <button onclick="generateDrawWinner()" class="w-full py-2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">🎲 Generate Winner</button>
+                </div>
+            </div>
+
+            <!-- ANALYTICS -->
+            <div id="m-analytics" class="tab space-y-4">
+                <h3 class="text-2xl font-bold">📈 Revenue Analytics</h3>
+                <div class="glass rounded-2xl p-6 border border-yellow-400/10">
+                    <div class="space-y-2 text-sm">
+                        <p>Total: <span class="text-yellow-400 font-bold">7,200 ETB</span></p>
+                        <p>This Month: <span class="text-yellow-400 font-bold">2,400 ETB</span></p>
+                        <p>By Branch: Ahmed (2,400) | Fatima (1,800) | Hassan (3,000)</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AUDIT -->
+            <div id="m-audit" class="tab space-y-4">
+                <h3 class="text-2xl font-bold">🔐 Audit Log</h3>
+                <div id="m-audit-list" class="space-y-2 text-sm">
+                    <div class="glass rounded-lg p-3 border border-yellow-400/10 text-slate-300">
+                        <p><strong>Ahmed:</strong> Verified payment • 2 hours ago</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SETTINGS -->
+            <div id="m-settings" class="tab space-y-4">
+                <h3 class="text-2xl font-bold">⚙️ System Settings</h3>
+                <div class="glass rounded-2xl p-6 border border-yellow-400/10 space-y-3">
+                    <div>
+                        <label class="text-sm text-slate-400">Ticket Price (ETB)</label>
+                        <input type="number" value="100" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white outline-none mt-1">
+                    </div>
+                    <div>
+                        <label class="text-sm text-slate-400">Draw Time</label>
+                        <input type="time" value="20:00" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white outline-none mt-1">
+                    </div>
+                    <div>
+                        <label class="text-sm text-slate-400">Prize Pool %</label>
+                        <input type="number" value="70" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white outline-none mt-1">
+                    </div>
+                    <button onclick="notify('success', '✅ Settings saved!')" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl">Save</button>
+                </div>
             </div>
         </div>
-    </div>
+    </main>
+</div>
 
-    <div id="range-modal" class="modal">
-        <div class="modal-overlay" onclick="closeModal('range-modal')"></div>
-        <div class="modal-content p-6 m-auto">
-            <h3 class="text-xl font-bold text-white mb-4">Modify Range</h3>
-            <div class="space-y-3">
-                <input type="number" id="range-start-input" placeholder="Start" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
-                <input type="number" id="range-end-input" placeholder="End" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
-                <button onclick="saveRange()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl">Save Range</button>
-                <button onclick="closeModal('range-modal')" class="w-full py-2 bg-slate-700 text-white rounded-xl">Cancel</button>
-            </div>
-        </div>
-    </div>
+<script>
+    let user = null;
+    let selected = [];
 
-    <script>
-        let currentUser = null;
-        let selectedNumbers = [];
-
-        // NOTIFICATION SYSTEM
-        function notify(type, message) {
-            const container = document.getElementById('notification-container');
-            const toast = document.createElement('div');
-            toast.className = `notification-toast ${type}`;
-            toast.innerHTML = message;
-            container.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.classList.add('exit');
-                setTimeout(() => toast.remove(), 300);
-            }, 5000);
-        }
-
-        // TAB SWITCHING
-        function switchTab(section, tab) {
-            document.querySelectorAll(`#${section}-dashboard .tab-content, #${section}-admin-dashboard .tab-content, #admin-dashboard .tab-content, #admin-dashboard-tab`).forEach(el => {
-                if (el.id.includes(section)) el.classList.remove('active');
-            });
-            
-            document.querySelectorAll(`#${section}-dashboard .tab-button, #${section}-admin-dashboard .tab-button, #admin-dashboard .tab-button`).forEach(el => {
-                el.classList.remove('active');
-            });
-            
-            const target = document.getElementById(`${section}-${tab}`);
-            if (target) {
-                target.classList.add('active');
-                event.target.classList.add('active');
-            }
-        }
-
-        // MODAL
-        function openCustomerModal() { document.getElementById('customer-modal').classList.add('active'); }
-        function openCreateAdminModal() { document.getElementById('admin-modal').classList.add('active'); }
-        function openModifyRangeModal(name, start, end) {
-            document.getElementById('range-start-input').value = start;
-            document.getElementById('range-end-input').value = end;
-            document.getElementById('range-modal').classList.add('active');
-        }
-        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-
-        // LOGIN
-        function openLoginModal() { document.getElementById('login-modal').classList.remove('hidden'); }
-        function closeLoginModal() { document.getElementById('login-modal').classList.add('hidden'); }
-
-        function handleLogin(event) {
-            event.preventDefault();
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
-
-            if (email === 'fita.regassa@gmail.com' && password === 'MainAdmin@123') {
-                currentUser = { type: 'main_admin', email };
-                document.getElementById('public-page').classList.add('hidden');
-                document.getElementById('login-modal').classList.add('hidden');
-                document.getElementById('main-admin-dashboard').classList.remove('hidden');
-                notify('success', '✅ Main Admin Login Successful');
-            } else if (email === 'ahmed@company.com' && password === 'Ahmed123') {
-                currentUser = { type: 'admin', name: 'Ahmed Mohamed', email };
-                document.getElementById('public-page').classList.add('hidden');
-                document.getElementById('login-modal').classList.add('hidden');
-                document.getElementById('admin-dashboard').classList.remove('hidden');
-                document.getElementById('admin-name').textContent = 'Ahmed Mohamed';
-                notify('success', '✅ Admin Login Successful');
-            } else if (email === 'm@email.com' && password === 'Pass123') {
-                currentUser = { type: 'customer', name: 'Mohammed', email };
-                document.getElementById('public-page').classList.add('hidden');
-                document.getElementById('login-modal').classList.add('hidden');
-                document.getElementById('customer-dashboard').classList.remove('hidden');
-                document.getElementById('cust-name').textContent = 'Mohammed';
-                generateNumbersGrid();
-                notify('success', '✅ Customer Login Successful');
-            } else {
-                notify('error', '❌ Invalid credentials');
-            }
-        }
-
-        // CUSTOMER FUNCTIONS
-        function generateNumbersGrid() {
-            const grid = document.getElementById('numbers-grid');
-            grid.innerHTML = '';
-            for (let i = 1; i <= 300; i++) {
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.className = selectedNumbers.includes(i) ? 'w-8 h-8 bg-yellow-400 text-black text-xs font-bold rounded' : 'w-8 h-8 bg-slate-700 text-white text-xs rounded hover:bg-slate-600';
-                btn.textContent = i;
-                btn.onclick = () => { selectedNumbers.includes(i) ? selectedNumbers.splice(selectedNumbers.indexOf(i), 1) : selectedNumbers.push(i); updateCost(); generateNumbersGrid(); };
-                grid.appendChild(btn);
-            }
-        }
+    function login(e) {
+        e.preventDefault();
+        const email = document.getElementById('email').value;
+        const pwd = document.getElementById('password').value;
         
-        function updateCost() {
-            document.getElementById('selected-count').textContent = selectedNumbers.length;
-            document.getElementById('ticket-cost').textContent = selectedNumbers.length * 100;
+        document.getElementById('login-page').classList.add('hidden');
+        
+        if (email === 'fita.regassa@gmail.com' && pwd === 'MainAdmin@123') {
+            user = 'main';
+            document.getElementById('main-page').classList.remove('hidden');
+            notify('success', '✅ Main Admin logged in');
+        } else if (email === 'ahmed@company.com' && pwd === 'Ahmed123') {
+            user = 'admin';
+            document.getElementById('admin-page').classList.remove('hidden');
+            document.getElementById('admin-title').textContent = 'Ahmed Mohamed - Admin Dashboard';
+            notify('success', '✅ Admin logged in');
+        } else if (email === 'm@email.com' && pwd === 'Pass123') {
+            user = 'customer';
+            document.getElementById('customer-page').classList.remove('hidden');
+            generateNumberGrid();
+            notify('success', '✅ Customer logged in');
+        } else {
+            notify('error', '❌ Invalid credentials');
         }
+    }
 
-        function submitTicket() {
-            if (selectedNumbers.length === 0) return notify('error', '❌ Select at least 1 number');
-            notify('success', `✅ Ticket submitted: ${selectedNumbers.join(',')} - ${selectedNumbers.length * 100} ETB`);
-            selectedNumbers = [];
-            updateCost();
+    function logout() {
+        if (confirm('Logout?')) {
+            user = null;
+            document.getElementById('login-page').classList.remove('hidden');
+            document.getElementById('customer-page').classList.add('hidden');
+            document.getElementById('admin-page').classList.add('hidden');
+            document.getElementById('main-page').classList.add('hidden');
+            document.getElementById('email').value = '';
+            document.getElementById('password').value = '';
+            notify('info', 'Logged out');
         }
+    }
 
-        function openTikTok() { notify('info', '📱 Opening TikTok @BoniLottery Live'); }
+    function switchTab(sec, tab) {
+        document.querySelectorAll(`#${sec}-page .tab`).forEach(e => e.classList.remove('active'));
+        document.querySelectorAll(`#${sec}-page .tab-btn`).forEach(e => e.classList.remove('active'));
+        document.getElementById(`${sec}-${tab}`).classList.add('active');
+        event.target.classList.add('active');
+    }
 
-        // ADMIN FUNCTIONS
-        function addCustomer() {
-            const name = document.getElementById('cust-name-input').value;
-            if (!name) return notify('error', '❌ Enter customer name');
-            notify('success', `✅ Customer ${name} added!`);
-            closeModal('customer-modal');
-            document.getElementById('admin-customers-list').innerHTML += `<div class="glass-panel rounded-lg p-4 border border-yellow-400/10"><p class="font-bold text-white">${name}</p><p class="text-xs text-slate-400">New customer</p></div>`;
+    function generateNumberGrid() {
+        const g = document.getElementById('number-grid');
+        g.innerHTML = '';
+        for(let i=1;i<=300;i++) {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = selected.includes(i) ? 'w-8 h-8 bg-yellow-400 text-black text-xs font-bold rounded' : 'w-8 h-8 bg-slate-700 text-white text-xs rounded hover:bg-slate-600';
+            b.textContent = i;
+            b.onclick = () => { selected.includes(i) ? selected.splice(selected.indexOf(i),1) : selected.push(i); updateCost(); generateNumberGrid(); };
+            g.appendChild(b);
         }
+    }
 
-        function deleteCustomer(btn) {
-            if (confirm('Delete customer?')) { btn.parentElement.parentElement.remove(); notify('success', '✅ Customer deleted'); }
-        }
+    function updateCost() {
+        document.getElementById('c-count').textContent = selected.length;
+        document.getElementById('c-cost').textContent = selected.length * 100;
+    }
 
-        function editCustomer(name) { notify('info', `Editing ${name}...`); }
+    function submitTicket() {
+        if(selected.length === 0) return notify('error', '❌ Select at least 1 number');
+        notify('success', `✅ Ticket submitted: ${selected.join(',')} (${selected.length*100} ETB)`);
+        selected = [];
+        updateCost();
+    }
 
-        function approvePayment(btn) {
-            notify('success', '✅ Payment approved!');
-            btn.parentElement.parentElement.parentElement.remove();
-        }
+    function openBookAppt() { document.getElementById('c-appt-form').classList.toggle('hidden'); }
+    function bookAppt() { notify('success', '✅ Appointment booked'); document.getElementById('c-appt-form').classList.add('hidden'); }
+    function openAddCustomer() { document.getElementById('a-cust-form').classList.toggle('hidden'); }
+    function addCustomer() { notify('success', '✅ Customer added'); document.getElementById('a-cust-form').classList.add('hidden'); }
+    function delCustomer(e) { if(confirm('Delete?')) { e.closest('div').remove(); notify('success', '✅ Deleted'); } }
+    function approvePayment(e) { e.parentElement.parentElement.parentElement.remove(); notify('success', '✅ Payment approved'); }
+    function rejectPayment(e) { e.parentElement.parentElement.parentElement.remove(); notify('error', '❌ Payment rejected'); }
+    function confirmAppt(e) { e.textContent = 'Confirmed'; e.disabled = true; notify('success', '✅ Confirmed'); }
+    function generateWinner() { notify('success', `🎲 Winner: ${Math.floor(Math.random()*1000)+1}`); }
+    function generateDrawWinner() { notify('success', `🎲 Winner: ${Math.floor(Math.random()*1000)+1}`); }
+    function openCreateAdmin() { document.getElementById('m-admin-form').classList.toggle('hidden'); }
+    function createAdmin() { notify('success', '✅ Admin created'); document.getElementById('m-admin-form').classList.add('hidden'); }
+    function delAdmin(e) { if(confirm('Delete?')) { e.closest('div').remove(); notify('success', '✅ Deleted'); } }
+    function openEditRange() { notify('info', 'Range editor'); }
 
-        function rejectPayment(btn) {
-            notify('error', '❌ Payment rejected');
-            btn.parentElement.parentElement.parentElement.remove();
-        }
+    function notify(type, msg) {
+        const div = document.createElement('div');
+        div.className = `notification ${type}`;
+        div.innerHTML = msg;
+        document.getElementById('notifications').appendChild(div);
+        setTimeout(() => div.remove(), 5000);
+    }
+</script>
 
-        function generateWinner() {
-            const num = Math.floor(Math.random() * 1000) + 1;
-            notify('success', `🎲 Winner Generated: Number ${num}`);
-        }
-
-        function savePaymentSettings() { notify('success', '✅ Payment settings saved!'); }
-
-        function bookAdminAppointment() {
-            const date = document.getElementById('admin-appt-date').value;
-            if (!date) return notify('error', '❌ Select date');
-            notify('success', '✅ Appointment booked with Main Admin!');
-        }
-
-        // MAIN ADMIN FUNCTIONS
-        function createAdmin() {
-            const name = document.getElementById('admin-name-input').value;
-            if (!name) return notify('error', '❌ Enter admin name');
-            notify('success', `✅ Admin ${name} created!`);
-            closeModal('admin-modal');
-        }
-
-        function deleteAdmin(btn) {
-            if (confirm('Delete admin?')) { btn.parentElement.parentElement.remove(); notify('success', '✅ Admin deleted'); }
-        }
-
-        function toggleAdminStatus(btn) {
-            btn.textContent = btn.textContent === 'Disable' ? 'Enable' : 'Disable';
-            notify('info', `Admin status changed`);
-        }
-
-        function editAdminInfo(name) { notify('info', `Editing ${name}...`); }
-
-        function saveRange() {
-            const start = document.getElementById('range-start-input').value;
-            const end = document.getElementById('range-end-input').value;
-            if (start >= end) return notify('error', '❌ Start must be less than end');
-            notify('success', `✅ Range updated: ${start} - ${end}`);
-            closeModal('range-modal');
-        }
-
-        function saveMainPaymentSettings() { notify('success', '✅ Payment accounts saved!'); }
-
-        function sendNotification() { notify('success', '✅ Notifications sent!'); }
-
-        function logout() {
-            if (confirm('Logout?')) {
-                currentUser = null;
-                document.getElementById('customer-dashboard').classList.add('hidden');
-                document.getElementById('admin-dashboard').classList.add('hidden');
-                document.getElementById('main-admin-dashboard').classList.add('hidden');
-                document.getElementById('public-page').classList.remove('hidden');
-                notify('info', 'Logged out');
-            }
-        }
-    </script>
 </body>
 </html>
