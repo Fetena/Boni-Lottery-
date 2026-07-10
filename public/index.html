@@ -127,9 +127,13 @@
                 <!-- TABS -->
                 <div class="flex gap-2 border-b border-yellow-400/10 pb-2 overflow-x-auto">
                     <button onclick="switchTab('cust', 'profile')" class="tab-button active px-4 py-2 text-xs font-bold text-yellow-400">Profile</button>
+                    <button onclick="switchTab('cust', 'library')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📖 Library</button>
                     <button onclick="switchTab('cust', 'buytickets')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🎫 Buy</button>
                     <button onclick="switchTab('cust', 'mytickets')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">My Tickets</button>
-                    <button onclick="switchTab('cust', 'drawings')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🎰 Drawings</button>
+                    <button onclick="switchTab('cust', 'appointments')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📅 Book</button>
+                    <button onclick="switchTab('cust', 'drawings')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🎰 Draws</button>
+                    <button onclick="switchTab('cust', 'notifications')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🔔 Alerts</button>
+                    <button onclick="switchTab('cust', 'settings')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">⚙️ Settings</button>
                 </div>
 
                 <!-- PROFILE TAB -->
@@ -201,6 +205,42 @@
                         <button onclick="openTikTok()" class="px-6 py-2 bg-yellow-400 text-black font-bold rounded-xl inline-block">📱 @BoniLottery Live</button>
                     </div>
                 </div>
+
+                <!-- LIBRARY TAB -->
+                <div id="cust-library" class="tab-content space-y-4"></div>
+
+                <!-- APPOINTMENTS TAB -->
+                <div id="cust-appointments" class="tab-content space-y-4">
+                    <h3 class="text-2xl font-bold text-white">📅 Book Appointment</h3>
+                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-3">
+                        <input type="date" id="cust-appt-date" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
+                        <select class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
+                            <option>10:00 AM</option>
+                            <option>11:00 AM</option>
+                            <option>2:00 PM</option>
+                            <option>3:00 PM</option>
+                            <option>4:00 PM</option>
+                        </select>
+                        <button onclick="bookAppointment()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl">Book</button>
+                    </div>
+                </div>
+
+                <!-- NOTIFICATIONS TAB -->
+                <div id="cust-notifications" class="tab-content space-y-4">
+                    <h3 class="text-2xl font-bold text-white">🔔 Notifications</h3>
+                </div>
+
+                <!-- SETTINGS TAB -->
+                <div id="cust-settings" class="tab-content space-y-4">
+                    <h3 class="text-2xl font-bold text-white">⚙️ Settings</h3>
+                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-3">
+                        <div>
+                            <label class="text-sm text-slate-400">Phone Number</label>
+                            <input type="text" id="cust-phone" value="0911223344" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
+                        </div>
+                        <button onclick="saveCustomerSettings()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl">Save</button>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
@@ -222,8 +262,11 @@
                     <button onclick="switchTab('admin', 'customers')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">👥 Customers</button>
                     <button onclick="switchTab('admin', 'payments')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">💳 Payments</button>
                     <button onclick="switchTab('admin', 'draws')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🎰 Draws</button>
+                    <button onclick="switchTab('admin', 'revenue')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">💹 Revenue</button>
+                    <button onclick="switchTab('admin', 'logs')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📋 Logs</button>
+                    <button onclick="switchTab('admin', 'notifications')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🔔 Notify</button>
                     <button onclick="switchTab('admin', 'settings')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">⚙️ Settings</button>
-                    <button onclick="switchTab('admin', 'appointments')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📅 Main Admin</button>
+                    <button onclick="switchTab('admin', 'appointments')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📅 Book</button>
                 </div>
 
                 <!-- DASHBOARD TAB -->
@@ -357,6 +400,21 @@
                         <button onclick="bookAdminAppointment()" class="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">Book Appointment</button>
                     </div>
                 </div>
+
+                <!-- REVENUE TAB -->
+                <div id="admin-revenue" class="tab-content space-y-4">
+                    <h3 class="text-2xl font-bold text-white">💹 Revenue</h3>
+                </div>
+
+                <!-- ACTIVITY LOG TAB -->
+                <div id="admin-logs" class="tab-content space-y-4">
+                    <h3 class="text-2xl font-bold text-white">📋 Activity Log</h3>
+                </div>
+
+                <!-- NOTIFICATIONS TAB -->
+                <div id="admin-notifications" class="tab-content space-y-4">
+                    <h3 class="text-2xl font-bold text-white">🔔 Send Notifications</h3>
+                </div>
             </div>
         </main>
     </div>
@@ -377,10 +435,13 @@
                     <button onclick="switchTab('main', 'dashboard')" class="tab-button active px-4 py-2 text-xs font-bold text-yellow-400">Dashboard</button>
                     <button onclick="switchTab('main', 'admins')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">👨‍💼 Admins</button>
                     <button onclick="switchTab('main', 'ranges')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📍 Ranges</button>
+                    <button onclick="switchTab('main', 'customers')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">👥 Customers</button>
                     <button onclick="switchTab('main', 'payments')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">💳 Payments</button>
-                    <button onclick="switchTab('main', 'transactions')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📋 Transactions</button>
-                    <button onclick="switchTab('main', 'settings')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">⚙️ Settings</button>
+                    <button onclick="switchTab('main', 'transactions')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📋 Trans</button>
+                    <button onclick="switchTab('main', 'analytics')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📈 Analytics</button>
+                    <button onclick="switchTab('main', 'audit')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🔐 Audit</button>
                     <button onclick="switchTab('main', 'notifications')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🔔 Notify</button>
+                    <button onclick="switchTab('main', 'settings')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">⚙️ Settings</button>
                 </div>
 
                 <!-- DASHBOARD TAB -->
@@ -508,6 +569,26 @@
                         <button onclick="sendNotification()" class="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">Send</button>
                     </div>
                 </div>
+
+                <!-- CUSTOMERS TAB -->
+                <div id="main-customers" class="tab-content space-y-4">
+                    <h3 class="text-2xl font-bold text-white">👥 All Customers</h3>
+                </div>
+
+                <!-- ANALYTICS TAB -->
+                <div id="main-analytics" class="tab-content space-y-4">
+                    <h3 class="text-2xl font-bold text-white">📈 Analytics</h3>
+                </div>
+
+                <!-- AUDIT LOG TAB -->
+                <div id="main-audit" class="tab-content space-y-4">
+                    <h3 class="text-2xl font-bold text-white">🔐 Audit Log</h3>
+                </div>
+
+                <!-- TRANSACTIONS TAB -->
+                <div id="main-transactions" class="tab-content space-y-4">
+                    <h3 class="text-2xl font-bold text-white">📋 Transactions</h3>
+                </div>
             </div>
         </main>
     </div>
@@ -572,16 +653,26 @@
             }, 5000);
         }
 
-        // TAB SWITCHING
+        // TAB SWITCHING - WORKS FOR ALL SECTIONS
         function switchTab(section, tab) {
-            document.querySelectorAll(`#${section}-dashboard .tab-content, #${section}-admin-dashboard .tab-content, #admin-dashboard .tab-content, #admin-dashboard-tab`).forEach(el => {
-                if (el.id.includes(section)) el.classList.remove('active');
-            });
+            // Determine which dashboard to target
+            let dashId = section === 'cust' ? 'customer-dashboard' : 
+                        section === 'admin' ? 'admin-dashboard' : 
+                        'main-admin-dashboard';
             
-            document.querySelectorAll(`#${section}-dashboard .tab-button, #${section}-admin-dashboard .tab-button, #admin-dashboard .tab-button`).forEach(el => {
+            let dashboard = document.getElementById(dashId);
+            
+            // Hide all tabs in this dashboard
+            dashboard.querySelectorAll('.tab-content').forEach(el => {
                 el.classList.remove('active');
             });
             
+            // Deactivate all buttons in this dashboard
+            dashboard.querySelectorAll('.tab-button').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            // Show target tab and activate button
             const target = document.getElementById(`${section}-${tab}`);
             if (target) {
                 target.classList.add('active');
@@ -730,6 +821,193 @@
         function saveMainPaymentSettings() { notify('success', '✅ Payment accounts saved!'); }
 
         function sendNotification() { notify('success', '✅ Notifications sent!'); }
+
+        // CUSTOMER APPOINTMENT BOOKING
+        function bookAppointment() {
+            const date = document.getElementById('cust-appt-date')?.value;
+            if (!date) {
+                const input = document.createElement('input');
+                input.type = 'date';
+                input.id = 'cust-appt-date';
+                return notify('error', '❌ Enter appointment date');
+            }
+            notify('success', '✅ Appointment booked!');
+        }
+
+        // LIBRARY TAB - DISPLAY INFO
+        function showLibrary() {
+            const content = document.getElementById('cust-library');
+            if (content && !content.innerHTML.includes('How to Play')) {
+                content.innerHTML = `
+                    <h3 class="text-2xl font-bold mb-6">📖 Lottery Guide</h3>
+                    <div class="glass-panel rounded-lg p-6 border border-yellow-400/10 mb-4">
+                        <h4 class="text-yellow-400 font-bold mb-3">How to Play</h4>
+                        <ol class="text-sm text-slate-300 space-y-2">
+                            <li>1. Select 1-10 numbers from 1-300</li>
+                            <li>2. Pay 100 ETB per number</li>
+                            <li>3. Upload receipt</li>
+                            <li>4. Wait for admin verification</li>
+                            <li>5. Draw happens every Sunday 8 PM</li>
+                        </ol>
+                    </div>
+                `;
+            }
+        }
+
+        // NOTIFICATIONS TAB
+        function showNotifications() {
+            const content = document.getElementById('cust-notifications');
+            if (content && content.innerHTML.trim() === '') {
+                content.innerHTML = `
+                    <div class="space-y-3">
+                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
+                            <p class="font-bold text-white">✅ Payment Verified</p>
+                            <p class="text-xs text-slate-400 mt-1">Your ticket was verified</p>
+                        </div>
+                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
+                            <p class="font-bold text-white">🎫 Ticket Created</p>
+                            <p class="text-xs text-slate-400 mt-1">You bought a new ticket</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // CUSTOMER SETTINGS
+        function saveCustomerSettings() {
+            const phone = document.getElementById('cust-phone')?.value;
+            if (phone) notify('success', `✅ Settings saved!`);
+        }
+
+        // ADMIN NOTIFICATIONS
+        function showAdminNotifications() {
+            const content = document.getElementById('admin-notifications');
+            if (content && content.innerHTML.trim() === '') {
+                content.innerHTML = `
+                    <div class="glass-panel rounded-lg p-6 border border-yellow-400/10 space-y-3">
+                        <textarea placeholder="Message..." rows="3" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none"></textarea>
+                        <button onclick="sendNotification()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl">Send</button>
+                    </div>
+                `;
+            }
+        }
+
+        // ADMIN REVENUE ANALYTICS
+        function showRevenue() {
+            const content = document.getElementById('admin-revenue');
+            if (content && content.innerHTML.trim() === '') {
+                content.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
+                            <p class="text-slate-400 text-sm">Total Revenue</p>
+                            <p class="text-3xl font-bold text-yellow-400 mt-2">2,400 ETB</p>
+                        </div>
+                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
+                            <p class="text-slate-400 text-sm">This Month</p>
+                            <p class="text-3xl font-bold text-yellow-400 mt-2">1,200 ETB</p>
+                        </div>
+                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
+                            <p class="text-slate-400 text-sm">This Week</p>
+                            <p class="text-3xl font-bold text-yellow-400 mt-2">300 ETB</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // ADMIN ACTIVITY LOG
+        function showActivityLog() {
+            const content = document.getElementById('admin-logs');
+            if (content && content.innerHTML.trim() === '') {
+                content.innerHTML = `
+                    <div class="space-y-2">
+                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
+                            <p class="text-sm text-slate-300"><strong>2 hours ago:</strong> Payment approved</p>
+                        </div>
+                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
+                            <p class="text-sm text-slate-300"><strong>5 hours ago:</strong> Ticket created</p>
+                        </div>
+                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
+                            <p class="text-sm text-slate-300"><strong>1 day ago:</strong> Customer added</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // MAIN ADMIN CUSTOMERS TAB
+        function showAllCustomers() {
+            const content = document.getElementById('main-customers');
+            if (content && content.innerHTML.trim() === '') {
+                content.innerHTML = `
+                    <div class="glass-panel rounded-lg border border-yellow-400/10 overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <tr class="border-b border-yellow-400/10">
+                                <th class="p-3 text-left">Name</th>
+                                <th class="p-3 text-left">Branch</th>
+                                <th class="p-3 text-left">Tickets</th>
+                                <th class="p-3 text-left">Spent</th>
+                            </tr>
+                            <tr class="border-b border-yellow-400/10"><td class="p-3">Mohammed Ali</td><td class="p-3">Ahmed</td><td class="p-3">5</td><td class="p-3">500 ETB</td></tr>
+                            <tr class="border-b border-yellow-400/10"><td class="p-3">Zainab Hassan</td><td class="p-3">Admin2</td><td class="p-3">3</td><td class="p-3">300 ETB</td></tr>
+                        </table>
+                    </div>
+                `;
+            }
+        }
+
+        // MAIN ADMIN TRANSACTIONS
+        function showTransactions() {
+            const content = document.getElementById('main-transactions');
+            if (content && content.innerHTML.trim() === '') {
+                content.innerHTML = `
+                    <div class="space-y-2">
+                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
+                            <p class="text-sm text-slate-300"><strong>July 8:</strong> Mohammed paid 300 ETB (Telebirr)</p>
+                        </div>
+                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
+                            <p class="text-sm text-slate-300"><strong>July 7:</strong> Zainab paid 300 ETB (CBE)</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // MAIN ADMIN AUDIT LOG
+        function showAuditLog() {
+            const content = document.getElementById('main-audit');
+            if (content && content.innerHTML.trim() === '') {
+                content.innerHTML = `
+                    <div class="space-y-2">
+                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
+                            <p class="text-sm text-slate-300"><strong>Ahmed:</strong> Approved payment - 2h ago</p>
+                        </div>
+                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
+                            <p class="text-sm text-slate-300"><strong>Ahmed:</strong> Created ticket - 4h ago</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // MAIN ADMIN ANALYTICS
+        function showAnalytics() {
+            const content = document.getElementById('main-analytics');
+            if (content && content.innerHTML.trim() === '') {
+                content.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
+                            <p class="text-slate-400 text-sm">Total Platform Revenue</p>
+                            <p class="text-3xl font-bold text-yellow-400 mt-2">7,200 ETB</p>
+                        </div>
+                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
+                            <p class="text-slate-400 text-sm">This Month</p>
+                            <p class="text-3xl font-bold text-yellow-400 mt-2">2,400 ETB</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
 
         function logout() {
             if (confirm('Logout?')) {
