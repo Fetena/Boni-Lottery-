@@ -1,54 +1,54 @@
-// ============================================
-// CUSTOMER DASHBOARD (PARENT COMPONENT)
-// Manages: Profile, Numbers, Settings, Tickets
-// ============================================
-
-class CustomerDashboard {
-    constructor(custId) {
-        this.custId = custId;
-        this.customer = db.getCustomer(custId);
-        
-        // Initialize child components
-        this.profile = new CustomerProfile(custId);
-        this.numberGrid = new CustomerNumberGrid(custId);
-        this.settings = new CustomerSettings(custId);
-        this.tickets = new CustomerTickets(custId);
+class CustomerProfile {
+    constructor(custId) { this.custId = custId; }
+    render() {
+        const c = db.getCustomer(this.custId);
+        return `
+            <div class="glass-panel p-6 rounded-2xl">
+                <h3 class="text-xl font-bold mb-4">Profile</h3>
+                <div class="space-y-4">
+                    <p class="text-slate-400 text-sm">Name: <span class="text-white">${c.name}</span></p>
+                    <p class="text-slate-400 text-sm">Email: <span class="text-white">${c.email}</span></p>
+                    <p class="text-slate-400 text-sm">Spent: <span class="text-yellow-400">${c.spent} ETB</span></p>
+                </div>
+            </div>
+        `;
     }
-
-    // Inside Customer/CustomerDashboard.js
-render() {
-    return `
-        <div id="customer-dashboard">
-            <!-- Navigation -->
-            <nav class="flex gap-4">
-                <button onclick="switchTab('customer', 'profile')" class="tab-button active">Profile</button>
-                <button onclick="switchTab('customer', 'buy')" class="tab-button">Buy</button>
-                <button onclick="switchTab('customer', 'tickets')" class="tab-button">My Tickets</button>
-                <button onclick="switchTab('customer', 'settings')" class="tab-button">Settings</button>
-                <!-- NEW TABS -->
-                <button onclick="switchTab('customer', 'library')" class="tab-button">Library</button>
-                <button onclick="switchTab('customer', 'appointments')" class="tab-button">Appointments</button>
-                <button onclick="switchTab('customer', 'drawings')" class="tab-button">Drawings</button>
-            </nav>
-
-            <!-- Tab Content Containers -->
-            <div id="customer-profile" class="tab-content active">...</div>
-            <div id="customer-buy" class="tab-content" style="display:none;">...</div>
-            <div id="customer-tickets" class="tab-content" style="display:none;">...</div>
-            <div id="customer-settings" class="tab-content" style="display:none;">...</div>
-            <!-- NEW CONTENT DIVS -->
-            <div id="customer-library" class="tab-content" style="display:none;"></div>
-            <div id="customer-appointments" class="tab-content" style="display:none;"></div>
-            <div id="customer-drawings" class="tab-content" style="display:none;"></div>
-        </div>
-    `;
 }
 
-    loadTabs() {
-        // Load child components into tabs
-        document.getElementById('cust-profile').innerHTML = this.profile.render();
-        document.getElementById('cust-buytickets').innerHTML = this.numberGrid.render();
-        document.getElementById('cust-mytickets').innerHTML = this.tickets.render();
-        document.getElementById('cust-settings').innerHTML = this.settings.render();
+class CustomerSettings {
+    constructor(custId) { this.custId = custId; }
+    render() {
+        return `
+            <div class="glass-panel p-6 rounded-2xl">
+                <h3 class="text-xl font-bold mb-4">Settings</h3>
+                <button class="bg-yellow-600 px-4 py-2 rounded-xl font-bold text-black">Update Password</button>
+            </div>
+        `;
     }
+}
+
+class CustomerTickets {
+    constructor(custId) { this.custId = custId; }
+    render() {
+        const c = db.getCustomer(this.custId);
+        return `
+            <div class="glass-panel p-6 rounded-2xl">
+                <h3 class="text-xl font-bold mb-4">My Tickets</h3>
+                <div class="space-y-2">${(c.tickets || []).map(t => `<div class="p-3 bg-black/40 rounded-lg">${t.id} - ${t.status}</div>`).join('')}</div>
+            </div>
+        `;
+    }
+}
+
+class CustomerLibrary {
+    constructor(custId) { this.custId = custId; }
+    render() { return `<div class="glass-panel p-6 rounded-2xl">Library: Coming Soon</div>`; }
+}
+class CustomerAppointments {
+    constructor(custId) { this.custId = custId; }
+    render() { return `<div class="glass-panel p-6 rounded-2xl">Appointments Interface</div>`; }
+}
+class CustomerDrawings {
+    constructor(custId) { this.custId = custId; }
+    render() { return `<div class="glass-panel p-6 rounded-2xl">Drawings History</div>`; }
 }
