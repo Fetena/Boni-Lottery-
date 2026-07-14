@@ -3,100 +3,234 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Boni Lottery - Master Architecture</title>
+    <title>Boni Lottery - Hierarchical Component Architecture</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { background: #020c1b; color: #e2e8f0; }
+        * { box-sizing: border-box; }
+        body { background: #020c1b; color: #e2e8f0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         .glass-panel { background: rgba(15, 39, 61, 0.45); backdrop-filter: blur(16px); border: 1px solid rgba(200, 184, 123, 0.08); }
+        .text-gradient { background: linear-gradient(135deg, #FFF 30%, #C8B87B 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
         .tab-button.active { border-bottom: 2px solid #FCD34D; color: #FCD34D; }
+        .tab-button { border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.3s; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
+        
+        .notification-toast { position: fixed; top: 20px; right: 20px; min-width: 300px; padding: 16px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 10000; animation: slideIn 0.3s ease; }
+        .notification-toast.success { background: #10b981; color: white; }
+        .notification-toast.error { background: #ef4444; color: white; }
+        .notification-toast.info { background: #3b82f6; color: white; }
+        @keyframes slideIn { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(400px); opacity: 0; } }
+        .notification-toast.exit { animation: slideOut 0.3s ease; }
     </style>
 </head>
 <body>
 
-    <div id="notification-container" class="fixed top-5 right-5 z-50"></div>
+    <div id="notification-container"></div>
 
-    <div id="app-container" class="min-h-screen">
-        <!-- Login UI -->
-        <div id="public-page" class="p-10 text-center space-y-4">
-            <h1 class="text-3xl font-bold text-yellow-400">Boni Lottery Admin</h1>
-            <input type="email" id="login-email" placeholder="Email" class="block mx-auto p-2 rounded bg-gray-900 border border-gray-700 text-white">
-            <input type="password" id="login-password" placeholder="Password" class="block mx-auto p-2 rounded bg-gray-900 border border-gray-700 text-white">
-            <button onclick="handleLogin()" class="bg-yellow-600 px-6 py-2 rounded font-bold">Login</button>
-        </div>
-        
-        <div id="dashboards-container"></div>
+    <!-- ===== LOGIN PAGE ===== -->
+    <div id="public-page" class="min-h-screen bg-black flex flex-col">
+        <header class="sticky top-0 z-40 w-full glass-panel border-b border-yellow-400/10 px-6 py-4">
+            <div class="max-w-7xl mx-auto flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center text-black font-bold text-lg">🏆</div>
+                    <div><span class="font-bold text-xl text-gradient">BONI</span><span class="text-xs text-yellow-400 font-bold">LOTTERY</span></div>
+                </div>
+                <button onclick="openLoginModal()" class="px-6 py-2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">Login</button>
+            </div>
+        </header>
+        <main class="flex-grow p-6">
+            <div class="max-w-7xl mx-auto">
+                <div class="rounded-3xl glass-panel border border-yellow-400/20 p-12 text-center space-y-6 mb-12">
+                    <h1 class="text-5xl font-bold text-white">Multi-Branch<br><span class="text-yellow-400">Lottery System</span></h1>
+                    <p class="text-slate-300">Hierarchical Parent/Child Components</p>
+                    <button onclick="openLoginModal()" class="px-8 py-4 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-2xl">Get Started →</button>
+                </div>
+            </div>
+        </main>
     </div>
 
+    <!-- ===== LOGIN MODAL ===== -->
+    <div id="login-modal" class="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4 hidden">
+        <div class="glass-panel rounded-3xl p-8 max-w-md w-full border border-yellow-400/20 space-y-6">
+            <div class="text-center">
+                <h2 class="text-2xl font-bold text-white">Login</h2>
+                <p class="text-xs text-slate-400 mt-2">Customer • Admin • Main Admin</p>
+            </div>
+            <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4">
+                <input type="email" id="login-email" placeholder="Email" required class="w-full bg-black/40 border border-yellow-400/20 focus:border-yellow-400 rounded-xl py-3 px-4 text-sm text-white outline-none">
+                <input type="password" id="login-password" placeholder="Password" required class="w-full bg-black/40 border border-yellow-400/20 focus:border-yellow-400 rounded-xl py-3 px-4 text-sm text-white outline-none">
+                <button type="submit" class="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">Login</button>
+            </form>
+            <div class="border-t border-yellow-400/20 pt-4 text-xs text-slate-300 space-y-1">
+                <p class="font-bold text-yellow-400">📝 Test Accounts:</p>
+                <p><strong>Main:</strong> fita.regassa@gmail.com / MainAdmin@123</p>
+                <p><strong>Admin:</strong> ahmed@company.com / Ahmed123</p>
+                <p><strong>Customer:</strong> m@email.com / Pass123</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- DASHBOARDS WILL BE INSERTED HERE -->
+    <div id="dashboards-container"></div>
+
+    <!-- ===== SCRIPTS ===== -->
+    <!-- 1. Shared Layer -->
+    <script src="Shared/DataStorage.js"></script>
+
+    <!-- 2. Customer Component (Parent + Children) -->
+    <script src="Customer/CustomerDashboard.js"></script>
+    <script src="Customer/Profile.js"></script>
+    <script src="Customer/NumberGrid.js"></script>
+    <script src="Customer/Settings.js"></script>
+    <script src="Customer/Tickets.js"></script>
+
+    <!-- 3. Admin Component (Parent + Children) -->
+    <script src="BranchAdmin/AdminDashboard.js"></script>
+    <script src="BranchAdmin/Notifications.js"></script>
+    <script src="BranchAdmin/Payments.js"></script>
+    <script src="BranchAdmin/Settings.js"></script>
+
+    <!-- 4. Main Admin Component (Parent + Children) -->
+    <script src="MainAdmin/MainAdminDashboard.js"></script>
+    <script src="MainAdmin/Settings.js"></script>
+
     <script>
-        // --- 1. SHARED DATA STORAGE ---
-        const db = {
-            storage: JSON.parse(localStorage.getItem('boni_db') || '{}'),
-            save() { localStorage.setItem('boni_db', JSON.stringify(this.storage)); },
-            getSettings() { return this.storage.settings || { price: 100, drawDay: 'Sunday' }; },
-            updateSettings(data) { this.storage.settings = { ...this.getSettings(), ...data }; this.save(); }
-        };
+        let currentUser = null;
+        let customerDashboard, adminDashboard, mainAdminDashboard;
 
-        // --- 2. PARENT DASHBOARD: MAIN ADMIN ---
-        class MainAdminDashboard {
-            render() {
-                return `
-                    <div class="p-6">
-                        <h2 class="text-2xl font-bold mb-4">System Control Center</h2>
-                        <nav class="flex gap-4 border-b border-white/10 mb-4">
-                            <button onclick="switchTab('main', 'settings')" class="tab-button active">Settings</button>
-                            <button onclick="switchTab('main', 'admins')" class="tab-button">Admins</button>
-                        </nav>
-                        <div id="main-settings" class="tab-content active"></div>
-                        <div id="main-admins" class="tab-content"></div>
-                    </div>
-                `;
+        // ========== NOTIFICATIONS ==========
+        function showNotification(type, message) {
+            const container = document.getElementById('notification-container');
+            const toast = document.createElement('div');
+            toast.className = `notification-toast ${type}`;
+            toast.innerHTML = message;
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.add('exit');
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+        }
+
+        // ========== TAB SWITCHING ==========
+        function switchTab(section, tab) {
+            const dashboardId = section === 'cust' ? 'customer-dashboard' :
+                               section === 'admin' ? 'admin-dashboard' : 'main-admin-dashboard';
+            
+            const dashDiv = document.getElementById(dashboardId);
+            if (!dashDiv) return;
+            
+            dashDiv.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+            dashDiv.querySelectorAll('.tab-button').forEach(el => el.classList.remove('active'));
+            
+            const targetTab = dashDiv.querySelector(`#${section}-${tab}`);
+            if (targetTab) {
+                targetTab.style.display = 'block';
+                if (event?.target) {
+                    event.target.classList.add('active');
+                }
             }
         }
 
-        // --- 3. CHILD COMPONENT: MAIN ADMIN SETTINGS ---
-        class MainAdminSettings {
-            render() {
-                const settings = db.getSettings();
-                return `
-                    <div class="glass-panel p-6 rounded-xl">
-                        <h3 class="font-bold mb-4">System Configuration</h3>
-                        <label>Ticket Price (ETB)</label>
-                        <input type="number" id="price-input" value="${settings.price}" class="block bg-gray-900 p-2 rounded mb-4">
-                        <button onclick="saveSettings()" class="bg-yellow-600 px-4 py-2 rounded">Save Settings</button>
-                    </div>
-                `;
-            }
-        }
+        // ========== LOGIN MODAL ==========
+        function openLoginModal() { document.getElementById('login-modal').classList.remove('hidden'); }
+        function closeLoginModal() { document.getElementById('login-modal').classList.add('hidden'); }
 
-        // --- 4. NAVIGATION & LOGIN LOGIC ---
-        function switchTab(role, tab) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-button').forEach(el => el.classList.remove('active'));
-            document.getElementById(`${role}-${tab}`).classList.add('active');
-            event.target.classList.add('active');
-        }
-
-        function saveSettings() {
-            const price = document.getElementById('price-input').value;
-            db.updateSettings({ price });
-            alert('Saved!');
-        }
-
-        function handleLogin() {
+        // ========== LOGIN ==========
+        function handleLogin(event) {
+            event.preventDefault();
             const email = document.getElementById('login-email').value;
-            if(email === 'fita.regassa@gmail.com') {
-                document.getElementById('public-page').style.display = 'none';
-                const dash = new MainAdminDashboard();
-                document.getElementById('dashboards-container').innerHTML = dash.render();
-                
-                // Initialize Child
-                document.getElementById('main-settings').innerHTML = new MainAdminSettings().render();
+            const password = document.getElementById('login-password').value;
+
+            document.getElementById('public-page').classList.add('hidden');
+            closeLoginModal();
+
+            if (email === 'fita.regassa@gmail.com' && password === 'MainAdmin@123') {
+                currentUser = { type: 'main_admin', email };
+                mainAdminDashboard = new MainAdminDashboard();
+                document.getElementById('dashboards-container').innerHTML = mainAdminDashboard.render();
+                document.getElementById('main-admin-dashboard').classList.remove('hidden');
+                mainAdminSettings = new MainAdminSettings();
+                mainAdminDashboard.loadTabs();
+                showNotification('success', '✅ Main Admin Login Successful');
+            } else if (email === 'ahmed@company.com' && password === 'Ahmed123') {
+                currentUser = { type: 'admin', id: 'admin1', email };
+                adminDashboard = new AdminDashboard('admin1');
+                document.getElementById('dashboards-container').innerHTML = adminDashboard.render();
+                document.getElementById('admin-dashboard').classList.remove('hidden');
+                adminNotifications = new AdminNotifications('admin1');
+                adminPayments = new AdminPayments('admin1');
+                adminSettings = new AdminSettings('admin1');
+                adminDashboard.loadTabs();
+                showNotification('success', '✅ Admin Login Successful');
+            } else if (email === 'm@email.com' && password === 'Pass123') {
+                currentUser = { type: 'customer', id: 'cust1', email };
+                customerDashboard = new CustomerDashboard('cust1');
+                document.getElementById('dashboards-container').innerHTML = customerDashboard.render();
+                document.getElementById('customer-dashboard').classList.remove('hidden');
+                customerNumberGrid = new CustomerNumberGrid('cust1');
+                customerSettings = new CustomerSettings('cust1');
+                customerDashboard.loadTabs();
+                showNotification('success', '✅ Customer Login Successful');
             } else {
-                alert('Invalid Credentials');
+                document.getElementById('public-page').classList.remove('hidden');
+                showNotification('error', '❌ Invalid credentials');
             }
         }
+
+        // ========== LOGOUT ==========
+        function logout() {
+            if (confirm('Logout?')) {
+                currentUser = null;
+                document.getElementById('dashboards-container').innerHTML = '';
+                document.getElementById('public-page').classList.remove('hidden');
+                showNotification('info', 'Logged out');
+            }
+        }
+
+        // ========== INITIALIZE ==========
+        window.addEventListener('load', () => {
+            db.initializeDefaultData();
+        });
     </script>
+
+    <!-- ===== SHARED LAYER ===== -->
+    <script src="Shared/DataStorage.js"></script>
+
+    <!-- ===== CUSTOMER SECTION ===== -->
+    <script src="Customer/CustomerDashboard.js"></script>
+    <script src="Customer/Profile.js"></script>
+    <script src="Customer/NumberGrid.js"></script>
+    <script src="Customer/Settings.js"></script>
+    <script src="Customer/Tickets.js"></script>
+    <script src="Customer/Library.js"></script>
+    <script src="Customer/Appointments.js"></script>
+    <script src="Customer/Drawings.js"></script>
+
+    <!-- ===== BRANCHADMIN SECTION ===== -->
+    <script src="BranchAdmin/AdminDashboard.js"></script>
+    <script src="BranchAdmin/Notifications.js"></script>
+    <script src="BranchAdmin/Payments.js"></script>
+    <script src="BranchAdmin/Settings.js"></script>
+    <script src="BranchAdmin/Customers.js"></script>
+    <script src="BranchAdmin/Draws.js"></script>
+    <script src="BranchAdmin/Revenue.js"></script>
+    <script src="BranchAdmin/Logs.js"></script>
+    <script src="BranchAdmin/Notify.js"></script>
+    <script src="BranchAdmin/BookAppointment.js"></script>
+
+    <!-- ===== MAINADMIN SECTION ===== -->
+    <script src="MainAdmin/MainAdminDashboard.js"></script>
+    <script src="MainAdmin/Settings.js"></script>
+    <script src="MainAdmin/Admins.js"></script>
+    <script src="MainAdmin/Ranges.js"></script>
+    <script src="MainAdmin/Customers.js"></script>
+    <script src="MainAdmin/Payments.js"></script>
+    <script src="MainAdmin/Transactions.js"></script>
+    <script src="MainAdmin/Analytics.js"></script>
+    <script src="MainAdmin/AuditLog.js"></script>
+    <script src="MainAdmin/Notifications.js"></script>
 </body>
 </html>
