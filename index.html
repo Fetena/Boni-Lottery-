@@ -85,29 +85,17 @@
     <script src="Customer/NumberGrid.js"></script>
     <script src="Customer/Settings.js"></script>
     <script src="Customer/Tickets.js"></script>
-    <script src="Customer/Library.js"></script>
-    <script src="Customer/Appointments.js"></script>
-    <script src="Customer/Drawings.js"></script>
+
     <!-- 3. Admin Component (Parent + Children) -->
     <script src="BranchAdmin/AdminDashboard.js"></script>
     <script src="BranchAdmin/Notifications.js"></script>
     <script src="BranchAdmin/Payments.js"></script>
     <script src="BranchAdmin/Settings.js"></script>
-    <script src="BranchAdmin/Customers.js"></script>
-    <script src="BranchAdmin/Draws.js"></script>
-    <script src="BranchAdmin/Logs.js"></script>
-    <script src="BranchAdmin/BookAppointment.js"></script>
+
     <!-- 4. Main Admin Component (Parent + Children) -->
     <script src="MainAdmin/MainAdminDashboard.js"></script>
     <script src="MainAdmin/Settings.js"></script>
-    <script src="MainAdmin/Admins.js"></script>
-    <script src="MainAdmin/Analytics.js"></script>
-    <script src="MainAdmin/AuditLog.js"></script>
-    <script src="MainAdmin/Customers.js"></script>
-    <script src="MainAdmin/Notifications.js"></script>
-    <script src="MainAdmin/Payments.js"></script>
-    <script src="MainAdmin/Ranges.js"></script>
-    <script src="MainAdmin/Transactions.js"></script>
+
     <script>
         let currentUser = null;
         let customerDashboard, adminDashboard, mainAdminDashboard;
@@ -207,5 +195,42 @@
             db.initializeDefaultData();
         });
     </script>
+
+    <!-- ===== SHARED LAYER ===== -->
+    <script src="Shared/DataStorage.js"></script>
+
+    <!-- ===== CUSTOMER SECTION ===== -->
+    <script src="Customer/CustomerDashboard.js"></script>
+    <script src="Customer/Profile.js"></script>
+    <script src="Customer/NumberGrid.js"></script>
+    <script src="Customer/Settings.js"></script>
+    <script src="Customer/Tickets.js"></script>
+    <script src="Customer/Library.js"></script>
+    <script src="Customer/Appointments.js"></script>
+    <script src="Customer/Drawings.js"></script>
+
+    <!-- ===== BRANCHADMIN SECTION ===== -->
+    <script src="BranchAdmin/AdminDashboard.js"></script>
+    <script src="BranchAdmin/Notifications.js"></script>
+    <script src="BranchAdmin/Payments.js"></script>
+    <script src="BranchAdmin/Settings.js"></script>
+    <script src="BranchAdmin/Customers.js"></script>
+    <script src="BranchAdmin/Draws.js"></script>
+    <script src="BranchAdmin/Revenue.js"></script>
+    <script src="BranchAdmin/Logs.js"></script>
+    <script src="BranchAdmin/Notify.js"></script>
+    <script src="BranchAdmin/BookAppointment.js"></script>
+
+    <!-- ===== MAINADMIN SECTION ===== -->
+    <script src="MainAdmin/MainAdminDashboard.js"></script>
+    <script src="MainAdmin/Settings.js"></script>
+    <script src="MainAdmin/Admins.js"></script>
+    <script src="MainAdmin/Ranges.js"></script>
+    <script src="MainAdmin/Customers.js"></script>
+    <script src="MainAdmin/Payments.js"></script>
+    <script src="MainAdmin/Transactions.js"></script>
+    <script src="MainAdmin/Analytics.js"></script>
+    <script src="MainAdmin/AuditLog.js"></script>
+    <script src="MainAdmin/Notifications.js"></script>
 </body>
 </html>
