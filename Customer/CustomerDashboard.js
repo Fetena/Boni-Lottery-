@@ -1,26 +1,11 @@
-// ============================================
-// CUSTOMER DASHBOARD (PARENT COMPONENT)
-// Manages: Profile, Numbers, Settings, Tickets
-// ============================================
-
 class CustomerDashboard {
     constructor(custId) {
         this.custId = custId;
-        this.customer = db.getCustomer(custId);
-        
-        // Initialize ALL child components
-        this.profile = new CustomerProfile(custId);
-        this.numberGrid = new CustomerNumberGrid(custId);
-        this.settings = new CustomerSettings(custId);
-        this.tickets = new CustomerTickets(custId);
-        this.library = new CustomerLibrary(custId);
-        this.appointments = new CustomerAppointments(custId);
-        this.drawings = new CustomerDrawings(custId);
     }
 
     render() {
         return `
-            <div id="customer-dashboard" class="hidden min-h-screen bg-black flex flex-col">
+            <div id="customer-dashboard" class="min-h-screen bg-black flex flex-col">
                 <header class="sticky top-0 z-40 w-full glass-panel border-b border-yellow-400/10 px-6 py-4">
                     <div class="max-w-7xl mx-auto flex items-center justify-between">
                         <h1 class="font-bold text-xl text-gradient">👤 CUSTOMER DASHBOARD</h1>
@@ -30,66 +15,217 @@ class CustomerDashboard {
                 
                 <main class="flex-grow p-6 overflow-y-auto">
                     <div class="max-w-7xl mx-auto space-y-6">
-                        <h2 class="text-3xl font-bold text-white">Welcome, <span id="cust-name">${this.customer.name}</span>! 👋</h2>
+                        <h2 class="text-3xl font-bold text-white">Welcome, <span id="cust-name">Customer</span>! 👋</h2>
                         
-                        <!-- TABS -->
                         <div class="flex gap-2 border-b border-yellow-400/10 pb-2 overflow-x-auto">
-                            <button onclick="customerDashboard.switchTab('profile')" class="tab-button active px-4 py-2 text-xs font-bold text-yellow-400">👤 Profile</button>
-                            <button onclick="customerDashboard.switchTab('library')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📖 Learn</button>
-                            <button onclick="customerDashboard.switchTab('buytickets')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🎫 Buy Tickets</button>
-                            <button onclick="customerDashboard.switchTab('mytickets')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🎟️ My Tickets</button>
-                            <button onclick="customerDashboard.switchTab('drawings')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🎰 Drawings</button>
-                            <button onclick="customerDashboard.switchTab('appointments')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📅 Appointments</button>
-                            <button onclick="customerDashboard.switchTab('settings')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">⚙️ Settings</button>
+                            <button onclick="switchTab('cust', 'profile')" class="tab-button active px-4 py-2 text-xs font-bold text-yellow-400">👤 Profile</button>
+                            <button onclick="switchTab('cust', 'buytickets')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">🎫 Buy Tickets</button>
+                            <button onclick="switchTab('cust', 'mytickets')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">🎟️ My Tickets</button>
+                            <button onclick="switchTab('cust', 'settings')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">⚙️ Settings</button>
                         </div>
 
-                        <!-- TAB CONTENTS -->
-                        <div id="cust-profile" class="tab-content active"></div>
-                        <div id="cust-library" class="tab-content" style="display: none;"></div>
-                        <div id="cust-buytickets" class="tab-content" style="display: none;"></div>
-                        <div id="cust-mytickets" class="tab-content" style="display: none;"></div>
-                        <div id="cust-drawings" class="tab-content" style="display: none;"></div>
-                        <div id="cust-appointments" class="tab-content" style="display: none;"></div>
-                        <div id="cust-settings" class="tab-content" style="display: none;"></div>
+                        <!-- Profile Tab -->
+                        <div id="cust-profile" class="tab-content active">
+                            <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                                <h3 class="text-xl font-bold text-white mb-4">Your Profile</h3>
+                                <p class="text-slate-400">Email: <span id="cust-email">${currentUser.email}</span></p>
+                                <p class="text-slate-400 mt-2">Member Since: <span id="cust-joindate">Today</span></p>
+                                <p class="text-slate-400 mt-2">Total Tickets: <span id="cust-total-tickets">0</span></p>
+                                <p class="text-slate-400 mt-2">Total Spent: <span id="cust-total-spent">0 ETB</span></p>
+                            </div>
+                        </div>
+
+                        <!-- Buy Tickets Tab -->
+                        <div id="cust-buytickets" class="tab-content" style="display: none;">
+                            <div class="space-y-4">
+                                <h3 class="text-xl font-bold text-white">Select Numbers (1-300)</h3>
+                                <div id="cust-number-grid" class="grid grid-cols-10 gap-2"></div>
+                                <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
+                                    <p class="text-white">Selected: <span id="cust-selected-count">0</span> numbers</p>
+                                    <p class="text-white mt-2">Cost: <span id="cust-total-cost">0</span> ETB</p>
+                                    <button onclick="submitCustomerTicket()" class="w-full mt-4 py-2 bg-yellow-400 text-black font-bold rounded-xl">Submit Ticket</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- My Tickets Tab -->
+                        <div id="cust-mytickets" class="tab-content" style="display: none;">
+                            <div id="cust-tickets-list" class="space-y-3"></div>
+                        </div>
+
+                        <!-- Settings Tab -->
+                        <div id="cust-settings" class="tab-content" style="display: none;">
+                            <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
+                                <h3 class="text-xl font-bold text-white">Settings</h3>
+                                <div>
+                                    <label class="block text-xs text-slate-400 mb-2">Phone Number</label>
+                                    <input type="tel" id="cust-phone" placeholder="0912345678" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-slate-400 mb-2">Preferred Payment Method</label>
+                                    <select id="cust-payment" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white">
+                                        <option>Telebirr</option>
+                                        <option>CBE Birr</option>
+                                        <option>Bank Transfer</option>
+                                    </select>
+                                </div>
+                                <button onclick="saveCustomerSettings()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl">Save Settings</button>
+                            </div>
+                        </div>
                     </div>
                 </main>
             </div>
         `;
     }
 
-    loadTabs() {
-        // Load ALL child components into tabs
-        document.getElementById('cust-profile').innerHTML = this.profile.render();
-        document.getElementById('cust-library').innerHTML = this.library.render();
-        document.getElementById('cust-buytickets').innerHTML = this.numberGrid.render();
-        document.getElementById('cust-mytickets').innerHTML = this.tickets.render();
-        document.getElementById('cust-drawings').innerHTML = this.drawings.render();
-        document.getElementById('cust-appointments').innerHTML = this.appointments.render();
-        document.getElementById('cust-settings').innerHTML = this.settings.render();
+    async loadData() {
+        await loadCustomerSettings();
+        await loadCustomerTickets();
+        generateNumberGrid();
     }
+}
 
-    switchTab(tabName) {
-        // Hide all tabs
-        document.querySelectorAll('[id^="cust-"]').forEach(el => {
-            el.classList.remove('active');
-            el.style.display = 'none';
+let selectedNumbers = [];
+
+// ========== NUMBER GRID ==========
+function generateNumberGrid() {
+    const grid = document.getElementById('cust-number-grid');
+    if (!grid) return;
+    
+    grid.innerHTML = '';
+    for (let i = 1; i <= 300; i++) {
+        const btn = document.createElement('button');
+        btn.className = selectedNumbers.includes(i) 
+            ? 'p-2 bg-yellow-400 text-black font-bold rounded text-xs'
+            : 'p-2 bg-black/40 border border-yellow-400/20 text-yellow-400 rounded text-xs hover:bg-yellow-400/20';
+        btn.textContent = i;
+        btn.onclick = () => toggleNumber(i);
+        grid.appendChild(btn);
+    }
+    updateCost();
+}
+
+function toggleNumber(num) {
+    if (selectedNumbers.includes(num)) {
+        selectedNumbers = selectedNumbers.filter(n => n !== num);
+    } else {
+        selectedNumbers.push(num);
+    }
+    generateNumberGrid();
+}
+
+function updateCost() {
+    document.getElementById('cust-selected-count').textContent = selectedNumbers.length;
+    document.getElementById('cust-total-cost').textContent = selectedNumbers.length * 100;
+}
+
+// ========== CUSTOMER TICKETS - FIRESTORE ==========
+async function submitCustomerTicket() {
+    if (selectedNumbers.length === 0) return notify('error', '❌ Select at least 1 number');
+    if (!db) return notify('error', '❌ Database not initialized');
+    
+    const paymentMethod = document.getElementById('cust-payment')?.value || 'Telebirr';
+    
+    try {
+        // SAVE TO FIRESTORE
+        await db.collection('customer_tickets').add({
+            customerEmail: currentUser.email,
+            customerName: currentUser.name,
+            numbers: selectedNumbers,
+            cost: selectedNumbers.length * 100,
+            paymentMethod: paymentMethod,
+            status: 'Pending',
+            createdAt: new Date(),
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
         
-        // Remove active from all buttons
-        document.querySelectorAll('#customer-dashboard .tab-button').forEach(btn => {
-            btn.classList.remove('active');
-            btn.style.color = '';
-        });
+        notify('success', `✅ Ticket submitted with ${selectedNumbers.length} numbers!`);
+        selectedNumbers = [];
+        generateNumberGrid();
+        await loadCustomerTickets();
+    } catch (error) {
+        notify('error', `❌ Error: ${error.message}`);
+        console.error('Error submitting ticket:', error);
+    }
+}
+
+async function loadCustomerTickets() {
+    if (!db) return console.error('Database not initialized');
+    
+    try {
+        const snapshot = await db.collection('customer_tickets')
+            .where('customerEmail', '==', currentUser.email)
+            .orderBy('createdAt', 'desc')
+            .get();
         
-        // Show selected tab
-        const tabEl = document.getElementById(`cust-${tabName}`);
-        if (tabEl) {
-            tabEl.classList.add('active');
-            tabEl.style.display = 'block';
+        const content = document.getElementById('cust-tickets-list');
+        if (!content) return;
+        
+        if (snapshot.empty) {
+            content.innerHTML = '<p class="text-slate-400 text-center py-6">No tickets yet</p>';
+            return;
         }
         
-        // Mark button as active
-        event.target.classList.add('active');
-        event.target.style.color = '#FCD34D';
+        content.innerHTML = snapshot.docs.map((doc, i) => {
+            const ticket = doc.data();
+            const createdDate = ticket.createdAt?.toDate?.() || new Date();
+            return `
+                <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="font-bold text-white">Ticket #${i + 1}</p>
+                            <p class="text-xs text-slate-400">Numbers: ${ticket.numbers.join(', ')}</p>
+                            <p class="text-xs text-slate-400">Cost: ${ticket.cost} ETB</p>
+                            <p class="text-xs text-slate-400">Payment: ${ticket.paymentMethod}</p>
+                            <p class="text-xs text-slate-400">Date: ${createdDate.toLocaleDateString()}</p>
+                        </div>
+                        <span class="px-2 py-1 bg-yellow-400/20 text-yellow-400 text-xs rounded">${ticket.status}</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    } catch (error) {
+        console.error('Error loading tickets:', error);
+    }
+}
+
+// ========== CUSTOMER SETTINGS - FIRESTORE ==========
+async function saveCustomerSettings() {
+    const phone = document.getElementById('cust-phone')?.value;
+    const payment = document.getElementById('cust-payment')?.value;
+    
+    if (!phone) return notify('error', '❌ Enter phone number');
+    if (!db) return notify('error', '❌ Database not initialized');
+    
+    try {
+        // SAVE TO FIRESTORE
+        await db.collection('customer_settings').doc(currentUser.email).set({
+            customerEmail: currentUser.email,
+            customerName: currentUser.name,
+            phone: phone,
+            preferredPayment: payment,
+            updatedAt: new Date(),
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+        
+        notify('success', '✅ Settings saved!');
+    } catch (error) {
+        notify('error', `❌ Error: ${error.message}`);
+        console.error('Error saving settings:', error);
+    }
+}
+
+async function loadCustomerSettings() {
+    if (!db) return console.error('Database not initialized');
+    
+    try {
+        const doc = await db.collection('customer_settings').doc(currentUser.email).get();
+        if (doc.exists) {
+            const data = doc.data();
+            if (data.phone) document.getElementById('cust-phone').value = data.phone;
+            if (data.preferredPayment) document.getElementById('cust-payment').value = data.preferredPayment;
+        }
+    } catch (error) {
+        console.error('Error loading settings:', error);
     }
 }
