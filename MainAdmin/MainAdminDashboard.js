@@ -7,7 +7,7 @@ class MainAdminDashboard {
     constructor() {
         // Initialize ALL child components
         this.settings = new MainAdminSettings();
-        //this.admins = new MainAdminAdmins();
+        this.admins = new MainAdminAdmins();
         this.ranges = new MainAdminRanges();
         this.customers = new MainAdminCustomers();
         this.payments = new MainAdminPayments();
