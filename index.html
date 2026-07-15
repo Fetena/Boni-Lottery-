@@ -737,43 +737,135 @@
         function openLoginModal() { document.getElementById('login-modal').classList.remove('hidden'); }
         function closeLoginModal() { document.getElementById('login-modal').classList.add('hidden'); }
 
-       async function handleLogin(event) {
+       // ========== REPLACE YOUR handleLogin() WITH THIS ==========
+
+async function handleLogin(event) {
     event.preventDefault();
     const email = document.getElementById('login-email').value;
     const password = document.getElementById('login-password').value;
+
+    // Check if db is initialized
+    if (!db) {
+        notify('error', '❌ Database not initialized. Wait a moment and try again.');
+        return;
+    }
 
     if (email === 'fita.regassa@gmail.com' && password === 'MainAdmin@123') {
         currentUser = { type: 'main_admin', email };
         document.getElementById('public-page').classList.add('hidden');
         document.getElementById('login-modal').classList.add('hidden');
         document.getElementById('main-admin-dashboard').classList.remove('hidden');
-        await loadMainAdminPaymentSettings();  // ← Load from Firestore
         notify('success', '✅ Main Admin Login Successful');
-    } else if (email === 'ahmed@company.com' && password === 'Ahmed123') {
+    } 
+    else if (email === 'ahmed@company.com' && password === 'Ahmed123') {
         currentUser = { type: 'admin', name: 'Ahmed Mohamed', email };
         document.getElementById('public-page').classList.add('hidden');
         document.getElementById('login-modal').classList.add('hidden');
         document.getElementById('admin-dashboard').classList.remove('hidden');
         document.getElementById('admin-name').textContent = 'Ahmed Mohamed';
-        await loadAdminPaymentSettings();      // ← Load from Firestore
-        await showAdminCustomers();            // ← Load from Firestore
-        await showAdminNotifications();        // ← Load from Firestore
+        
+        // Create dashboard and load data
+        const adminDash = new AdminDashboard('admin1');
+        document.getElementById('dashboards-container').innerHTML = adminDash.render();
+        await adminDash.loadData(); // ← LOAD FROM FIRESTORE
+        
         notify('success', '✅ Admin Login Successful');
-    } else if (email === 'm@email.com' && password === 'Pass123') {
+    } 
+    else if (email === 'm@email.com' && password === 'Pass123') {
         currentUser = { type: 'customer', name: 'Mohammed', email };
         document.getElementById('public-page').classList.add('hidden');
         document.getElementById('login-modal').classList.add('hidden');
         document.getElementById('customer-dashboard').classList.remove('hidden');
         document.getElementById('cust-name').textContent = 'Mohammed';
-        generateNumbersGrid();
-        await loadCustomerSettings();          // ← Load from Firestore
-        await showCustomerTickets();           // ← Load from Firestore
-        await showCustomerNotifications();     // ← Load from Firestore
+        
+        // Create dashboard and load data
+        const custDash = new CustomerDashboard('cust1');
+        document.getElementById('dashboards-container').innerHTML = custDash.render();
+        await custDash.loadData(); // ← LOAD FROM FIRESTORE
+        
         notify('success', '✅ Customer Login Successful');
-    } else {
+    } 
+    else {
         notify('error', '❌ Invalid credentials');
     }
 }
+
+// ========== GLOBAL FUNCTIONS THAT MUST EXIST ==========
+
+function switchTab(section, tab) {
+    const dashboardId = section === 'cust' ? 'customer-dashboard' :
+                       section === 'admin' ? 'admin-dashboard' : 'main-admin-dashboard';
+    
+    const dashDiv = document.getElementById(dashboardId);
+    if (!dashDiv) return;
+    
+    // Hide all tabs
+    dashDiv.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+    dashDiv.querySelectorAll('.tab-button').forEach(el => {
+        el.classList.remove('active');
+        el.style.color = '';
+    });
+    
+    // Show selected tab
+    const tabEl = dashDiv.querySelector(`#${section}-${tab}`);
+    if (tabEl) {
+        tabEl.style.display = 'block';
+        tabEl.classList.add('active');
+    }
+    
+    // Mark button as active
+    if (event?.target) {
+        event.target.classList.add('active');
+        event.target.style.color = '#FCD34D';
+    }
+}
+
+function logout() {
+    if (confirm('Logout?')) {
+        currentUser = null;
+        document.getElementById('customer-dashboard').classList.add('hidden');
+        document.getElementById('admin-dashboard').classList.add('hidden');
+        document.getElementById('main-admin-dashboard').classList.add('hidden');
+        document.getElementById('public-page').classList.remove('hidden');
+        notify('info', 'Logged out');
+    }
+}
+
+function notify(type, message) {
+    const container = document.getElementById('notification-container');
+    if (!container) return;
+    
+    const toast = document.createElement('div');
+    toast.className = `notification-toast ${type}`;
+    toast.textContent = message;
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+    }, 5000);
+}
+
+function openLoginModal() {
+    document.getElementById('login-modal').classList.remove('hidden');
+}
+
+function closeLoginModal() {
+    document.getElementById('login-modal').classList.add('hidden');
+}
+
+// ========== VERIFY DB IS LOADED ==========
+window.addEventListener('load', () => {
+    console.log('Page loaded');
+    setTimeout(() => {
+        if (window.db) {
+            console.log('✅ Firebase Firestore is ready');
+        } else {
+            console.error('❌ Firebase Firestore NOT initialized');
+        }
+    }, 2000);
+});
+
 
         // CUSTOMER FUNCTIONS
         function generateNumbersGrid() {
