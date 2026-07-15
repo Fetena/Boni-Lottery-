@@ -1,31 +1,14 @@
-// ============================================
-// ADMIN DASHBOARD (PARENT COMPONENT)
-// Manages: Payments, Notifications, Settings
-// ============================================
-
 class AdminDashboard {
     constructor(adminId) {
         this.adminId = adminId;
-        this.admin = db.getAdminSettings(adminId);
-        
-        // Initialize ALL child components
-        this.payments = new AdminPayments(adminId);
-        this.notifications = new AdminNotifications(adminId);
-        this.settings = new AdminSettings(adminId);
-        this.customers = new AdminCustomers(adminId);
-        this.draws = new AdminDraws(adminId);
-        this.revenue = new AdminRevenue(adminId);
-        this.logs = new AdminLogs(adminId);
-        this.notify = new AdminNotify(adminId);
-        this.bookAppointment = new AdminBookAppointment(adminId);
     }
 
     render() {
         return `
-            <div id="admin-dashboard" class="hidden min-h-screen bg-black flex flex-col">
+            <div id="admin-dashboard" class="min-h-screen bg-black flex flex-col">
                 <header class="sticky top-0 z-40 w-full glass-panel border-b border-yellow-400/10 px-6 py-4">
                     <div class="max-w-7xl mx-auto flex items-center justify-between">
-                        <h1 class="font-bold text-xl text-gradient">🛡️ BRANCH ADMIN DASHBOARD</h1>
+                        <h1 class="font-bold text-xl text-gradient">🛡️ ADMIN DASHBOARD</h1>
                         <button onclick="logout()" class="px-4 py-2 bg-red-950/30 text-red-400 text-xs font-bold rounded-xl">Logout</button>
                     </div>
                 </header>
@@ -34,88 +17,215 @@ class AdminDashboard {
                     <div class="max-w-7xl mx-auto space-y-6">
                         <h2 class="text-3xl font-bold text-white">Admin Control Center</h2>
                         
-                        <!-- TABS -->
                         <div class="flex gap-2 border-b border-yellow-400/10 pb-2 overflow-x-auto">
-                            <button onclick="adminDashboard.switchTab('dashboard')" class="tab-button active px-4 py-2 text-xs font-bold text-yellow-400">📊 Dashboard</button>
-                            <button onclick="adminDashboard.switchTab('customers')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">👥 Customers</button>
-                            <button onclick="adminDashboard.switchTab('revenue')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">💰 Revenue</button>
-                            <button onclick="adminDashboard.switchTab('draws')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🎰 Draws</button>
-                            <button onclick="adminDashboard.switchTab('notify')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🔔 Notify</button>
-                            <button onclick="adminDashboard.switchTab('appointments')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📅 Appointments</button>
-                            <button onclick="adminDashboard.switchTab('payments')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">💳 Payments</button>
-                            <button onclick="adminDashboard.switchTab('logs')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📋 Logs</button>
-                            <button onclick="adminDashboard.switchTab('settings')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">⚙️ Settings</button>
+                            <button onclick="switchTab('admin', 'dashboard')" class="tab-button active px-4 py-2 text-xs font-bold text-yellow-400">📊 Dashboard</button>
+                            <button onclick="switchTab('admin', 'customers')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">👥 Customers</button>
+                            <button onclick="switchTab('admin', 'payments')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">💳 Payments</button>
+                            <button onclick="switchTab('admin', 'settings')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">⚙️ Settings</button>
                         </div>
 
-                        <!-- TAB CONTENTS -->
+                        <!-- Dashboard Tab -->
                         <div id="admin-dashboard" class="tab-content active space-y-6">
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                                    <p class="text-xs text-slate-400">Customers</p>
-                                    <p class="text-3xl font-bold text-blue-400 mt-2">${this.admin?.customers || 0}</p>
+                                    <p class="text-xs text-slate-400">Total Customers</p>
+                                    <p class="text-3xl font-bold text-blue-400 mt-2" id="admin-total-customers">0</p>
                                 </div>
                                 <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                                    <p class="text-xs text-slate-400">Revenue</p>
-                                    <p class="text-3xl font-bold text-purple-400 mt-2">${this.admin?.revenue || 0} ETB</p>
+                                    <p class="text-xs text-slate-400">Total Tickets</p>
+                                    <p class="text-3xl font-bold text-emerald-400 mt-2" id="admin-total-tickets">0</p>
                                 </div>
                                 <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                                    <p class="text-xs text-slate-400">Tickets</p>
-                                    <p class="text-3xl font-bold text-emerald-400 mt-2">${this.admin?.tickets || 0}</p>
+                                    <p class="text-xs text-slate-400">Total Revenue</p>
+                                    <p class="text-3xl font-bold text-purple-400 mt-2" id="admin-total-revenue">0 ETB</p>
                                 </div>
                             </div>
                         </div>
-                        
-                        <div id="admin-customers" class="tab-content" style="display: none;"></div>
-                        <div id="admin-revenue" class="tab-content" style="display: none;"></div>
-                        <div id="admin-draws" class="tab-content" style="display: none;"></div>
-                        <div id="admin-notify" class="tab-content" style="display: none;"></div>
-                        <div id="admin-appointments" class="tab-content" style="display: none;"></div>
-                        <div id="admin-payments" class="tab-content" style="display: none;"></div>
-                        <div id="admin-logs" class="tab-content" style="display: none;"></div>
-                        <div id="admin-settings" class="tab-content" style="display: none;"></div>
+
+                        <!-- Customers Tab -->
+                        <div id="admin-customers" class="tab-content" style="display: none;">
+                            <div class="space-y-4">
+                                <button onclick="openAddCustomerModal()" class="px-6 py-2 bg-yellow-400 text-black font-bold rounded-xl">+ Add Customer</button>
+                                <div id="admin-customers-list" class="space-y-3"></div>
+                            </div>
+                        </div>
+
+                        <!-- Payments Tab -->
+                        <div id="admin-payments" class="tab-content" style="display: none;">
+                            <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
+                                <h3 class="text-xl font-bold text-white">Payment Accounts</h3>
+                                <div>
+                                    <label class="block text-xs text-slate-400 mb-2">Telebirr Phone</label>
+                                    <input type="tel" id="admin-telebirr" placeholder="0945792677" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-slate-400 mb-2">CBE Account</label>
+                                    <input type="text" id="admin-cbe" placeholder="Account number" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white">
+                                </div>
+                                <button onclick="saveAdminPayments()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl">Save Payments</button>
+                            </div>
+                        </div>
+
+                        <!-- Settings Tab -->
+                        <div id="admin-settings" class="tab-content" style="display: none;">
+                            <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                                <h3 class="text-xl font-bold text-white mb-4">Admin Settings</h3>
+                                <p class="text-slate-400">Admin ID: <span id="admin-id-display">${this.adminId}</span></p>
+                            </div>
+                        </div>
                     </div>
                 </main>
             </div>
         `;
     }
 
-    loadTabs() {
-        document.getElementById('admin-customers').innerHTML = this.customers.render();
-        document.getElementById('admin-revenue').innerHTML = this.revenue.render();
-        document.getElementById('admin-draws').innerHTML = this.draws.render();
-        document.getElementById('admin-notify').innerHTML = this.notify.render();
-        document.getElementById('admin-appointments').innerHTML = this.bookAppointment.render();
-        document.getElementById('admin-payments').innerHTML = this.payments.render();
-        document.getElementById('admin-logs').innerHTML = this.logs.render();
-        document.getElementById('admin-settings').innerHTML = this.settings.render();
+    async loadData() {
+        // Load customers from Firestore
+        await loadAdminCustomers();
+        // Load payment info
+        await loadAdminPayments();
+        // Load dashboard stats
+        await loadAdminStats();
     }
+}
 
-    switchTab(tabName) {
-        // Hide all tabs
-        document.querySelectorAll('#admin-dashboard + div, [id^="admin-"]').forEach(el => {
-            if (el.classList && el.classList.contains('tab-content')) {
-                el.classList.remove('active');
-                el.style.display = 'none';
-            }
+// ========== ADMIN CUSTOMERS - FIRESTORE ==========
+async function openAddCustomerModal() {
+    const name = prompt('Customer Name:');
+    if (!name) return;
+    
+    const email = prompt('Customer Email:');
+    if (!email) return;
+    
+    const phone = prompt('Customer Phone:');
+    if (!phone) return;
+    
+    await addAdminCustomer(name, email, phone);
+}
+
+async function addAdminCustomer(name, email, phone) {
+    if (!db) return notify('error', '❌ Database not initialized');
+    
+    try {
+        // SAVE TO FIRESTORE
+        await db.collection('admin_customers').add({
+            adminEmail: currentUser.email,
+            name: name,
+            email: email,
+            phone: phone,
+            tickets: 0,
+            spent: 0,
+            createdAt: new Date(),
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
         
-        // Remove active from all buttons
-        document.querySelectorAll('#admin-dashboard .tab-button').forEach(btn => {
-            btn.classList.remove('active');
-            btn.style.color = '';
-        });
+        notify('success', `✅ Customer ${name} added!`);
+        await loadAdminCustomers();
+    } catch (error) {
+        notify('error', `❌ Error: ${error.message}`);
+        console.error('Error adding customer:', error);
+    }
+}
+
+async function loadAdminCustomers() {
+    if (!db) return console.error('Database not initialized');
+    
+    try {
+        const snapshot = await db.collection('admin_customers')
+            .where('adminEmail', '==', currentUser.email)
+            .get();
         
-        // Show selected tab
-        const tabEl = document.getElementById(`admin-${tabName}`);
-        if (tabEl) {
-            tabEl.classList.add('active');
-            tabEl.style.display = 'block';
+        const content = document.getElementById('admin-customers-list');
+        if (!content) return;
+        
+        if (snapshot.empty) {
+            content.innerHTML = '<p class="text-slate-400 text-center py-6">No customers yet</p>';
+            return;
         }
         
-        // Mark button as active
-        if (event && event.target) {
-            event.target.classList.add('active');
-            event.target.style.color = '#FCD34D';
+        content.innerHTML = snapshot.docs.map(doc => {
+            const cust = doc.data();
+            return `
+                <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
+                    <p class="font-bold text-white">${cust.name}</p>
+                    <p class="text-xs text-slate-400">${cust.email} • ${cust.phone}</p>
+                    <p class="text-xs text-slate-400">Tickets: ${cust.tickets} • Spent: ${cust.spent} ETB</p>
+                    <button onclick="deleteAdminCustomer('${doc.id}')" class="text-xs px-2 py-1 bg-red-400/20 text-red-400 rounded mt-2 cursor-pointer">Delete</button>
+                </div>
+            `;
+        }).join('');
+    } catch (error) {
+        console.error('Error loading customers:', error);
+    }
+}
+
+async function deleteAdminCustomer(docId) {
+    if (!confirm('Delete customer?')) return;
+    
+    try {
+        await db.collection('admin_customers').doc(docId).delete();
+        notify('success', '✅ Customer deleted');
+        await loadAdminCustomers();
+    } catch (error) {
+        notify('error', `❌ Error: ${error.message}`);
+    }
+}
+
+// ========== ADMIN PAYMENTS - FIRESTORE ==========
+async function saveAdminPayments() {
+    const telebirr = document.getElementById('admin-telebirr')?.value;
+    const cbe = document.getElementById('admin-cbe')?.value;
+    
+    if (!telebirr || !cbe) return notify('error', '❌ Fill all fields');
+    if (!db) return notify('error', '❌ Database not initialized');
+    
+    try {
+        // SAVE TO FIRESTORE
+        await db.collection('admin_settings').doc(currentUser.email).set({
+            adminEmail: currentUser.email,
+            telebirrPhone: telebirr,
+            cbeAccount: cbe,
+            updatedAt: new Date(),
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+        
+        notify('success', '✅ Payment settings saved!');
+    } catch (error) {
+        notify('error', `❌ Error: ${error.message}`);
+        console.error('Error saving payments:', error);
+    }
+}
+
+async function loadAdminPayments() {
+    if (!db) return console.error('Database not initialized');
+    
+    try {
+        const doc = await db.collection('admin_settings').doc(currentUser.email).get();
+        if (doc.exists) {
+            const data = doc.data();
+            if (data.telebirrPhone) document.getElementById('admin-telebirr').value = data.telebirrPhone;
+            if (data.cbeAccount) document.getElementById('admin-cbe').value = data.cbeAccount;
         }
+    } catch (error) {
+        console.error('Error loading payments:', error);
+    }
+}
+
+// ========== ADMIN STATS - FIRESTORE ==========
+async function loadAdminStats() {
+    if (!db) return console.error('Database not initialized');
+    
+    try {
+        // Count customers
+        const custSnapshot = await db.collection('admin_customers')
+            .where('adminEmail', '==', currentUser.email)
+            .get();
+        document.getElementById('admin-total-customers').textContent = custSnapshot.size;
+        
+        // Count tickets (approximate)
+        document.getElementById('admin-total-tickets').textContent = '0'; // Will update later
+        document.getElementById('admin-total-revenue').textContent = '0 ETB'; // Will update later
+    } catch (error) {
+        console.error('Error loading stats:', error);
     }
 }
