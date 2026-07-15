@@ -1,11 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Firebase CDN (NO TYPE="MODULE") -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boni Lottery - Enhanced System</title>
+    
+    <!-- TAILWIND & FONTS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- ✅ FIREBASE SCRIPTS - NO TYPE="MODULE" -->
     <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-analytics.js"></script>
 
+    <!-- ✅ INITIALIZE FIREBASE - REGULAR SCRIPT, NOT MODULE -->
     <script>
         // Firebase configuration
         const firebaseConfig = {
@@ -25,14 +34,11 @@
         // ✅ INITIALIZE FIRESTORE - GLOBALLY ACCESSIBLE
         const db = firebase.firestore();
         
-        console.log('✅ Firebase & Firestore initialized!');
-        console.log('db:', db);
+        console.log('✅ Firebase initialized');
+        console.log('✅ Firestore initialized');
+        console.log('db object:', db);
     </script>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Boni Lottery - Enhanced System</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
         * { box-sizing: border-box; }
         body { background: #020c1b; color: #e2e8f0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -85,7 +91,7 @@
         .modal { display: none; position: fixed; inset: 0; z-index: 9999; }
         .modal.active { display: flex; }
         .modal-overlay { background: rgba(0,0,0,0.8); flex: 1; }
-        .modal-content { background: rgba(15, 39, 61, 0.95); border: 1px solid rgba(200, 184, 123, 0.2); border-radius: 12px; max-width: 500px; max-height: 80vh; overflow-y-auto; }
+        .modal-content { background: rgba(15, 39, 61, 0.95); border: 1px solid rgba(200, 184, 123, 0.2); border-radius: 12px; max-width: 500px; max-height: 80vh; overflow-y: auto; }
     </style>
 </head>
 <body class="antialiased">
