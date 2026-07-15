@@ -1,35 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
- <script type="module">
-  // Import Firebase functions
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
-  import { getFirestore } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-analytics.js";
+    <!-- Firebase CDN (NO TYPE="MODULE") -->
+    <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-analytics.js"></script>
 
-  // Firebase configuration
-  const firebaseConfig = {
-    apiKey: "AIzaSyBW0egtlG4JXjkoWB2Lfu5GcYhZz_oEjbI",
-    authDomain: "boni-lottery-8d0e6.firebaseapp.com",
-    projectId: "boni-lottery-8d0e6",
-    storageBucket: "boni-lottery-8d0e6.appspot.com",
-    messagingSenderId: "479140405683",
-    appId: "1:479140405683:web:20a2205ece9fdcdf076bc6",
-    measurementId: "G-6MG08FXC7V"
-  };
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBW0egtlG4JXjkoWB2Lfu5GcYhZz_oEjbI",
+            authDomain: "boni-lottery-8d0e6.firebaseapp.com",
+            projectId: "boni-lottery-8d0e6",
+            storageBucket: "boni-lottery-8d0e6.appspot.com",
+            messagingSenderId: "479140405683",
+            appId: "1:479140405683:web:20a2205ece9fdcdf076bc6",
+            measurementId: "G-6MG08FXC7V"
+        };
 
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-  
-  // ✅ INITIALIZE FIRESTORE (THIS WAS MISSING!)
-  const db = getFirestore(app);
-  
-  // ✅ Make db available globally
-  window.db = db;
-  
-  console.log('✅ Firebase & Firestore initialized!');
-</script>
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const analytics = firebase.getAnalytics();
+        
+        // ✅ INITIALIZE FIRESTORE - GLOBALLY ACCESSIBLE
+        const db = firebase.firestore();
+        
+        console.log('✅ Firebase & Firestore initialized!');
+        console.log('db:', db);
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Boni Lottery - Enhanced System</title>
