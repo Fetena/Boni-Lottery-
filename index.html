@@ -1,6 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js"></script>
+
+<script>
+    // Initialize Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyBW0egtlG4JXjkoWB2Lfu5GcYhZz_oEjbI",
+        authDomain: "boni-lottery-8d0e6.firebaseapp.com",
+        projectId: "boni-lottery-8d0e6",
+        storageBucket: "boni-lottery-8d0e6.firebasestorage.app",
+        messagingSenderId: "479140405683",
+        appId: "1:479140405683:web:20a2205ece9fdcdf076bc6"
+    };
+
+    // Initialize Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore(app);
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Boni Lottery - Enhanced System</title>
@@ -673,12 +692,26 @@
             });
             
             // Show target tab and activate button
-            const target = document.getElementById(`${section}-${tab}`);
-            if (target) {
-                target.classList.add('active');
-                event.target.classList.add('active');
-            }
-        }
+            
+    
+    // Show target tab and activate button
+    const target = document.getElementById(`${section}-${tab}`);
+    if (target) {
+        target.classList.add('active');
+        event.target.classList.add('active');
+        
+        // POPULATE CONTENT WHEN TAB IS CLICKED
+        if (tab === 'library') showLibrary();
+        if (tab === 'revenue') showRevenue();
+        if (tab === 'logs') showActivityLog();
+        if (tab === 'notifications') showAdminNotifications();
+        if (tab === 'appointments') {}; // Already has content
+        if (tab === 'customers' && section === 'main') showAllCustomers();
+        if (tab === 'analytics') showAnalytics();
+        if (tab === 'audit') showAuditLog();
+        if (tab === 'transactions') showTransactions();
+    }
+}
 
         // MODAL
         function openCustomerModal() { document.getElementById('customer-modal').classList.add('active'); }
@@ -694,36 +727,43 @@
         function openLoginModal() { document.getElementById('login-modal').classList.remove('hidden'); }
         function closeLoginModal() { document.getElementById('login-modal').classList.add('hidden'); }
 
-        function handleLogin(event) {
-            event.preventDefault();
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
+       async function handleLogin(event) {
+    event.preventDefault();
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
 
-            if (email === 'fita.regassa@gmail.com' && password === 'MainAdmin@123') {
-                currentUser = { type: 'main_admin', email };
-                document.getElementById('public-page').classList.add('hidden');
-                document.getElementById('login-modal').classList.add('hidden');
-                document.getElementById('main-admin-dashboard').classList.remove('hidden');
-                notify('success', '✅ Main Admin Login Successful');
-            } else if (email === 'ahmed@company.com' && password === 'Ahmed123') {
-                currentUser = { type: 'admin', name: 'Ahmed Mohamed', email };
-                document.getElementById('public-page').classList.add('hidden');
-                document.getElementById('login-modal').classList.add('hidden');
-                document.getElementById('admin-dashboard').classList.remove('hidden');
-                document.getElementById('admin-name').textContent = 'Ahmed Mohamed';
-                notify('success', '✅ Admin Login Successful');
-            } else if (email === 'm@email.com' && password === 'Pass123') {
-                currentUser = { type: 'customer', name: 'Mohammed', email };
-                document.getElementById('public-page').classList.add('hidden');
-                document.getElementById('login-modal').classList.add('hidden');
-                document.getElementById('customer-dashboard').classList.remove('hidden');
-                document.getElementById('cust-name').textContent = 'Mohammed';
-                generateNumbersGrid();
-                notify('success', '✅ Customer Login Successful');
-            } else {
-                notify('error', '❌ Invalid credentials');
-            }
-        }
+    if (email === 'fita.regassa@gmail.com' && password === 'MainAdmin@123') {
+        currentUser = { type: 'main_admin', email };
+        document.getElementById('public-page').classList.add('hidden');
+        document.getElementById('login-modal').classList.add('hidden');
+        document.getElementById('main-admin-dashboard').classList.remove('hidden');
+        await loadMainAdminPaymentSettings();  // ← Load from Firestore
+        notify('success', '✅ Main Admin Login Successful');
+    } else if (email === 'ahmed@company.com' && password === 'Ahmed123') {
+        currentUser = { type: 'admin', name: 'Ahmed Mohamed', email };
+        document.getElementById('public-page').classList.add('hidden');
+        document.getElementById('login-modal').classList.add('hidden');
+        document.getElementById('admin-dashboard').classList.remove('hidden');
+        document.getElementById('admin-name').textContent = 'Ahmed Mohamed';
+        await loadAdminPaymentSettings();      // ← Load from Firestore
+        await showAdminCustomers();            // ← Load from Firestore
+        await showAdminNotifications();        // ← Load from Firestore
+        notify('success', '✅ Admin Login Successful');
+    } else if (email === 'm@email.com' && password === 'Pass123') {
+        currentUser = { type: 'customer', name: 'Mohammed', email };
+        document.getElementById('public-page').classList.add('hidden');
+        document.getElementById('login-modal').classList.add('hidden');
+        document.getElementById('customer-dashboard').classList.remove('hidden');
+        document.getElementById('cust-name').textContent = 'Mohammed';
+        generateNumbersGrid();
+        await loadCustomerSettings();          // ← Load from Firestore
+        await showCustomerTickets();           // ← Load from Firestore
+        await showCustomerNotifications();     // ← Load from Firestore
+        notify('success', '✅ Customer Login Successful');
+    } else {
+        notify('error', '❌ Invalid credentials');
+    }
+}
 
         // CUSTOMER FUNCTIONS
         function generateNumbersGrid() {
@@ -738,30 +778,277 @@
                 grid.appendChild(btn);
             }
         }
+        async function addCustomerNotification(title, message) {
+    try {
+        await db.collection('notifications').add({
+            type: 'customer',
+            recipientEmail: currentUser.email,
+            recipientName: currentUser.name,
+            title: title,
+            message: message,
+            read: false,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+    } catch (error) {
+        console.error('Error adding notification:', error);
+    }
+}
+
+// LOAD CUSTOMER NOTIFICATIONS FROM FIRESTORE
+async function showCustomerNotifications() {
+    try {
+        const snapshot = await db.collection('notifications')
+            .where('recipientEmail', '==', currentUser.email)
+            .where('type', '==', 'customer')
+            .orderBy('createdAt', 'desc')
+            .get();
         
+        const content = document.getElementById('cust-notifications');
+        if (!content) return;
+        
+        if (snapshot.empty) {
+            content.innerHTML = '<div class="glass-panel rounded-lg p-4 border border-yellow-400/10 text-center text-slate-400">No notifications yet</div>';
+            return;
+        }
+        
+        content.innerHTML = snapshot.docs.map(doc => {
+            const notif = doc.data();
+            return `
+                <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
+                    <p class="font-bold text-white">${notif.title}</p>
+                    <p class="text-xs text-slate-400 mt-1">${notif.message}</p>
+                    <p class="text-xs text-slate-500 mt-2">${notif.createdAt.toDate().toLocaleString()}</p>
+                </div>
+            `;
+        }).join('');
+    } catch (error) {
+        console.error('Error loading notifications:', error);
+    }
+}
         function updateCost() {
             document.getElementById('selected-count').textContent = selectedNumbers.length;
             document.getElementById('ticket-cost').textContent = selectedNumbers.length * 100;
         }
 
-        function submitTicket() {
-            if (selectedNumbers.length === 0) return notify('error', '❌ Select at least 1 number');
-            notify('success', `✅ Ticket submitted: ${selectedNumbers.join(',')} - ${selectedNumbers.length * 100} ETB`);
-            selectedNumbers = [];
-            updateCost();
+        async function submitTicket() {
+    if (selectedNumbers.length === 0) return notify('error', '❌ Select at least 1 number');
+    
+    const transactionId = document.getElementById('transaction-id')?.value;
+    const paymentMethod = document.getElementById('payment-method')?.value;
+    
+    if (!transactionId) return notify('error', '❌ Enter transaction ID');
+    
+    try {
+        // SAVE TO FIRESTORE
+        await db.collection('tickets').add({
+            customerEmail: currentUser.email,
+            customerName: currentUser.name,
+            numbers: selectedNumbers,
+            cost: selectedNumbers.length * 100,
+            paymentMethod: paymentMethod,
+            transactionId: transactionId,
+            status: 'Pending Verification',
+            submittedAt: new Date(),
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        // ALSO ADD NOTIFICATION
+        await addCustomerNotification(
+            '🎫 Ticket Submitted',
+            `Ticket with ${selectedNumbers.length} numbers submitted for ${selectedNumbers.length * 100} ETB`
+        );
+        
+        notify('success', `✅ Ticket submitted: ${selectedNumbers.join(',')} - ${selectedNumbers.length * 100} ETB`);
+        selectedNumbers = [];
+        updateCost();
+        generateNumbersGrid();
+        showCustomerTickets();
+    } catch (error) {
+        notify('error', `❌ Error: ${error.message}`);
+    }
+}
+
+// LOAD CUSTOMER TICKETS FROM FIRESTORE
+async function showCustomerTickets() {
+    try {
+        const snapshot = await db.collection('tickets')
+            .where('customerEmail', '==', currentUser.email)
+            .orderBy('submittedAt', 'desc')
+            .get();
+        
+        const content = document.getElementById('cust-tickets-list');
+        if (!content) return;
+        
+        if (snapshot.empty) {
+            content.innerHTML = '<div class="glass-panel rounded-lg p-4 border border-yellow-400/10 text-slate-400 text-center py-6">No tickets yet</div>';
+            return;
         }
+        
+        content.innerHTML = snapshot.docs.map((doc, i) => {
+            const ticket = doc.data();
+            return `
+                <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="font-bold text-white">Ticket #${i + 1}</p>
+                            <p class="text-xs text-slate-400">Numbers: ${ticket.numbers.join(', ')}</p>
+                            <p class="text-xs text-slate-400">Cost: ${ticket.cost} ETB</p>
+                            <p class="text-xs text-slate-400">Payment: ${ticket.paymentMethod}</p>
+                            <p class="text-xs text-slate-400">Transaction: ${ticket.transactionId}</p>
+                            <p class="text-xs text-slate-400">Submitted: ${ticket.submittedAt.toDate().toLocaleString()}</p>
+                        </div>
+                        <span class="px-2 py-1 bg-yellow-400/20 text-yellow-400 text-xs rounded">${ticket.status}</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    } catch (error) {
+        console.error('Error loading tickets:', error);
+    }
+}
 
         function openTikTok() { notify('info', '📱 Opening TikTok @BoniLottery Live'); }
 
         // ADMIN FUNCTIONS
-        function addCustomer() {
-            const name = document.getElementById('cust-name-input').value;
-            if (!name) return notify('error', '❌ Enter customer name');
-            notify('success', `✅ Customer ${name} added!`);
-            closeModal('customer-modal');
-            document.getElementById('admin-customers-list').innerHTML += `<div class="glass-panel rounded-lg p-4 border border-yellow-400/10"><p class="font-bold text-white">${name}</p><p class="text-xs text-slate-400">New customer</p></div>`;
-        }
+        async function addCustomer() {
+    const name = document.getElementById('cust-name-input')?.value;
+    const email = document.getElementById('cust-email-input')?.value;
+    const phone = document.getElementById('cust-phone-input')?.value;
+    
+    if (!name || !email || !phone) return notify('error', '❌ Fill all fields');
+    
+    try {
+        // SAVE TO FIRESTORE
+        await db.collection('admin_customers').add({
+            adminEmail: currentUser.email,
+            name: name,
+            email: email,
+            phone: phone,
+            tickets: 0,
+            spent: 0,
+            addedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        notify('success', `✅ Customer ${name} added!`);
+        closeModal('customer-modal');
+        document.getElementById('cust-name-input').value = '';
+        document.getElementById('cust-email-input').value = '';
+        document.getElementById('cust-phone-input').value = '';
+        
+        showAdminCustomers();
+    } catch (error) {
+        notify('error', `❌ Error: ${error.message}`);
+    }
+}
 
+// LOAD ADMIN CUSTOMERS FROM FIRESTORE
+async function showAdminCustomers() {
+    try {
+        const snapshot = await db.collection('admin_customers')
+            .where('adminEmail', '==', currentUser.email)
+            .orderBy('addedAt', 'desc')
+            .get();
+        
+        const content = document.getElementById('admin-customers-list');
+        if (!content) return;
+        
+        if (snapshot.empty) {
+            content.innerHTML = '<div class="glass-panel rounded-lg p-4 border border-yellow-400/10 text-center text-slate-400">No customers yet</div>';
+            return;
+        }
+        
+        content.innerHTML = snapshot.docs.map((doc, i) => {
+            const cust = doc.data();
+            return `
+                <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
+                    <p class="font-bold text-white">${cust.name}</p>
+                    <p class="text-xs text-slate-400">${cust.email} • ${cust.phone} • ${cust.tickets} tickets • ${cust.spent} ETB</p>
+                    <div class="flex gap-2 mt-2">
+                        <button onclick="editCustomer('${cust.name}')" class="text-xs px-2 py-1 bg-yellow-400/20 text-yellow-400 rounded">Edit</button>
+                        <button class="text-xs px-2 py-1 bg-red-400/20 text-red-400 rounded cursor-pointer" onclick="deleteAdminCustomer('${doc.id}')">Delete</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    } catch (error) {
+        console.error('Error loading customers:', error);
+    }
+}
+
+async function deleteAdminCustomer(docId) {
+    if (confirm('Delete customer?')) {
+        try {
+            await db.collection('admin_customers').doc(docId).delete();
+            notify('success', '✅ Customer deleted');
+            showAdminCustomers();
+        } catch (error) {
+            notify('error', `❌ Error: ${error.message}`);
+        }
+    }
+}
+
+        async function sendAdminNotification() {
+    const message = document.querySelector('#admin-notifications textarea')?.value;
+    if (!message) return notify('error', '❌ Enter notification message');
+    
+    try {
+        // SAVE TO FIRESTORE
+        await db.collection('notifications').add({
+            type: 'broadcast',
+            fromAdmin: currentUser.email,
+            fromAdminName: currentUser.name,
+            message: message,
+            recipient: 'All Customers',
+            read: false,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        notify('success', `✅ Notification sent!\n"${message}"`);
+        document.querySelector('#admin-notifications textarea').value = '';
+        showAdminNotifications();
+    } catch (error) {
+        notify('error', `❌ Error: ${error.message}`);
+    }
+}
+
+// LOAD ADMIN NOTIFICATIONS HISTORY
+async function showAdminNotifications() {
+    try {
+        const snapshot = await db.collection('notifications')
+            .where('fromAdmin', '==', currentUser.email)
+            .where('type', '==', 'broadcast')
+            .orderBy('createdAt', 'desc')
+            .get();
+        
+        const content = document.getElementById('admin-notifications');
+        if (!content) return;
+        
+        let html = `
+            <h3 class="text-2xl font-bold text-white">🔔 Send Notifications</h3>
+            <div class="glass-panel rounded-lg p-6 border border-yellow-400/10 space-y-3 mb-6">
+                <textarea id="admin-notif-msg" placeholder="Message..." rows="3" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none"></textarea>
+                <button onclick="sendAdminNotification()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl">Send Notification</button>
+            </div>
+        `;
+        
+        if (!snapshot.empty) {
+            html += `<h4 class="text-xl font-bold text-white mb-3">📤 Sent History</h4>`;
+            html += snapshot.docs.map(doc => {
+                const n = doc.data();
+                return `
+                    <div class="glass-panel rounded-lg p-4 border border-yellow-400/10 mb-2">
+                        <p class="text-white">${n.message}</p>
+                        <p class="text-xs text-slate-400 mt-2">Sent to: ${n.recipient} - ${n.createdAt.toDate().toLocaleString()}</p>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        content.innerHTML = html;
+    } catch (error) {
+        console.error('Error loading notifications:', error);
+    }
+}
         function deleteCustomer(btn) {
             if (confirm('Delete customer?')) { btn.parentElement.parentElement.remove(); notify('success', '✅ Customer deleted'); }
         }
@@ -783,13 +1070,40 @@
             notify('success', `🎲 Winner Generated: Number ${num}`);
         }
 
-        function savePaymentSettings() { notify('success', '✅ Payment settings saved!'); }
+        async function savePaymentSettings() {
+    const telebirr = document.getElementById('telebirr-phone')?.value;
+    const cbe = document.getElementById('cbe-account')?.value;
+    
+    if (!telebirr || !cbe) return notify('error', '❌ Fill all payment accounts');
+    
+    try {
+        // SAVE TO FIRESTORE
+        await db.collection('admin_settings').doc(currentUser.email).set({
+            adminEmail: currentUser.email,
+            telebirrPhone: telebirr,
+            cbeAccount: cbe,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+        
+        notify('success', `✅ Payment settings saved!\nTelebirr: ${telebirr}\nCBE: ${cbe}`);
+    } catch (error) {
+        notify('error', `❌ Error: ${error.message}`);
+    }
+}
 
-        function bookAdminAppointment() {
-            const date = document.getElementById('admin-appt-date').value;
-            if (!date) return notify('error', '❌ Select date');
-            notify('success', '✅ Appointment booked with Main Admin!');
+// LOAD ADMIN PAYMENT SETTINGS FROM FIRESTORE
+async function loadAdminPaymentSettings() {
+    try {
+        const doc = await db.collection('admin_settings').doc(currentUser.email).get();
+        if (doc.exists) {
+            const data = doc.data();
+            if (data.telebirrPhone) document.getElementById('telebirr-phone').value = data.telebirrPhone;
+            if (data.cbeAccount) document.getElementById('cbe-account').value = data.cbeAccount;
         }
+    } catch (error) {
+        console.error('Error loading payment settings:', error);
+    }
+}
 
         // MAIN ADMIN FUNCTIONS
         function createAdmin() {
@@ -818,10 +1132,63 @@
             closeModal('range-modal');
         }
 
-        function saveMainPaymentSettings() { notify('success', '✅ Payment accounts saved!'); }
+        async function saveMainPaymentSettings() {
+    const telebirr = document.getElementById('main-telebirr')?.value;
+    const cbe = document.getElementById('main-cbe')?.value;
+    
+    if (!telebirr || !cbe) return notify('error', '❌ Fill all accounts');
+    
+    try {
+        // SAVE TO FIRESTORE
+        await db.collection('system_settings').doc('payments').set({
+            telebirrPhone: telebirr,
+            cbeAccount: cbe,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+        
+        notify('success', `✅ Payment accounts saved!\nTelebirr: ${telebirr}\nCBE: ${cbe}`);
+    } catch (error) {
+        notify('error', `❌ Error: ${error.message}`);
+    }
+}
 
-        function sendNotification() { notify('success', '✅ Notifications sent!'); }
-
+// LOAD MAIN ADMIN PAYMENT SETTINGS FROM FIRESTORE
+async function loadMainAdminPaymentSettings() {
+    try {
+        const doc = await db.collection('system_settings').doc('payments').get();
+        if (doc.exists) {
+            const data = doc.data();
+            if (data.telebirrPhone) document.getElementById('main-telebirr').value = data.telebirrPhone;
+            if (data.cbeAccount) document.getElementById('main-cbe').value = data.cbeAccount;
+        }
+    } catch (error) {
+        console.error('Error loading payment settings:', error);
+    }
+}
+        async function sendNotification() {
+    const target = document.getElementById('notify-target')?.value;
+    const message = document.querySelector('#main-notifications textarea')?.value;
+    
+    if (!message) return notify('error', '❌ Enter message');
+    
+    try {
+        // SAVE TO FIRESTORE
+        await db.collection('notifications').add({
+            type: 'system_broadcast',
+            fromAdmin: currentUser.email,
+            fromAdminName: 'Main Admin',
+            target: target,
+            message: message,
+            read: false,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        notify('success', `✅ Notification sent to ${target}!\n"${message}"`);
+        document.querySelector('#main-notifications textarea').value = '';
+    } catch (error) {
+        notify('error', `❌ Error: ${error.message}`);
+    }
+}
         // CUSTOMER APPOINTMENT BOOKING
         function bookAppointment() {
             const date = document.getElementById('cust-appt-date')?.value;
@@ -874,10 +1241,39 @@
         }
 
         // CUSTOMER SETTINGS
-        function saveCustomerSettings() {
-            const phone = document.getElementById('cust-phone')?.value;
-            if (phone) notify('success', `✅ Settings saved!`);
+        async function saveCustomerSettings() {
+    const phone = document.getElementById('cust-phone')?.value;
+    if (!phone) return notify('error', '❌ Enter phone number');
+    
+    try {
+        // SAVE TO FIRESTORE
+        await db.collection('customers').doc(currentUser.email).set({
+            name: currentUser.name,
+            email: currentUser.email,
+            phone: phone,
+            updatedAt: new Date()
+        }, { merge: true });
+        
+        notify('success', `✅ Settings saved! Phone: ${phone}`);
+    } catch (error) {
+        notify('error', `❌ Error: ${error.message}`);
+    }
+}
+
+// LOAD CUSTOMER SETTINGS FROM FIRESTORE
+async function loadCustomerSettings() {
+    try {
+        const doc = await db.collection('customers').doc(currentUser.email).get();
+        if (doc.exists) {
+            const data = doc.data();
+            if (data.phone) {
+                document.getElementById('cust-phone').value = data.phone;
+            }
         }
+    } catch (error) {
+        console.error('Error loading settings:', error);
+    }
+}
 
         // ADMIN NOTIFICATIONS
         function showAdminNotifications() {
