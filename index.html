@@ -3,33 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Boni Lottery - Hierarchical Component Architecture</title>
+    <title>Boni Lottery - Enhanced System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { box-sizing: border-box; }
         body { background: #020c1b; color: #e2e8f0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .glass-panel { background: rgba(15, 39, 61, 0.45); backdrop-filter: blur(16px); border: 1px solid rgba(200, 184, 123, 0.08); }
-        .text-gradient { background: linear-gradient(135deg, #FFF 30%, #C8B87B 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-        .tab-button.active { border-bottom: 2px solid #FCD34D; color: #FCD34D; }
+        .glass-panel {
+            background: rgba(15, 39, 61, 0.45);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(200, 184, 123, 0.08);
+        }
+        .text-gradient {
+            background: linear-gradient(135deg, #FFF 30%, #C8B87B 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .tab-button.active {
+            border-bottom: 2px solid #FCD34D;
+            color: #FCD34D;
+        }
         .tab-button { border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.3s; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
         
-        .notification-toast { position: fixed; top: 20px; right: 20px; min-width: 300px; padding: 16px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 10000; animation: slideIn 0.3s ease; }
+        /* NOTIFICATION POP-UP STYLES */
+        .notification-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            min-width: 300px;
+            padding: 16px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 10000;
+            animation: slideIn 0.3s ease;
+        }
         .notification-toast.success { background: #10b981; color: white; }
         .notification-toast.error { background: #ef4444; color: white; }
         .notification-toast.info { background: #3b82f6; color: white; }
-        @keyframes slideIn { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(400px); opacity: 0; } }
+        .notification-toast.warning { background: #f59e0b; color: white; }
+        @keyframes slideIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(400px); opacity: 0; }
+        }
         .notification-toast.exit { animation: slideOut 0.3s ease; }
+
+        /* MODAL STYLES */
+        .modal { display: none; position: fixed; inset: 0; z-index: 9999; }
+        .modal.active { display: flex; }
+        .modal-overlay { background: rgba(0,0,0,0.8); flex: 1; }
+        .modal-content { background: rgba(15, 39, 61, 0.95); border: 1px solid rgba(200, 184, 123, 0.2); border-radius: 12px; max-width: 500px; max-height: 80vh; overflow-y-auto; }
     </style>
 </head>
-<body>
+<body class="antialiased">
 
+    <!-- NOTIFICATION CONTAINER -->
     <div id="notification-container"></div>
 
-    <!-- ===== LOGIN PAGE ===== -->
+    <!-- PUBLIC PAGE -->
     <div id="public-page" class="min-h-screen bg-black flex flex-col">
         <header class="sticky top-0 z-40 w-full glass-panel border-b border-yellow-400/10 px-6 py-4">
             <div class="max-w-7xl mx-auto flex items-center justify-between">
@@ -37,21 +74,21 @@
                     <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center text-black font-bold text-lg">🏆</div>
                     <div><span class="font-bold text-xl text-gradient">BONI</span><span class="text-xs text-yellow-400 font-bold">LOTTERY</span></div>
                 </div>
-                <button onclick="openLoginModal()" class="px-6 py-2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">Login</button>
+                <button onclick="openLoginModal()" class="px-6 py-2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl hover:shadow-lg transition">Login</button>
             </div>
         </header>
         <main class="flex-grow p-6">
             <div class="max-w-7xl mx-auto">
                 <div class="rounded-3xl glass-panel border border-yellow-400/20 p-12 text-center space-y-6 mb-12">
                     <h1 class="text-5xl font-bold text-white">Multi-Branch<br><span class="text-yellow-400">Lottery System</span></h1>
-                    <p class="text-slate-300">Hierarchical Parent/Child Components</p>
+                    <p class="text-slate-300">Complete lottery management platform</p>
                     <button onclick="openLoginModal()" class="px-8 py-4 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-2xl">Get Started →</button>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- ===== LOGIN MODAL ===== -->
+    <!-- LOGIN MODAL -->
     <div id="login-modal" class="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4 hidden">
         <div class="glass-panel rounded-3xl p-8 max-w-md w-full border border-yellow-400/20 space-y-6">
             <div class="text-center">
@@ -63,45 +100,547 @@
                 <input type="password" id="login-password" placeholder="Password" required class="w-full bg-black/40 border border-yellow-400/20 focus:border-yellow-400 rounded-xl py-3 px-4 text-sm text-white outline-none">
                 <button type="submit" class="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">Login</button>
             </form>
-            <div class="border-t border-yellow-400/20 pt-4 text-xs text-slate-300 space-y-1">
-                <p class="font-bold text-yellow-400">📝 Test Accounts:</p>
-                <p><strong>Main:</strong> fita.regassa@gmail.com / MainAdmin@123</p>
-                <p><strong>Admin:</strong> ahmed@company.com / Ahmed123</p>
-                <p><strong>Customer:</strong> m@email.com / Pass123</p>
+            <div class="border-t border-yellow-400/20 pt-4">
+                <p class="text-xs text-slate-400 text-center mb-3 font-bold">TEST CREDENTIALS:</p>
+                <div class="space-y-2 text-xs text-slate-300 bg-black/30 p-3 rounded-lg">
+                    <p><strong>Main Admin:</strong><br>fita.regassa@gmail.com / MainAdmin@123</p>
+                    <p><strong>Admin:</strong><br>ahmed@company.com / Ahmed123</p>
+                    <p><strong>Customer:</strong><br>m@email.com / Pass123</p>
+                </div>
+            </div>
+            <button onclick="closeLoginModal()" class="w-full text-slate-400 font-semibold text-xs">Close</button>
+        </div>
+    </div>
+
+    <!-- CUSTOMER DASHBOARD -->
+    <div id="customer-dashboard" class="hidden min-h-screen bg-black flex flex-col">
+        <header class="sticky top-0 z-40 w-full glass-panel border-b border-yellow-400/10 px-6 py-4">
+            <div class="max-w-7xl mx-auto flex items-center justify-between">
+                <h1 class="font-bold text-xl text-gradient">👤 Customer Dashboard</h1>
+                <button onclick="logout()" class="px-4 py-2 bg-red-950/30 text-red-400 text-xs font-bold rounded-xl">Logout</button>
+            </div>
+        </header>
+        <main class="flex-grow p-6 overflow-y-auto">
+            <div class="max-w-7xl mx-auto space-y-6">
+                <h2 class="text-3xl font-bold text-white">Welcome, <span id="cust-name">Customer</span>! 👋</h2>
+                
+                <!-- TABS -->
+                <div class="flex gap-2 border-b border-yellow-400/10 pb-2 overflow-x-auto">
+                    <button onclick="switchTab('cust', 'profile')" class="tab-button active px-4 py-2 text-xs font-bold text-yellow-400">Profile</button>
+                    <button onclick="switchTab('cust', 'library')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📖 Library</button>
+                    <button onclick="switchTab('cust', 'buytickets')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🎫 Buy</button>
+                    <button onclick="switchTab('cust', 'mytickets')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">My Tickets</button>
+                    <button onclick="switchTab('cust', 'appointments')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📅 Book</button>
+                    <button onclick="switchTab('cust', 'drawings')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🎰 Draws</button>
+                    <button onclick="switchTab('cust', 'notifications')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🔔 Alerts</button>
+                    <button onclick="switchTab('cust', 'settings')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">⚙️ Settings</button>
+                </div>
+
+                <!-- PROFILE TAB -->
+                <div id="cust-profile" class="tab-content active space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                            <p class="text-xs text-slate-400">Admin</p>
+                            <p class="text-xl font-bold text-yellow-400 mt-2">Ahmed Mohamed</p>
+                        </div>
+                        <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                            <p class="text-xs text-slate-400">Range</p>
+                            <p class="text-xl font-bold text-blue-400 mt-2">1 - 300</p>
+                        </div>
+                        <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                            <p class="text-xs text-slate-400">Tickets</p>
+                            <p class="text-xl font-bold text-emerald-400 mt-2" id="cust-ticket-count">0</p>
+                        </div>
+                        <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                            <p class="text-xs text-slate-400">Spent</p>
+                            <p class="text-xl font-bold text-purple-400 mt-2" id="cust-spent">0 ETB</p>
+                        </div>
+                    </div>
+                    
+                    <!-- DRAWING STATUS WITH TIKTOK -->
+                    <div class="glass-panel rounded-2xl p-8 border border-yellow-400/10 text-center space-y-4">
+                        <h4 class="text-2xl font-bold text-white">Next Drawing</h4>
+                        <p class="text-yellow-400 font-bold text-xl">Sunday, 8:00 PM</p>
+                        <p id="draw-status" class="text-slate-300">Coming soon...</p>
+                        <button onclick="openTikTok()" class="px-6 py-2 bg-yellow-400 text-black font-bold rounded-xl inline-block">📱 Watch Live on TikTok</button>
+                    </div>
+
+                    <button onclick="switchTab('cust', 'buytickets')" class="w-full py-4 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-2xl text-lg">🎫 BUY TICKET</button>
+                </div>
+
+                <!-- BUY TICKETS TAB -->
+                <div id="cust-buytickets" class="tab-content space-y-4">
+                    <h3 class="text-2xl font-bold text-white">🎫 Buy Lottery Ticket</h3>
+                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
+                        <div class="grid grid-cols-10 gap-2 max-h-64 overflow-y-auto p-4 bg-black/30 rounded-xl">
+                            <div id="numbers-grid"></div>
+                        </div>
+                        <div class="bg-black/30 p-4 rounded-xl border border-yellow-400/10">
+                            <p class="text-yellow-400 font-bold text-lg">Selected: <span id="selected-count">0</span> × 100 = <span id="ticket-cost">0</span> ETB</p>
+                        </div>
+                        <select id="payment-method" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
+                            <option>Telebirr (0945792677)</option>
+                            <option>CBE Birr (0945792677)</option>
+                        </select>
+                        <input type="text" id="transaction-id" placeholder="Transaction ID" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
+                        <button onclick="submitTicket()" class="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">Submit</button>
+                    </div>
+                </div>
+
+                <!-- MY TICKETS TAB -->
+                <div id="cust-mytickets" class="tab-content space-y-4">
+                    <h3 class="text-2xl font-bold text-white">My Tickets</h3>
+                    <div id="cust-tickets-list" class="space-y-3">
+                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10 text-slate-400 text-center py-6">No tickets yet</div>
+                    </div>
+                </div>
+
+                <!-- DRAWINGS TAB -->
+                <div id="cust-drawings" class="tab-content space-y-4">
+                    <h3 class="text-2xl font-bold text-white">🎰 Lottery Drawings</h3>
+                    <div class="glass-panel rounded-2xl p-8 border border-yellow-400/10 text-center space-y-4">
+                        <div class="text-6xl">👑</div>
+                        <h4 class="text-2xl font-bold text-white">Live Drawing</h4>
+                        <p class="text-slate-300">Watch our live drawing on TikTok every Sunday at 8 PM</p>
+                        <button onclick="openTikTok()" class="px-6 py-2 bg-yellow-400 text-black font-bold rounded-xl inline-block">📱 @BoniLottery Live</button>
+                    </div>
+                </div>
+
+                <!-- LIBRARY TAB -->
+                <div id="cust-library" class="tab-content space-y-4"></div>
+
+                <!-- APPOINTMENTS TAB -->
+                <div id="cust-appointments" class="tab-content space-y-4">
+                    <h3 class="text-2xl font-bold text-white">📅 Book Appointment</h3>
+                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-3">
+                        <input type="date" id="cust-appt-date" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
+                        <select class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
+                            <option>10:00 AM</option>
+                            <option>11:00 AM</option>
+                            <option>2:00 PM</option>
+                            <option>3:00 PM</option>
+                            <option>4:00 PM</option>
+                        </select>
+                        <button onclick="bookAppointment()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl">Book</button>
+                    </div>
+                </div>
+
+                <!-- NOTIFICATIONS TAB -->
+                <div id="cust-notifications" class="tab-content space-y-4">
+                    <h3 class="text-2xl font-bold text-white">🔔 Notifications</h3>
+                </div>
+
+                <!-- SETTINGS TAB -->
+                <div id="cust-settings" class="tab-content space-y-4">
+                    <h3 class="text-2xl font-bold text-white">⚙️ Settings</h3>
+                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-3">
+                        <div>
+                            <label class="text-sm text-slate-400">Phone Number</label>
+                            <input type="text" id="cust-phone" value="0911223344" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
+                        </div>
+                        <button onclick="saveCustomerSettings()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl">Save</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ADMIN DASHBOARD -->
+    <div id="admin-dashboard" class="hidden min-h-screen bg-black flex flex-col">
+        <header class="sticky top-0 z-40 w-full glass-panel border-b border-yellow-400/10 px-6 py-4">
+            <div class="max-w-7xl mx-auto flex items-center justify-between">
+                <h1 class="font-bold text-xl text-gradient">🛡️ ADMIN CONTROL</h1>
+                <button onclick="logout()" class="px-4 py-2 bg-red-950/30 text-red-400 text-xs font-bold rounded-xl">Logout</button>
+            </div>
+        </header>
+        <main class="flex-grow p-6 overflow-y-auto">
+            <div class="max-w-7xl mx-auto space-y-6">
+                <h2 class="text-3xl font-bold text-white" id="admin-name">Admin Dashboard</h2>
+                
+                <div class="flex gap-2 border-b border-yellow-400/10 pb-2 overflow-x-auto">
+                    <button onclick="switchTab('admin', 'dashboard')" class="tab-button active px-4 py-2 text-xs font-bold text-yellow-400">Dashboard</button>
+                    <button onclick="switchTab('admin', 'customers')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">👥 Customers</button>
+                    <button onclick="switchTab('admin', 'payments')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">💳 Payments</button>
+                    <button onclick="switchTab('admin', 'draws')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🎰 Draws</button>
+                    <button onclick="switchTab('admin', 'revenue')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">💹 Revenue</button>
+                    <button onclick="switchTab('admin', 'logs')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📋 Logs</button>
+                    <button onclick="switchTab('admin', 'notifications')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🔔 Notify</button>
+                    <button onclick="switchTab('admin', 'settings')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">⚙️ Settings</button>
+                    <button onclick="switchTab('admin', 'appointments')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📅 Book</button>
+                </div>
+
+                <!-- DASHBOARD TAB -->
+                <div id="admin-dashboard-tab" class="tab-content active space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                            <p class="text-xs text-slate-400">My Range</p>
+                            <p class="text-3xl font-bold text-yellow-400 mt-2">1-300</p>
+                        </div>
+                        <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                            <p class="text-xs text-slate-400">Customers</p>
+                            <p class="text-3xl font-bold text-blue-400 mt-2" id="admin-cust-count">8</p>
+                        </div>
+                        <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                            <p class="text-xs text-slate-400">Tickets</p>
+                            <p class="text-3xl font-bold text-emerald-400 mt-2" id="admin-ticket-count">25</p>
+                        </div>
+                        <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                            <p class="text-xs text-slate-400">Revenue</p>
+                            <p class="text-3xl font-bold text-purple-400 mt-2" id="admin-revenue">2,500 ETB</p>
+                        </div>
+                    </div>
+
+                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                        <h4 class="font-bold text-white mb-3">Recent Activity</h4>
+                        <div class="space-y-2 text-sm">
+                            <p class="text-slate-300">✅ New customer: Mohammed Ali</p>
+                            <p class="text-slate-300">💳 Payment verified: 500 ETB</p>
+                            <p class="text-slate-300">🎫 New ticket created</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CUSTOMERS TAB -->
+                <div id="admin-customers" class="tab-content space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-2xl font-bold text-white">👥 My Customers</h3>
+                        <button onclick="openCustomerModal()" class="px-4 py-2 bg-yellow-400 text-black font-bold rounded-xl text-xs">+ Add Customer</button>
+                    </div>
+                    <div id="admin-customers-list" class="space-y-2">
+                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
+                            <p class="font-bold text-white">Mohammed Ali</p>
+                            <p class="text-xs text-slate-400">m@email.com • 0911223344 • 5 tickets</p>
+                            <div class="flex gap-2 mt-2">
+                                <button onclick="editCustomer('Mohammed')" class="text-xs px-2 py-1 bg-yellow-400/20 text-yellow-400 rounded">Edit</button>
+                                <button onclick="deleteCustomer(this)" class="text-xs px-2 py-1 bg-red-400/20 text-red-400 rounded">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PAYMENTS TAB -->
+                <div id="admin-payments" class="tab-content space-y-4">
+                    <h3 class="text-2xl font-bold text-white">💳 Payments</h3>
+                    <div class="space-y-2">
+                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
+                            <div class="flex justify-between items-center">
+                                <div><p class="font-bold text-white">Mohammed - 500 ETB</p><p class="text-xs text-slate-400">Telebirr</p></div>
+                                <div class="space-x-2">
+                                    <button onclick="approvePayment(this)" class="px-2 py-1 bg-emerald-600 text-white text-xs rounded">Approve</button>
+                                    <button onclick="rejectPayment(this)" class="px-2 py-1 bg-red-600 text-white text-xs rounded">Reject</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DRAWS TAB -->
+                <div id="admin-draws" class="tab-content space-y-4">
+                    <h3 class="text-2xl font-bold text-white">🎰 Draw Management</h3>
+                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
+                        <div>
+                            <label class="text-sm text-slate-400">Drawing Date</label>
+                            <input type="date" id="draw-date" value="2026-07-13" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
+                        </div>
+                        <div>
+                            <label class="text-sm text-slate-400">Drawing Time</label>
+                            <input type="time" id="draw-time" value="20:00" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
+                        </div>
+                        <button onclick="generateWinner()" class="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">🎲 Generate Winner Now</button>
+                    </div>
+                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                        <h4 class="font-bold text-white mb-3">Last Draw</h4>
+                        <p class="text-slate-300">July 6, 2026 - Winner: <span class="text-yellow-400 font-bold">742</span></p>
+                    </div>
+                </div>
+
+                <!-- SETTINGS TAB -->
+                <div id="admin-settings" class="tab-content space-y-4">
+                    <h3 class="text-2xl font-bold text-white">⚙️ Payment Settings</h3>
+                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
+                        <div>
+                            <label class="text-sm text-slate-400">Telebirr Phone Number</label>
+                            <input type="text" id="telebirr-phone" value="0945792677" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
+                        </div>
+                        <div>
+                            <label class="text-sm text-slate-400">CBE Birr Account</label>
+                            <input type="text" id="cbe-account" value="0945792677" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
+                        </div>
+                        <button onclick="savePaymentSettings()" class="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">Save Settings</button>
+                    </div>
+                </div>
+
+                <!-- APPOINTMENTS TAB -->
+                <div id="admin-appointments" class="tab-content space-y-4">
+                    <h3 class="text-2xl font-bold text-white">📅 Book Appointment with Main Admin</h3>
+                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
+                        <div>
+                            <label class="text-sm text-slate-400">Appointment Date</label>
+                            <input type="date" id="admin-appt-date" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
+                        </div>
+                        <div>
+                            <label class="text-sm text-slate-400">Time Slot (Auto-scheduled)</label>
+                            <select id="admin-appt-time" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
+                                <option>10:00 AM</option>
+                                <option>11:00 AM</option>
+                                <option>2:00 PM</option>
+                                <option>3:00 PM</option>
+                                <option>4:00 PM</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-sm text-slate-400">Purpose</label>
+                            <select id="admin-appt-purpose" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
+                                <option>Discussion</option>
+                                <option>Report</option>
+                                <option>Issue</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+                        <button onclick="bookAdminAppointment()" class="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">Book Appointment</button>
+                    </div>
+                </div>
+
+                <!-- REVENUE TAB -->
+                <div id="admin-revenue" class="tab-content space-y-4">
+                    <h3 class="text-2xl font-bold text-white">💹 Revenue</h3>
+                </div>
+
+                <!-- ACTIVITY LOG TAB -->
+                <div id="admin-logs" class="tab-content space-y-4">
+                    <h3 class="text-2xl font-bold text-white">📋 Activity Log</h3>
+                </div>
+
+                <!-- NOTIFICATIONS TAB -->
+                <div id="admin-notifications" class="tab-content space-y-4">
+                    <h3 class="text-2xl font-bold text-white">🔔 Send Notifications</h3>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MAIN ADMIN DASHBOARD -->
+    <div id="main-admin-dashboard" class="hidden min-h-screen bg-black flex flex-col">
+        <header class="sticky top-0 z-40 w-full glass-panel border-b border-yellow-400/10 px-6 py-4">
+            <div class="max-w-7xl mx-auto flex items-center justify-between">
+                <h1 class="font-bold text-xl text-gradient">👑 MAIN ADMIN</h1>
+                <button onclick="logout()" class="px-4 py-2 bg-red-950/30 text-red-400 text-xs font-bold rounded-xl">Logout</button>
+            </div>
+        </header>
+        <main class="flex-grow p-6 overflow-y-auto">
+            <div class="max-w-7xl mx-auto space-y-6">
+                <h2 class="text-3xl font-bold text-white">Platform Control Center</h2>
+                
+                <div class="flex gap-2 border-b border-yellow-400/10 pb-2 overflow-x-auto">
+                    <button onclick="switchTab('main', 'dashboard')" class="tab-button active px-4 py-2 text-xs font-bold text-yellow-400">Dashboard</button>
+                    <button onclick="switchTab('main', 'admins')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">👨‍💼 Admins</button>
+                    <button onclick="switchTab('main', 'ranges')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📍 Ranges</button>
+                    <button onclick="switchTab('main', 'customers')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">👥 Customers</button>
+                    <button onclick="switchTab('main', 'payments')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">💳 Payments</button>
+                    <button onclick="switchTab('main', 'transactions')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📋 Trans</button>
+                    <button onclick="switchTab('main', 'analytics')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📈 Analytics</button>
+                    <button onclick="switchTab('main', 'audit')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🔐 Audit</button>
+                    <button onclick="switchTab('main', 'notifications')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🔔 Notify</button>
+                    <button onclick="switchTab('main', 'settings')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">⚙️ Settings</button>
+                </div>
+
+                <!-- DASHBOARD TAB -->
+                <div id="main-dashboard" class="tab-content active space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                            <p class="text-xs text-slate-400">Total Admins</p>
+                            <p class="text-3xl font-bold text-yellow-400 mt-2">3</p>
+                        </div>
+                        <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                            <p class="text-xs text-slate-400">Total Customers</p>
+                            <p class="text-3xl font-bold text-blue-400 mt-2">24</p>
+                        </div>
+                        <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                            <p class="text-xs text-slate-400">Total Tickets</p>
+                            <p class="text-3xl font-bold text-emerald-400 mt-2">75</p>
+                        </div>
+                        <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                            <p class="text-xs text-slate-400">Platform Revenue</p>
+                            <p class="text-3xl font-bold text-purple-400 mt-2">7,500 ETB</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ADMINS TAB -->
+                <div id="main-admins" class="tab-content space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-2xl font-bold text-white">👨‍💼 Manage Admins</h3>
+                        <button onclick="openCreateAdminModal()" class="px-4 py-2 bg-yellow-400 text-black font-bold rounded-xl text-xs">+ Create</button>
+                    </div>
+                    <div id="admin-list" class="space-y-2">
+                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
+                            <div class="flex justify-between items-start">
+                                <div><p class="font-bold text-white">Ahmed Mohamed</p><p class="text-xs text-slate-400">ahmed@company.com • Range: 1-300</p></div>
+                                <div class="flex gap-1">
+                                    <button onclick="editAdminInfo('Ahmed')" class="px-2 py-1 bg-yellow-400/20 text-yellow-400 text-xs rounded">Edit</button>
+                                    <button onclick="toggleAdminStatus(this)" class="px-2 py-1 bg-blue-400/20 text-blue-400 text-xs rounded">Disable</button>
+                                    <button onclick="deleteAdmin(this)" class="px-2 py-1 bg-red-400/20 text-red-400 text-xs rounded">Delete</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RANGES TAB -->
+                <div id="main-ranges" class="tab-content space-y-4">
+                    <h3 class="text-2xl font-bold text-white">📍 Ticket Ranges</h3>
+                    <div id="ranges-list" class="space-y-2">
+                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
+                            <div class="flex justify-between items-center">
+                                <div><p class="font-bold text-white">Ahmed Mohamed</p><p class="text-xs text-slate-400">Current: 1 - 300</p></div>
+                                <button onclick="openModifyRangeModal('Ahmed', 1, 300)" class="px-3 py-1 bg-yellow-400 text-black text-xs font-bold rounded">Modify</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PAYMENTS TAB -->
+                <div id="main-payments" class="tab-content space-y-4">
+                    <h3 class="text-2xl font-bold text-white">💳 Payment Accounts</h3>
+                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
+                        <div>
+                            <label class="text-sm text-slate-400">Telebirr Account</label>
+                            <input type="text" id="main-telebirr" value="0945792677" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
+                        </div>
+                        <div>
+                            <label class="text-sm text-slate-400">CBE Birr Account</label>
+                            <input type="text" id="main-cbe" value="0945792677" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
+                        </div>
+                        <button onclick="saveMainPaymentSettings()" class="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">Save</button>
+                    </div>
+                </div>
+
+                <!-- TRANSACTIONS TAB -->
+                <div id="main-transactions" class="tab-content space-y-4">
+                    <h3 class="text-2xl font-bold text-white">📋 Transaction History (View Only)</h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
+                            <p class="text-slate-300"><strong>July 8, 14:30</strong> - Mohammed Ali paid 500 ETB via Telebirr (TXN123456) - Ahmed's Branch</p>
+                        </div>
+                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
+                            <p class="text-slate-300"><strong>July 7, 10:15</strong> - Zainab paid 300 ETB via CBE (TXN123457) - Fatima's Branch</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SETTINGS TAB -->
+                <div id="main-settings" class="tab-content space-y-4">
+                    <h3 class="text-2xl font-bold text-white">⚙️ System Configuration</h3>
+                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
+                        <div>
+                            <label class="text-sm text-slate-400">Ticket Price (ETB)</label>
+                            <input type="number" value="100" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
+                        </div>
+                        <div>
+                            <label class="text-sm text-slate-400">Prize Pool %</label>
+                            <input type="number" value="70" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
+                        </div>
+                        <button onclick="notify('success', 'Settings saved!')" class="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">Save</button>
+                    </div>
+                </div>
+
+                <!-- NOTIFICATIONS TAB -->
+                <div id="main-notifications" class="tab-content space-y-4">
+                    <h3 class="text-2xl font-bold text-white">🔔 Send Notifications</h3>
+                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
+                        <div>
+                            <label class="text-sm text-slate-400">Send To</label>
+                            <select id="notify-target" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
+                                <option>All Customers</option>
+                                <option>Specific Admin's Customers</option>
+                                <option>Specific Customer</option>
+                                <option>All Admins</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-sm text-slate-400">Message</label>
+                            <textarea placeholder="Type message..." rows="3" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1"></textarea>
+                        </div>
+                        <div class="flex gap-3">
+                            <label class="flex items-center text-sm text-slate-300"><input type="checkbox" class="mr-2"> Telegram</label>
+                            <label class="flex items-center text-sm text-slate-300"><input type="checkbox" class="mr-2"> Email</label>
+                            <label class="flex items-center text-sm text-slate-300"><input type="checkbox" class="mr-2"> SMS</label>
+                        </div>
+                        <button onclick="sendNotification()" class="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">Send</button>
+                    </div>
+                </div>
+
+                <!-- CUSTOMERS TAB -->
+                <div id="main-customers" class="tab-content space-y-4">
+                    <h3 class="text-2xl font-bold text-white">👥 All Customers</h3>
+                </div>
+
+                <!-- ANALYTICS TAB -->
+                <div id="main-analytics" class="tab-content space-y-4">
+                    <h3 class="text-2xl font-bold text-white">📈 Analytics</h3>
+                </div>
+
+                <!-- AUDIT LOG TAB -->
+                <div id="main-audit" class="tab-content space-y-4">
+                    <h3 class="text-2xl font-bold text-white">🔐 Audit Log</h3>
+                </div>
+
+                <!-- TRANSACTIONS TAB -->
+                <div id="main-transactions" class="tab-content space-y-4">
+                    <h3 class="text-2xl font-bold text-white">📋 Transactions</h3>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODALS -->
+    <div id="customer-modal" class="modal">
+        <div class="modal-overlay" onclick="closeModal('customer-modal')"></div>
+        <div class="modal-content p-6 m-auto">
+            <h3 class="text-xl font-bold text-white mb-4">Add Customer</h3>
+            <div class="space-y-3">
+                <input type="text" id="cust-name-input" placeholder="Customer Name" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
+                <input type="email" id="cust-email-input" placeholder="Email" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
+                <input type="text" id="cust-phone-input" placeholder="Phone" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
+                <button onclick="addCustomer()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl">Add</button>
+                <button onclick="closeModal('customer-modal')" class="w-full py-2 bg-slate-700 text-white rounded-xl">Cancel</button>
             </div>
         </div>
     </div>
 
-    <!-- DASHBOARDS WILL BE INSERTED HERE -->
-    <div id="dashboards-container"></div>
+    <div id="admin-modal" class="modal">
+        <div class="modal-overlay" onclick="closeModal('admin-modal')"></div>
+        <div class="modal-content p-6 m-auto">
+            <h3 class="text-xl font-bold text-white mb-4">Create Admin</h3>
+            <div class="space-y-3">
+                <input type="text" id="admin-name-input" placeholder="Name" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
+                <input type="email" id="admin-email-input" placeholder="Email" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
+                <input type="password" id="admin-pass-input" placeholder="Password" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
+                <button onclick="createAdmin()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl">Create</button>
+                <button onclick="closeModal('admin-modal')" class="w-full py-2 bg-slate-700 text-white rounded-xl">Cancel</button>
+            </div>
+        </div>
+    </div>
 
-    <!-- ===== SCRIPTS ===== -->
-    <!-- 1. Shared Layer -->
-    <script src="Shared/DataStorage.js"></script>
-
-    <!-- 2. Customer Component (Parent + Children) -->
-    <script src="Customer/CustomerDashboard.js"></script>
-    <script src="Customer/Profile.js"></script>
-    <script src="Customer/NumberGrid.js"></script>
-    <script src="Customer/Settings.js"></script>
-    <script src="Customer/Tickets.js"></script>
-
-    <!-- 3. Admin Component (Parent + Children) -->
-    <script src="BranchAdmin/AdminDashboard.js"></script>
-    <script src="BranchAdmin/Notifications.js"></script>
-    <script src="BranchAdmin/Payments.js"></script>
-    <script src="BranchAdmin/Settings.js"></script>
-
-    <!-- 4. Main Admin Component (Parent + Children) -->
-    <script src="MainAdmin/MainAdminDashboard.js"></script>
-    <script src="MainAdmin/Settings.js"></script>
+    <div id="range-modal" class="modal">
+        <div class="modal-overlay" onclick="closeModal('range-modal')"></div>
+        <div class="modal-content p-6 m-auto">
+            <h3 class="text-xl font-bold text-white mb-4">Modify Range</h3>
+            <div class="space-y-3">
+                <input type="number" id="range-start-input" placeholder="Start" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
+                <input type="number" id="range-end-input" placeholder="End" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
+                <button onclick="saveRange()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl">Save Range</button>
+                <button onclick="closeModal('range-modal')" class="w-full py-2 bg-slate-700 text-white rounded-xl">Cancel</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         let currentUser = null;
-        let customerDashboard, adminDashboard, mainAdminDashboard;
+        let selectedNumbers = [];
 
-        // ========== NOTIFICATIONS ==========
-        function showNotification(type, message) {
+        // NOTIFICATION SYSTEM
+        function notify(type, message) {
             const container = document.getElementById('notification-container');
             const toast = document.createElement('div');
             toast.className = `notification-toast ${type}`;
@@ -114,86 +653,372 @@
             }, 5000);
         }
 
-        // ========== TAB SWITCHING ==========
+        // TAB SWITCHING - WORKS FOR ALL SECTIONS
         function switchTab(section, tab) {
-            const dashboardId = section === 'cust' ? 'customer-dashboard' :
-                               section === 'admin' ? 'admin-dashboard' : 'main-admin-dashboard';
+            // Determine which dashboard to target
+            let dashId = section === 'cust' ? 'customer-dashboard' : 
+                        section === 'admin' ? 'admin-dashboard' : 
+                        'main-admin-dashboard';
             
-            const dashDiv = document.getElementById(dashboardId);
-            if (!dashDiv) return;
+            let dashboard = document.getElementById(dashId);
             
-            dashDiv.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
-            dashDiv.querySelectorAll('.tab-button').forEach(el => el.classList.remove('active'));
+            // Hide all tabs in this dashboard
+            dashboard.querySelectorAll('.tab-content').forEach(el => {
+                el.classList.remove('active');
+            });
             
-            const targetTab = dashDiv.querySelector(`#${section}-${tab}`);
-            if (targetTab) {
-                targetTab.style.display = 'block';
-                if (event?.target) {
-                    event.target.classList.add('active');
-                }
+            // Deactivate all buttons in this dashboard
+            dashboard.querySelectorAll('.tab-button').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            // Show target tab and activate button
+            const target = document.getElementById(`${section}-${tab}`);
+            if (target) {
+                target.classList.add('active');
+                event.target.classList.add('active');
             }
         }
 
-        // ========== LOGIN MODAL ==========
+        // MODAL
+        function openCustomerModal() { document.getElementById('customer-modal').classList.add('active'); }
+        function openCreateAdminModal() { document.getElementById('admin-modal').classList.add('active'); }
+        function openModifyRangeModal(name, start, end) {
+            document.getElementById('range-start-input').value = start;
+            document.getElementById('range-end-input').value = end;
+            document.getElementById('range-modal').classList.add('active');
+        }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+        // LOGIN
         function openLoginModal() { document.getElementById('login-modal').classList.remove('hidden'); }
         function closeLoginModal() { document.getElementById('login-modal').classList.add('hidden'); }
 
-        // ========== LOGIN ==========
         function handleLogin(event) {
             event.preventDefault();
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
 
-            document.getElementById('public-page').classList.add('hidden');
-            closeLoginModal();
-
             if (email === 'fita.regassa@gmail.com' && password === 'MainAdmin@123') {
                 currentUser = { type: 'main_admin', email };
-                mainAdminDashboard = new MainAdminDashboard();
-                document.getElementById('dashboards-container').innerHTML = mainAdminDashboard.render();
+                document.getElementById('public-page').classList.add('hidden');
+                document.getElementById('login-modal').classList.add('hidden');
                 document.getElementById('main-admin-dashboard').classList.remove('hidden');
-                mainAdminSettings = new MainAdminSettings();
-                mainAdminDashboard.loadTabs();
-                showNotification('success', '✅ Main Admin Login Successful');
+                notify('success', '✅ Main Admin Login Successful');
             } else if (email === 'ahmed@company.com' && password === 'Ahmed123') {
-                currentUser = { type: 'admin', id: 'admin1', email };
-                adminDashboard = new AdminDashboard('admin1');
-                document.getElementById('dashboards-container').innerHTML = adminDashboard.render();
+                currentUser = { type: 'admin', name: 'Ahmed Mohamed', email };
+                document.getElementById('public-page').classList.add('hidden');
+                document.getElementById('login-modal').classList.add('hidden');
                 document.getElementById('admin-dashboard').classList.remove('hidden');
-                adminNotifications = new AdminNotifications('admin1');
-                adminPayments = new AdminPayments('admin1');
-                adminSettings = new AdminSettings('admin1');
-                adminDashboard.loadTabs();
-                showNotification('success', '✅ Admin Login Successful');
+                document.getElementById('admin-name').textContent = 'Ahmed Mohamed';
+                notify('success', '✅ Admin Login Successful');
             } else if (email === 'm@email.com' && password === 'Pass123') {
-                currentUser = { type: 'customer', id: 'cust1', email };
-                customerDashboard = new CustomerDashboard('cust1');
-                document.getElementById('dashboards-container').innerHTML = customerDashboard.render();
+                currentUser = { type: 'customer', name: 'Mohammed', email };
+                document.getElementById('public-page').classList.add('hidden');
+                document.getElementById('login-modal').classList.add('hidden');
                 document.getElementById('customer-dashboard').classList.remove('hidden');
-                customerNumberGrid = new CustomerNumberGrid('cust1');
-                customerSettings = new CustomerSettings('cust1');
-                customerDashboard.loadTabs();
-                showNotification('success', '✅ Customer Login Successful');
+                document.getElementById('cust-name').textContent = 'Mohammed';
+                generateNumbersGrid();
+                notify('success', '✅ Customer Login Successful');
             } else {
-                document.getElementById('public-page').classList.remove('hidden');
-                showNotification('error', '❌ Invalid credentials');
+                notify('error', '❌ Invalid credentials');
             }
         }
 
-        // ========== LOGOUT ==========
+        // CUSTOMER FUNCTIONS
+        function generateNumbersGrid() {
+            const grid = document.getElementById('numbers-grid');
+            grid.innerHTML = '';
+            for (let i = 1; i <= 300; i++) {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = selectedNumbers.includes(i) ? 'w-8 h-8 bg-yellow-400 text-black text-xs font-bold rounded' : 'w-8 h-8 bg-slate-700 text-white text-xs rounded hover:bg-slate-600';
+                btn.textContent = i;
+                btn.onclick = () => { selectedNumbers.includes(i) ? selectedNumbers.splice(selectedNumbers.indexOf(i), 1) : selectedNumbers.push(i); updateCost(); generateNumbersGrid(); };
+                grid.appendChild(btn);
+            }
+        }
+        
+        function updateCost() {
+            document.getElementById('selected-count').textContent = selectedNumbers.length;
+            document.getElementById('ticket-cost').textContent = selectedNumbers.length * 100;
+        }
+
+        function submitTicket() {
+            if (selectedNumbers.length === 0) return notify('error', '❌ Select at least 1 number');
+            notify('success', `✅ Ticket submitted: ${selectedNumbers.join(',')} - ${selectedNumbers.length * 100} ETB`);
+            selectedNumbers = [];
+            updateCost();
+        }
+
+        function openTikTok() { notify('info', '📱 Opening TikTok @BoniLottery Live'); }
+
+        // ADMIN FUNCTIONS
+        function addCustomer() {
+            const name = document.getElementById('cust-name-input').value;
+            if (!name) return notify('error', '❌ Enter customer name');
+            notify('success', `✅ Customer ${name} added!`);
+            closeModal('customer-modal');
+            document.getElementById('admin-customers-list').innerHTML += `<div class="glass-panel rounded-lg p-4 border border-yellow-400/10"><p class="font-bold text-white">${name}</p><p class="text-xs text-slate-400">New customer</p></div>`;
+        }
+
+        function deleteCustomer(btn) {
+            if (confirm('Delete customer?')) { btn.parentElement.parentElement.remove(); notify('success', '✅ Customer deleted'); }
+        }
+
+        function editCustomer(name) { notify('info', `Editing ${name}...`); }
+
+        function approvePayment(btn) {
+            notify('success', '✅ Payment approved!');
+            btn.parentElement.parentElement.parentElement.remove();
+        }
+
+        function rejectPayment(btn) {
+            notify('error', '❌ Payment rejected');
+            btn.parentElement.parentElement.parentElement.remove();
+        }
+
+        function generateWinner() {
+            const num = Math.floor(Math.random() * 1000) + 1;
+            notify('success', `🎲 Winner Generated: Number ${num}`);
+        }
+
+        function savePaymentSettings() { notify('success', '✅ Payment settings saved!'); }
+
+        function bookAdminAppointment() {
+            const date = document.getElementById('admin-appt-date').value;
+            if (!date) return notify('error', '❌ Select date');
+            notify('success', '✅ Appointment booked with Main Admin!');
+        }
+
+        // MAIN ADMIN FUNCTIONS
+        function createAdmin() {
+            const name = document.getElementById('admin-name-input').value;
+            if (!name) return notify('error', '❌ Enter admin name');
+            notify('success', `✅ Admin ${name} created!`);
+            closeModal('admin-modal');
+        }
+
+        function deleteAdmin(btn) {
+            if (confirm('Delete admin?')) { btn.parentElement.parentElement.remove(); notify('success', '✅ Admin deleted'); }
+        }
+
+        function toggleAdminStatus(btn) {
+            btn.textContent = btn.textContent === 'Disable' ? 'Enable' : 'Disable';
+            notify('info', `Admin status changed`);
+        }
+
+        function editAdminInfo(name) { notify('info', `Editing ${name}...`); }
+
+        function saveRange() {
+            const start = document.getElementById('range-start-input').value;
+            const end = document.getElementById('range-end-input').value;
+            if (start >= end) return notify('error', '❌ Start must be less than end');
+            notify('success', `✅ Range updated: ${start} - ${end}`);
+            closeModal('range-modal');
+        }
+
+        function saveMainPaymentSettings() { notify('success', '✅ Payment accounts saved!'); }
+
+        function sendNotification() { notify('success', '✅ Notifications sent!'); }
+
+        // CUSTOMER APPOINTMENT BOOKING
+        function bookAppointment() {
+            const date = document.getElementById('cust-appt-date')?.value;
+            if (!date) {
+                const input = document.createElement('input');
+                input.type = 'date';
+                input.id = 'cust-appt-date';
+                return notify('error', '❌ Enter appointment date');
+            }
+            notify('success', '✅ Appointment booked!');
+        }
+
+        // LIBRARY TAB - DISPLAY INFO
+        function showLibrary() {
+            const content = document.getElementById('cust-library');
+            if (content && !content.innerHTML.includes('How to Play')) {
+                content.innerHTML = `
+                    <h3 class="text-2xl font-bold mb-6">📖 Lottery Guide</h3>
+                    <div class="glass-panel rounded-lg p-6 border border-yellow-400/10 mb-4">
+                        <h4 class="text-yellow-400 font-bold mb-3">How to Play</h4>
+                        <ol class="text-sm text-slate-300 space-y-2">
+                            <li>1. Select 1-10 numbers from 1-300</li>
+                            <li>2. Pay 100 ETB per number</li>
+                            <li>3. Upload receipt</li>
+                            <li>4. Wait for admin verification</li>
+                            <li>5. Draw happens every Sunday 8 PM</li>
+                        </ol>
+                    </div>
+                `;
+            }
+        }
+
+        // NOTIFICATIONS TAB
+        function showNotifications() {
+            const content = document.getElementById('cust-notifications');
+            if (content && content.innerHTML.trim() === '') {
+                content.innerHTML = `
+                    <div class="space-y-3">
+                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
+                            <p class="font-bold text-white">✅ Payment Verified</p>
+                            <p class="text-xs text-slate-400 mt-1">Your ticket was verified</p>
+                        </div>
+                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
+                            <p class="font-bold text-white">🎫 Ticket Created</p>
+                            <p class="text-xs text-slate-400 mt-1">You bought a new ticket</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // CUSTOMER SETTINGS
+        function saveCustomerSettings() {
+            const phone = document.getElementById('cust-phone')?.value;
+            if (phone) notify('success', `✅ Settings saved!`);
+        }
+
+        // ADMIN NOTIFICATIONS
+        function showAdminNotifications() {
+            const content = document.getElementById('admin-notifications');
+            if (content && content.innerHTML.trim() === '') {
+                content.innerHTML = `
+                    <div class="glass-panel rounded-lg p-6 border border-yellow-400/10 space-y-3">
+                        <textarea placeholder="Message..." rows="3" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none"></textarea>
+                        <button onclick="sendNotification()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl">Send</button>
+                    </div>
+                `;
+            }
+        }
+
+        // ADMIN REVENUE ANALYTICS
+        function showRevenue() {
+            const content = document.getElementById('admin-revenue');
+            if (content && content.innerHTML.trim() === '') {
+                content.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
+                            <p class="text-slate-400 text-sm">Total Revenue</p>
+                            <p class="text-3xl font-bold text-yellow-400 mt-2">2,400 ETB</p>
+                        </div>
+                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
+                            <p class="text-slate-400 text-sm">This Month</p>
+                            <p class="text-3xl font-bold text-yellow-400 mt-2">1,200 ETB</p>
+                        </div>
+                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
+                            <p class="text-slate-400 text-sm">This Week</p>
+                            <p class="text-3xl font-bold text-yellow-400 mt-2">300 ETB</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // ADMIN ACTIVITY LOG
+        function showActivityLog() {
+            const content = document.getElementById('admin-logs');
+            if (content && content.innerHTML.trim() === '') {
+                content.innerHTML = `
+                    <div class="space-y-2">
+                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
+                            <p class="text-sm text-slate-300"><strong>2 hours ago:</strong> Payment approved</p>
+                        </div>
+                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
+                            <p class="text-sm text-slate-300"><strong>5 hours ago:</strong> Ticket created</p>
+                        </div>
+                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
+                            <p class="text-sm text-slate-300"><strong>1 day ago:</strong> Customer added</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // MAIN ADMIN CUSTOMERS TAB
+        function showAllCustomers() {
+            const content = document.getElementById('main-customers');
+            if (content && content.innerHTML.trim() === '') {
+                content.innerHTML = `
+                    <div class="glass-panel rounded-lg border border-yellow-400/10 overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <tr class="border-b border-yellow-400/10">
+                                <th class="p-3 text-left">Name</th>
+                                <th class="p-3 text-left">Branch</th>
+                                <th class="p-3 text-left">Tickets</th>
+                                <th class="p-3 text-left">Spent</th>
+                            </tr>
+                            <tr class="border-b border-yellow-400/10"><td class="p-3">Mohammed Ali</td><td class="p-3">Ahmed</td><td class="p-3">5</td><td class="p-3">500 ETB</td></tr>
+                            <tr class="border-b border-yellow-400/10"><td class="p-3">Zainab Hassan</td><td class="p-3">Admin2</td><td class="p-3">3</td><td class="p-3">300 ETB</td></tr>
+                        </table>
+                    </div>
+                `;
+            }
+        }
+
+        // MAIN ADMIN TRANSACTIONS
+        function showTransactions() {
+            const content = document.getElementById('main-transactions');
+            if (content && content.innerHTML.trim() === '') {
+                content.innerHTML = `
+                    <div class="space-y-2">
+                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
+                            <p class="text-sm text-slate-300"><strong>July 8:</strong> Mohammed paid 300 ETB (Telebirr)</p>
+                        </div>
+                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
+                            <p class="text-sm text-slate-300"><strong>July 7:</strong> Zainab paid 300 ETB (CBE)</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // MAIN ADMIN AUDIT LOG
+        function showAuditLog() {
+            const content = document.getElementById('main-audit');
+            if (content && content.innerHTML.trim() === '') {
+                content.innerHTML = `
+                    <div class="space-y-2">
+                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
+                            <p class="text-sm text-slate-300"><strong>Ahmed:</strong> Approved payment - 2h ago</p>
+                        </div>
+                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
+                            <p class="text-sm text-slate-300"><strong>Ahmed:</strong> Created ticket - 4h ago</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // MAIN ADMIN ANALYTICS
+        function showAnalytics() {
+            const content = document.getElementById('main-analytics');
+            if (content && content.innerHTML.trim() === '') {
+                content.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
+                            <p class="text-slate-400 text-sm">Total Platform Revenue</p>
+                            <p class="text-3xl font-bold text-yellow-400 mt-2">7,200 ETB</p>
+                        </div>
+                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
+                            <p class="text-slate-400 text-sm">This Month</p>
+                            <p class="text-3xl font-bold text-yellow-400 mt-2">2,400 ETB</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
         function logout() {
             if (confirm('Logout?')) {
                 currentUser = null;
-                document.getElementById('dashboards-container').innerHTML = '';
+                document.getElementById('customer-dashboard').classList.add('hidden');
+                document.getElementById('admin-dashboard').classList.add('hidden');
+                document.getElementById('main-admin-dashboard').classList.add('hidden');
                 document.getElementById('public-page').classList.remove('hidden');
-                showNotification('info', 'Logged out');
+                notify('info', 'Logged out');
             }
         }
-
-        // ========== INITIALIZE ==========
-        window.addEventListener('load', () => {
-            db.initializeDefaultData();
-        });
     </script>
 </body>
 </html>
