@@ -128,4 +128,4 @@ class DataStorage {
 }
 
 // Global instance for all components
-const db = new DataStorage();
+const dataStorage = new DataStorage();  // ✅ No conflict!
