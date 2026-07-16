@@ -706,26 +706,23 @@
             });
             
             // Show target tab and activate button
-            
-    
-    // Show target tab and activate button
-    const target = document.getElementById(`${section}-${tab}`);
-    if (target) {
-        target.classList.add('active');
-        event.target.classList.add('active');
-        
-        // POPULATE CONTENT WHEN TAB IS CLICKED
-        if (tab === 'library') showLibrary();
-        if (tab === 'revenue') showRevenue();
-        if (tab === 'logs') showActivityLog();
-        if (tab === 'notifications') showAdminNotifications();
-        if (tab === 'appointments') {}; // Already has content
-        if (tab === 'customers' && section === 'main') showAllCustomers();
-        if (tab === 'analytics') showAnalytics();
-        if (tab === 'audit') showAuditLog();
-        if (tab === 'transactions') showTransactions();
-    }
-}
+            const target = document.getElementById(`${section}-${tab}`);
+            if (target) {
+                target.classList.add('active');
+                event.target.classList.add('active');
+                
+                // POPULATE CONTENT WHEN TAB IS CLICKED
+                if (tab === 'library') showLibrary();
+                if (tab === 'revenue') showRevenue();
+                if (tab === 'logs') showActivityLog();
+                if (tab === 'notifications') showAdminNotifications();
+                if (tab === 'appointments') {}; // Already has content
+                if (tab === 'customers' && section === 'main') showAllCustomers();
+                if (tab === 'analytics') showAnalytics();
+                if (tab === 'audit') showAuditLog();
+                if (tab === 'transactions') showTransactions();
+            }
+        }
 
         // MODAL
         function openCustomerModal() { document.getElementById('customer-modal').classList.add('active'); }
@@ -795,34 +792,7 @@ async function handleLogin(event) {
 }
 
 // ========== GLOBAL FUNCTIONS THAT MUST EXIST ==========
-
-function switchTab(section, tab) {
-    const dashboardId = section === 'cust' ? 'customer-dashboard' :
-                       section === 'admin' ? 'admin-dashboard' : 'main-admin-dashboard';
-    
-    const dashDiv = document.getElementById(dashboardId);
-    if (!dashDiv) return;
-    
-    // Hide all tabs
-    dashDiv.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
-    dashDiv.querySelectorAll('.tab-button').forEach(el => {
-        el.classList.remove('active');
-        el.style.color = '';
-    });
-    
-    // Show selected tab
-    const tabEl = dashDiv.querySelector(`#${section}-${tab}`);
-    if (tabEl) {
-        tabEl.style.display = 'block';
-        tabEl.classList.add('active');
-    }
-    
-    // Mark button as active
-    if (event?.target) {
-        event.target.classList.add('active');
-        event.target.style.color = '#FCD34D';
-    }
-}
+// (Duplicate functions removed - they're already defined above)
 
 function logout() {
     if (confirm('Logout?')) {
@@ -833,29 +803,6 @@ function logout() {
         document.getElementById('public-page').classList.remove('hidden');
         notify('info', 'Logged out');
     }
-}
-
-function notify(type, message) {
-    const container = document.getElementById('notification-container');
-    if (!container) return;
-    
-    const toast = document.createElement('div');
-    toast.className = `notification-toast ${type}`;
-    toast.textContent = message;
-    container.appendChild(toast);
-    
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        setTimeout(() => toast.remove(), 300);
-    }, 5000);
-}
-
-function openLoginModal() {
-    document.getElementById('login-modal').classList.remove('hidden');
-}
-
-function closeLoginModal() {
-    document.getElementById('login-modal').classList.add('hidden');
 }
 
 // ========== VERIFY DB IS LOADED ==========
