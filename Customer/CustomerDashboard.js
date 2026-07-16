@@ -85,7 +85,7 @@ class CustomerDashboard {
     }
 }
 
-let selectedNumbers = [];
+//let selectedNumbers = [];
 
 // ========== NUMBER GRID ==========
 function generateNumberGrid() {
