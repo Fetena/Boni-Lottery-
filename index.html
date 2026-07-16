@@ -756,6 +756,12 @@ async function handleLogin(event) {
         document.getElementById('public-page').classList.add('hidden');
         document.getElementById('login-modal').classList.add('hidden');
         document.getElementById('main-admin-dashboard').classList.remove('hidden');
+        
+        // ✅ Create dashboard and load data from Firestore
+        const mainDash = new MainAdminDashboard();
+        document.getElementById('dashboards-container').innerHTML = mainDash.render();
+        await mainDash.loadData();
+        
         notify('success', '✅ Main Admin Login Successful');
     } 
     else if (email === 'ahmed@company.com' && password === 'Ahmed123') {
