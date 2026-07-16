@@ -127,5 +127,6 @@ class DataStorage {
     setSelectedNumbers(custId, numbers) { localStorage.setItem(`selected_numbers_${custId}`, JSON.stringify(numbers)); }
 }
 
-// Global instance for all components
-const dataStorage = new DataStorage();  // ✅ No conflict!
+// ✅ RENAMED FROM "const db" TO "const dataStorage" TO AVOID CONFLICT WITH FIREBASE
+// The global "db" from index.html is now used for Firebase Firestore
+const dataStorage = new DataStorage();
