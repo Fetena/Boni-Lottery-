@@ -1,31 +1,45 @@
-// MAIN ADMIN CUSTOMERS (CHILD)
+// ============================================
+// MAIN ADMIN - CUSTOMERS MANAGEMENT
+// ============================================
+
 class MainAdminCustomers {
-    constructor() {}
-    render() {
-        return `<div class="space-y-4">
-            <h3 class="text-2xl font-bold text-white">👥 Global Customers</h3>
-            <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
-                <div class="flex gap-2">
-                    <input type="text" id="cust-search" placeholder="Search customers..." class="flex-1 bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
-                    <button onclick="mainAdminCustomers.search()" class="px-4 py-2 bg-yellow-400 text-black font-bold rounded-xl">🔍</button>
-                </div>
-                <select class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
-                    <option>All Admins</option>
-                    <option>Admin 1</option>
-                    <option>Admin 2</option>
-                </select>
-            </div>
-            <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                <h4 class="font-bold text-white mb-4">Total Customers: 24</h4>
-                <div class="space-y-2 max-h-80 overflow-y-auto">
-                    <div class="bg-black/30 rounded-lg p-3 border border-yellow-400/10">
-                        <p class="font-bold text-white text-sm">Mohammed Ali</p>
-                        <p class="text-xs text-slate-400">Admin 1 | 5 tickets | 500 ETB</p>
-                    </div>
-                </div>
-            </div>
-        </div>`;
+    constructor() {
+        this.customers = [];
     }
-    search() { showNotification('info', '🔍 Searching...'); }
+
+    render() {
+        return `
+            <div class="space-y-4">
+                <h3 class="text-2xl font-bold text-white">👥 All Customers</h3>
+                <div id="customers-list" class="space-y-3">${this.renderCustomersList()}</div>
+            </div>
+        `;
+    }
+
+    async loadData() {
+        try {
+            if (!db) return;
+            const snapshot = await db.collection('customers').get();
+            this.customers = [];
+            snapshot.forEach(doc => {
+                this.customers.push({ id: doc.id, ...doc.data() });
+            });
+        } catch (error) {
+            console.error('Error loading customers:', error);
+        }
+    }
+
+    renderCustomersList() {
+        if (this.customers.length === 0) {
+            return '<p class="text-slate-400 text-center py-6">No customers yet</p>';
+        }
+
+        return this.customers.map(cust => `
+            <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
+                <p class="font-bold text-white">${cust.name || 'N/A'}</p>
+                <p class="text-xs text-slate-400">${cust.email || 'N/A'} • ${cust.phone || 'N/A'}</p>
+                <p class="text-xs text-slate-400">Tickets: ${cust.tickets || 0} • Spent: ${cust.spent || 0} ETB</p>
+            </div>
+        `).join('');
+    }
 }
-let mainAdminCustomers;
