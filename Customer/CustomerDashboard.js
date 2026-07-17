@@ -1,3 +1,7 @@
+// ============================================
+// CUSTOMER DASHBOARD - COMPLETE
+// ============================================
+
 class CustomerDashboard {
     constructor(custId) {
         this.custId = custId;
@@ -28,8 +32,7 @@ class CustomerDashboard {
                         <div id="cust-profile" class="tab-content active">
                             <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
                                 <h3 class="text-xl font-bold text-white mb-4">Your Profile</h3>
-                                <p class="text-slate-400">Email: <span id="cust-email">${currentUser.email}</span></p>
-                                <p class="text-slate-400 mt-2">Member Since: <span id="cust-joindate">Today</span></p>
+                                <p class="text-slate-400">Email: <span id="cust-email">${currentUser?.email || 'N/A'}</span></p>
                                 <p class="text-slate-400 mt-2">Total Tickets: <span id="cust-total-tickets">0</span></p>
                                 <p class="text-slate-400 mt-2">Total Spent: <span id="cust-total-spent">0 ETB</span></p>
                             </div>
@@ -39,10 +42,10 @@ class CustomerDashboard {
                         <div id="cust-buytickets" class="tab-content" style="display: none;">
                             <div class="space-y-4">
                                 <h3 class="text-xl font-bold text-white">Select Numbers (1-300)</h3>
-                                <div id="cust-number-grid" class="grid grid-cols-10 gap-2"></div>
+                                <div id="numbers-grid" class="grid grid-cols-10 gap-2"></div>
                                 <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
-                                    <p class="text-white">Selected: <span id="cust-selected-count">0</span> numbers</p>
-                                    <p class="text-white mt-2">Cost: <span id="cust-total-cost">0</span> ETB</p>
+                                    <p class="text-white">Selected: <span id="selected-count">0</span> numbers</p>
+                                    <p class="text-white mt-2">Cost: <span id="ticket-cost">0</span> ETB</p>
                                     <button onclick="submitCustomerTicket()" class="w-full mt-4 py-2 bg-yellow-400 text-black font-bold rounded-xl">Submit Ticket</button>
                                 </div>
                             </div>
@@ -79,19 +82,25 @@ class CustomerDashboard {
     }
 
     async loadData() {
-        await loadCustomerSettings();
-        await loadCustomerTickets();
-        generateNumberGrid();
+        try {
+            generateNumbersGrid();
+            await loadCustomerSettings();
+            await loadCustomerTickets();
+            await loadCustomerStats();
+        } catch (error) {
+            console.error('Error loading customer data:', error);
+        }
     }
 }
 
-//let selectedNumbers = [];
+// ========== NUMBER SELECTION ==========
 
-// ========== NUMBER GRID ==========
-function generateNumberGrid() {
-    const grid = document.getElementById('cust-number-grid');
+let selectedNumbers = [];
+
+function generateNumbersGrid() {
+    const grid = document.getElementById('numbers-grid');
     if (!grid) return;
-    
+
     grid.innerHTML = '';
     for (let i = 1; i <= 300; i++) {
         const btn = document.createElement('button');
@@ -111,23 +120,23 @@ function toggleNumber(num) {
     } else {
         selectedNumbers.push(num);
     }
-    generateNumberGrid();
+    generateNumbersGrid();
 }
 
 function updateCost() {
-    document.getElementById('cust-selected-count').textContent = selectedNumbers.length;
-    document.getElementById('cust-total-cost').textContent = selectedNumbers.length * 100;
+    document.getElementById('selected-count').textContent = selectedNumbers.length;
+    document.getElementById('ticket-cost').textContent = selectedNumbers.length * 100;
 }
 
 // ========== CUSTOMER TICKETS - FIRESTORE ==========
+
 async function submitCustomerTicket() {
     if (selectedNumbers.length === 0) return notify('error', '❌ Select at least 1 number');
     if (!db) return notify('error', '❌ Database not initialized');
-    
+
     const paymentMethod = document.getElementById('cust-payment')?.value || 'Telebirr';
-    
+
     try {
-        // SAVE TO FIRESTORE
         await db.collection('customer_tickets').add({
             customerEmail: currentUser.email,
             customerName: currentUser.name,
@@ -135,37 +144,35 @@ async function submitCustomerTicket() {
             cost: selectedNumbers.length * 100,
             paymentMethod: paymentMethod,
             status: 'Pending',
-            createdAt: new Date(),
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            createdAt: new Date()
         });
-        
+
         notify('success', `✅ Ticket submitted with ${selectedNumbers.length} numbers!`);
         selectedNumbers = [];
-        generateNumberGrid();
+        generateNumbersGrid();
         await loadCustomerTickets();
     } catch (error) {
         notify('error', `❌ Error: ${error.message}`);
-        console.error('Error submitting ticket:', error);
     }
 }
 
 async function loadCustomerTickets() {
-    if (!db) return console.error('Database not initialized');
-    
+    if (!db) return;
+
     try {
         const snapshot = await db.collection('customer_tickets')
             .where('customerEmail', '==', currentUser.email)
             .orderBy('createdAt', 'desc')
             .get();
-        
+
         const content = document.getElementById('cust-tickets-list');
         if (!content) return;
-        
+
         if (snapshot.empty) {
             content.innerHTML = '<p class="text-slate-400 text-center py-6">No tickets yet</p>';
             return;
         }
-        
+
         content.innerHTML = snapshot.docs.map((doc, i) => {
             const ticket = doc.data();
             const createdDate = ticket.createdAt?.toDate?.() || new Date();
@@ -190,34 +197,32 @@ async function loadCustomerTickets() {
 }
 
 // ========== CUSTOMER SETTINGS - FIRESTORE ==========
+
 async function saveCustomerSettings() {
     const phone = document.getElementById('cust-phone')?.value;
     const payment = document.getElementById('cust-payment')?.value;
-    
+
     if (!phone) return notify('error', '❌ Enter phone number');
     if (!db) return notify('error', '❌ Database not initialized');
-    
+
     try {
-        // SAVE TO FIRESTORE
         await db.collection('customer_settings').doc(currentUser.email).set({
             customerEmail: currentUser.email,
             customerName: currentUser.name,
             phone: phone,
             preferredPayment: payment,
-            updatedAt: new Date(),
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            updatedAt: new Date()
         }, { merge: true });
-        
+
         notify('success', '✅ Settings saved!');
     } catch (error) {
         notify('error', `❌ Error: ${error.message}`);
-        console.error('Error saving settings:', error);
     }
 }
 
 async function loadCustomerSettings() {
-    if (!db) return console.error('Database not initialized');
-    
+    if (!db) return;
+
     try {
         const doc = await db.collection('customer_settings').doc(currentUser.email).get();
         if (doc.exists) {
@@ -227,5 +232,27 @@ async function loadCustomerSettings() {
         }
     } catch (error) {
         console.error('Error loading settings:', error);
+    }
+}
+
+// ========== CUSTOMER STATS ==========
+
+async function loadCustomerStats() {
+    if (!db) return;
+
+    try {
+        const ticketSnapshot = await db.collection('customer_tickets')
+            .where('customerEmail', '==', currentUser.email)
+            .get();
+
+        document.getElementById('cust-total-tickets').textContent = ticketSnapshot.size;
+
+        let spent = 0;
+        ticketSnapshot.forEach(doc => {
+            spent += doc.data().cost || 0;
+        });
+        document.getElementById('cust-total-spent').textContent = spent.toLocaleString() + ' ETB';
+    } catch (error) {
+        console.error('Error loading stats:', error);
     }
 }
