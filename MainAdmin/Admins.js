@@ -2,7 +2,7 @@
 // MAIN ADMIN - ADMINS MANAGEMENT
 // ============================================
 
-class MainAdminAdmins {
+class Admins {
     constructor() {
         this.admins = [];
     }
