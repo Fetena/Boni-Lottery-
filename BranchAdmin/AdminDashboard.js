@@ -1,3 +1,7 @@
+// ============================================
+// ADMIN DASHBOARD - COMPLETE
+// ============================================
+
 class AdminDashboard {
     constructor(adminId) {
         this.adminId = adminId;
@@ -20,6 +24,7 @@ class AdminDashboard {
                         <div class="flex gap-2 border-b border-yellow-400/10 pb-2 overflow-x-auto">
                             <button onclick="switchTab('admin', 'dashboard')" class="tab-button active px-4 py-2 text-xs font-bold text-yellow-400">📊 Dashboard</button>
                             <button onclick="switchTab('admin', 'customers')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">👥 Customers</button>
+                            <button onclick="switchTab('admin', 'tickets')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">🎫 Tickets</button>
                             <button onclick="switchTab('admin', 'payments')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">💳 Payments</button>
                             <button onclick="switchTab('admin', 'settings')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">⚙️ Settings</button>
                         </div>
@@ -50,6 +55,14 @@ class AdminDashboard {
                             </div>
                         </div>
 
+                        <!-- Tickets Tab -->
+                        <div id="admin-tickets" class="tab-content" style="display: none;">
+                            <div class="space-y-4">
+                                <h3 class="text-xl font-bold text-white">Recent Tickets</h3>
+                                <div id="admin-tickets-list" class="space-y-3"></div>
+                            </div>
+                        </div>
+
                         <!-- Payments Tab -->
                         <div id="admin-payments" class="tab-content" style="display: none;">
                             <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
@@ -76,38 +89,55 @@ class AdminDashboard {
                     </div>
                 </main>
             </div>
+
+            <!-- Add Customer Modal -->
+            <div id="customer-modal" class="modal" style="display: none;">
+                <div class="modal-overlay"></div>
+                <div class="modal-content p-6 m-auto">
+                    <h3 class="text-xl font-bold text-white mb-4">Add Customer</h3>
+                    <div class="space-y-3">
+                        <input type="text" id="cust-name-input" placeholder="Customer Name" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white">
+                        <input type="email" id="cust-email-input" placeholder="Email" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white">
+                        <input type="tel" id="cust-phone-input" placeholder="Phone" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white">
+                        <button onclick="addAdminCustomer()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl">Add</button>
+                        <button onclick="closeAddCustomerModal()" class="w-full py-2 bg-slate-700 text-white rounded-xl">Cancel</button>
+                    </div>
+                </div>
+            </div>
         `;
     }
 
     async loadData() {
-        // Load customers from Firestore
-        await loadAdminCustomers();
-        // Load payment info
-        await loadAdminPayments();
-        // Load dashboard stats
-        await loadAdminStats();
+        try {
+            await loadAdminCustomers();
+            await loadAdminTickets();
+            await loadAdminPayments();
+            await loadAdminStats();
+        } catch (error) {
+            console.error('Error loading admin data:', error);
+        }
     }
 }
 
 // ========== ADMIN CUSTOMERS - FIRESTORE ==========
+
 async function openAddCustomerModal() {
-    const name = prompt('Customer Name:');
-    if (!name) return;
-    
-    const email = prompt('Customer Email:');
-    if (!email) return;
-    
-    const phone = prompt('Customer Phone:');
-    if (!phone) return;
-    
-    await addAdminCustomer(name, email, phone);
+    document.getElementById('customer-modal').style.display = 'flex';
 }
 
-async function addAdminCustomer(name, email, phone) {
+function closeAddCustomerModal() {
+    document.getElementById('customer-modal').style.display = 'none';
+}
+
+async function addAdminCustomer() {
+    const name = document.getElementById('cust-name-input').value;
+    const email = document.getElementById('cust-email-input').value;
+    const phone = document.getElementById('cust-phone-input').value;
+
+    if (!name || !email || !phone) return notify('error', '❌ Fill all fields');
     if (!db) return notify('error', '❌ Database not initialized');
-    
+
     try {
-        // SAVE TO FIRESTORE
         await db.collection('admin_customers').add({
             adminEmail: currentUser.email,
             name: name,
@@ -115,34 +145,37 @@ async function addAdminCustomer(name, email, phone) {
             phone: phone,
             tickets: 0,
             spent: 0,
-            createdAt: new Date(),
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            createdAt: new Date()
         });
-        
+
         notify('success', `✅ Customer ${name} added!`);
+        closeAddCustomerModal();
+        document.getElementById('cust-name-input').value = '';
+        document.getElementById('cust-email-input').value = '';
+        document.getElementById('cust-phone-input').value = '';
+        
         await loadAdminCustomers();
     } catch (error) {
         notify('error', `❌ Error: ${error.message}`);
-        console.error('Error adding customer:', error);
     }
 }
 
 async function loadAdminCustomers() {
-    if (!db) return console.error('Database not initialized');
-    
+    if (!db) return;
+
     try {
         const snapshot = await db.collection('admin_customers')
             .where('adminEmail', '==', currentUser.email)
             .get();
-        
+
         const content = document.getElementById('admin-customers-list');
         if (!content) return;
-        
+
         if (snapshot.empty) {
             content.innerHTML = '<p class="text-slate-400 text-center py-6">No customers yet</p>';
             return;
         }
-        
+
         content.innerHTML = snapshot.docs.map(doc => {
             const cust = doc.data();
             return `
@@ -150,7 +183,7 @@ async function loadAdminCustomers() {
                     <p class="font-bold text-white">${cust.name}</p>
                     <p class="text-xs text-slate-400">${cust.email} • ${cust.phone}</p>
                     <p class="text-xs text-slate-400">Tickets: ${cust.tickets} • Spent: ${cust.spent} ETB</p>
-                    <button onclick="deleteAdminCustomer('${doc.id}')" class="text-xs px-2 py-1 bg-red-400/20 text-red-400 rounded mt-2 cursor-pointer">Delete</button>
+                    <button onclick="deleteAdminCustomer('${doc.id}')" class="text-xs px-2 py-1 bg-red-400/20 text-red-400 rounded mt-2">Delete</button>
                 </div>
             `;
         }).join('');
@@ -161,7 +194,7 @@ async function loadAdminCustomers() {
 
 async function deleteAdminCustomer(docId) {
     if (!confirm('Delete customer?')) return;
-    
+
     try {
         await db.collection('admin_customers').doc(docId).delete();
         notify('success', '✅ Customer deleted');
@@ -171,34 +204,65 @@ async function deleteAdminCustomer(docId) {
     }
 }
 
-// ========== ADMIN PAYMENTS - FIRESTORE ==========
+// ========== ADMIN TICKETS ==========
+
+async function loadAdminTickets() {
+    if (!db) return;
+
+    try {
+        const snapshot = await db.collection('customer_tickets')
+            .orderBy('createdAt', 'desc')
+            .limit(10)
+            .get();
+
+        const content = document.getElementById('admin-tickets-list');
+        if (!content) return;
+
+        if (snapshot.empty) {
+            content.innerHTML = '<p class="text-slate-400">No tickets yet</p>';
+            return;
+        }
+
+        content.innerHTML = snapshot.docs.map(doc => {
+            const ticket = doc.data();
+            return `
+                <div class="glass-panel rounded-lg p-4 border border-yellow-400/10 text-xs">
+                    <p class="text-white">Numbers: ${ticket.numbers?.join(', ') || 'N/A'}</p>
+                    <p class="text-slate-400">Cost: ${ticket.cost} ETB • Status: ${ticket.status}</p>
+                </div>
+            `;
+        }).join('');
+    } catch (error) {
+        console.error('Error loading tickets:', error);
+    }
+}
+
+// ========== ADMIN PAYMENTS ==========
+
 async function saveAdminPayments() {
-    const telebirr = document.getElementById('admin-telebirr')?.value;
-    const cbe = document.getElementById('admin-cbe')?.value;
-    
+    const telebirr = document.getElementById('admin-telebirr').value;
+    const cbe = document.getElementById('admin-cbe').value;
+
     if (!telebirr || !cbe) return notify('error', '❌ Fill all fields');
     if (!db) return notify('error', '❌ Database not initialized');
-    
+
     try {
-        // SAVE TO FIRESTORE
         await db.collection('admin_settings').doc(currentUser.email).set({
             adminEmail: currentUser.email,
             telebirrPhone: telebirr,
             cbeAccount: cbe,
-            updatedAt: new Date(),
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            updatedAt: new Date()
         }, { merge: true });
-        
+
         notify('success', '✅ Payment settings saved!');
     } catch (error) {
         notify('error', `❌ Error: ${error.message}`);
-        console.error('Error saving payments:', error);
     }
 }
 
 async function loadAdminPayments() {
-    if (!db) return console.error('Database not initialized');
-    
+    if (!db) return;
+
     try {
         const doc = await db.collection('admin_settings').doc(currentUser.email).get();
         if (doc.exists) {
@@ -211,20 +275,25 @@ async function loadAdminPayments() {
     }
 }
 
-// ========== ADMIN STATS - FIRESTORE ==========
+// ========== ADMIN STATS ==========
+
 async function loadAdminStats() {
-    if (!db) return console.error('Database not initialized');
-    
+    if (!db) return;
+
     try {
-        // Count customers
         const custSnapshot = await db.collection('admin_customers')
             .where('adminEmail', '==', currentUser.email)
             .get();
         document.getElementById('admin-total-customers').textContent = custSnapshot.size;
-        
-        // Count tickets (approximate)
-        document.getElementById('admin-total-tickets').textContent = '0'; // Will update later
-        document.getElementById('admin-total-revenue').textContent = '0 ETB'; // Will update later
+
+        const ticketSnapshot = await db.collection('customer_tickets').get();
+        document.getElementById('admin-total-tickets').textContent = ticketSnapshot.size;
+
+        let revenue = 0;
+        ticketSnapshot.forEach(doc => {
+            revenue += doc.data().cost || 0;
+        });
+        document.getElementById('admin-total-revenue').textContent = revenue.toLocaleString() + ' ETB';
     } catch (error) {
         console.error('Error loading stats:', error);
     }
