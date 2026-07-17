@@ -1,7 +1,7 @@
 // MAIN ADMIN - NOTIFICATIONS
 // ============================================
 
-class MainAdminNotifications {
+class Notifications {
     render() {
         return `
             <div class="space-y-4">
