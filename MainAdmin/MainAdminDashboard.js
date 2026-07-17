@@ -82,43 +82,29 @@ class MainAdminDashboard {
         `;
     }
 
-    //async loadData() {
-        //try {
-            // Load all child components
-           // await this.admins.loadData();
-           // await this.customers.loadData();
-          //  await this.ranges.loadData();
-           // await this.payments.loadData();
-           // await this.analytics.loadData();
-           // await this.transactions.loadData();
-           // await this.auditLog.loadData();
-           // await this.notifications.loadData();
-           // await this.settings.loadData();
-
-            // Render all tabs
-           // this.loadTabs();
-
-            // Update dashboard stats
-         //   await this.updateDashboardStats();
-     // //  } catch (error) {
-        //    console.error('Error loading main admin data:', error);
-          //  notify('error', 'Error loading dashboard data');
-      //  }
-   // }
- // Inside MainAdmin/MainAdminDashboard.js
-
-async loadData() {
+    async loadData() {
     try {
-        // 1. Fetch main dashboard stats
-        // 2. Trigger child components to load and render themselves
-        if (this.adminsComponent) {
-            await this.adminsComponent.loadData();
-        }
-        if (this.customersComponent) {
-            await this.customersComponent.loadData();
-        }
-        // ... repeat for other components
-        notify('info', '✅ Data loaded successfully');
+        // 1. Load data for all child components
+        // Use the names defined in your constructor (this.admins, this.customers, etc.)
+        await Promise.all([
+            this.admins.loadData(),
+            this.customers.loadData(),
+            this.ranges.loadData(),
+            this.payments.loadData(),
+            this.analytics.loadData(),
+            this.transactions.loadData(),
+            this.auditLog.loadData(),
+            this.notifications.loadData(),
+            this.settings.loadData()
+        ]);
+
+        // 2. Render all tabs once data is loaded
+        this.loadTabs();
+
+        // 3. Update dashboard stats
+        await this.updateDashboardStats();
+
+        notify('info', '✅ All dashboard data loaded');
     } catch (error) {
         console.error('Error in MainAdminDashboard loadData:', error);
     }
