@@ -1,7 +1,7 @@
 // MAIN ADMIN - PAYMENTS MANAGEMENT
 // ============================================
 
-class MainAdminPayments {
+class Payments {
     constructor() {
         this.accounts = {};
     }
