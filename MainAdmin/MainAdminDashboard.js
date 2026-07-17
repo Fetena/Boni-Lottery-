@@ -82,30 +82,47 @@ class MainAdminDashboard {
         `;
     }
 
-    async loadData() {
-        try {
+    //async loadData() {
+        //try {
             // Load all child components
-            await this.admins.loadData();
-            await this.customers.loadData();
-            await this.ranges.loadData();
-            await this.payments.loadData();
-            await this.analytics.loadData();
-            await this.transactions.loadData();
-            await this.auditLog.loadData();
-            await this.notifications.loadData();
-            await this.settings.loadData();
+           // await this.admins.loadData();
+           // await this.customers.loadData();
+          //  await this.ranges.loadData();
+           // await this.payments.loadData();
+           // await this.analytics.loadData();
+           // await this.transactions.loadData();
+           // await this.auditLog.loadData();
+           // await this.notifications.loadData();
+           // await this.settings.loadData();
 
             // Render all tabs
-            this.loadTabs();
+           // this.loadTabs();
 
             // Update dashboard stats
-            await this.updateDashboardStats();
-        } catch (error) {
-            console.error('Error loading main admin data:', error);
-            notify('error', 'Error loading dashboard data');
-        }
-    }
+         //   await this.updateDashboardStats();
+     // //  } catch (error) {
+        //    console.error('Error loading main admin data:', error);
+          //  notify('error', 'Error loading dashboard data');
+      //  }
+   // }
+ // Inside MainAdmin/MainAdminDashboard.js
 
+async loadData() {
+    try {
+        // 1. Fetch main dashboard stats
+        // 2. Trigger child components to load and render themselves
+        if (this.adminsComponent) {
+            await this.adminsComponent.loadData();
+        }
+        if (this.customersComponent) {
+            await this.customersComponent.loadData();
+        }
+        // ... repeat for other components
+        notify('info', '✅ Data loaded successfully');
+    } catch (error) {
+        console.error('Error in MainAdminDashboard loadData:', error);
+    }
+}
     loadTabs() {
         document.getElementById('main-admins').innerHTML = this.admins.render();
         document.getElementById('main-customers').innerHTML = this.customers.render();
