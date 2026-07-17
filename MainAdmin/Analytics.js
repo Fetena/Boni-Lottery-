@@ -1,7 +1,7 @@
 // MAIN ADMIN - ANALYTICS
 // ============================================
 
-class MainAdminAnalytics {
+class Analytics {
     render() {
         return `
             <div class="space-y-4">
