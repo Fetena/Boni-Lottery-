@@ -173,4 +173,5 @@ class MainAdminDashboard {
 }
 
 // Store global reference
-let mainAdminDashboard = null;
+//let mainAdminDashboard = null;
+window.mainAdminDashboard = new MainAdminDashboard();
