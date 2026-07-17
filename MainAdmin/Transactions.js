@@ -1,7 +1,7 @@
 // MAIN ADMIN - TRANSACTIONS
 // ============================================
 
-class MainAdminTransactions {
+class Transactions {
     constructor() {
         this.transactions = [];
     }
