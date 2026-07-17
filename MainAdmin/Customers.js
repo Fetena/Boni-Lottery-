@@ -30,10 +30,16 @@ class Customers {
   //  }
     // Inside MainAdmin/Customers.js
 async loadData() {
-    // ... after you fetch your customer data ...
-    const listContainer = document.getElementById('customers-list'); // Ensure this ID matches your render() HTML
-    if (listContainer) {
-        listContainer.innerHTML = this.renderCustomersList(); // Or your equivalent render function
+    try {
+        const snapshot = await db.collection('customers').get();
+        this.customers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        const listContainer = document.getElementById('customers-list'); 
+        if (listContainer) {
+            listContainer.innerHTML = this.renderCustomersList();
+        }
+    } catch (error) {
+        console.error('Error loading customers:', error);
     }
 }
 
