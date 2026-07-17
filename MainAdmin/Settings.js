@@ -1,7 +1,7 @@
 // MAIN ADMIN - SETTINGS
 // ============================================
 
-class MainAdminSettings {
+class Settings {
     render() {
         return `
             <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
