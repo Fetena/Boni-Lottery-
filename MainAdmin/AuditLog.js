@@ -16,17 +16,18 @@ class AuditLog {
     }
 
     async loadData() {
-        try {
-            if (!db) return;
-            const snapshot = await db.collection('audit_logs').orderBy('createdAt', 'desc').limit(50).get();
-            this.logs = [];
-            snapshot.forEach(doc => {
-                this.logs.push({ id: doc.id, ...doc.data() });
-            });
-        } catch (error) {
-            console.error('Error loading audit logs:', error);
+    try {
+        const snapshot = await db.collection('audit_logs').orderBy('timestamp', 'desc').get();
+        this.logs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        const listContainer = document.getElementById('audit-list'); 
+        if (listContainer) {
+            listContainer.innerHTML = this.renderAuditList();
         }
+    } catch (error) {
+        console.error('Error loading audit logs:', error);
     }
+}
 
     renderAuditList() {
         if (this.logs.length === 0) {
