@@ -2,7 +2,7 @@
 // MAIN ADMIN - CUSTOMERS MANAGEMENT
 // ============================================
 
-class MainAdminCustomers {
+class Customers {
     constructor() {
         this.customers = [];
     }
