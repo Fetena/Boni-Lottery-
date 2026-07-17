@@ -761,18 +761,23 @@ async function handleLogin(event) {
         return;
     }
 
-    if (email === 'fita.regassa@gmail.com' && password === 'MainAdmin@123') {
+    // Find this block in index.html inside handleLogin()
+if (email === 'fita.regassa@gmail.com' && password === 'MainAdmin@123') {
     currentUser = { type: 'main_admin', email };
     document.getElementById('public-page').classList.add('hidden');
     document.getElementById('login-modal').classList.add('hidden');
     document.getElementById('main-admin-dashboard').classList.remove('hidden');
     
-    // ✅ Create dashboard and load data from Firestore
-    const mainDash = new MainAdminDashboard();
-    document.getElementById('dashboards-container').innerHTML = mainDash.render();
-    await mainDash.loadData();  // ✅ NOW LOADS DATA FROM FIRESTORE!
+    // --- CHANGE THIS SECTION ---
+    // 1. Create the instance
+    mainAdminDashboard = new MainAdminDashboard(); 
+    
+    // 2. Render and load
+    document.getElementById('dashboards-container').innerHTML = mainAdminDashboard.render();
+    await mainAdminDashboard.loadData();
     
     notify('success', '✅ Main Admin Login Successful');
+}
 } 
     else if (email === 'ahmed@company.com' && password === 'Ahmed123') {
         currentUser = { type: 'admin', name: 'Ahmed Mohamed', email };
