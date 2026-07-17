@@ -16,18 +16,26 @@ class Customers {
         `;
     }
 
-    async loadData() {
-        try {
-            if (!db) return;
-            const snapshot = await db.collection('customers').get();
-            this.customers = [];
-            snapshot.forEach(doc => {
-                this.customers.push({ id: doc.id, ...doc.data() });
-            });
-        } catch (error) {
-            console.error('Error loading customers:', error);
-        }
+    //async loadData() {
+        //try {
+            //if (!db) return;
+           // const snapshot = await db.collection('customers').get();
+           // this.customers = [];
+           // snapshot.forEach(doc => {
+               // this.customers.push({ id: doc.id, ...doc.data() });
+           // });
+       // } catch (error) {
+           // console.error('Error loading customers:', error);
+      //  }
+  //  }
+    // Inside MainAdmin/Customers.js
+async loadData() {
+    // ... after you fetch your customer data ...
+    const listContainer = document.getElementById('customers-list'); // Ensure this ID matches your render() HTML
+    if (listContainer) {
+        listContainer.innerHTML = this.renderCustomersList(); // Or your equivalent render function
     }
+}
 
     renderCustomersList() {
         if (this.customers.length === 0) {
