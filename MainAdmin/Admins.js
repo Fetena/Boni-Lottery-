@@ -39,20 +39,17 @@ class Admins {
 
 async loadData() {
     try {
-        if (!db) return;
         const snapshot = await db.collection('admins').get();
-        this.admins = [];
-        snapshot.forEach(doc => {
-            this.admins.push({ id: doc.id, ...doc.data() });
-        });
+        this.admins = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-        // ✅ ADD THIS LINE: This forces the list to render after data loads
-        const listContainer = document.getElementById('admins-list');
+        // --- ADD THIS LINE ---
+        // This targets the div where the list should appear
+        const listContainer = document.getElementById('admin-list'); 
         if (listContainer) {
-            listContainer.innerHTML = this.renderAdminsList();
+            listContainer.innerHTML = this.renderAdminsList(); // Or your equivalent render function
         }
     } catch (error) {
-        console.error('Error loading admins:', error);
+        console.error('Error:', error);
     }
 }
 
