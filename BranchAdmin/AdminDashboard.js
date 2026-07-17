@@ -22,11 +22,12 @@ class AdminDashboard {
                         <h2 class="text-3xl font-bold text-white">Admin Control Center</h2>
                         
                         <div class="flex gap-2 border-b border-yellow-400/10 pb-2 overflow-x-auto">
-                            <button onclick="switchTab('admin', 'dashboard')" class="tab-button active px-4 py-2 text-xs font-bold text-yellow-400">📊 Dashboard</button>
-                            <button onclick="switchTab('admin', 'customers')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">👥 Customers</button>
-                            <button onclick="switchTab('admin', 'tickets')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">🎫 Tickets</button>
-                            <button onclick="switchTab('admin', 'payments')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">💳 Payments</button>
-                            <button onclick="switchTab('admin', 'settings')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">⚙️ Settings</button>
+                        
+                            <button onclick="window.AdminDashboard.switchTab('dashboard')" class="tab-button active px-4 py-2 text-xs font-bold text-yellow-400">📊 Dashboard</button>
+                            <button onclick="window.AdminDashboard.switchTab('customers')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">👥 Customers</button>
+                            <button onclick="window.AdminDashboard.switchTabb('tickets')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">🎫 Tickets</button>
+                            <button onclick="window.AdminDashboard.switchTab('payments')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">💳 Payments</button>
+                            <button onclick="window.AdminDashboard.switchTab('settings')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">⚙️ Settings</button>
                         </div>
 
                         <!-- Dashboard Tab -->
