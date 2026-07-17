@@ -1,7 +1,7 @@
 // MAIN ADMIN - RANGES MANAGEMENT
 // ============================================
 
-class MainAdminRanges {
+class Ranges {
     constructor() {
         this.ranges = [];
     }
