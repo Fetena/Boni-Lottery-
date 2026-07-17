@@ -44,7 +44,7 @@ async loadData() {
 
         // --- ADD THIS LINE ---
         // This targets the div where the list should appear
-        const listContainer = document.getElementById('admin-list'); 
+        const listContainer = document.getElementById('admins-list'); 
         if (listContainer) {
             listContainer.innerHTML = this.renderAdminsList(); // Or your equivalent render function
         }
