@@ -98,7 +98,7 @@ async loadData() {
             this.notifications.loadData(),
             this.settings.loadData()
         ]);
-        
+        this.loadTabs();
         // 2. Update the total stats on the main dashboard tab
         await this.updateDashboardStats();
         
