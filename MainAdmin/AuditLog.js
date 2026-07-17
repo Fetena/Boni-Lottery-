@@ -1,7 +1,7 @@
 // MAIN ADMIN - AUDIT LOG
 // ============================================
 
-class MainAdminAuditLog {
+class AuditLog {
     constructor() {
         this.logs = [];
     }
