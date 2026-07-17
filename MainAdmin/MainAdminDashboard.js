@@ -6,15 +6,15 @@
 class MainAdminDashboard {
     constructor() {
         // Initialize ALL child components
-        this.admins = new MainAdminAdmins();
-        this.customers = new MainAdminCustomers();
-        this.ranges = new MainAdminRanges();
-        this.payments = new MainAdminPayments();
-        this.analytics = new MainAdminAnalytics();
-        this.transactions = new MainAdminTransactions();
-        this.auditLog = new MainAdminAuditLog();
-        this.notifications = new MainAdminNotifications();
-        this.settings = new MainAdminSettings();
+        this.admins = new Admins();
+        this.customers = new Customers();
+        this.ranges = new Ranges();
+        this.payments = new Payments();
+        this.analytics = new Analytics();
+        this.transactions = new Transactions();
+        this.auditLog = new AuditLog();
+        this.notifications = new Notifications();
+        this.settings = new Settings();
     }
 
     render() {
