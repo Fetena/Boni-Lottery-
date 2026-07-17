@@ -35,18 +35,26 @@ class Admins {
         `;
     }
 
-    async loadData() {
-        try {
-            if (!db) return;
-            const snapshot = await db.collection('admins').get();
-            this.admins = [];
-            snapshot.forEach(doc => {
-                this.admins.push({ id: doc.id, ...doc.data() });
-            });
-        } catch (error) {
-            console.error('Error loading admins:', error);
+    // Inside MainAdmin/Admins.js
+
+async loadData() {
+    try {
+        if (!db) return;
+        const snapshot = await db.collection('admins').get();
+        this.admins = [];
+        snapshot.forEach(doc => {
+            this.admins.push({ id: doc.id, ...doc.data() });
+        });
+
+        // ✅ ADD THIS LINE: This forces the list to render after data loads
+        const listContainer = document.getElementById('admins-list');
+        if (listContainer) {
+            listContainer.innerHTML = this.renderAdminsList();
         }
+    } catch (error) {
+        console.error('Error loading admins:', error);
     }
+}
 
     showCreateModal() {
         document.getElementById('create-admin-modal').style.display = 'flex';
