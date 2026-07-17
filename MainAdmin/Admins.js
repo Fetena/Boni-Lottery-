@@ -1,115 +1,136 @@
 // ============================================
-// MAIN ADMIN ADMINS (CHILD COMPONENT)
-// Parent: MainAdminDashboard
-// CRUD for branch admins
+// MAIN ADMIN - ADMINS MANAGEMENT
 // ============================================
 
 class MainAdminAdmins {
     constructor() {
-        this.admins = db.getAdmins() || {};
+        this.admins = [];
     }
 
     render() {
         return `
             <div class="space-y-4">
-                <h3 class="text-2xl font-bold text-white">🛡️ Manage Branch Admins</h3>
-
-                <!-- ADD NEW ADMIN -->
-                <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
-                    <h4 class="font-bold text-white mb-4">Add Branch Admin</h4>
-                    <div class="grid grid-cols-2 gap-4">
-                        <input type="text" id="new-admin-name" placeholder="Full Name"
-                            class="bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
-                        <input type="email" id="new-admin-email" placeholder="Email"
-                            class="bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
-                        <input type="password" id="new-admin-pass" placeholder="Password"
-                            class="bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
-                        <select id="new-admin-status" class="bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
-                            <option value="Active">Active</option>
-                            <option value="Inactive">Inactive</option>
-                        </select>
-                    </div>
-                    <button onclick="mainAdminAdmins.addAdmin()" 
-                        class="w-full py-2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">➕ Add Admin</button>
+                <div class="flex justify-between items-center">
+                    <h3 class="text-2xl font-bold text-white">🛡️ Manage Admins</h3>
+                    <button onclick="mainAdminDashboard.admins.showCreateModal()" class="px-4 py-2 bg-yellow-400 text-black font-bold rounded-xl">+ Create Admin</button>
                 </div>
+                <div id="admins-list" class="space-y-3"></div>
+            </div>
 
-                <!-- ADMINS LIST -->
-                <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                    <h4 class="font-bold text-white mb-4">Total Admins: ${Object.keys(this.admins).length}</h4>
-                    <div class="space-y-2 max-h-96 overflow-y-auto">
-                        ${Object.values(this.admins).map(admin => `
-                            <div class="bg-black/30 rounded-lg p-4 border border-yellow-400/10">
-                                <div class="flex justify-between items-start">
-                                    <div>
-                                        <p class="font-bold text-white">${admin.name}</p>
-                                        <p class="text-sm text-slate-300">${admin.email}</p>
-                                        <p class="text-xs text-slate-400 mt-1">👥 ${admin.customers || 0} customers | 💰 ${admin.revenue || 0} ETB</p>
-                                        <p class="text-xs ${admin.isActive ? 'text-emerald-400' : 'text-red-400'} mt-1">${admin.isActive ? '✅ Active' : '❌ Inactive'}</p>
-                                    </div>
-                                    <div class="flex gap-2">
-                                        <button onclick="mainAdminAdmins.editAdmin('${admin.id}')" class="px-3 py-1 bg-blue-950/30 text-blue-400 text-xs rounded">Edit</button>
-                                        <button onclick="mainAdminAdmins.toggleAdmin('${admin.id}')" class="px-3 py-1 bg-yellow-950/30 text-yellow-400 text-xs rounded">${admin.isActive ? 'Disable' : 'Enable'}</button>
-                                        <button onclick="mainAdminAdmins.deleteAdmin('${admin.id}')" class="px-3 py-1 bg-red-950/30 text-red-400 text-xs rounded">Delete</button>
-                                    </div>
-                                </div>
-                            </div>
-                        `).join('')}
+            <!-- Create Admin Modal -->
+            <div id="create-admin-modal" class="modal" style="display: none;">
+                <div class="modal-overlay"></div>
+                <div class="modal-content p-6 m-auto">
+                    <h3 class="text-xl font-bold text-white mb-4">Create New Admin</h3>
+                    <div class="space-y-3">
+                        <input type="text" id="admin-name-input" placeholder="Full Name" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white">
+                        <input type="email" id="admin-email-input" placeholder="Email" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white">
+                        <input type="password" id="admin-password-input" placeholder="Password" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white">
+                        <input type="tel" id="admin-phone-input" placeholder="Phone" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white">
+                        <button onclick="mainAdminDashboard.admins.createAdmin()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl">Create</button>
+                        <button onclick="mainAdminDashboard.admins.closeCreateModal()" class="w-full py-2 bg-slate-700 text-white rounded-xl">Cancel</button>
                     </div>
                 </div>
             </div>
         `;
     }
 
-    addAdmin() {
-        const name = document.getElementById('new-admin-name')?.value;
-        const email = document.getElementById('new-admin-email')?.value;
-        const password = document.getElementById('new-admin-pass')?.value;
-        const status = document.getElementById('new-admin-status')?.value;
+    async loadData() {
+        try {
+            if (!db) return;
+            const snapshot = await db.collection('admins').get();
+            this.admins = [];
+            snapshot.forEach(doc => {
+                this.admins.push({ id: doc.id, ...doc.data() });
+            });
+        } catch (error) {
+            console.error('Error loading admins:', error);
+        }
+    }
 
-        if (!name || !email || !password) {
-            showNotification('error', '❌ Fill all fields');
+    showCreateModal() {
+        document.getElementById('create-admin-modal').style.display = 'flex';
+    }
+
+    closeCreateModal() {
+        document.getElementById('create-admin-modal').style.display = 'none';
+    }
+
+    async createAdmin() {
+        const name = document.getElementById('admin-name-input').value;
+        const email = document.getElementById('admin-email-input').value;
+        const password = document.getElementById('admin-password-input').value;
+        const phone = document.getElementById('admin-phone-input').value;
+
+        if (!name || !email || !password || !phone) {
+            notify('error', '❌ Fill all fields');
             return;
         }
 
-        const newAdmin = {
-            id: 'admin' + Date.now(),
-            name, email, password, status,
-            customers: 0,
-            revenue: 0,
-            isActive: status === 'Active'
-        };
+        try {
+            await db.collection('admins').add({
+                name: name,
+                email: email,
+                password: password,
+                phone: phone,
+                ticketRange: { start: 1, end: 100 },
+                customers: 0,
+                revenue: 0,
+                createdAt: new Date()
+            });
 
-        const admins = db.getAdmins() || {};
-        admins[newAdmin.id] = newAdmin;
-        localStorage.setItem('admins', JSON.stringify(admins));
+            notify('success', `✅ Admin ${name} created!`);
+            this.closeCreateModal();
+            document.getElementById('admin-name-input').value = '';
+            document.getElementById('admin-email-input').value = '';
+            document.getElementById('admin-password-input').value = '';
+            document.getElementById('admin-phone-input').value = '';
 
-        showNotification('success', `✅ Admin ${name} added!`);
-        document.getElementById('new-admin-name').value = '';
-        document.getElementById('new-admin-email').value = '';
-        document.getElementById('new-admin-pass').value = '';
-    }
-
-    editAdmin(adminId) {
-        showNotification('info', 'Edit feature coming soon');
-    }
-
-    toggleAdmin(adminId) {
-        const admins = db.getAdmins();
-        if (admins[adminId]) {
-            admins[adminId].isActive = !admins[adminId].isActive;
-            localStorage.setItem('admins', JSON.stringify(admins));
-            showNotification('success', '✅ Admin status updated');
+            await this.loadData();
+            document.getElementById('admins-list').innerHTML = this.renderAdminsList();
+        } catch (error) {
+            notify('error', `❌ Error: ${error.message}`);
         }
     }
 
-    deleteAdmin(adminId) {
-        if (confirm('Delete this admin?')) {
-            const admins = db.getAdmins();
-            delete admins[adminId];
-            localStorage.setItem('admins', JSON.stringify(admins));
-            showNotification('success', '✅ Admin deleted');
+    renderAdminsList() {
+        if (this.admins.length === 0) {
+            return '<p class="text-slate-400 text-center py-6">No admins yet</p>';
+        }
+
+        return this.admins.map(admin => `
+            <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="font-bold text-white">${admin.name}</p>
+                        <p class="text-xs text-slate-400">${admin.email} • ${admin.phone}</p>
+                        <p class="text-xs text-slate-400">Range: ${admin.ticketRange?.start || 1} - ${admin.ticketRange?.end || 100}</p>
+                        <p class="text-xs text-slate-400">Customers: ${admin.customers || 0} • Revenue: ${admin.revenue || 0} ETB</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="mainAdminDashboard.admins.editAdmin('${admin.id}')" class="px-3 py-1 bg-yellow-400/20 text-yellow-400 text-xs rounded">Edit</button>
+                        <button onclick="mainAdminDashboard.admins.deleteAdmin('${admin.id}')" class="px-3 py-1 bg-red-400/20 text-red-400 text-xs rounded">Delete</button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    async editAdmin(adminId) {
+        // Placeholder for edit functionality
+        notify('info', 'Edit functionality coming soon');
+    }
+
+    async deleteAdmin(adminId) {
+        if (!confirm('Delete this admin?')) return;
+
+        try {
+            await db.collection('admins').doc(adminId).delete();
+            notify('success', '✅ Admin deleted');
+            await this.loadData();
+            document.getElementById('admins-list').innerHTML = this.renderAdminsList();
+        } catch (error) {
+            notify('error', `❌ Error: ${error.message}`);
         }
     }
 }
-
-let mainAdminAdmins;
