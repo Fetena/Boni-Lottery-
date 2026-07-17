@@ -82,10 +82,11 @@ class MainAdminDashboard {
         `;
     }
 
-    async loadData() {
+    // Inside MainAdmin/MainAdminDashboard.js
+
+async loadData() {
     try {
-        // 1. Load data for all child components
-        // Use the names defined in your constructor (this.admins, this.customers, etc.)
+        // 1. Run loadData for all child components
         await Promise.all([
             this.admins.loadData(),
             this.customers.loadData(),
@@ -97,13 +98,10 @@ class MainAdminDashboard {
             this.notifications.loadData(),
             this.settings.loadData()
         ]);
-
-        // 2. Render all tabs once data is loaded
-        this.loadTabs();
-
-        // 3. Update dashboard stats
+        
+        // 2. Update the total stats on the main dashboard tab
         await this.updateDashboardStats();
-
+        
         notify('info', '✅ All dashboard data loaded');
     } catch (error) {
         console.error('Error in MainAdminDashboard loadData:', error);
