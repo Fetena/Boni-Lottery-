@@ -16,17 +16,18 @@ class Transactions {
     }
 
     async loadData() {
-        try {
-            if (!db) return;
-            const snapshot = await db.collection('transactions').orderBy('createdAt', 'desc').limit(20).get();
-            this.transactions = [];
-            snapshot.forEach(doc => {
-                this.transactions.push({ id: doc.id, ...doc.data() });
-            });
-        } catch (error) {
-            console.error('Error loading transactions:', error);
+    try {
+        const snapshot = await db.collection('transactions').orderBy('createdAt', 'desc').get();
+        this.transactions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        const listContainer = document.getElementById('transactions-list'); 
+        if (listContainer) {
+            listContainer.innerHTML = this.renderTransactionsList();
         }
+    } catch (error) {
+        console.error('Error loading transactions:', error);
     }
+}
 
     renderTransactionsList() {
         if (this.transactions.length === 0) {
