@@ -99,17 +99,12 @@ class MainAdminDashboard {
                 this.settings.loadData()
             ]);
             
-            console.log('✅ All component data loaded');
-            this.loadTabs();
-            
-            // 2. Update the total stats on the main dashboard tab
-            await this.updateDashboardStats();
-            
-            notify('info', '✅ All dashboard data loaded');
-            console.log('✅ Dashboard fully initialized');
-        } catch (error) {
-            console.error('Error in MainAdminDashboard loadData:', error);
-            notify('error', '❌ Error loading dashboard data');
+            document.getElementById('admin-list').innerHTML = this.admins.renderAdminsList();
+        document.getElementById('customers-list').innerHTML = this.customers.renderCustomersList();
+
+        notify('info', '✅ Data loaded successfully');
+    } catch (error) {
+        console.error('Error loading data:', error);;
         }
     }
 
