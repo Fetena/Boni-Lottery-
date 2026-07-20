@@ -122,10 +122,10 @@
 <body class="antialiased">
 
     <!-- NOTIFICATION CONTAINER -->
-<!--    <div id="notification-container"></div>
+   <div id="notification-container"></div>
 
     <!-- PUBLIC PAGE -->
- <!--   <div id="public-page" class="min-h-screen bg-black flex flex-col">
+   <div id="public-page" class="min-h-screen bg-black flex flex-col">
         <header class="sticky top-0 z-40 w-full glass-panel border-b border-yellow-400/10 px-6 py-4">
             <div class="max-w-7xl mx-auto flex items-center justify-between">
                 <div class="flex items-center space-x-3">
@@ -147,8 +147,8 @@
     </div>
 
     <!-- LOGIN MODAL -->
-    <div id="dashboards-container"></div>
-  <!--  <div id="login-modal" class="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4 hidden">
+  
+    <div id="login-modal" class="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4 hidden">
         <div class="glass-panel rounded-3xl p-8 max-w-md w-full border border-yellow-400/20 space-y-6">
             <div class="text-center">
                 <h2 class="text-2xl font-bold text-white">Login</h2>
@@ -172,7 +172,7 @@
     </div>
 <div id="dashboards-container"></div>
     <!-- CUSTOMER DASHBOARD -->
-<!--    <div id="customer-dashboard" class="hidden min-h-screen bg-black flex flex-col">
+    <div id="customer-dashboard" class="hidden min-h-screen bg-black flex flex-col">
         <header class="sticky top-0 z-40 w-full glass-panel border-b border-yellow-400/10 px-6 py-4">
             <div class="max-w-7xl mx-auto flex items-center justify-between">
                 <h1 class="font-bold text-xl text-gradient">👤 Customer Dashboard</h1>
@@ -184,7 +184,7 @@
                 <h2 class="text-3xl font-bold text-white">Welcome, <span id="cust-name">Customer</span>! 👋</h2>
                 
                 <!-- TABS -->
-         <!--       <div class="flex gap-2 border-b border-yellow-400/10 pb-2 overflow-x-auto">
+                <div class="flex gap-2 border-b border-yellow-400/10 pb-2 overflow-x-auto">
                     <button onclick="switchTab('cust', 'profile')" class="tab-button active px-4 py-2 text-xs font-bold text-yellow-400">Profile</button>
                     <button onclick="switchTab('cust', 'library')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📖 Library</button>
                     <button onclick="switchTab('cust', 'buytickets')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🎫 Buy</button>
@@ -196,7 +196,7 @@
                 </div>
 
                 <!-- PROFILE TAB -->
-            <!--    <div id="cust-profile" class="tab-content active space-y-6">
+                <div id="cust-profile" class="tab-content active space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                         <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
                             <p class="text-xs text-slate-400">Admin</p>
@@ -217,7 +217,7 @@
                     </div>
                     
                     <!-- DRAWING STATUS WITH TIKTOK -->
-                <!--    <div class="glass-panel rounded-2xl p-8 border border-yellow-400/10 text-center space-y-4">
+                    <div class="glass-panel rounded-2xl p-8 border border-yellow-400/10 text-center space-y-4">
                         <h4 class="text-2xl font-bold text-white">Next Drawing</h4>
                         <p class="text-yellow-400 font-bold text-xl">Sunday, 8:00 PM</p>
                         <p id="draw-status" class="text-slate-300">Coming soon...</p>
@@ -228,7 +228,7 @@
                 </div>
 
                 <!-- BUY TICKETS TAB -->
-          <!--      <div id="cust-buytickets" class="tab-content space-y-4">
+                <div id="cust-buytickets" class="tab-content space-y-4">
                     <h3 class="text-2xl font-bold text-white">🎫 Buy Lottery Ticket</h3>
                     <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
                         <div class="grid grid-cols-10 gap-2 max-h-64 overflow-y-auto p-4 bg-black/30 rounded-xl">
@@ -247,7 +247,7 @@
                 </div>
 
                 <!-- MY TICKETS TAB -->
-          <!--      <div id="cust-mytickets" class="tab-content space-y-4">
+                <div id="cust-mytickets" class="tab-content space-y-4">
                     <h3 class="text-2xl font-bold text-white">My Tickets</h3>
                     <div id="cust-tickets-list" class="space-y-3">
                         <div class="glass-panel rounded-lg p-4 border border-yellow-400/10 text-slate-400 text-center py-6">No tickets yet</div>
@@ -255,7 +255,7 @@
                 </div>
 
                 <!-- DRAWINGS TAB -->
-           <!--     <div id="cust-drawings" class="tab-content space-y-4">
+                <div id="cust-drawings" class="tab-content space-y-4">
                     <h3 class="text-2xl font-bold text-white">🎰 Lottery Drawings</h3>
                     <div class="glass-panel rounded-2xl p-8 border border-yellow-400/10 text-center space-y-4">
                         <div class="text-6xl">👑</div>
@@ -266,10 +266,10 @@
                 </div>
 
                 <!-- LIBRARY TAB -->
-            <!--    <div id="cust-library" class="tab-content space-y-4"></div>
+                <div id="cust-library" class="tab-content space-y-4"></div>
 
                 <!-- APPOINTMENTS TAB -->
-          <!--      <div id="cust-appointments" class="tab-content space-y-4">
+                <div id="cust-appointments" class="tab-content space-y-4">
                     <h3 class="text-2xl font-bold text-white">📅 Book Appointment</h3>
                     <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-3">
                         <input type="date" id="cust-appt-date" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
@@ -285,12 +285,12 @@
                 </div>
 
                 <!-- NOTIFICATIONS TAB -->
-             <!--   <div id="cust-notifications" class="tab-content space-y-4">
+                <div id="cust-notifications" class="tab-content space-y-4">
                     <h3 class="text-2xl font-bold text-white">🔔 Notifications</h3>
                 </div>
 
                 <!-- SETTINGS TAB -->
-           <!--     <div id="cust-settings" class="tab-content space-y-4">
+                <div id="cust-settings" class="tab-content space-y-4">
                     <h3 class="text-2xl font-bold text-white">⚙️ Settings</h3>
                     <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-3">
                         <div>
@@ -305,7 +305,7 @@
     </div> 
 
     <!-- ADMIN DASHBOARD -->
- <!--   <div id="admin-dashboard" class="hidden min-h-screen bg-black flex flex-col">
+    <div id="admin-dashboard" class="hidden min-h-screen bg-black flex flex-col">
         <header class="sticky top-0 z-40 w-full glass-panel border-b border-yellow-400/10 px-6 py-4">
             <div class="max-w-7xl mx-auto flex items-center justify-between">
                 <h1 class="font-bold text-xl text-gradient">🛡️ ADMIN CONTROL</h1>
@@ -329,7 +329,7 @@
                 </div>
 
                 <!-- DASHBOARD TAB -->
-             <!--   <div id="admin-dashboard-tab" class="tab-content active space-y-6">
+                <div id="admin-dashboard-tab" class="tab-content active space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                         <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
                             <p class="text-xs text-slate-400">My Range</p>
@@ -360,7 +360,7 @@
                 </div>
 
                 <!-- CUSTOMERS TAB -->
-             <!--   <div id="admin-customers" class="tab-content space-y-4">
+                <div id="admin-customers" class="tab-content space-y-4">
                     <div class="flex justify-between items-center">
                         <h3 class="text-2xl font-bold text-white">👥 My Customers</h3>
                         <button onclick="openCustomerModal()" class="px-4 py-2 bg-yellow-400 text-black font-bold rounded-xl text-xs">+ Add Customer</button>
@@ -378,7 +378,7 @@
                 </div>
 
                 <!-- PAYMENTS TAB -->
-              <!--  <div id="admin-payments" class="tab-content space-y-4">
+                <div id="admin-payments" class="tab-content space-y-4">
                     <h3 class="text-2xl font-bold text-white">💳 Payments</h3>
                     <div class="space-y-2">
                         <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
@@ -394,7 +394,7 @@
                 </div>
 
                 <!-- DRAWS TAB -->
-             <!--   <div id="admin-draws" class="tab-content space-y-4">
+                <div id="admin-draws" class="tab-content space-y-4">
                     <h3 class="text-2xl font-bold text-white">🎰 Draw Management</h3>
                     <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
                         <div>
@@ -414,7 +414,7 @@
                 </div>
 
                 <!-- SETTINGS TAB -->
-            <!--    <div id="admin-settings" class="tab-content space-y-4">
+                <div id="admin-settings" class="tab-content space-y-4">
                     <h3 class="text-2xl font-bold text-white">⚙️ Payment Settings</h3>
                     <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
                         <div>
@@ -430,7 +430,7 @@
                 </div>
 
                 <!-- APPOINTMENTS TAB -->
-             <!--   <div id="admin-appointments" class="tab-content space-y-4">
+                <div id="admin-appointments" class="tab-content space-y-4">
                     <h3 class="text-2xl font-bold text-white">📅 Book Appointment with Main Admin</h3>
                     <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
                         <div>
@@ -461,17 +461,17 @@
                 </div>
 
                 <!-- REVENUE TAB -->
-              <!--  <div id="admin-revenue" class="tab-content space-y-4">
+                <div id="admin-revenue" class="tab-content space-y-4">
                     <h3 class="text-2xl font-bold text-white">💹 Revenue</h3>
                 </div>
 
                 <!-- ACTIVITY LOG TAB -->
-              <!--  <div id="admin-logs" class="tab-content space-y-4">
+                <div id="admin-logs" class="tab-content space-y-4">
                     <h3 class="text-2xl font-bold text-white">📋 Activity Log</h3>
                 </div>
 
                 <!-- NOTIFICATIONS TAB -->
-             <!--   <div id="admin-notifications" class="tab-content space-y-4">
+                <div id="admin-notifications" class="tab-content space-y-4">
                     <h3 class="text-2xl font-bold text-white">🔔 Send Notifications</h3>
                 </div>
             </div>
@@ -479,7 +479,7 @@
     </div>
 
     <!-- MAIN ADMIN DASHBOARD -->
-   <!-- <div id="main-admin-dashboard" class="hidden min-h-screen bg-black flex flex-col">
+    <div id="main-admin-dashboard" class="hidden min-h-screen bg-black flex flex-col">
         <header class="sticky top-0 z-40 w-full glass-panel border-b border-yellow-400/10 px-6 py-4">
             <div class="max-w-7xl mx-auto flex items-center justify-between">
                 <h1 class="font-bold text-xl text-gradient">👑 MAIN ADMIN</h1>
@@ -504,7 +504,7 @@
                 </div>
 
                 <!-- DASHBOARD TAB -->
-          <!--      <div id="main-dashboard" class="tab-content active space-y-6">
+                <div id="main-dashboard" class="tab-content active space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                         <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
                             <p class="text-xs text-slate-400">Total Admins</p>
@@ -526,7 +526,7 @@
                 </div>
 
                 <!-- ADMINS TAB -->
-          <!--      <div id="main-admins" class="tab-content space-y-4">
+                <div id="main-admins" class="tab-content space-y-4">
                     <div class="flex justify-between items-center">
                         <h3 class="text-2xl font-bold text-white">👨‍💼 Manage Admins</h3>
                         <button onclick="openCreateAdminModal()" class="px-4 py-2 bg-yellow-400 text-black font-bold rounded-xl text-xs">+ Create</button>
@@ -546,7 +546,7 @@
                 </div>
 
                 <!-- RANGES TAB -->
-          <!--      <div id="main-ranges" class="tab-content space-y-4">
+                <div id="main-ranges" class="tab-content space-y-4">
                     <h3 class="text-2xl font-bold text-white">📍 Ticket Ranges</h3>
                     <div id="ranges-list" class="space-y-2">
                         <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
@@ -559,7 +559,7 @@
                 </div>
 
                 <!-- PAYMENTS TAB -->
-          <!--      <div id="main-payments" class="tab-content space-y-4">
+                <div id="main-payments" class="tab-content space-y-4">
                     <h3 class="text-2xl font-bold text-white">💳 Payment Accounts</h3>
                     <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
                         <div>
@@ -575,7 +575,7 @@
                 </div>
 
                 <!-- TRANSACTIONS TAB -->
-          <!--      <div id="main-transactions" class="tab-content space-y-4">
+                <div id="main-transactions" class="tab-content space-y-4">
                     <h3 class="text-2xl font-bold text-white">📋 Transaction History (View Only)</h3>
                     <div class="space-y-2 text-sm">
                         <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
@@ -588,7 +588,7 @@
                 </div>
 
                 <!-- SETTINGS TAB -->
-          <!--      <div id="main-settings" class="tab-content space-y-4">
+                <div id="main-settings" class="tab-content space-y-4">
                     <h3 class="text-2xl font-bold text-white">⚙️ System Configuration</h3>
                     <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
                         <div>
@@ -604,7 +604,7 @@
                 </div>
 
                 <!-- NOTIFICATIONS TAB -->
-           <!--     <div id="main-notifications" class="tab-content space-y-4">
+                <div id="main-notifications" class="tab-content space-y-4">
                     <h3 class="text-2xl font-bold text-white">🔔 Send Notifications</h3>
                     <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
                         <div>
@@ -630,22 +630,22 @@
                 </div>
 
                 <!-- CUSTOMERS TAB -->
-         <!--       <div id="main-customers" class="tab-content space-y-4">
+                <div id="main-customers" class="tab-content space-y-4">
                     <h3 class="text-2xl font-bold text-white">👥 All Customers</h3>
                 </div>
 
                 <!-- ANALYTICS TAB -->
-         <!--       <div id="main-analytics" class="tab-content space-y-4">
+                <div id="main-analytics" class="tab-content space-y-4">
                     <h3 class="text-2xl font-bold text-white">📈 Analytics</h3>
                 </div>
 
                 <!-- AUDIT LOG TAB -->
-           <!--     <div id="main-audit" class="tab-content space-y-4">
+                <div id="main-audit" class="tab-content space-y-4">
                     <h3 class="text-2xl font-bold text-white">🔐 Audit Log</h3>
                 </div>
 
                 <!-- TRANSACTIONS TAB -->
-           <!--     <div id="main-transactions" class="tab-content space-y-4">
+                <div id="main-transactions" class="tab-content space-y-4">
                     <h3 class="text-2xl font-bold text-white">📋 Transactions</h3>
                 </div>
             </div>
