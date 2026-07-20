@@ -1,22 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Boni Lottery - Enhanced System</title>
+    <title>BONI Lottery System</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js"></script>
+</head>
+<body class="bg-black text-white">
 
-    <!-- ✅ FIREBASE SCRIPTS - REGULAR CDN (NO MODULE) -->
-    <!-- ✅ CORRECT - Firebase v9 Compat (works with regular scripts) -->
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-analytics-compat.js"></script>
+<!-- ============================================
+     GLOBAL NOTIFICATION SYSTEM
+     ============================================ -->
+<div id="notification" class="fixed top-4 right-4 px-6 py-3 rounded-xl glass-panel hidden z-50 animate-pulse"></div>
 
-    <!-- ✅ INITIALIZE FIREBASE - GLOBALLY ACCESSIBLE -->
-    <script>
-    // Firebase configuration
+<!-- ============================================
+     ALL DASHBOARDS - RENDERED BY JAVASCRIPT
+     ============================================ -->
+
+<!-- Main Admin Dashboard Container -->
+<div id="main-admin-container"></div>
+
+<!-- Branch Admin Dashboard Container -->
+<div id="admin-container"></div>
+
+<!-- Customer Dashboard Container -->
+<div id="customer-container"></div>
+
+<!-- Public Page Container -->
+<div id="public-page-container"></div>
+
+<!-- ============================================
+     GLOBAL SCRIPTS - LOAD IN ORDER
+     ============================================ -->
+
+<!-- Firebase Config & Init -->
+<script>
+    let db, currentUser;
+    
     const firebaseConfig = {
         apiKey: "AIzaSyBW0egtlG4JXjkoWB2Lfu5GcYhZz_oEjbI",
         authDomain: "boni-lottery-8d0e6.firebaseapp.com",
@@ -27,1487 +50,197 @@
         measurementId: "G-6MG08FXC7V"
     };
 
-    // Initialize Firebase (Compat version)
     firebase.initializeApp(firebaseConfig);
-    
-    // ✅ FIRESTORE - Using compat
-    window.db = firebase.firestore();
+    db = firebase.firestore();
     
     console.log('✅ Firebase initialized');
-    console.log('✅ Firestore initialized');
 </script>
-    <style>
-        * { box-sizing: border-box; }
-        body { background: #020c1b; color: #e2e8f0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .glass-panel {
-            background: rgba(15, 39, 61, 0.45);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(200, 184, 123, 0.08);
-        }
-        .text-gradient {
-            background: linear-gradient(135deg, #FFF 30%, #C8B87B 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        .tab-button.active {
-            border-bottom: 2px solid #FCD34D;
-            color: #FCD34D;
-        }
-        .tab-button { border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.3s; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        
-        /* NOTIFICATION POP-UP STYLES */
-        .notification-toast {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            min-width: 300px;
-            padding: 16px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            z-index: 10000;
-            animation: slideIn 0.3s ease;
-        }
-        .notification-toast.success { background: #10b981; color: white; }
-        .notification-toast.error { background: #ef4444; color: white; }
-        .notification-toast.info { background: #3b82f6; color: white; }
-        .notification-toast.warning { background: #f59e0b; color: white; }
-        @keyframes slideIn {
-            from { transform: translateX(400px); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        @keyframes slideOut {
-            from { transform: translateX(0); opacity: 1; }
-            to { transform: translateX(400px); opacity: 0; }
-        }
-        .notification-toast.exit { animation: slideOut 0.3s ease; }
 
-        /* MODAL STYLES */
-        .modal { display: none; position: fixed; inset: 0; z-index: 9999; }
-        .modal.active { display: flex; }
-        .modal-overlay { background: rgba(0,0,0,0.8); flex: 1; }
-        .modal-content { background: rgba(15, 39, 61, 0.95); border: 1px solid rgba(200, 184, 123, 0.2); border-radius: 12px; max-width: 500px; max-height: 80vh; overflow-y-auto; }
-    </style>
-    <!-- Load all child components BEFORE the parent dashboard -->
-<script src="MainAdmin/Admins.js"></script>
-<script src="MainAdmin/Customers.js"></script>
-<script src="MainAdmin/Ranges.js"></script>
-<script src="MainAdmin/Payments.js"></script>
-<script src="MainAdmin/Analytics.js"></script>
-<script src="MainAdmin/Transactions.js"></script>
-<script src="MainAdmin/AuditLog.js"></script>
-<script src="MainAdmin/Notifications.js"></script>
-<script src="MainAdmin/Settings.js"></script>
-
-<script src="BranchAdmin/BookAppointment.js"></script>
-<script src="BranchAdmin/Notifications.js"></script>
-<script src="BranchAdmin/Payments.js"></script>
-<script src="BranchAdmin/Settings.js"></script>
-
-<script src="Customer/Appointments.js"></script>
-<script src="Customer/Drawings.js"></script>
-<script src="Customer/Library.js"></script>
-<script src="Customer/NumberGrid.js"></script>
-<script src="Customer/Profile.js"></script>
-<script src="Customer/Settings.js"></script>
-<script src="Customer/Tickets.js"></script>
-
-<!-- Finally, load the parent dashboard -->
-<script src="Customer/CustomerDashboard.js"></script>
-<script src="BranchAdmin/AdminDashboard.js"></script>
-<script src="MainAdmin/MainAdminDashboard.js"></script>
-</head>
-<body class="antialiased">
-
-    <!-- NOTIFICATION CONTAINER -->
-   <div id="notification-container"></div>
-
-    <!-- PUBLIC PAGE -->
-   <div id="public-page" class="min-h-screen bg-black flex flex-col">
-        <header class="sticky top-0 z-40 w-full glass-panel border-b border-yellow-400/10 px-6 py-4">
-            <div class="max-w-7xl mx-auto flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                    <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center text-black font-bold text-lg">🏆</div>
-                    <div><span class="font-bold text-xl text-gradient">BONI</span><span class="text-xs text-yellow-400 font-bold">LOTTERY</span></div>
-                </div>
-                <button onclick="openLoginModal()" class="px-6 py-2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl hover:shadow-lg transition">Login</button>
-            </div>
-        </header>
-        <main class="flex-grow p-6">
-            <div class="max-w-7xl mx-auto">
-                <div class="rounded-3xl glass-panel border border-yellow-400/20 p-12 text-center space-y-6 mb-12">
-                    <h1 class="text-5xl font-bold text-white">Multi-Branch<br><span class="text-yellow-400">Lottery System</span></h1>
-                    <p class="text-slate-300">Complete lottery management platform</p>
-                    <button onclick="openLoginModal()" class="px-8 py-4 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-2xl">Get Started →</button>
-                </div>
-            </div>
-        </main>
-    </div>
-
-    <!-- LOGIN MODAL -->
-  
-    <div id="login-modal" class="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4 hidden">
-        <div class="glass-panel rounded-3xl p-8 max-w-md w-full border border-yellow-400/20 space-y-6">
-            <div class="text-center">
-                <h2 class="text-2xl font-bold text-white">Login</h2>
-                <p class="text-xs text-slate-400 mt-2">Customer • Admin • Main Admin</p>
-            </div>
-            <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4">
-                <input type="email" id="login-email" placeholder="Email" required class="w-full bg-black/40 border border-yellow-400/20 focus:border-yellow-400 rounded-xl py-3 px-4 text-sm text-white outline-none">
-                <input type="password" id="login-password" placeholder="Password" required class="w-full bg-black/40 border border-yellow-400/20 focus:border-yellow-400 rounded-xl py-3 px-4 text-sm text-white outline-none">
-                <button type="submit" class="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">Login</button>
-            </form>
-            <div class="border-t border-yellow-400/20 pt-4">
-                <p class="text-xs text-slate-400 text-center mb-3 font-bold">TEST CREDENTIALS:</p>
-                <div class="space-y-2 text-xs text-slate-300 bg-black/30 p-3 rounded-lg">
-                    <p><strong>Main Admin:</strong><br>fita.regassa@gmail.com / MainAdmin@123</p>
-                    <p><strong>Admin:</strong><br>ahmed@company.com / Ahmed123</p>
-                    <p><strong>Customer:</strong><br>m@email.com / Pass123</p>
-                </div>
-            </div>
-            <button onclick="closeLoginModal()" class="w-full text-slate-400 font-semibold text-xs">Close</button>
-        </div>
-    </div>
-<div id="dashboards-container"></div>
-    <!-- CUSTOMER DASHBOARD -->
-    <div id="customer-dashboard" class="hidden min-h-screen bg-black flex flex-col">
-        <header class="sticky top-0 z-40 w-full glass-panel border-b border-yellow-400/10 px-6 py-4">
-            <div class="max-w-7xl mx-auto flex items-center justify-between">
-                <h1 class="font-bold text-xl text-gradient">👤 Customer Dashboard</h1>
-                <button onclick="logout()" class="px-4 py-2 bg-red-950/30 text-red-400 text-xs font-bold rounded-xl">Logout</button>
-            </div>
-        </header>
-        <main class="flex-grow p-6 overflow-y-auto">
-            <div class="max-w-7xl mx-auto space-y-6">
-                <h2 class="text-3xl font-bold text-white">Welcome, <span id="cust-name">Customer</span>! 👋</h2>
-                
-                <!-- TABS -->
-                <div class="flex gap-2 border-b border-yellow-400/10 pb-2 overflow-x-auto">
-                    <button onclick="switchTab('cust', 'profile')" class="tab-button active px-4 py-2 text-xs font-bold text-yellow-400">Profile</button>
-                    <button onclick="switchTab('cust', 'library')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📖 Library</button>
-                    <button onclick="switchTab('cust', 'buytickets')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🎫 Buy</button>
-                    <button onclick="switchTab('cust', 'mytickets')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">My Tickets</button>
-                    <button onclick="switchTab('cust', 'appointments')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📅 Book</button>
-                    <button onclick="switchTab('cust', 'drawings')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🎰 Draws</button>
-                    <button onclick="switchTab('cust', 'notifications')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🔔 Alerts</button>
-                    <button onclick="switchTab('cust', 'settings')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">⚙️ Settings</button>
-                </div>
-
-                <!-- PROFILE TAB -->
-                <div id="cust-profile" class="tab-content active space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                        <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                            <p class="text-xs text-slate-400">Admin</p>
-                            <p class="text-xl font-bold text-yellow-400 mt-2">Ahmed Mohamed</p>
-                        </div>
-                        <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                            <p class="text-xs text-slate-400">Range</p>
-                            <p class="text-xl font-bold text-blue-400 mt-2">1 - 300</p>
-                        </div>
-                        <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                            <p class="text-xs text-slate-400">Tickets</p>
-                            <p class="text-xl font-bold text-emerald-400 mt-2" id="cust-ticket-count">0</p>
-                        </div>
-                        <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                            <p class="text-xs text-slate-400">Spent</p>
-                            <p class="text-xl font-bold text-purple-400 mt-2" id="cust-spent">0 ETB</p>
-                        </div>
-                    </div>
-                    
-                    <!-- DRAWING STATUS WITH TIKTOK -->
-                    <div class="glass-panel rounded-2xl p-8 border border-yellow-400/10 text-center space-y-4">
-                        <h4 class="text-2xl font-bold text-white">Next Drawing</h4>
-                        <p class="text-yellow-400 font-bold text-xl">Sunday, 8:00 PM</p>
-                        <p id="draw-status" class="text-slate-300">Coming soon...</p>
-                        <button onclick="openTikTok()" class="px-6 py-2 bg-yellow-400 text-black font-bold rounded-xl inline-block">📱 Watch Live on TikTok</button>
-                    </div>
-
-                    <button onclick="switchTab('cust', 'buytickets')" class="w-full py-4 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-2xl text-lg">🎫 BUY TICKET</button>
-                </div>
-
-                <!-- BUY TICKETS TAB -->
-                <div id="cust-buytickets" class="tab-content space-y-4">
-                    <h3 class="text-2xl font-bold text-white">🎫 Buy Lottery Ticket</h3>
-                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
-                        <div class="grid grid-cols-10 gap-2 max-h-64 overflow-y-auto p-4 bg-black/30 rounded-xl">
-                            <div id="numbers-grid"></div>
-                        </div>
-                        <div class="bg-black/30 p-4 rounded-xl border border-yellow-400/10">
-                            <p class="text-yellow-400 font-bold text-lg">Selected: <span id="selected-count">0</span> × 100 = <span id="ticket-cost">0</span> ETB</p>
-                        </div>
-                        <select id="payment-method" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
-                            <option>Telebirr (0945792677)</option>
-                            <option>CBE Birr (0945792677)</option>
-                        </select>
-                        <input type="text" id="transaction-id" placeholder="Transaction ID" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
-                        <button onclick="submitTicket()" class="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">Submit</button>
-                    </div>
-                </div>
-
-                <!-- MY TICKETS TAB -->
-                <div id="cust-mytickets" class="tab-content space-y-4">
-                    <h3 class="text-2xl font-bold text-white">My Tickets</h3>
-                    <div id="cust-tickets-list" class="space-y-3">
-                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10 text-slate-400 text-center py-6">No tickets yet</div>
-                    </div>
-                </div>
-
-                <!-- DRAWINGS TAB -->
-                <div id="cust-drawings" class="tab-content space-y-4">
-                    <h3 class="text-2xl font-bold text-white">🎰 Lottery Drawings</h3>
-                    <div class="glass-panel rounded-2xl p-8 border border-yellow-400/10 text-center space-y-4">
-                        <div class="text-6xl">👑</div>
-                        <h4 class="text-2xl font-bold text-white">Live Drawing</h4>
-                        <p class="text-slate-300">Watch our live drawing on TikTok every Sunday at 8 PM</p>
-                        <button onclick="openTikTok()" class="px-6 py-2 bg-yellow-400 text-black font-bold rounded-xl inline-block">📱 @BoniLottery Live</button>
-                    </div>
-                </div>
-
-                <!-- LIBRARY TAB -->
-                <div id="cust-library" class="tab-content space-y-4"></div>
-
-                <!-- APPOINTMENTS TAB -->
-                <div id="cust-appointments" class="tab-content space-y-4">
-                    <h3 class="text-2xl font-bold text-white">📅 Book Appointment</h3>
-                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-3">
-                        <input type="date" id="cust-appt-date" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
-                        <select class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
-                            <option>10:00 AM</option>
-                            <option>11:00 AM</option>
-                            <option>2:00 PM</option>
-                            <option>3:00 PM</option>
-                            <option>4:00 PM</option>
-                        </select>
-                        <button onclick="bookAppointment()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl">Book</button>
-                    </div>
-                </div>
-
-                <!-- NOTIFICATIONS TAB -->
-                <div id="cust-notifications" class="tab-content space-y-4">
-                    <h3 class="text-2xl font-bold text-white">🔔 Notifications</h3>
-                </div>
-
-                <!-- SETTINGS TAB -->
-                <div id="cust-settings" class="tab-content space-y-4">
-                    <h3 class="text-2xl font-bold text-white">⚙️ Settings</h3>
-                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-3">
-                        <div>
-                            <label class="text-sm text-slate-400">Phone Number</label>
-                            <input type="text" id="cust-phone" value="0911223344" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
-                        </div>
-                        <button onclick="saveCustomerSettings()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl">Save</button>
-                    </div>
-                </div>
-            </div>
-        </main>
-    </div> 
-
-    <!-- ADMIN DASHBOARD -->
-    <div id="admin-dashboard" class="hidden min-h-screen bg-black flex flex-col">
-        <header class="sticky top-0 z-40 w-full glass-panel border-b border-yellow-400/10 px-6 py-4">
-            <div class="max-w-7xl mx-auto flex items-center justify-between">
-                <h1 class="font-bold text-xl text-gradient">🛡️ ADMIN CONTROL</h1>
-                <button onclick="logout()" class="px-4 py-2 bg-red-950/30 text-red-400 text-xs font-bold rounded-xl">Logout</button>
-            </div>
-        </header>
-        <main class="flex-grow p-6 overflow-y-auto">
-            <div class="max-w-7xl mx-auto space-y-6">
-                <h2 class="text-3xl font-bold text-white" id="admin-name">Admin Dashboard</h2>
-                
-                <div class="flex gap-2 border-b border-yellow-400/10 pb-2 overflow-x-auto">
-                    <button onclick="switchTab('admin', 'dashboard')" class="tab-button active px-4 py-2 text-xs font-bold text-yellow-400">Dashboard</button>
-                    <button onclick="switchTab('admin', 'customers')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">👥 Customers</button>
-                    <button onclick="switchTab('admin', 'payments')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">💳 Payments</button>
-                    <button onclick="switchTab('admin', 'draws')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🎰 Draws</button>
-                    <button onclick="switchTab('admin', 'revenue')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">💹 Revenue</button>
-                    <button onclick="switchTab('admin', 'logs')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📋 Logs</button>
-                    <button onclick="switchTab('admin', 'notifications')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🔔 Notify</button>
-                    <button onclick="switchTab('admin', 'settings')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">⚙️ Settings</button>
-                    <button onclick="switchTab('admin', 'appointments')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📅 Book</button>
-                </div>
-
-                <!-- DASHBOARD TAB -->
-                <div id="admin-dashboard-tab" class="tab-content active space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                        <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                            <p class="text-xs text-slate-400">My Range</p>
-                            <p class="text-3xl font-bold text-yellow-400 mt-2">1-300</p>
-                        </div>
-                        <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                            <p class="text-xs text-slate-400">Customers</p>
-                            <p class="text-3xl font-bold text-blue-400 mt-2" id="admin-cust-count">8</p>
-                        </div>
-                        <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                            <p class="text-xs text-slate-400">Tickets</p>
-                            <p class="text-3xl font-bold text-emerald-400 mt-2" id="admin-ticket-count">25</p>
-                        </div>
-                        <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                            <p class="text-xs text-slate-400">Revenue</p>
-                            <p class="text-3xl font-bold text-purple-400 mt-2" id="admin-revenue">2,500 ETB</p>
-                        </div>
-                    </div>
-
-                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                        <h4 class="font-bold text-white mb-3">Recent Activity</h4>
-                        <div class="space-y-2 text-sm">
-                            <p class="text-slate-300">✅ New customer: Mohammed Ali</p>
-                            <p class="text-slate-300">💳 Payment verified: 500 ETB</p>
-                            <p class="text-slate-300">🎫 New ticket created</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- CUSTOMERS TAB -->
-                <div id="admin-customers" class="tab-content space-y-4">
-                    <div class="flex justify-between items-center">
-                        <h3 class="text-2xl font-bold text-white">👥 My Customers</h3>
-                        <button onclick="openCustomerModal()" class="px-4 py-2 bg-yellow-400 text-black font-bold rounded-xl text-xs">+ Add Customer</button>
-                    </div>
-                    <div id="admin-customers-list" class="space-y-2">
-                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
-                            <p class="font-bold text-white">Mohammed Ali</p>
-                            <p class="text-xs text-slate-400">m@email.com • 0911223344 • 5 tickets</p>
-                            <div class="flex gap-2 mt-2">
-                                <button onclick="editCustomer('Mohammed')" class="text-xs px-2 py-1 bg-yellow-400/20 text-yellow-400 rounded">Edit</button>
-                                <button onclick="deleteCustomer(this)" class="text-xs px-2 py-1 bg-red-400/20 text-red-400 rounded">Delete</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- PAYMENTS TAB -->
-                <div id="admin-payments" class="tab-content space-y-4">
-                    <h3 class="text-2xl font-bold text-white">💳 Payments</h3>
-                    <div class="space-y-2">
-                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
-                            <div class="flex justify-between items-center">
-                                <div><p class="font-bold text-white">Mohammed - 500 ETB</p><p class="text-xs text-slate-400">Telebirr</p></div>
-                                <div class="space-x-2">
-                                    <button onclick="approvePayment(this)" class="px-2 py-1 bg-emerald-600 text-white text-xs rounded">Approve</button>
-                                    <button onclick="rejectPayment(this)" class="px-2 py-1 bg-red-600 text-white text-xs rounded">Reject</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- DRAWS TAB -->
-                <div id="admin-draws" class="tab-content space-y-4">
-                    <h3 class="text-2xl font-bold text-white">🎰 Draw Management</h3>
-                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
-                        <div>
-                            <label class="text-sm text-slate-400">Drawing Date</label>
-                            <input type="date" id="draw-date" value="2026-07-13" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
-                        </div>
-                        <div>
-                            <label class="text-sm text-slate-400">Drawing Time</label>
-                            <input type="time" id="draw-time" value="20:00" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
-                        </div>
-                        <button onclick="generateWinner()" class="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">🎲 Generate Winner Now</button>
-                    </div>
-                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                        <h4 class="font-bold text-white mb-3">Last Draw</h4>
-                        <p class="text-slate-300">July 6, 2026 - Winner: <span class="text-yellow-400 font-bold">742</span></p>
-                    </div>
-                </div>
-
-                <!-- SETTINGS TAB -->
-                <div id="admin-settings" class="tab-content space-y-4">
-                    <h3 class="text-2xl font-bold text-white">⚙️ Payment Settings</h3>
-                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
-                        <div>
-                            <label class="text-sm text-slate-400">Telebirr Phone Number</label>
-                            <input type="text" id="telebirr-phone" value="0945792677" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
-                        </div>
-                        <div>
-                            <label class="text-sm text-slate-400">CBE Birr Account</label>
-                            <input type="text" id="cbe-account" value="0945792677" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
-                        </div>
-                        <button onclick="savePaymentSettings()" class="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">Save Settings</button>
-                    </div>
-                </div>
-
-                <!-- APPOINTMENTS TAB -->
-                <div id="admin-appointments" class="tab-content space-y-4">
-                    <h3 class="text-2xl font-bold text-white">📅 Book Appointment with Main Admin</h3>
-                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
-                        <div>
-                            <label class="text-sm text-slate-400">Appointment Date</label>
-                            <input type="date" id="admin-appt-date" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
-                        </div>
-                        <div>
-                            <label class="text-sm text-slate-400">Time Slot (Auto-scheduled)</label>
-                            <select id="admin-appt-time" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
-                                <option>10:00 AM</option>
-                                <option>11:00 AM</option>
-                                <option>2:00 PM</option>
-                                <option>3:00 PM</option>
-                                <option>4:00 PM</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="text-sm text-slate-400">Purpose</label>
-                            <select id="admin-appt-purpose" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
-                                <option>Discussion</option>
-                                <option>Report</option>
-                                <option>Issue</option>
-                                <option>Other</option>
-                            </select>
-                        </div>
-                        <button onclick="bookAdminAppointment()" class="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">Book Appointment</button>
-                    </div>
-                </div>
-
-                <!-- REVENUE TAB -->
-                <div id="admin-revenue" class="tab-content space-y-4">
-                    <h3 class="text-2xl font-bold text-white">💹 Revenue</h3>
-                </div>
-
-                <!-- ACTIVITY LOG TAB -->
-                <div id="admin-logs" class="tab-content space-y-4">
-                    <h3 class="text-2xl font-bold text-white">📋 Activity Log</h3>
-                </div>
-
-                <!-- NOTIFICATIONS TAB -->
-                <div id="admin-notifications" class="tab-content space-y-4">
-                    <h3 class="text-2xl font-bold text-white">🔔 Send Notifications</h3>
-                </div>
-            </div>
-        </main>
-    </div>
-
-    <!-- MAIN ADMIN DASHBOARD -->
-    <div id="main-admin-dashboard" class="hidden min-h-screen bg-black flex flex-col">
-        <header class="sticky top-0 z-40 w-full glass-panel border-b border-yellow-400/10 px-6 py-4">
-            <div class="max-w-7xl mx-auto flex items-center justify-between">
-                <h1 class="font-bold text-xl text-gradient">👑 MAIN ADMIN</h1>
-                <button onclick="logout()" class="px-4 py-2 bg-red-950/30 text-red-400 text-xs font-bold rounded-xl">Logout</button>
-            </div>
-        </header>
-        <main class="flex-grow p-6 overflow-y-auto">
-            <div class="max-w-7xl mx-auto space-y-6">
-                <h2 class="text-3xl font-bold text-white">Platform Control Center</h2>
-                
-                <div class="flex gap-2 border-b border-yellow-400/10 pb-2 overflow-x-auto">
-                    <button onclick="switchTab('main', 'dashboard')" class="tab-button active px-4 py-2 text-xs font-bold text-yellow-400">Dashboard</button>
-                    <button onclick="switchTab('main', 'admins')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">👨‍💼 Admins</button>
-                    <button onclick="switchTab('main', 'ranges')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📍 Ranges</button>
-                    <button onclick="switchTab('main', 'customers')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">👥 Customers</button>
-                    <button onclick="switchTab('main', 'payments')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">💳 Payments</button>
-                    <button onclick="switchTab('main', 'transactions')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📋 Trans</button>
-                    <button onclick="switchTab('main', 'analytics')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📈 Analytics</button>
-                    <button onclick="switchTab('main', 'audit')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🔐 Audit</button>
-                    <button onclick="switchTab('main', 'notifications')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🔔 Notify</button>
-                    <button onclick="switchTab('main', 'settings')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">⚙️ Settings</button>
-                </div>
-
-                <!-- DASHBOARD TAB -->
-                <div id="main-dashboard" class="tab-content active space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                        <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                            <p class="text-xs text-slate-400">Total Admins</p>
-                            <p class="text-3xl font-bold text-yellow-400 mt-2">3</p>
-                        </div>
-                        <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                            <p class="text-xs text-slate-400">Total Customers</p>
-                            <p class="text-3xl font-bold text-blue-400 mt-2">24</p>
-                        </div>
-                        <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                            <p class="text-xs text-slate-400">Total Tickets</p>
-                            <p class="text-3xl font-bold text-emerald-400 mt-2">75</p>
-                        </div>
-                        <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                            <p class="text-xs text-slate-400">Platform Revenue</p>
-                            <p class="text-3xl font-bold text-purple-400 mt-2">7,500 ETB</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ADMINS TAB -->
-                <div id="main-admins" class="tab-content space-y-4">
-                    <div class="flex justify-between items-center">
-                        <h3 class="text-2xl font-bold text-white">👨‍💼 Manage Admins</h3>
-                        <button onclick="openCreateAdminModal()" class="px-4 py-2 bg-yellow-400 text-black font-bold rounded-xl text-xs">+ Create</button>
-                    </div>
-                    <div id="admin-list" class="space-y-2">
-                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
-                            <div class="flex justify-between items-start">
-                                <div><p class="font-bold text-white">Ahmed Mohamed</p><p class="text-xs text-slate-400">ahmed@company.com • Range: 1-300</p></div>
-                                <div class="flex gap-1">
-                                    <button onclick="editAdminInfo('Ahmed')" class="px-2 py-1 bg-yellow-400/20 text-yellow-400 text-xs rounded">Edit</button>
-                                    <button onclick="toggleAdminStatus(this)" class="px-2 py-1 bg-blue-400/20 text-blue-400 text-xs rounded">Disable</button>
-                                    <button onclick="deleteAdmin(this)" class="px-2 py-1 bg-red-400/20 text-red-400 text-xs rounded">Delete</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- RANGES TAB -->
-                <div id="main-ranges" class="tab-content space-y-4">
-                    <h3 class="text-2xl font-bold text-white">📍 Ticket Ranges</h3>
-                    <div id="ranges-list" class="space-y-2">
-                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
-                            <div class="flex justify-between items-center">
-                                <div><p class="font-bold text-white">Ahmed Mohamed</p><p class="text-xs text-slate-400">Current: 1 - 300</p></div>
-                                <button onclick="openModifyRangeModal('Ahmed', 1, 300)" class="px-3 py-1 bg-yellow-400 text-black text-xs font-bold rounded">Modify</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- PAYMENTS TAB -->
-                <div id="main-payments" class="tab-content space-y-4">
-                    <h3 class="text-2xl font-bold text-white">💳 Payment Accounts</h3>
-                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
-                        <div>
-                            <label class="text-sm text-slate-400">Telebirr Account</label>
-                            <input type="text" id="main-telebirr" value="0945792677" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
-                        </div>
-                        <div>
-                            <label class="text-sm text-slate-400">CBE Birr Account</label>
-                            <input type="text" id="main-cbe" value="0945792677" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
-                        </div>
-                        <button onclick="saveMainPaymentSettings()" class="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">Save</button>
-                    </div>
-                </div>
-
-                <!-- TRANSACTIONS TAB -->
-                <div id="main-transactions" class="tab-content space-y-4">
-                    <h3 class="text-2xl font-bold text-white">📋 Transaction History (View Only)</h3>
-                    <div class="space-y-2 text-sm">
-                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
-                            <p class="text-slate-300"><strong>July 8, 14:30</strong> - Mohammed Ali paid 500 ETB via Telebirr (TXN123456) - Ahmed's Branch</p>
-                        </div>
-                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
-                            <p class="text-slate-300"><strong>July 7, 10:15</strong> - Zainab paid 300 ETB via CBE (TXN123457) - Fatima's Branch</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- SETTINGS TAB -->
-                <div id="main-settings" class="tab-content space-y-4">
-                    <h3 class="text-2xl font-bold text-white">⚙️ System Configuration</h3>
-                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
-                        <div>
-                            <label class="text-sm text-slate-400">Ticket Price (ETB)</label>
-                            <input type="number" value="100" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
-                        </div>
-                        <div>
-                            <label class="text-sm text-slate-400">Prize Pool %</label>
-                            <input type="number" value="70" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
-                        </div>
-                        <button onclick="notify('success', 'Settings saved!')" class="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">Save</button>
-                    </div>
-                </div>
-
-                <!-- NOTIFICATIONS TAB -->
-                <div id="main-notifications" class="tab-content space-y-4">
-                    <h3 class="text-2xl font-bold text-white">🔔 Send Notifications</h3>
-                    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
-                        <div>
-                            <label class="text-sm text-slate-400">Send To</label>
-                            <select id="notify-target" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
-                                <option>All Customers</option>
-                                <option>Specific Admin's Customers</option>
-                                <option>Specific Customer</option>
-                                <option>All Admins</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="text-sm text-slate-400">Message</label>
-                            <textarea placeholder="Type message..." rows="3" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1"></textarea>
-                        </div>
-                        <div class="flex gap-3">
-                            <label class="flex items-center text-sm text-slate-300"><input type="checkbox" class="mr-2"> Telegram</label>
-                            <label class="flex items-center text-sm text-slate-300"><input type="checkbox" class="mr-2"> Email</label>
-                            <label class="flex items-center text-sm text-slate-300"><input type="checkbox" class="mr-2"> SMS</label>
-                        </div>
-                        <button onclick="sendNotification()" class="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">Send</button>
-                    </div>
-                </div>
-
-                <!-- CUSTOMERS TAB -->
-                <div id="main-customers" class="tab-content space-y-4">
-                    <h3 class="text-2xl font-bold text-white">👥 All Customers</h3>
-                </div>
-
-                <!-- ANALYTICS TAB -->
-                <div id="main-analytics" class="tab-content space-y-4">
-                    <h3 class="text-2xl font-bold text-white">📈 Analytics</h3>
-                </div>
-
-                <!-- AUDIT LOG TAB -->
-                <div id="main-audit" class="tab-content space-y-4">
-                    <h3 class="text-2xl font-bold text-white">🔐 Audit Log</h3>
-                </div>
-
-                <!-- TRANSACTIONS TAB -->
-                <div id="main-transactions" class="tab-content space-y-4">
-                    <h3 class="text-2xl font-bold text-white">📋 Transactions</h3>
-                </div>
-            </div>
-        </main>
-    </div>
-
-    <!-- MODALS -->
-    <div id="customer-modal" class="modal">
-        <div class="modal-overlay" onclick="closeModal('customer-modal')"></div>
-        <div class="modal-content p-6 m-auto">
-            <h3 class="text-xl font-bold text-white mb-4">Add Customer</h3>
-            <div class="space-y-3">
-                <input type="text" id="cust-name-input" placeholder="Customer Name" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
-                <input type="email" id="cust-email-input" placeholder="Email" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
-                <input type="text" id="cust-phone-input" placeholder="Phone" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
-                <button onclick="addCustomer()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl">Add</button>
-                <button onclick="closeModal('customer-modal')" class="w-full py-2 bg-slate-700 text-white rounded-xl">Cancel</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="admin-modal" class="modal">
-        <div class="modal-overlay" onclick="closeModal('admin-modal')"></div>
-        <div class="modal-content p-6 m-auto">
-            <h3 class="text-xl font-bold text-white mb-4">Create Admin</h3>
-            <div class="space-y-3">
-                <input type="text" id="admin-name-input" placeholder="Name" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
-                <input type="email" id="admin-email-input" placeholder="Email" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
-                <input type="password" id="admin-pass-input" placeholder="Password" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
-                <button onclick="createAdmin()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl">Create</button>
-                <button onclick="closeModal('admin-modal')" class="w-full py-2 bg-slate-700 text-white rounded-xl">Cancel</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="range-modal" class="modal">
-        <div class="modal-overlay" onclick="closeModal('range-modal')"></div>
-        <div class="modal-content p-6 m-auto">
-            <h3 class="text-xl font-bold text-white mb-4">Modify Range</h3>
-            <div class="space-y-3">
-                <input type="number" id="range-start-input" placeholder="Start" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
-                <input type="number" id="range-end-input" placeholder="End" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
-                <button onclick="saveRange()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl">Save Range</button>
-                <button onclick="closeModal('range-modal')" class="w-full py-2 bg-slate-700 text-white rounded-xl">Cancel</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        let currentUser = null;
-        let activeLotteryNumbers = [];
-
-        // NOTIFICATION SYSTEM
-        function notify(type, message) {
-            const container = document.getElementById('notification-container');
-            const toast = document.createElement('div');
-            toast.className = `notification-toast ${type}`;
-            toast.innerHTML = message;
-            container.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.classList.add('exit');
-                setTimeout(() => toast.remove(), 300);
-            }, 5000);
-        }
-
-        // TAB SWITCHING - WORKS FOR ALL SECTIONS
-        function switchTab(section, tab) {
-            // Determine which dashboard to target
-            let dashId = section === 'cust' ? 'customer-dashboard' : 
-                        section === 'admin' ? 'admin-dashboard' : 
-                        'main-admin-dashboard';
-            
-            let dashboard = document.getElementById(dashId);
-            
-            // Hide all tabs in this dashboard
-            dashboard.querySelectorAll('.tab-content').forEach(el => {
-                el.classList.remove('active');
-            });
-            
-            // Deactivate all buttons in this dashboard
-            dashboard.querySelectorAll('.tab-button').forEach(el => {
-                el.classList.remove('active');
-            });
-            
-            // Show target tab and activate button
-            const target = document.getElementById(`${section}-${tab}`);
-            if (target) {
-                target.classList.add('active');
-                event.target.classList.add('active');
-                
-                // POPULATE CONTENT WHEN TAB IS CLICKED
-                if (tab === 'library') showLibrary();
-                if (tab === 'revenue') showRevenue();
-                if (tab === 'logs') showActivityLog();
-                if (tab === 'notifications') showAdminNotifications();
-                if (tab === 'appointments') {}; // Already has content
-                if (tab === 'customers' && section === 'main') showAllCustomers();
-                if (tab === 'analytics') showAnalytics();
-                if (tab === 'audit') showAuditLog();
-                if (tab === 'transactions') showTransactions();
-            }
-        }
-
-        // MODAL
-        function openCustomerModal() { document.getElementById('customer-modal').classList.add('active'); }
-        function openCreateAdminModal() { document.getElementById('admin-modal').classList.add('active'); }
-        function openModifyRangeModal(name, start, end) {
-            document.getElementById('range-start-input').value = start;
-            document.getElementById('range-end-input').value = end;
-            document.getElementById('range-modal').classList.add('active');
-        }
-        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-
-        // LOGIN
-        function openLoginModal() { document.getElementById('login-modal').classList.remove('hidden'); }
-        function closeLoginModal() { document.getElementById('login-modal').classList.add('hidden'); }
-
-       // ========== REPLACE YOUR handleLogin() WITH THIS ==========
-
-async function handleLogin(event) {
-    event.preventDefault();
-    const email = document.getElementById('login-email').value;
-    const password = document.getElementById('login-password').value;
-
-    // Check if db is initialized
-    if (!db) {
-        notify('error', '❌ Database not initialized. Wait a moment and try again.');
-        return;
+<!-- Utility Functions -->
+<script>
+    // Notification system
+    function notify(type, message) {
+        const notif = document.getElementById('notification');
+        notif.textContent = message;
+        notif.className = `fixed top-4 right-4 px-6 py-3 rounded-xl glass-panel z-50 ${
+            type === 'success' ? 'bg-green-500/20 text-green-400' :
+            type === 'error' ? 'bg-red-500/20 text-red-400' :
+            'bg-blue-500/20 text-blue-400'
+        }`;
+        notif.classList.remove('hidden');
+        setTimeout(() => notif.classList.add('hidden'), 3000);
     }
 
-    // Find this block in index.html inside handleLogin()
-if (email === 'fita.regassa@gmail.com' && password === 'MainAdmin@123') {
-    currentUser = { type: 'main_admin', email };
-    document.getElementById('public-page').classList.add('hidden');
-    document.getElementById('login-modal').classList.add('hidden');
-    document.getElementById('main-admin-dashboard').classList.remove('hidden');
-    
-    // --- CHANGE THIS SECTION ---
-    // 1. Create the instance
-    if (!window.mainAdminDashboard) {
-    window.mainAdminDashboard = new MainAdminDashboard();
-}
-document.getElementById('main-admin-dashboard').innerHTML = window.mainAdminDashboard.render();
-await window.mainAdminDashboard.loadData();
-    
-    notify('success', '✅ Main Admin Login Successful');
-}
- 
-    else if (email === 'ahmed@company.com' && password === 'Ahmed123') {
-    currentUser = { type: 'admin', name: 'Ahmed Mohamed', email };
-    document.getElementById('public-page').classList.add('hidden');
-    document.getElementById('login-modal').classList.add('hidden');
-    
-    // 1. Initialize the global object
-    window.adminDashboard = new AdminDashboard('admin1');
-    
-    // 2. Render to the container
-    document.getElementById('dashboards-container').innerHTML = window.adminDashboard.render();
-    
-    // 3. Now it is safe to load data
-    await window.adminDashboard.loadData();
-    
-    document.getElementById('admin-dashboard').classList.remove('hidden');
-    notify('success', '✅ Admin Login Successful');
-} 
-    else if (email === 'm@email.com' && password === 'Pass123') {
-        currentUser = { type: 'customer', name: 'Mohammed', email };
-        document.getElementById('public-page').classList.add('hidden');
-        document.getElementById('login-modal').classList.add('hidden');
-        document.getElementById('customer-dashboard').classList.remove('hidden');
-        document.getElementById('cust-name').textContent = 'Mohammed';
-        
-        // Create dashboard and load data
-        const custDash = new CustomerDashboard('cust1');
-        document.getElementById('dashboards-container').innerHTML = custDash.render();
-        await custDash.loadData(); // ← LOAD FROM FIRESTORE
-        
-        notify('success', '✅ Customer Login Successful');
-    } 
-    else {
-        notify('error', '❌ Invalid credentials');
-    }
-}
-
-// ========== GLOBAL FUNCTIONS THAT MUST EXIST ==========
-// (Duplicate functions removed - they're already defined above)
-
-function logout() {
-    if (confirm('Logout?')) {
+    // Logout
+    function logout() {
         currentUser = null;
-        document.getElementById('customer-dashboard').classList.add('hidden');
-        document.getElementById('admin-dashboard').classList.add('hidden');
-        document.getElementById('main-admin-dashboard').classList.add('hidden');
-        document.getElementById('public-page').classList.remove('hidden');
-        notify('info', 'Logged out');
+        document.getElementById('main-admin-container').innerHTML = '';
+        document.getElementById('admin-container').innerHTML = '';
+        document.getElementById('customer-container').innerHTML = '';
+        document.getElementById('public-page-container').innerHTML = renderPublicPage();
+        notify('success', 'Logged out successfully');
     }
-}
+</script>
 
-// ========== VERIFY DB IS LOADED ==========
-window.addEventListener('load', () => {
-    console.log('Page loaded');
-    setTimeout(() => {
-        if (window.db) {
-            console.log('✅ Firebase Firestore is ready');
-        } else {
-            console.error('❌ Firebase Firestore NOT initialized');
-        }
-    }, 5000); // Wait 1 second to ensure scripts are fully processed
-});
+<!-- Component Classes (Child Components First) -->
+<script src="components/Admins.js"></script>
+<script src="components/Customers.js"></script>
+<script src="components/Ranges.js"></script>
+<script src="components/Payments.js"></script>
+<script src="components/Analytics.js"></script>
+<script src="components/Transactions.js"></script>
+<script src="components/AuditLog.js"></script>
+<script src="components/Notifications.js"></script>
+<script src="components/Settings.js"></script>
 
+<!-- Dashboard Classes (Parent Components) -->
+<script src="dashboards/MainAdminDashboard.js"></script>
+<script src="dashboards/AdminDashboard.js"></script>
+<script src="dashboards/CustomerDashboard.js"></script>
 
-        // CUSTOMER FUNCTIONS
-        function generateNumbersGrid() {
-            const grid = document.getElementById('numbers-grid');
-            grid.innerHTML = '';
-            for (let i = 1; i <= 300; i++) {
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.className = selectedNumbers.includes(i) ? 'w-8 h-8 bg-yellow-400 text-black text-xs font-bold rounded' : 'w-8 h-8 bg-slate-700 text-white text-xs rounded hover:bg-slate-600';
-                btn.textContent = i;
-                btn.onclick = () => { selectedNumbers.includes(i) ? selectedNumbers.splice(selectedNumbers.indexOf(i), 1) : selectedNumbers.push(i); updateCost(); generateNumbersGrid(); };
-                grid.appendChild(btn);
-            }
-        }
-        async function addCustomerNotification(title, message) {
-    try {
-        await db.collection('notifications').add({
-            type: 'customer',
-            recipientEmail: currentUser.email,
-            recipientName: currentUser.name,
-            title: title,
-            message: message,
-            read: false,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-    } catch (error) {
-        console.error('Error adding notification:', error);
-    }
-}
+<!-- Public Page & Login -->
+<script>
+    function renderPublicPage() {
+        return `
+            <div class="min-h-screen bg-black flex flex-col">
+                <nav class="glass-panel border-b border-yellow-400/10 px-6 py-4">
+                    <div class="max-w-7xl mx-auto flex items-center justify-between">
+                        <h1 class="font-bold text-2xl text-gradient">🎰 BONI LOTTERY</h1>
+                        <button onclick="openLoginModal()" class="px-6 py-2 bg-yellow-400 text-black font-bold rounded-xl">Login</button>
+                    </div>
+                </nav>
+                
+                <main class="flex-grow flex items-center justify-center p-6">
+                    <div class="text-center">
+                        <h2 class="text-4xl font-bold text-white mb-4">Welcome to BONI Lottery</h2>
+                        <p class="text-slate-400 mb-8">Select numbers, win big prizes</p>
+                        <button onclick="openLoginModal()" class="px-8 py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">Get Started</button>
+                    </div>
+                </main>
+            </div>
 
-// LOAD CUSTOMER NOTIFICATIONS FROM FIRESTORE
-async function showCustomerNotifications() {
-    try {
-        const snapshot = await db.collection('notifications')
-            .where('recipientEmail', '==', currentUser.email)
-            .where('type', '==', 'customer')
-            .orderBy('createdAt', 'desc')
-            .get();
-        
-        const content = document.getElementById('cust-notifications');
-        if (!content) return;
-        
-        if (snapshot.empty) {
-            content.innerHTML = '<div class="glass-panel rounded-lg p-4 border border-yellow-400/10 text-center text-slate-400">No notifications yet</div>';
-            return;
-        }
-        
-        content.innerHTML = snapshot.docs.map(doc => {
-            const notif = doc.data();
-            return `
-                <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
-                    <p class="font-bold text-white">${notif.title}</p>
-                    <p class="text-xs text-slate-400 mt-1">${notif.message}</p>
-                    <p class="text-xs text-slate-500 mt-2">${notif.createdAt.toDate().toLocaleString()}</p>
-                </div>
-            `;
-        }).join('');
-    } catch (error) {
-        console.error('Error loading notifications:', error);
-    }
-}
-        function updateCost() {
-            document.getElementById('selected-count').textContent = selectedNumbers.length;
-            document.getElementById('ticket-cost').textContent = selectedNumbers.length * 100;
-        }
-
-        async function submitTicket() {
-    if (selectedNumbers.length === 0) return notify('error', '❌ Select at least 1 number');
-    
-    const transactionId = document.getElementById('transaction-id')?.value;
-    const paymentMethod = document.getElementById('payment-method')?.value;
-    
-    if (!transactionId) return notify('error', '❌ Enter transaction ID');
-    
-    try {
-        // SAVE TO FIRESTORE
-        await db.collection('tickets').add({
-            customerEmail: currentUser.email,
-            customerName: currentUser.name,
-            numbers: selectedNumbers,
-            cost: selectedNumbers.length * 100,
-            paymentMethod: paymentMethod,
-            transactionId: transactionId,
-            status: 'Pending Verification',
-            submittedAt: new Date(),
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        
-        // ALSO ADD NOTIFICATION
-        await addCustomerNotification(
-            '🎫 Ticket Submitted',
-            `Ticket with ${selectedNumbers.length} numbers submitted for ${selectedNumbers.length * 100} ETB`
-        );
-        
-        notify('success', `✅ Ticket submitted: ${selectedNumbers.join(',')} - ${selectedNumbers.length * 100} ETB`);
-        selectedNumbers = [];
-        updateCost();
-        generateNumbersGrid();
-        showCustomerTickets();
-    } catch (error) {
-        notify('error', `❌ Error: ${error.message}`);
-    }
-}
-
-// LOAD CUSTOMER TICKETS FROM FIRESTORE
-async function showCustomerTickets() {
-    try {
-        const snapshot = await db.collection('tickets')
-            .where('customerEmail', '==', currentUser.email)
-            .orderBy('submittedAt', 'desc')
-            .get();
-        
-        const content = document.getElementById('cust-tickets-list');
-        if (!content) return;
-        
-        if (snapshot.empty) {
-            content.innerHTML = '<div class="glass-panel rounded-lg p-4 border border-yellow-400/10 text-slate-400 text-center py-6">No tickets yet</div>';
-            return;
-        }
-        
-        content.innerHTML = snapshot.docs.map((doc, i) => {
-            const ticket = doc.data();
-            return `
-                <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="font-bold text-white">Ticket #${i + 1}</p>
-                            <p class="text-xs text-slate-400">Numbers: ${ticket.numbers.join(', ')}</p>
-                            <p class="text-xs text-slate-400">Cost: ${ticket.cost} ETB</p>
-                            <p class="text-xs text-slate-400">Payment: ${ticket.paymentMethod}</p>
-                            <p class="text-xs text-slate-400">Transaction: ${ticket.transactionId}</p>
-                            <p class="text-xs text-slate-400">Submitted: ${ticket.submittedAt.toDate().toLocaleString()}</p>
-                        </div>
-                        <span class="px-2 py-1 bg-yellow-400/20 text-yellow-400 text-xs rounded">${ticket.status}</span>
+            <!-- Login Modal -->
+            <div id="login-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50">
+                <div class="glass-panel rounded-2xl p-8 w-full max-w-md border border-yellow-400/10">
+                    <h3 class="text-2xl font-bold text-white mb-6">Login</h3>
+                    <div class="space-y-4">
+                        <input type="email" id="login-email" placeholder="Email" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-3 px-4 text-white">
+                        <input type="password" id="login-password" placeholder="Password" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-3 px-4 text-white">
+                        <button onclick="handleLogin()" class="w-full py-3 bg-yellow-400 text-black font-bold rounded-xl">Login</button>
+                        <button onclick="closeLoginModal()" class="w-full py-3 bg-slate-700 text-white rounded-xl">Cancel</button>
                     </div>
                 </div>
-            `;
-        }).join('');
-    } catch (error) {
-        console.error('Error loading tickets:', error);
-    }
-}
-
-        function openTikTok() { notify('info', '📱 Opening TikTok @BoniLottery Live'); }
-
-        // ADMIN FUNCTIONS
-        async function addCustomer() {
-    const name = document.getElementById('cust-name-input')?.value;
-    const email = document.getElementById('cust-email-input')?.value;
-    const phone = document.getElementById('cust-phone-input')?.value;
-    
-    if (!name || !email || !phone) return notify('error', '❌ Fill all fields');
-    
-    try {
-        // SAVE TO FIRESTORE
-        await db.collection('admin_customers').add({
-            adminEmail: currentUser.email,
-            name: name,
-            email: email,
-            phone: phone,
-            tickets: 0,
-            spent: 0,
-            addedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        
-        notify('success', `✅ Customer ${name} added!`);
-        closeModal('customer-modal');
-        document.getElementById('cust-name-input').value = '';
-        document.getElementById('cust-email-input').value = '';
-        document.getElementById('cust-phone-input').value = '';
-        
-        showAdminCustomers();
-    } catch (error) {
-        notify('error', `❌ Error: ${error.message}`);
-    }
-}
-
-// LOAD ADMIN CUSTOMERS FROM FIRESTORE
-async function showAdminCustomers() {
-    try {
-        const snapshot = await db.collection('admin_customers')
-            .where('adminEmail', '==', currentUser.email)
-            .orderBy('addedAt', 'desc')
-            .get();
-        
-        const content = document.getElementById('admin-customers-list');
-        if (!content) return;
-        
-        if (snapshot.empty) {
-            content.innerHTML = '<div class="glass-panel rounded-lg p-4 border border-yellow-400/10 text-center text-slate-400">No customers yet</div>';
-            return;
-        }
-        
-        content.innerHTML = snapshot.docs.map((doc, i) => {
-            const cust = doc.data();
-            return `
-                <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
-                    <p class="font-bold text-white">${cust.name}</p>
-                    <p class="text-xs text-slate-400">${cust.email} • ${cust.phone} • ${cust.tickets} tickets • ${cust.spent} ETB</p>
-                    <div class="flex gap-2 mt-2">
-                        <button onclick="editCustomer('${cust.name}')" class="text-xs px-2 py-1 bg-yellow-400/20 text-yellow-400 rounded">Edit</button>
-                        <button class="text-xs px-2 py-1 bg-red-400/20 text-red-400 rounded cursor-pointer" onclick="deleteAdminCustomer('${doc.id}')">Delete</button>
-                    </div>
-                </div>
-            `;
-        }).join('');
-    } catch (error) {
-        console.error('Error loading customers:', error);
-    }
-}
-
-async function deleteAdminCustomer(docId) {
-    if (confirm('Delete customer?')) {
-        try {
-            await db.collection('admin_customers').doc(docId).delete();
-            notify('success', '✅ Customer deleted');
-            showAdminCustomers();
-        } catch (error) {
-            notify('error', `❌ Error: ${error.message}`);
-        }
-    }
-}
-
-        async function sendAdminNotification() {
-    const message = document.querySelector('#admin-notifications textarea')?.value;
-    if (!message) return notify('error', '❌ Enter notification message');
-    
-    try {
-        // SAVE TO FIRESTORE
-        await db.collection('notifications').add({
-            type: 'broadcast',
-            fromAdmin: currentUser.email,
-            fromAdminName: currentUser.name,
-            message: message,
-            recipient: 'All Customers',
-            read: false,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        
-        notify('success', `✅ Notification sent!\n"${message}"`);
-        document.querySelector('#admin-notifications textarea').value = '';
-        showAdminNotifications();
-    } catch (error) {
-        notify('error', `❌ Error: ${error.message}`);
-    }
-}
-
-// LOAD ADMIN NOTIFICATIONS HISTORY
-async function showAdminNotifications() {
-    try {
-        const snapshot = await db.collection('notifications')
-            .where('fromAdmin', '==', currentUser.email)
-            .where('type', '==', 'broadcast')
-            .orderBy('createdAt', 'desc')
-            .get();
-        
-        const content = document.getElementById('admin-notifications');
-        if (!content) return;
-        
-        let html = `
-            <h3 class="text-2xl font-bold text-white">🔔 Send Notifications</h3>
-            <div class="glass-panel rounded-lg p-6 border border-yellow-400/10 space-y-3 mb-6">
-                <textarea id="admin-notif-msg" placeholder="Message..." rows="3" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none"></textarea>
-                <button onclick="sendAdminNotification()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl">Send Notification</button>
             </div>
         `;
+    }
+
+    function openLoginModal() {
+        const modal = document.getElementById('login-modal');
+        if (!modal) {
+            // Create modal if it doesn't exist
+            const div = document.createElement('div');
+            div.id = 'login-modal';
+            div.className = 'fixed inset-0 bg-black/80 flex items-center justify-center z-50';
+            div.innerHTML = `...`;
+            document.body.appendChild(div);
+        } else {
+            modal.classList.remove('hidden');
+        }
+    }
+
+    function closeLoginModal() {
+        const modal = document.getElementById('login-modal');
+        if (modal) modal.classList.add('hidden');
+    }
+
+    async function handleLogin() {
+        const email = document.getElementById('login-email')?.value || '';
+        const password = document.getElementById('login-password')?.value || '';
+
+        if (!email || !password) {
+            notify('error', '❌ Fill all fields');
+            return;
+        }
+
+        // Main Admin Login
+        if (email === 'fita.regassa@gmail.com' && password === 'MainAdmin@123') {
+            currentUser = { type: 'main_admin', email };
+            closeLoginModal();
+            document.getElementById('public-page-container').innerHTML = '';
+            
+            if (!window.mainAdminDashboard) {
+                window.mainAdminDashboard = new MainAdminDashboard();
+            }
+            document.getElementById('main-admin-container').innerHTML = window.mainAdminDashboard.render();
+            await window.mainAdminDashboard.loadData();
+            notify('success', '✅ Main Admin Login Successful');
+            return;
+        }
+
+        // Branch Admin Login
+        if (email === 'ahmed@company.com' && password === 'Admin@123') {
+            currentUser = { type: 'admin', email };
+            closeLoginModal();
+            document.getElementById('public-page-container').innerHTML = '';
+            
+            if (!window.adminDashboard) {
+                window.adminDashboard = new AdminDashboard(email);
+            }
+            document.getElementById('admin-container').innerHTML = window.adminDashboard.render();
+            await window.adminDashboard.loadData();
+            notify('success', '✅ Admin Login Successful');
+            return;
+        }
+
+        // Customer Login
+        currentUser = { type: 'customer', email, name: email.split('@')[0] };
+        closeLoginModal();
+        document.getElementById('public-page-container').innerHTML = '';
         
-        if (!snapshot.empty) {
-            html += `<h4 class="text-xl font-bold text-white mb-3">📤 Sent History</h4>`;
-            html += snapshot.docs.map(doc => {
-                const n = doc.data();
-                return `
-                    <div class="glass-panel rounded-lg p-4 border border-yellow-400/10 mb-2">
-                        <p class="text-white">${n.message}</p>
-                        <p class="text-xs text-slate-400 mt-2">Sent to: ${n.recipient} - ${n.createdAt.toDate().toLocaleString()}</p>
-                    </div>
-                `;
-            }).join('');
+        if (!window.customerDashboard) {
+            window.customerDashboard = new CustomerDashboard(email);
         }
-        
-        content.innerHTML = html;
-    } catch (error) {
-        console.error('Error loading notifications:', error);
+        document.getElementById('customer-container').innerHTML = window.customerDashboard.render();
+        await window.customerDashboard.loadData();
+        notify('success', '✅ Login Successful');
     }
-}
-        function deleteCustomer(btn) {
-            if (confirm('Delete customer?')) { btn.parentElement.parentElement.remove(); notify('success', '✅ Customer deleted'); }
-        }
+</script>
 
-        function editCustomer(name) { notify('info', `Editing ${name}...`); }
+<!-- Initialize App -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('public-page-container').innerHTML = renderPublicPage();
+    });
+</script>
 
-        function approvePayment(btn) {
-            notify('success', '✅ Payment approved!');
-            btn.parentElement.parentElement.parentElement.remove();
-        }
-
-        function rejectPayment(btn) {
-            notify('error', '❌ Payment rejected');
-            btn.parentElement.parentElement.parentElement.remove();
-        }
-
-        function generateWinner() {
-            const num = Math.floor(Math.random() * 1000) + 1;
-            notify('success', `🎲 Winner Generated: Number ${num}`);
-        }
-
-        async function savePaymentSettings() {
-    const telebirr = document.getElementById('telebirr-phone')?.value;
-    const cbe = document.getElementById('cbe-account')?.value;
+<!-- Styles -->
+<style>
+    .glass-panel {
+        background: rgba(15, 23, 42, 0.8);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+    }
     
-    if (!telebirr || !cbe) return notify('error', '❌ Fill all payment accounts');
+    .text-gradient {
+        background: linear-gradient(135deg, #FCD34D 0%, #F59E0B 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
     
-    try {
-        // SAVE TO FIRESTORE
-        await db.collection('admin_settings').doc(currentUser.email).set({
-            adminEmail: currentUser.email,
-            telebirrPhone: telebirr,
-            cbeAccount: cbe,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
-        
-        notify('success', `✅ Payment settings saved!\nTelebirr: ${telebirr}\nCBE: ${cbe}`);
-    } catch (error) {
-        notify('error', `❌ Error: ${error.message}`);
+    .tab-button.active {
+        border-bottom: 2px solid #FCD34D;
     }
-}
-
-// LOAD ADMIN PAYMENT SETTINGS FROM FIRESTORE
-async function loadAdminPaymentSettings() {
-    try {
-        const doc = await db.collection('admin_settings').doc(currentUser.email).get();
-        if (doc.exists) {
-            const data = doc.data();
-            if (data.telebirrPhone) document.getElementById('telebirr-phone').value = data.telebirrPhone;
-            if (data.cbeAccount) document.getElementById('cbe-account').value = data.cbeAccount;
-        }
-    } catch (error) {
-        console.error('Error loading payment settings:', error);
-    }
-}
-
-        // MAIN ADMIN FUNCTIONS
-        function createAdmin() {
-            const name = document.getElementById('admin-name-input').value;
-            if (!name) return notify('error', '❌ Enter admin name');
-            notify('success', `✅ Admin ${name} created!`);
-            closeModal('admin-modal');
-        }
-
-        function deleteAdmin(btn) {
-            if (confirm('Delete admin?')) { btn.parentElement.parentElement.remove(); notify('success', '✅ Admin deleted'); }
-        }
-
-        function toggleAdminStatus(btn) {
-            btn.textContent = btn.textContent === 'Disable' ? 'Enable' : 'Disable';
-            notify('info', `Admin status changed`);
-        }
-
-        function editAdminInfo(name) { notify('info', `Editing ${name}...`); }
-
-        function saveRange() {
-            const start = document.getElementById('range-start-input').value;
-            const end = document.getElementById('range-end-input').value;
-            if (start >= end) return notify('error', '❌ Start must be less than end');
-            notify('success', `✅ Range updated: ${start} - ${end}`);
-            closeModal('range-modal');
-        }
-
-        async function saveMainPaymentSettings() {
-    const telebirr = document.getElementById('main-telebirr')?.value;
-    const cbe = document.getElementById('main-cbe')?.value;
     
-    if (!telebirr || !cbe) return notify('error', '❌ Fill all accounts');
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
     
-    try {
-        // SAVE TO FIRESTORE
-        await db.collection('system_settings').doc('payments').set({
-            telebirrPhone: telebirr,
-            cbeAccount: cbe,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
-        
-        notify('success', `✅ Payment accounts saved!\nTelebirr: ${telebirr}\nCBE: ${cbe}`);
-    } catch (error) {
-        notify('error', `❌ Error: ${error.message}`);
+    .animate-pulse {
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     }
-}
+</style>
 
-// LOAD MAIN ADMIN PAYMENT SETTINGS FROM FIRESTORE
-async function loadMainAdminPaymentSettings() {
-    try {
-        const doc = await db.collection('system_settings').doc('payments').get();
-        if (doc.exists) {
-            const data = doc.data();
-            if (data.telebirrPhone) document.getElementById('main-telebirr').value = data.telebirrPhone;
-            if (data.cbeAccount) document.getElementById('main-cbe').value = data.cbeAccount;
-        }
-    } catch (error) {
-        console.error('Error loading payment settings:', error);
-    }
-}
-        async function sendNotification() {
-    const target = document.getElementById('notify-target')?.value;
-    const message = document.querySelector('#main-notifications textarea')?.value;
-    
-    if (!message) return notify('error', '❌ Enter message');
-    
-    try {
-        // SAVE TO FIRESTORE
-        await db.collection('notifications').add({
-            type: 'system_broadcast',
-            fromAdmin: currentUser.email,
-            fromAdminName: 'Main Admin',
-            target: target,
-            message: message,
-            read: false,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        
-        notify('success', `✅ Notification sent to ${target}!\n"${message}"`);
-        document.querySelector('#main-notifications textarea').value = '';
-    } catch (error) {
-        notify('error', `❌ Error: ${error.message}`);
-    }
-}
-        // CUSTOMER APPOINTMENT BOOKING
-        function bookAppointment() {
-            const date = document.getElementById('cust-appt-date')?.value;
-            if (!date) {
-                const input = document.createElement('input');
-                input.type = 'date';
-                input.id = 'cust-appt-date';
-                return notify('error', '❌ Enter appointment date');
-            }
-            notify('success', '✅ Appointment booked!');
-        }
-
-        // LIBRARY TAB - DISPLAY INFO
-        function showLibrary() {
-            const content = document.getElementById('cust-library');
-            if (content && !content.innerHTML.includes('How to Play')) {
-                content.innerHTML = `
-                    <h3 class="text-2xl font-bold mb-6">📖 Lottery Guide</h3>
-                    <div class="glass-panel rounded-lg p-6 border border-yellow-400/10 mb-4">
-                        <h4 class="text-yellow-400 font-bold mb-3">How to Play</h4>
-                        <ol class="text-sm text-slate-300 space-y-2">
-                            <li>1. Select 1-10 numbers from 1-300</li>
-                            <li>2. Pay 100 ETB per number</li>
-                            <li>3. Upload receipt</li>
-                            <li>4. Wait for admin verification</li>
-                            <li>5. Draw happens every Sunday 8 PM</li>
-                        </ol>
-                    </div>
-                `;
-            }
-        }
-
-        // NOTIFICATIONS TAB
-        function showNotifications() {
-            const content = document.getElementById('cust-notifications');
-            if (content && content.innerHTML.trim() === '') {
-                content.innerHTML = `
-                    <div class="space-y-3">
-                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
-                            <p class="font-bold text-white">✅ Payment Verified</p>
-                            <p class="text-xs text-slate-400 mt-1">Your ticket was verified</p>
-                        </div>
-                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
-                            <p class="font-bold text-white">🎫 Ticket Created</p>
-                            <p class="text-xs text-slate-400 mt-1">You bought a new ticket</p>
-                        </div>
-                    </div>
-                `;
-            }
-        }
-
-        // CUSTOMER SETTINGS
-        async function saveCustomerSettings() {
-    const phone = document.getElementById('cust-phone')?.value;
-    if (!phone) return notify('error', '❌ Enter phone number');
-    
-    try {
-        // SAVE TO FIRESTORE
-        await db.collection('customers').doc(currentUser.email).set({
-            name: currentUser.name,
-            email: currentUser.email,
-            phone: phone,
-            updatedAt: new Date()
-        }, { merge: true });
-        
-        notify('success', `✅ Settings saved! Phone: ${phone}`);
-    } catch (error) {
-        notify('error', `❌ Error: ${error.message}`);
-    }
-}
-
-// LOAD CUSTOMER SETTINGS FROM FIRESTORE
-async function loadCustomerSettings() {
-    try {
-        const doc = await db.collection('customers').doc(currentUser.email).get();
-        if (doc.exists) {
-            const data = doc.data();
-            if (data.phone) {
-                document.getElementById('cust-phone').value = data.phone;
-            }
-        }
-    } catch (error) {
-        console.error('Error loading settings:', error);
-    }
-}
-
-        // ADMIN NOTIFICATIONS
-        function showAdminNotifications() {
-            const content = document.getElementById('admin-notifications');
-            if (content && content.innerHTML.trim() === '') {
-                content.innerHTML = `
-                    <div class="glass-panel rounded-lg p-6 border border-yellow-400/10 space-y-3">
-                        <textarea placeholder="Message..." rows="3" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none"></textarea>
-                        <button onclick="sendNotification()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl">Send</button>
-                    </div>
-                `;
-            }
-        }
-
-        // ADMIN REVENUE ANALYTICS
-        function showRevenue() {
-            const content = document.getElementById('admin-revenue');
-            if (content && content.innerHTML.trim() === '') {
-                content.innerHTML = `
-                    <div class="space-y-4">
-                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
-                            <p class="text-slate-400 text-sm">Total Revenue</p>
-                            <p class="text-3xl font-bold text-yellow-400 mt-2">2,400 ETB</p>
-                        </div>
-                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
-                            <p class="text-slate-400 text-sm">This Month</p>
-                            <p class="text-3xl font-bold text-yellow-400 mt-2">1,200 ETB</p>
-                        </div>
-                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
-                            <p class="text-slate-400 text-sm">This Week</p>
-                            <p class="text-3xl font-bold text-yellow-400 mt-2">300 ETB</p>
-                        </div>
-                    </div>
-                `;
-            }
-        }
-
-        // ADMIN ACTIVITY LOG
-        function showActivityLog() {
-            const content = document.getElementById('admin-logs');
-            if (content && content.innerHTML.trim() === '') {
-                content.innerHTML = `
-                    <div class="space-y-2">
-                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
-                            <p class="text-sm text-slate-300"><strong>2 hours ago:</strong> Payment approved</p>
-                        </div>
-                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
-                            <p class="text-sm text-slate-300"><strong>5 hours ago:</strong> Ticket created</p>
-                        </div>
-                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
-                            <p class="text-sm text-slate-300"><strong>1 day ago:</strong> Customer added</p>
-                        </div>
-                    </div>
-                `;
-            }
-        }
-
-        // MAIN ADMIN CUSTOMERS TAB
-        function showAllCustomers() {
-            const content = document.getElementById('main-customers');
-            if (content && content.innerHTML.trim() === '') {
-                content.innerHTML = `
-                    <div class="glass-panel rounded-lg border border-yellow-400/10 overflow-x-auto">
-                        <table class="w-full text-sm">
-                            <tr class="border-b border-yellow-400/10">
-                                <th class="p-3 text-left">Name</th>
-                                <th class="p-3 text-left">Branch</th>
-                                <th class="p-3 text-left">Tickets</th>
-                                <th class="p-3 text-left">Spent</th>
-                            </tr>
-                            <tr class="border-b border-yellow-400/10"><td class="p-3">Mohammed Ali</td><td class="p-3">Ahmed</td><td class="p-3">5</td><td class="p-3">500 ETB</td></tr>
-                            <tr class="border-b border-yellow-400/10"><td class="p-3">Zainab Hassan</td><td class="p-3">Admin2</td><td class="p-3">3</td><td class="p-3">300 ETB</td></tr>
-                        </table>
-                    </div>
-                `;
-            }
-        }
-
-        // MAIN ADMIN TRANSACTIONS
-        function showTransactions() {
-            const content = document.getElementById('main-transactions');
-            if (content && content.innerHTML.trim() === '') {
-                content.innerHTML = `
-                    <div class="space-y-2">
-                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
-                            <p class="text-sm text-slate-300"><strong>July 8:</strong> Mohammed paid 300 ETB (Telebirr)</p>
-                        </div>
-                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
-                            <p class="text-sm text-slate-300"><strong>July 7:</strong> Zainab paid 300 ETB (CBE)</p>
-                        </div>
-                    </div>
-                `;
-            }
-        }
-
-        // MAIN ADMIN AUDIT LOG
-        function showAuditLog() {
-            const content = document.getElementById('main-audit');
-            if (content && content.innerHTML.trim() === '') {
-                content.innerHTML = `
-                    <div class="space-y-2">
-                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
-                            <p class="text-sm text-slate-300"><strong>Ahmed:</strong> Approved payment - 2h ago</p>
-                        </div>
-                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
-                            <p class="text-sm text-slate-300"><strong>Ahmed:</strong> Created ticket - 4h ago</p>
-                        </div>
-                    </div>
-                `;
-            }
-        }
-
-        // MAIN ADMIN ANALYTICS
-        function showAnalytics() {
-            const content = document.getElementById('main-analytics');
-            if (content && content.innerHTML.trim() === '') {
-                content.innerHTML = `
-                    <div class="space-y-4">
-                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
-                            <p class="text-slate-400 text-sm">Total Platform Revenue</p>
-                            <p class="text-3xl font-bold text-yellow-400 mt-2">7,200 ETB</p>
-                        </div>
-                        <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
-                            <p class="text-slate-400 text-sm">This Month</p>
-                            <p class="text-3xl font-bold text-yellow-400 mt-2">2,400 ETB</p>
-                        </div>
-                    </div>
-                `;
-            }
-        }
-
-        function logout() {
-            if (confirm('Logout?')) {
-                currentUser = null;
-                document.getElementById('customer-dashboard').classList.add('hidden');
-                document.getElementById('admin-dashboard').classList.add('hidden');
-                document.getElementById('main-admin-dashboard').classList.add('hidden');
-                document.getElementById('public-page').classList.remove('hidden');
-                notify('info', 'Logged out');
-            }
-        }
-    </script>
 </body>
 </html>
