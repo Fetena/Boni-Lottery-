@@ -1,3 +1,4 @@
+// ============================================
 // MAIN ADMIN - TRANSACTIONS
 // ============================================
 
@@ -9,36 +10,57 @@ class Transactions {
     render() {
         return `
             <div class="space-y-4">
-                <h3 class="text-2xl font-bold text-white">📋 Transactions</h3>
+                <h3 class="text-2xl font-bold text-white">📋 Recent Transactions</h3>
                 <div id="transactions-list" class="space-y-3">${this.renderTransactionsList()}</div>
             </div>
         `;
     }
 
     async loadData() {
-    try {
-        const snapshot = await db.collection('transactions').orderBy('createdAt', 'desc').get();
-        this.transactions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        try {
+            if (!db) return;
 
-        const listContainer = document.getElementById('transactions-list'); 
-        if (listContainer) {
-            listContainer.innerHTML = this.renderTransactionsList();
+            const snapshot = await db.collection('customer_tickets')
+                .orderBy('createdAt', 'desc')
+                .limit(50)
+                .get();
+
+            this.transactions = snapshot.docs.map((doc, index) => ({
+                id: doc.id,
+                index: index + 1,
+                ...doc.data()
+            }));
+
+            const listContainer = document.getElementById('transactions-list');
+            if (listContainer) {
+                listContainer.innerHTML = this.renderTransactionsList();
+            }
+        } catch (error) {
+            console.error('Error loading transactions:', error);
         }
-    } catch (error) {
-        console.error('Error loading transactions:', error);
     }
-}
 
     renderTransactionsList() {
         if (this.transactions.length === 0) {
-            return '<p class="text-slate-400 text-center py-6">No transactions</p>';
+            return '<p class="text-slate-400 text-center py-6">No transactions yet</p>';
         }
 
-        return this.transactions.map(trans => `
-            <div class="glass-panel rounded-lg p-3 border border-yellow-400/10 text-xs">
-                <p class="text-white">${trans.description || 'Transaction'}</p>
-                <p class="text-slate-400">${trans.createdAt?.toDate?.()?.toLocaleString() || 'N/A'}</p>
-            </div>
-        `).join('');
+        return this.transactions.map(trans => {
+            const createdAt = trans.createdAt?.toDate?.() || new Date();
+            return `
+                <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="font-bold text-white">Transaction #${trans.index}</p>
+                            <p class="text-xs text-slate-400">Customer: ${trans.customerName || 'N/A'}</p>
+                            <p class="text-xs text-slate-400">Amount: ${trans.cost || 0} ETB</p>
+                            <p class="text-xs text-slate-400">Numbers: ${trans.numbers?.length || 0}</p>
+                            <p class="text-xs text-slate-400">Date: ${createdAt.toLocaleDateString()} ${createdAt.toLocaleTimeString()}</p>
+                        </div>
+                        <span class="px-2 py-1 bg-yellow-400/20 text-yellow-400 text-xs rounded">${trans.status || 'Pending'}</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
     }
 }
