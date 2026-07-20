@@ -5,242 +5,231 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BONI Lottery System</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js"></script>
+    
+    <!-- Firebase v9 Compat -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
+        }
+        .text-gradient {
+            background: linear-gradient(135deg, #FCD34D 0%, #F59E0B 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .tab-button.active {
+            border-bottom: 2px solid #FCD34D;
+            color: #FCD34D;
+        }
+        .notification-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px;
+            border-radius: 8px;
+            z-index: 10000;
+            animation: slideIn 0.3s ease;
+        }
+        .notification-toast.success { background: #10b981; color: white; }
+        .notification-toast.error { background: #ef4444; color: white; }
+        .notification-toast.info { background: #3b82f6; color: white; }
+        @keyframes slideIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    </style>
 </head>
+
 <body class="bg-black text-white">
 
-<!-- ============================================
-     GLOBAL NOTIFICATION SYSTEM
-     ============================================ -->
-<div id="notification" class="fixed top-4 right-4 px-6 py-3 rounded-xl glass-panel hidden z-50 animate-pulse"></div>
+    <!-- NOTIFICATION CONTAINER -->
+    <div id="notification-container"></div>
 
-<!-- ============================================
-     ALL DASHBOARDS - RENDERED BY JAVASCRIPT
-     ============================================ -->
+    <!-- PUBLIC PAGE -->
+    <div id="public-page"></div>
 
-<!-- Main Admin Dashboard Container -->
-<div id="main-admin-container"></div>
+    <!-- MAIN ADMIN DASHBOARD -->
+    <div id="main-admin-container"></div>
 
-<!-- Branch Admin Dashboard Container -->
-<div id="admin-container"></div>
+    <!-- BRANCH ADMIN DASHBOARD -->
+    <div id="admin-container"></div>
 
-<!-- Customer Dashboard Container -->
-<div id="customer-container"></div>
+    <!-- CUSTOMER DASHBOARD -->
+    <div id="customer-container"></div>
 
-<!-- Public Page Container -->
-<div id="public-page-container"></div>
+    <!-- ============================================
+         FIREBASE & GLOBAL SETUP
+         ============================================ -->
+    <script>
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyBW0egtlG4JXjkoWB2Lfu5GcYhZz_oEjbI",
+            authDomain: "boni-lottery-8d0e6.firebaseapp.com",
+            projectId: "boni-lottery-8d0e6",
+            storageBucket: "boni-lottery-8d0e6.appspot.com",
+            messagingSenderId: "479140405683",
+            appId: "1:479140405683:web:20a2205ece9fdcdf076bc6",
+        };
 
-<!-- ============================================
-     GLOBAL SCRIPTS - LOAD IN ORDER
-     ============================================ -->
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        let currentUser = null;
 
-<!-- Firebase Config & Init -->
-<script>
-    let db, currentUser;
-    
-    const firebaseConfig = {
-        apiKey: "AIzaSyBW0egtlG4JXjkoWB2Lfu5GcYhZz_oEjbI",
-        authDomain: "boni-lottery-8d0e6.firebaseapp.com",
-        projectId: "boni-lottery-8d0e6",
-        storageBucket: "boni-lottery-8d0e6.appspot.com",
-        messagingSenderId: "479140405683",
-        appId: "1:479140405683:web:20a2205ece9fdcdf076bc6",
-        measurementId: "G-6MG08FXC7V"
-    };
+        console.log('✅ Firebase initialized');
+        console.log('✅ Firestore ready');
 
-    firebase.initializeApp(firebaseConfig);
-    db = firebase.firestore();
-    
-    console.log('✅ Firebase initialized');
-</script>
+        // Notification System
+        function notify(type, message) {
+            const container = document.getElementById('notification-container');
+            const toast = document.createElement('div');
+            toast.className = `notification-toast ${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
 
-<!-- Utility Functions -->
-<script>
-    // Notification system
-    function notify(type, message) {
-        const notif = document.getElementById('notification');
-        notif.textContent = message;
-        notif.className = `fixed top-4 right-4 px-6 py-3 rounded-xl glass-panel z-50 ${
-            type === 'success' ? 'bg-green-500/20 text-green-400' :
-            type === 'error' ? 'bg-red-500/20 text-red-400' :
-            'bg-blue-500/20 text-blue-400'
-        }`;
-        notif.classList.remove('hidden');
-        setTimeout(() => notif.classList.add('hidden'), 3000);
-    }
+        // Logout Function
+        function logout() {
+            currentUser = null;
+            document.getElementById('main-admin-container').innerHTML = '';
+            document.getElementById('admin-container').innerHTML = '';
+            document.getElementById('customer-container').innerHTML = '';
+            document.getElementById('public-page').innerHTML = renderPublicPage();
+            notify('success', '✅ Logged out');
+        }
 
-    // Logout
-    function logout() {
-        currentUser = null;
-        document.getElementById('main-admin-container').innerHTML = '';
-        document.getElementById('admin-container').innerHTML = '';
-        document.getElementById('customer-container').innerHTML = '';
-        document.getElementById('public-page-container').innerHTML = renderPublicPage();
-        notify('success', 'Logged out successfully');
-    }
-</script>
+        // Render Public Page
+        function renderPublicPage() {
+            return `
+                <div class="min-h-screen bg-black flex flex-col">
+                    <header class="sticky top-0 z-40 w-full glass-panel border-b border-yellow-400/10 px-6 py-4">
+                        <div class="max-w-7xl mx-auto flex items-center justify-between">
+                            <h1 class="font-bold text-2xl text-gradient">🎰 BONI LOTTERY</h1>
+                            <button onclick="openLoginModal()" class="px-6 py-2 bg-yellow-400 text-black font-bold rounded-xl">Login</button>
+                        </div>
+                    </header>
+                    <main class="flex-grow flex items-center justify-center p-6">
+                        <div class="text-center">
+                            <h2 class="text-5xl font-bold text-white mb-4">Welcome to BONI Lottery</h2>
+                            <p class="text-slate-400 mb-8 text-xl">Complete lottery management platform</p>
+                            <button onclick="openLoginModal()" class="px-8 py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">Get Started →</button>
+                        </div>
+                    </main>
+                </div>
 
-<!-- Component Classes (Child Components First) -->
-<script src="components/Admins.js"></script>
-<script src="components/Customers.js"></script>
-<script src="components/Ranges.js"></script>
-<script src="components/Payments.js"></script>
-<script src="components/Analytics.js"></script>
-<script src="components/Transactions.js"></script>
-<script src="components/AuditLog.js"></script>
-<script src="components/Notifications.js"></script>
-<script src="components/Settings.js"></script>
-
-<!-- Dashboard Classes (Parent Components) -->
-<script src="dashboards/MainAdminDashboard.js"></script>
-<script src="dashboards/AdminDashboard.js"></script>
-<script src="dashboards/CustomerDashboard.js"></script>
-
-<!-- Public Page & Login -->
-<script>
-    function renderPublicPage() {
-        return `
-            <div class="min-h-screen bg-black flex flex-col">
-                <nav class="glass-panel border-b border-yellow-400/10 px-6 py-4">
-                    <div class="max-w-7xl mx-auto flex items-center justify-between">
-                        <h1 class="font-bold text-2xl text-gradient">🎰 BONI LOTTERY</h1>
-                        <button onclick="openLoginModal()" class="px-6 py-2 bg-yellow-400 text-black font-bold rounded-xl">Login</button>
-                    </div>
-                </nav>
-                
-                <main class="flex-grow flex items-center justify-center p-6">
-                    <div class="text-center">
-                        <h2 class="text-4xl font-bold text-white mb-4">Welcome to BONI Lottery</h2>
-                        <p class="text-slate-400 mb-8">Select numbers, win big prizes</p>
-                        <button onclick="openLoginModal()" class="px-8 py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">Get Started</button>
-                    </div>
-                </main>
-            </div>
-
-            <!-- Login Modal -->
-            <div id="login-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50">
-                <div class="glass-panel rounded-2xl p-8 w-full max-w-md border border-yellow-400/10">
-                    <h3 class="text-2xl font-bold text-white mb-6">Login</h3>
-                    <div class="space-y-4">
-                        <input type="email" id="login-email" placeholder="Email" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-3 px-4 text-white">
-                        <input type="password" id="login-password" placeholder="Password" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-3 px-4 text-white">
-                        <button onclick="handleLogin()" class="w-full py-3 bg-yellow-400 text-black font-bold rounded-xl">Login</button>
-                        <button onclick="closeLoginModal()" class="w-full py-3 bg-slate-700 text-white rounded-xl">Cancel</button>
+                <!-- Login Modal -->
+                <div id="login-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50">
+                    <div class="glass-panel rounded-2xl p-8 w-full max-w-md border border-yellow-400/10">
+                        <h3 class="text-2xl font-bold text-white mb-6">Login</h3>
+                        <div class="space-y-4">
+                            <input type="email" id="login-email" placeholder="Email" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-3 px-4 text-white placeholder-slate-500">
+                            <input type="password" id="login-password" placeholder="Password" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-3 px-4 text-white placeholder-slate-500">
+                            <button onclick="handleLogin()" class="w-full py-3 bg-yellow-400 text-black font-bold rounded-xl hover:bg-yellow-500">Login</button>
+                            <button onclick="closeLoginModal()" class="w-full py-3 bg-slate-700 text-white rounded-xl hover:bg-slate-600">Cancel</button>
+                        </div>
                     </div>
                 </div>
-            </div>
-        `;
-    }
-
-    function openLoginModal() {
-        const modal = document.getElementById('login-modal');
-        if (!modal) {
-            // Create modal if it doesn't exist
-            const div = document.createElement('div');
-            div.id = 'login-modal';
-            div.className = 'fixed inset-0 bg-black/80 flex items-center justify-center z-50';
-            div.innerHTML = `...`;
-            document.body.appendChild(div);
-        } else {
-            modal.classList.remove('hidden');
-        }
-    }
-
-    function closeLoginModal() {
-        const modal = document.getElementById('login-modal');
-        if (modal) modal.classList.add('hidden');
-    }
-
-    async function handleLogin() {
-        const email = document.getElementById('login-email')?.value || '';
-        const password = document.getElementById('login-password')?.value || '';
-
-        if (!email || !password) {
-            notify('error', '❌ Fill all fields');
-            return;
+            `;
         }
 
-        // Main Admin Login
-        if (email === 'fita.regassa@gmail.com' && password === 'MainAdmin@123') {
-            currentUser = { type: 'main_admin', email };
-            closeLoginModal();
-            document.getElementById('public-page-container').innerHTML = '';
-            
-            if (!window.mainAdminDashboard) {
-                window.mainAdminDashboard = new MainAdminDashboard();
+        function openLoginModal() {
+            const modal = document.getElementById('login-modal');
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        function closeLoginModal() {
+            const modal = document.getElementById('login-modal');
+            if (modal) modal.classList.add('hidden');
+            document.getElementById('login-email').value = '';
+            document.getElementById('login-password').value = '';
+        }
+
+        async function handleLogin() {
+            const email = document.getElementById('login-email')?.value || '';
+            const password = document.getElementById('login-password')?.value || '';
+
+            if (!email || !password) {
+                notify('error', '❌ Fill all fields');
+                return;
             }
-            document.getElementById('main-admin-container').innerHTML = window.mainAdminDashboard.render();
-            await window.mainAdminDashboard.loadData();
-            notify('success', '✅ Main Admin Login Successful');
-            return;
-        }
 
-        // Branch Admin Login
-        if (email === 'ahmed@company.com' && password === 'Admin@123') {
-            currentUser = { type: 'admin', email };
-            closeLoginModal();
-            document.getElementById('public-page-container').innerHTML = '';
-            
-            if (!window.adminDashboard) {
-                window.adminDashboard = new AdminDashboard(email);
+            // Main Admin
+            if (email === 'fita.regassa@gmail.com' && password === 'MainAdmin@123') {
+                currentUser = { type: 'main_admin', email };
+                closeLoginModal();
+                document.getElementById('public-page').innerHTML = '';
+                
+                if (!window.mainAdminDashboard) {
+                    window.mainAdminDashboard = new MainAdminDashboard();
+                }
+                document.getElementById('main-admin-container').innerHTML = window.mainAdminDashboard.render();
+                await window.mainAdminDashboard.loadData();
+                notify('success', '✅ Main Admin Login Successful');
+                return;
             }
-            document.getElementById('admin-container').innerHTML = window.adminDashboard.render();
-            await window.adminDashboard.loadData();
-            notify('success', '✅ Admin Login Successful');
-            return;
+
+            // Branch Admin
+            if (email === 'ahmed@company.com' && password === 'Admin@123') {
+                currentUser = { type: 'admin', email };
+                closeLoginModal();
+                document.getElementById('public-page').innerHTML = '';
+                
+                if (!window.adminDashboard) {
+                    window.adminDashboard = new AdminDashboard(email);
+                }
+                document.getElementById('admin-container').innerHTML = window.adminDashboard.render();
+                await window.adminDashboard.loadData();
+                notify('success', '✅ Admin Login Successful');
+                return;
+            }
+
+            // Customer (any email/password)
+            currentUser = { type: 'customer', email, name: email.split('@')[0] };
+            closeLoginModal();
+            document.getElementById('public-page').innerHTML = '';
+            
+            if (!window.customerDashboard) {
+                window.customerDashboard = new CustomerDashboard(email);
+            }
+            document.getElementById('customer-container').innerHTML = window.customerDashboard.render();
+            await window.customerDashboard.loadData();
+            notify('success', '✅ Login Successful');
         }
 
-        // Customer Login
-        currentUser = { type: 'customer', email, name: email.split('@')[0] };
-        closeLoginModal();
-        document.getElementById('public-page-container').innerHTML = '';
-        
-        if (!window.customerDashboard) {
-            window.customerDashboard = new CustomerDashboard(email);
-        }
-        document.getElementById('customer-container').innerHTML = window.customerDashboard.render();
-        await window.customerDashboard.loadData();
-        notify('success', '✅ Login Successful');
-    }
-</script>
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('public-page').innerHTML = renderPublicPage();
+        });
+    </script>
 
-<!-- Initialize App -->
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        document.getElementById('public-page-container').innerHTML = renderPublicPage();
-    });
-</script>
+    <!-- ============================================
+         LOAD COMPONENTS (MATCHING YOUR FOLDER STRUCTURE)
+         ============================================ -->
+    
+    <!-- MAIN ADMIN FOLDER COMPONENTS -->
+    <script src="MainAdmin/Admins.js"></script>
+    <script src="MainAdmin/Customers.js"></script>
+    <script src="MainAdmin/Ranges.js"></script>
+    <script src="MainAdmin/Payments.js"></script>
+    <script src="MainAdmin/Analytics.js"></script>
+    <script src="MainAdmin/Transactions.js"></script>
+    <script src="MainAdmin/AuditLog.js"></script>
+    <script src="MainAdmin/Notifications.js"></script>
+    <script src="MainAdmin/Settings.js"></script>
 
-<!-- Styles -->
-<style>
-    .glass-panel {
-        background: rgba(15, 23, 42, 0.8);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-    }
-    
-    .text-gradient {
-        background: linear-gradient(135deg, #FCD34D 0%, #F59E0B 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
-    
-    .tab-button.active {
-        border-bottom: 2px solid #FCD34D;
-    }
-    
-    @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.5; }
-    }
-    
-    .animate-pulse {
-        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-    }
-</style>
+    <!-- BRANCH ADMIN FOLDER COMPONENTS -->
+    <script src="BranchAdmin/AdminDashboard.js"></script>
+
+    <!-- CUSTOMER FOLDER COMPONENTS -->
+    <script src="Customer/CustomerDashboard.js"></script>
+
+    <!-- MAIN ADMIN DASHBOARD (LAST) -->
+    <script src="MainAdmin/MainAdminDashboard.js"></script>
 
 </body>
 </html>
