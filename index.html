@@ -795,19 +795,22 @@ await window.mainAdminDashboard.loadData();
 }
  
     else if (email === 'ahmed@company.com' && password === 'Ahmed123') {
-        currentUser = { type: 'admin', name: 'Ahmed Mohamed', email };
-        document.getElementById('public-page').classList.add('hidden');
-        document.getElementById('login-modal').classList.add('hidden');
-        document.getElementById('admin-dashboard').classList.remove('hidden');
-        document.getElementById('admin-name').textContent = 'Ahmed Mohamed';
-        
-        // Create dashboard and load data
-        const adminDash = new AdminDashboard('admin1');
-        document.getElementById('dashboards-container').innerHTML = adminDash.render();
-        await adminDash.loadData(); // ← LOAD FROM FIRESTORE
-        
-        notify('success', '✅ Admin Login Successful');
-    } 
+    currentUser = { type: 'admin', name: 'Ahmed Mohamed', email };
+    document.getElementById('public-page').classList.add('hidden');
+    document.getElementById('login-modal').classList.add('hidden');
+    
+    // 1. Initialize the global object
+    window.adminDashboard = new AdminDashboard('admin1');
+    
+    // 2. Render to the container
+    document.getElementById('dashboards-container').innerHTML = window.adminDashboard.render();
+    
+    // 3. Now it is safe to load data
+    await window.adminDashboard.loadData();
+    
+    document.getElementById('admin-dashboard').classList.remove('hidden');
+    notify('success', '✅ Admin Login Successful');
+} 
     else if (email === 'm@email.com' && password === 'Pass123') {
         currentUser = { type: 'customer', name: 'Mohammed', email };
         document.getElementById('public-page').classList.add('hidden');
