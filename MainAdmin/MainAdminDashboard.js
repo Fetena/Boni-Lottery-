@@ -1,7 +1,62 @@
 // ============================================
-// MAIN ADMIN DASHBOARD (PARENT COMPONENT)
+// MAIN ADMIN DASHBOARD (PARENT COMPONENT) - FIXED
 // Complete with Firestore integration
 // ============================================
+
+// Mock child component classes (add proper implementations in separate files)
+class Admins {
+    constructor() { this.admins = []; }
+    render() { return '<div id="admins-list" class="space-y-4"><p class="text-slate-400">Loading...</p></div>'; }
+    async loadData() { /* Load data */ }
+}
+
+class Customers {
+    constructor() { this.customers = []; }
+    render() { return '<div id="customers-list" class="space-y-4"><p class="text-slate-400">Loading...</p></div>'; }
+    async loadData() { /* Load data */ }
+}
+
+class Ranges {
+    constructor() { this.ranges = []; }
+    render() { return '<div id="ranges-list" class="space-y-4"><p class="text-slate-400">Loading...</p></div>'; }
+    async loadData() { /* Load data */ }
+}
+
+class Payments {
+    constructor() { this.payments = []; }
+    render() { return '<div id="payments-list" class="space-y-4"><p class="text-slate-400">Loading...</p></div>'; }
+    async loadData() { /* Load data */ }
+}
+
+class Analytics {
+    constructor() { this.analytics = []; }
+    render() { return '<div id="analytics-list" class="space-y-4"><p class="text-slate-400">Loading...</p></div>'; }
+    async loadData() { /* Load data */ }
+}
+
+class Transactions {
+    constructor() { this.transactions = []; }
+    render() { return '<div id="transactions-list" class="space-y-4"><p class="text-slate-400">Loading...</p></div>'; }
+    async loadData() { /* Load data */ }
+}
+
+class AuditLog {
+    constructor() { this.logs = []; }
+    render() { return '<div id="auditlog-list" class="space-y-4"><p class="text-slate-400">Loading...</p></div>'; }
+    async loadData() { /* Load data */ }
+}
+
+class Notifications {
+    constructor() { this.notifications = []; }
+    render() { return '<div id="notifications-list" class="space-y-4"><p class="text-slate-400">Loading...</p></div>'; }
+    async loadData() { /* Load data */ }
+}
+
+class Settings {
+    constructor() { this.settings = {}; }
+    render() { return '<div id="settings-content" class="space-y-4"><p class="text-slate-400">Loading...</p></div>'; }
+    async loadData() { /* Load data */ }
+}
 
 class MainAdminDashboard {
     constructor() {
@@ -33,7 +88,7 @@ class MainAdminDashboard {
                         
                         <!-- TABS -->
                         <div class="flex gap-2 border-b border-yellow-400/10 pb-2 overflow-x-auto">
-                            <button onclick="window.mainAdminDashboard.switchTab('admins')" class="tab-button active px-4 py-2 text-xs font-bold text-yellow-400">📊 Dashboard</button>
+                            <button onclick="window.mainAdminDashboard.switchTab('dashboard')" class="tab-button active px-4 py-2 text-xs font-bold text-yellow-400">📊 Dashboard</button>
                             <button onclick="window.mainAdminDashboard.switchTab('admins')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🛡️ Admins</button>
                             <button onclick="window.mainAdminDashboard.switchTab('customers')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">👥 Customers</button>
                             <button onclick="window.mainAdminDashboard.switchTab('ranges')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📊 Ranges</button>
@@ -82,65 +137,84 @@ class MainAdminDashboard {
         `;
     }
 
-    // Inside MainAdmin/MainAdminDashboard.js
-
-async loadData() {
-    try {
-        // 1. Run loadData for all child components
-        await Promise.all([
-            this.admins.loadData(),
-            this.customers.loadData(),
-            this.ranges.loadData(),
-            this.payments.loadData(),
-            this.analytics.loadData(),
-            this.transactions.loadData(),
-            this.auditLog.loadData(),
-            this.notifications.loadData(),
-            this.settings.loadData()
-        ]);
-        this.loadTabs();
-        // 2. Update the total stats on the main dashboard tab
-        await this.updateDashboardStats();
-        
-        notify('info', '✅ All dashboard data loaded');
-    } catch (error) {
-        console.error('Error in MainAdminDashboard loadData:', error);
+    async loadData() {
+        try {
+            // 1. Run loadData for all child components
+            await Promise.all([
+                this.admins.loadData(),
+                this.customers.loadData(),
+                this.ranges.loadData(),
+                this.payments.loadData(),
+                this.analytics.loadData(),
+                this.transactions.loadData(),
+                this.auditLog.loadData(),
+                this.notifications.loadData(),
+                this.settings.loadData()
+            ]);
+            
+            this.loadTabs();
+            
+            // 2. Update the total stats on the main dashboard tab
+            await this.updateDashboardStats();
+            
+            notify('info', '✅ All dashboard data loaded');
+        } catch (error) {
+            console.error('Error in MainAdminDashboard loadData:', error);
+            notify('error', '❌ Error loading dashboard data');
+        }
     }
-}
+
     loadTabs() {
-        document.getElementById('main-admins').innerHTML = this.admins.render();
-        document.getElementById('main-customers').innerHTML = this.customers.render();
-        document.getElementById('main-ranges').innerHTML = this.ranges.render();
-        document.getElementById('main-payments').innerHTML = this.payments.render();
-        document.getElementById('main-analytics').innerHTML = this.analytics.render();
-        document.getElementById('main-transactions').innerHTML = this.transactions.render();
-        document.getElementById('main-auditlog').innerHTML = this.auditLog.render();
-        document.getElementById('main-notifications').innerHTML = this.notifications.render();
-        document.getElementById('main-settings').innerHTML = this.settings.render();
+        const adminsContent = document.getElementById('main-admins');
+        const customersContent = document.getElementById('main-customers');
+        const rangesContent = document.getElementById('main-ranges');
+        const paymentsContent = document.getElementById('main-payments');
+        const analyticsContent = document.getElementById('main-analytics');
+        const transactionsContent = document.getElementById('main-transactions');
+        const auditlogContent = document.getElementById('main-auditlog');
+        const notificationsContent = document.getElementById('main-notifications');
+        const settingsContent = document.getElementById('main-settings');
+
+        if (adminsContent) adminsContent.innerHTML = this.admins.render();
+        if (customersContent) customersContent.innerHTML = this.customers.render();
+        if (rangesContent) rangesContent.innerHTML = this.ranges.render();
+        if (paymentsContent) paymentsContent.innerHTML = this.payments.render();
+        if (analyticsContent) analyticsContent.innerHTML = this.analytics.render();
+        if (transactionsContent) transactionsContent.innerHTML = this.transactions.render();
+        if (auditlogContent) auditlogContent.innerHTML = this.auditLog.render();
+        if (notificationsContent) notificationsContent.innerHTML = this.notifications.render();
+        if (settingsContent) settingsContent.innerHTML = this.settings.render();
     }
 
     async updateDashboardStats() {
         try {
-            if (!db) return;
+            if (!db) {
+                console.error('Database not initialized');
+                return;
+            }
 
             // Count admins
             const adminsSnap = await db.collection('admins').get();
-            document.getElementById('total-admins').textContent = adminsSnap.size;
+            const adminsEl = document.getElementById('total-admins');
+            if (adminsEl) adminsEl.textContent = adminsSnap.size;
 
             // Count customers
             const customersSnap = await db.collection('customers').get();
-            document.getElementById('total-customers').textContent = customersSnap.size;
+            const customersEl = document.getElementById('total-customers');
+            if (customersEl) customersEl.textContent = customersSnap.size;
 
             // Count tickets
             const ticketsSnap = await db.collection('customer_tickets').get();
-            document.getElementById('total-tickets').textContent = ticketsSnap.size;
+            const ticketsEl = document.getElementById('total-tickets');
+            if (ticketsEl) ticketsEl.textContent = ticketsSnap.size;
 
             // Calculate revenue
             let revenue = 0;
             ticketsSnap.forEach(doc => {
                 revenue += doc.data().cost || 0;
             });
-            document.getElementById('total-revenue').textContent = revenue.toLocaleString() + ' ETB';
+            const revenueEl = document.getElementById('total-revenue');
+            if (revenueEl) revenueEl.textContent = revenue.toLocaleString() + ' ETB';
         } catch (error) {
             console.error('Error updating dashboard stats:', error);
         }
@@ -148,14 +222,16 @@ async loadData() {
 
     switchTab(tabName) {
         // Hide all tabs
-        document.querySelectorAll('[id^="main-"]').forEach(el => {
+        const tabElements = document.querySelectorAll('[id^="main-"]');
+        tabElements.forEach(el => {
             if (el.classList && el.classList.contains('tab-content')) {
                 el.style.display = 'none';
             }
         });
 
         // Deactivate all buttons
-        document.querySelectorAll('.tab-button').forEach(btn => {
+        const tabButtons = document.querySelectorAll('#main-admin-dashboard .tab-button');
+        tabButtons.forEach(btn => {
             btn.classList.remove('active');
             btn.style.color = '';
         });
@@ -167,12 +243,13 @@ async loadData() {
             tab.classList.add('active');
         }
 
-        // Activate button
-        event.target.classList.add('active');
-        event.target.style.color = '#FCD34D';
+        // Activate button (find the clicked button)
+        if (event && event.target) {
+            event.target.classList.add('active');
+            event.target.style.color = '#FCD34D';
+        }
     }
 }
 
 // Store global reference
-//let mainAdminDashboard = null;
 window.mainAdminDashboard = new MainAdminDashboard();
