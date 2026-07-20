@@ -97,11 +97,11 @@ class MainAdminDashboard {
                 this.auditLog.loadData(),
                 this.notifications.loadData(),
                 this.settings.loadData()
-            ]);
-            
-            document.getElementById('admin-list').innerHTML = this.admins.renderAdminsList();
-        document.getElementById('customers-list').innerHTML = this.customers.renderCustomersList();
-
+            ]);   
+            //document.getElementById('admin-list').innerHTML = this.admins.renderAdminsList();
+        //document.getElementById('customers-list').innerHTML = this.customers.renderCustomersList();
+        this.loadTabs(); 
+        await this.updateDashboardStats();
         notify('info', '✅ Data loaded successfully');
     } catch (error) {
         console.error('Error loading data:', error);;
