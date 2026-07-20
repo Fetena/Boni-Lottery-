@@ -1,5 +1,5 @@
 // ============================================
-// MAIN ADMIN - CUSTOMERS MANAGEMENT
+// MAIN ADMIN - CUSTOMERS MANAGEMENT (FIXED)
 // ============================================
 
 class Customers {
@@ -16,32 +16,27 @@ class Customers {
         `;
     }
 
-    //async loadData() {
-        //try {
-            //if (!db) return;
-           // const snapshot = await db.collection('customers').get();
-           // this.customers = [];
-           // snapshot.forEach(doc => {
-               // this.customers.push({ id: doc.id, ...doc.data() });
-           // });
-       // } catch (error) {
-           // console.error('Error loading customers:', error);
-      //  }
-  //  }
-    // Inside MainAdmin/Customers.js
-async loadData() {
-    try {
-        const snapshot = await db.collection('customers').get();
-        this.customers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    async loadData() {
+        try {
+            if (!db) {
+                console.error('Database not initialized');
+                return;
+            }
+            
+            const snapshot = await db.collection('customers').get();
+            this.customers = [];
+            snapshot.forEach(doc => {
+                this.customers.push({ id: doc.id, ...doc.data() });
+            });
 
-        const listContainer = document.getElementById('customers-list'); 
-        if (listContainer) {
-            listContainer.innerHTML = this.renderCustomersList();
+            const listContainer = document.getElementById('customers-list'); 
+            if (listContainer) {
+                listContainer.innerHTML = this.renderCustomersList();
+            }
+        } catch (error) {
+            console.error('Error loading customers:', error);
         }
-    } catch (error) {
-        console.error('Error loading customers:', error);
     }
-}
 
     renderCustomersList() {
         if (this.customers.length === 0) {
