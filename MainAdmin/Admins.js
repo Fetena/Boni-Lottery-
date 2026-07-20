@@ -1,5 +1,5 @@
 // ============================================
-// MAIN ADMIN - ADMINS MANAGEMENT
+// MAIN ADMIN - ADMINS MANAGEMENT (FIXED)
 // ============================================
 
 class Admins {
@@ -12,9 +12,9 @@ class Admins {
             <div class="space-y-4">
                 <div class="flex justify-between items-center">
                     <h3 class="text-2xl font-bold text-white">🛡️ Manage Admins</h3>
-                    <button onclick="mainAdminDashboard.admins.showCreateModal()" class="px-4 py-2 bg-yellow-400 text-black font-bold rounded-xl">+ Create Admin</button>
+                    <button onclick="window.mainAdminDashboard.admins.showCreateModal()" class="px-4 py-2 bg-yellow-400 text-black font-bold rounded-xl">+ Create Admin</button>
                 </div>
-                <div id="admins-list" class="space-y-3"></div>
+                <div id="admins-list" class="space-y-3">${this.renderAdminsList()}</div>
             </div>
 
             <!-- Create Admin Modal -->
@@ -27,48 +27,65 @@ class Admins {
                         <input type="email" id="admin-email-input" placeholder="Email" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white">
                         <input type="password" id="admin-password-input" placeholder="Password" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white">
                         <input type="tel" id="admin-phone-input" placeholder="Phone" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white">
-                        <button onclick="mainAdminDashboard.admins.createAdmin()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl">Create</button>
-                        <button onclick="mainAdminDashboard.admins.closeCreateModal()" class="w-full py-2 bg-slate-700 text-white rounded-xl">Cancel</button>
+                        <button onclick="window.mainAdminDashboard.admins.createAdmin()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl">Create</button>
+                        <button onclick="window.mainAdminDashboard.admins.closeCreateModal()" class="w-full py-2 bg-slate-700 text-white rounded-xl">Cancel</button>
                     </div>
                 </div>
             </div>
         `;
     }
 
-    // Inside MainAdmin/Admins.js
+    async loadData() {
+        try {
+            if (!db) {
+                console.error('Database not initialized');
+                return;
+            }
+            
+            const snapshot = await db.collection('admins').get();
+            this.admins = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-async loadData() {
-    try {
-        const snapshot = await db.collection('admins').get();
-        this.admins = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-        // --- ADD THIS LINE ---
-        // This targets the div where the list should appear
-        const listContainer = document.getElementById('admins-list'); 
-        if (listContainer) {
-            listContainer.innerHTML = this.renderAdminsList(); // Or your equivalent render function
+            const listContainer = document.getElementById('admins-list'); 
+            if (listContainer) {
+                listContainer.innerHTML = this.renderAdminsList();
+            }
+        } catch (error) {
+            console.error('Error loading admins:', error);
         }
-    } catch (error) {
-        console.error('Error:', error);
     }
-}
 
     showCreateModal() {
-        document.getElementById('create-admin-modal').style.display = 'flex';
+        const modal = document.getElementById('create-admin-modal');
+        if (modal) {
+            modal.style.display = 'flex';
+        }
     }
 
     closeCreateModal() {
-        document.getElementById('create-admin-modal').style.display = 'none';
+        const modal = document.getElementById('create-admin-modal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
     }
 
     async createAdmin() {
-        const name = document.getElementById('admin-name-input').value;
-        const email = document.getElementById('admin-email-input').value;
-        const password = document.getElementById('admin-password-input').value;
-        const phone = document.getElementById('admin-phone-input').value;
+        const nameInput = document.getElementById('admin-name-input');
+        const emailInput = document.getElementById('admin-email-input');
+        const passwordInput = document.getElementById('admin-password-input');
+        const phoneInput = document.getElementById('admin-phone-input');
+
+        const name = nameInput?.value || '';
+        const email = emailInput?.value || '';
+        const password = passwordInput?.value || '';
+        const phone = phoneInput?.value || '';
 
         if (!name || !email || !password || !phone) {
             notify('error', '❌ Fill all fields');
+            return;
+        }
+
+        if (!db) {
+            notify('error', '❌ Database not initialized');
             return;
         }
 
@@ -86,13 +103,14 @@ async loadData() {
 
             notify('success', `✅ Admin ${name} created!`);
             this.closeCreateModal();
-            document.getElementById('admin-name-input').value = '';
-            document.getElementById('admin-email-input').value = '';
-            document.getElementById('admin-password-input').value = '';
-            document.getElementById('admin-phone-input').value = '';
+            
+            // Clear inputs
+            if (nameInput) nameInput.value = '';
+            if (emailInput) emailInput.value = '';
+            if (passwordInput) passwordInput.value = '';
+            if (phoneInput) phoneInput.value = '';
 
             await this.loadData();
-            document.getElementById('admins-list').innerHTML = this.renderAdminsList();
         } catch (error) {
             notify('error', `❌ Error: ${error.message}`);
         }
@@ -107,14 +125,14 @@ async loadData() {
             <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
                 <div class="flex justify-between items-start">
                     <div>
-                        <p class="font-bold text-white">${admin.name}</p>
-                        <p class="text-xs text-slate-400">${admin.email} • ${admin.phone}</p>
+                        <p class="font-bold text-white">${admin.name || 'N/A'}</p>
+                        <p class="text-xs text-slate-400">${admin.email || 'N/A'} • ${admin.phone || 'N/A'}</p>
                         <p class="text-xs text-slate-400">Range: ${admin.ticketRange?.start || 1} - ${admin.ticketRange?.end || 100}</p>
                         <p class="text-xs text-slate-400">Customers: ${admin.customers || 0} • Revenue: ${admin.revenue || 0} ETB</p>
                     </div>
                     <div class="flex gap-2">
-                        <button onclick="mainAdminDashboard.admins.editAdmin('${admin.id}')" class="px-3 py-1 bg-yellow-400/20 text-yellow-400 text-xs rounded">Edit</button>
-                        <button onclick="mainAdminDashboard.admins.deleteAdmin('${admin.id}')" class="px-3 py-1 bg-red-400/20 text-red-400 text-xs rounded">Delete</button>
+                        <button onclick="window.mainAdminDashboard.admins.editAdmin('${admin.id}')" class="px-3 py-1 bg-yellow-400/20 text-yellow-400 text-xs rounded">Edit</button>
+                        <button onclick="window.mainAdminDashboard.admins.deleteAdmin('${admin.id}')" class="px-3 py-1 bg-red-400/20 text-red-400 text-xs rounded">Delete</button>
                     </div>
                 </div>
             </div>
@@ -122,18 +140,21 @@ async loadData() {
     }
 
     async editAdmin(adminId) {
-        // Placeholder for edit functionality
-        notify('info', 'Edit functionality coming soon');
+        notify('info', 'ℹ️ Edit functionality coming soon');
     }
 
     async deleteAdmin(adminId) {
         if (!confirm('Delete this admin?')) return;
 
+        if (!db) {
+            notify('error', '❌ Database not initialized');
+            return;
+        }
+
         try {
             await db.collection('admins').doc(adminId).delete();
             notify('success', '✅ Admin deleted');
             await this.loadData();
-            document.getElementById('admins-list').innerHTML = this.renderAdminsList();
         } catch (error) {
             notify('error', `❌ Error: ${error.message}`);
         }
