@@ -1,5 +1,5 @@
 // ============================================
-// MAIN ADMIN DASHBOARD (PARENT COMPONENT) - FIXED v2
+// MAIN ADMIN DASHBOARD (PARENT COMPONENT) - FIXED
 // Complete with Firestore integration
 // ============================================
 
@@ -84,8 +84,6 @@ class MainAdminDashboard {
 
     async loadData() {
         try {
-            console.log('📥 Starting loadData...');
-            
             // 1. Run loadData for all child components
             await Promise.all([
                 this.admins.loadData(),
@@ -99,14 +97,12 @@ class MainAdminDashboard {
                 this.settings.loadData()
             ]);
             
-            console.log('✅ All component data loaded');
             this.loadTabs();
             
             // 2. Update the total stats on the main dashboard tab
             await this.updateDashboardStats();
             
             notify('info', '✅ All dashboard data loaded');
-            console.log('✅ Dashboard fully initialized');
         } catch (error) {
             console.error('Error in MainAdminDashboard loadData:', error);
             notify('error', '❌ Error loading dashboard data');
@@ -115,7 +111,6 @@ class MainAdminDashboard {
 
     loadTabs() {
         try {
-            console.log('🔄 Loading tabs content...');
             const adminsContent = document.getElementById('main-admins');
             const customersContent = document.getElementById('main-customers');
             const rangesContent = document.getElementById('main-ranges');
@@ -135,8 +130,6 @@ class MainAdminDashboard {
             if (auditlogContent) auditlogContent.innerHTML = this.auditLog.render();
             if (notificationsContent) notificationsContent.innerHTML = this.notifications.render();
             if (settingsContent) settingsContent.innerHTML = this.settings.render();
-            
-            console.log('✅ All tabs content loaded');
         } catch (error) {
             console.error('Error in loadTabs:', error);
         }
@@ -177,10 +170,8 @@ class MainAdminDashboard {
     }
 
     switchTab(tabName, event) {
-        console.log('🔀 Switching to tab:', tabName);
-        
         // Hide all tabs
-        const tabElements = document.querySelectorAll('[id^="main-"]');
+        const tabElements = document.querySelectorAll('#main-admin-dashboard [id^="main-"]');
         tabElements.forEach(el => {
             if (el.classList && el.classList.contains('tab-content')) {
                 el.style.display = 'none';
@@ -188,7 +179,7 @@ class MainAdminDashboard {
         });
 
         // Deactivate all buttons
-        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabButtons = document.querySelectorAll('#main-admin-dashboard .tab-button');
         tabButtons.forEach(btn => {
             btn.classList.remove('active');
             btn.style.color = '';
@@ -199,9 +190,6 @@ class MainAdminDashboard {
         if (tab) {
             tab.style.display = 'block';
             tab.classList.add('active');
-            console.log('✅ Tab shown:', tabName);
-        } else {
-            console.warn('⚠️ Tab not found:', `main-${tabName}`);
         }
 
         // Activate button
@@ -212,6 +200,5 @@ class MainAdminDashboard {
     }
 }
 
-// ⚠️ DO NOT CREATE INSTANCE HERE
-// Let the HTML initialize it when needed
-// window.mainAdminDashboard will be created in the login handler
+// Store global reference
+window.mainAdminDashboard = new MainAdminDashboard();
