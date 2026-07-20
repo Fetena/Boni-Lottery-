@@ -3,61 +3,6 @@
 // Complete with Firestore integration
 // ============================================
 
-// Mock child component classes (add proper implementations in separate files)
-class Admins {
-    constructor() { this.admins = []; }
-    render() { return '<div id="admins-list" class="space-y-4"><p class="text-slate-400">Loading...</p></div>'; }
-    async loadData() { /* Load data */ }
-}
-
-class Customers {
-    constructor() { this.customers = []; }
-    render() { return '<div id="customers-list" class="space-y-4"><p class="text-slate-400">Loading...</p></div>'; }
-    async loadData() { /* Load data */ }
-}
-
-class Ranges {
-    constructor() { this.ranges = []; }
-    render() { return '<div id="ranges-list" class="space-y-4"><p class="text-slate-400">Loading...</p></div>'; }
-    async loadData() { /* Load data */ }
-}
-
-class Payments {
-    constructor() { this.payments = []; }
-    render() { return '<div id="payments-list" class="space-y-4"><p class="text-slate-400">Loading...</p></div>'; }
-    async loadData() { /* Load data */ }
-}
-
-class Analytics {
-    constructor() { this.analytics = []; }
-    render() { return '<div id="analytics-list" class="space-y-4"><p class="text-slate-400">Loading...</p></div>'; }
-    async loadData() { /* Load data */ }
-}
-
-class Transactions {
-    constructor() { this.transactions = []; }
-    render() { return '<div id="transactions-list" class="space-y-4"><p class="text-slate-400">Loading...</p></div>'; }
-    async loadData() { /* Load data */ }
-}
-
-class AuditLog {
-    constructor() { this.logs = []; }
-    render() { return '<div id="auditlog-list" class="space-y-4"><p class="text-slate-400">Loading...</p></div>'; }
-    async loadData() { /* Load data */ }
-}
-
-class Notifications {
-    constructor() { this.notifications = []; }
-    render() { return '<div id="notifications-list" class="space-y-4"><p class="text-slate-400">Loading...</p></div>'; }
-    async loadData() { /* Load data */ }
-}
-
-class Settings {
-    constructor() { this.settings = {}; }
-    render() { return '<div id="settings-content" class="space-y-4"><p class="text-slate-400">Loading...</p></div>'; }
-    async loadData() { /* Load data */ }
-}
-
 class MainAdminDashboard {
     constructor() {
         // Initialize ALL child components
@@ -88,16 +33,16 @@ class MainAdminDashboard {
                         
                         <!-- TABS -->
                         <div class="flex gap-2 border-b border-yellow-400/10 pb-2 overflow-x-auto">
-                            <button onclick="window.mainAdminDashboard.switchTab('dashboard')" class="tab-button active px-4 py-2 text-xs font-bold text-yellow-400">📊 Dashboard</button>
-                            <button onclick="window.mainAdminDashboard.switchTab('admins')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🛡️ Admins</button>
-                            <button onclick="window.mainAdminDashboard.switchTab('customers')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">👥 Customers</button>
-                            <button onclick="window.mainAdminDashboard.switchTab('ranges')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📊 Ranges</button>
-                            <button onclick="window.mainAdminDashboard.switchTab('payments')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">💳 Payments</button>
-                            <button onclick="window.mainAdminDashboard.switchTab('analytics')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📈 Analytics</button>
-                            <button onclick="window.mainAdminDashboard.switchTab('transactions')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📋 Transactions</button>
-                            <button onclick="window.mainAdminDashboard.switchTab('auditlog')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🔒 Audit</button>
-                            <button onclick="window.mainAdminDashboard.switchTab('notifications')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📢 Notify</button>
-                            <button onclick="window.mainAdminDashboard.switchTab('settings')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">⚙️ Settings</button>
+                            <button onclick="window.mainAdminDashboard.switchTab('dashboard', event)" class="tab-button active px-4 py-2 text-xs font-bold text-yellow-400">📊 Dashboard</button>
+                            <button onclick="window.mainAdminDashboard.switchTab('admins', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🛡️ Admins</button>
+                            <button onclick="window.mainAdminDashboard.switchTab('customers', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">👥 Customers</button>
+                            <button onclick="window.mainAdminDashboard.switchTab('ranges', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📊 Ranges</button>
+                            <button onclick="window.mainAdminDashboard.switchTab('payments', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">💳 Payments</button>
+                            <button onclick="window.mainAdminDashboard.switchTab('analytics', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📈 Analytics</button>
+                            <button onclick="window.mainAdminDashboard.switchTab('transactions', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📋 Transactions</button>
+                            <button onclick="window.mainAdminDashboard.switchTab('auditlog', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🔒 Audit</button>
+                            <button onclick="window.mainAdminDashboard.switchTab('notifications', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📢 Notify</button>
+                            <button onclick="window.mainAdminDashboard.switchTab('settings', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">⚙️ Settings</button>
                         </div>
 
                         <!-- TAB CONTENTS -->
@@ -165,25 +110,29 @@ class MainAdminDashboard {
     }
 
     loadTabs() {
-        const adminsContent = document.getElementById('main-admins');
-        const customersContent = document.getElementById('main-customers');
-        const rangesContent = document.getElementById('main-ranges');
-        const paymentsContent = document.getElementById('main-payments');
-        const analyticsContent = document.getElementById('main-analytics');
-        const transactionsContent = document.getElementById('main-transactions');
-        const auditlogContent = document.getElementById('main-auditlog');
-        const notificationsContent = document.getElementById('main-notifications');
-        const settingsContent = document.getElementById('main-settings');
+        try {
+            const adminsContent = document.getElementById('main-admins');
+            const customersContent = document.getElementById('main-customers');
+            const rangesContent = document.getElementById('main-ranges');
+            const paymentsContent = document.getElementById('main-payments');
+            const analyticsContent = document.getElementById('main-analytics');
+            const transactionsContent = document.getElementById('main-transactions');
+            const auditlogContent = document.getElementById('main-auditlog');
+            const notificationsContent = document.getElementById('main-notifications');
+            const settingsContent = document.getElementById('main-settings');
 
-        if (adminsContent) adminsContent.innerHTML = this.admins.render();
-        if (customersContent) customersContent.innerHTML = this.customers.render();
-        if (rangesContent) rangesContent.innerHTML = this.ranges.render();
-        if (paymentsContent) paymentsContent.innerHTML = this.payments.render();
-        if (analyticsContent) analyticsContent.innerHTML = this.analytics.render();
-        if (transactionsContent) transactionsContent.innerHTML = this.transactions.render();
-        if (auditlogContent) auditlogContent.innerHTML = this.auditLog.render();
-        if (notificationsContent) notificationsContent.innerHTML = this.notifications.render();
-        if (settingsContent) settingsContent.innerHTML = this.settings.render();
+            if (adminsContent) adminsContent.innerHTML = this.admins.render();
+            if (customersContent) customersContent.innerHTML = this.customers.render();
+            if (rangesContent) rangesContent.innerHTML = this.ranges.render();
+            if (paymentsContent) paymentsContent.innerHTML = this.payments.render();
+            if (analyticsContent) analyticsContent.innerHTML = this.analytics.render();
+            if (transactionsContent) transactionsContent.innerHTML = this.transactions.render();
+            if (auditlogContent) auditlogContent.innerHTML = this.auditLog.render();
+            if (notificationsContent) notificationsContent.innerHTML = this.notifications.render();
+            if (settingsContent) settingsContent.innerHTML = this.settings.render();
+        } catch (error) {
+            console.error('Error in loadTabs:', error);
+        }
     }
 
     async updateDashboardStats() {
@@ -220,9 +169,9 @@ class MainAdminDashboard {
         }
     }
 
-    switchTab(tabName) {
+    switchTab(tabName, event) {
         // Hide all tabs
-        const tabElements = document.querySelectorAll('[id^="main-"]');
+        const tabElements = document.querySelectorAll('#main-admin-dashboard [id^="main-"]');
         tabElements.forEach(el => {
             if (el.classList && el.classList.contains('tab-content')) {
                 el.style.display = 'none';
@@ -243,7 +192,7 @@ class MainAdminDashboard {
             tab.classList.add('active');
         }
 
-        // Activate button (find the clicked button)
+        // Activate button
         if (event && event.target) {
             event.target.classList.add('active');
             event.target.style.color = '#FCD34D';
