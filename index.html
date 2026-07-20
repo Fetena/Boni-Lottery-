@@ -117,7 +117,7 @@
 <!-- Finally, load the parent dashboard -->
 <script src="Customer/CustomerDashboard.js"></script>
 <script src="BranchAdmin/AdminDashboard.js"></script>
-<script src="MainAdmin/MainAdminDashboard.js"></script>
+<script src="MainAdmin/MainAdminDashboard_v2.js"></script>
 </head>
 <body class="antialiased">
 
@@ -785,11 +785,11 @@ if (email === 'fita.regassa@gmail.com' && password === 'MainAdmin@123') {
     
     // --- CHANGE THIS SECTION ---
     // 1. Create the instance
-    mainAdminDashboard = new MainAdminDashboard(); 
-    
-    // 2. Render and load
-    document.getElementById('dashboards-container').innerHTML = mainAdminDashboard.render();
-    await mainAdminDashboard.loadData();
+    if (!window.mainAdminDashboard) {
+    window.mainAdminDashboard = new MainAdminDashboard();
+}
+document.getElementById('dashboards-container').innerHTML = window.mainAdminDashboard.render();
+await window.mainAdminDashboard.loadData();
     
     notify('success', '✅ Main Admin Login Successful');
 }
