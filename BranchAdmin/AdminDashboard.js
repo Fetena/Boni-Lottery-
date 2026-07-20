@@ -23,11 +23,11 @@ class AdminDashboard {
                         
                         <div class="flex gap-2 border-b border-yellow-400/10 pb-2 overflow-x-auto">
                         
-                            <button onclick="window.adminDashboard.switchTab('dashboard')" class="tab-button active px-4 py-2 text-xs font-bold text-yellow-400">📊 Dashboard</button>
-                            <button onclick="window.adminDashboard.switchTab('customers')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">👥 Customers</button>
-                            <button onclick="window.adminDashboard.switchTab('tickets')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">🎫 Tickets</button>
-                            <button onclick="window.adminDashboard.switchTab('payments')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">💳 Payments</button>
-                            <button onclick="window.adminDashboard.switchTab('settings')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">⚙️ Settings</button>
+                            <button onclick="window.adminDashboard.switchTab('dashboard', event)" class="tab-button active px-4 py-2 text-xs font-bold text-yellow-400">📊 Dashboard</button>
+                            <button onclick="window.adminDashboard.switchTab('customers', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">👥 Customers</button>
+                            <button onclick="window.adminDashboard.switchTab('tickets', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">🎫 Tickets</button>
+                            <button onclick="window.adminDashboard.switchTab('payments', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">💳 Payments</button>
+                            <button onclick="window.adminDashboard.switchTab('settings', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">⚙️ Settings</button>
                         </div>
 
                         <!-- Dashboard Tab -->
@@ -108,7 +108,7 @@ class AdminDashboard {
         `;
     }
 
-    switchTab(tabName) {
+    switchTab(tabName, event) {
         // Hide all admin tabs
         document.getElementById('admin-dashboard-tab').style.display = 'none';
         document.getElementById('admin-customers').style.display = 'none';
@@ -134,7 +134,10 @@ class AdminDashboard {
         }
 
         // Activate clicked button
+        //event.target.classList.add('active');
+        if (event && event.target) {
         event.target.classList.add('active');
+    }
     }
 
     async loadData() {
