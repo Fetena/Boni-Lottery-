@@ -211,7 +211,7 @@ class MainAdminDashboard {
         }
     }
 }
-window.mainAdminDashboard = new MainAdminDashboard();
+//window.mainAdminDashboard = new MainAdminDashboard();
 // ⚠️ DO NOT CREATE INSTANCE HERE
 // Let the HTML initialize it when needed
 // window.mainAdminDashboard will be created in the login handler
