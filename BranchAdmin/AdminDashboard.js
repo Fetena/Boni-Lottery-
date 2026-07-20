@@ -1,5 +1,5 @@
 // ============================================
-// ADMIN DASHBOARD - COMPLETE
+// ADMIN DASHBOARD - COMPLETE (FIXED)
 // ============================================
 
 class AdminDashboard {
@@ -23,15 +23,15 @@ class AdminDashboard {
                         
                         <div class="flex gap-2 border-b border-yellow-400/10 pb-2 overflow-x-auto">
                         
-                            <button onclick="window.AdminDashboard.switchTab('dashboard')" class="tab-button active px-4 py-2 text-xs font-bold text-yellow-400">📊 Dashboard</button>
-                            <button onclick="window.AdminDashboard.switchTab('customers')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">👥 Customers</button>
-                            <button onclick="window.AdminDashboard.switchTabb('tickets')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">🎫 Tickets</button>
-                            <button onclick="window.AdminDashboard.switchTab('payments')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">💳 Payments</button>
-                            <button onclick="window.AdminDashboard.switchTab('settings')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">⚙️ Settings</button>
+                            <button onclick="window.adminDashboard.switchTab('dashboard')" class="tab-button active px-4 py-2 text-xs font-bold text-yellow-400">📊 Dashboard</button>
+                            <button onclick="window.adminDashboard.switchTab('customers')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">👥 Customers</button>
+                            <button onclick="window.adminDashboard.switchTab('tickets')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">🎫 Tickets</button>
+                            <button onclick="window.adminDashboard.switchTab('payments')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">💳 Payments</button>
+                            <button onclick="window.adminDashboard.switchTab('settings')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">⚙️ Settings</button>
                         </div>
 
                         <!-- Dashboard Tab -->
-                        <div id="admin-dashboard" class="tab-content active space-y-6">
+                        <div id="admin-dashboard-tab" class="tab-content active space-y-6">
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
                                     <p class="text-xs text-slate-400">Total Customers</p>
@@ -108,6 +108,35 @@ class AdminDashboard {
         `;
     }
 
+    switchTab(tabName) {
+        // Hide all admin tabs
+        document.getElementById('admin-dashboard-tab').style.display = 'none';
+        document.getElementById('admin-customers').style.display = 'none';
+        document.getElementById('admin-tickets').style.display = 'none';
+        document.getElementById('admin-payments').style.display = 'none';
+        document.getElementById('admin-settings').style.display = 'none';
+
+        // Deactivate all buttons
+        const buttons = document.querySelectorAll('#admin-dashboard .tab-button');
+        buttons.forEach(btn => btn.classList.remove('active'));
+
+        // Show selected tab
+        if (tabName === 'dashboard') {
+            document.getElementById('admin-dashboard-tab').style.display = 'block';
+        } else if (tabName === 'customers') {
+            document.getElementById('admin-customers').style.display = 'block';
+        } else if (tabName === 'tickets') {
+            document.getElementById('admin-tickets').style.display = 'block';
+        } else if (tabName === 'payments') {
+            document.getElementById('admin-payments').style.display = 'block';
+        } else if (tabName === 'settings') {
+            document.getElementById('admin-settings').style.display = 'block';
+        }
+
+        // Activate clicked button
+        event.target.classList.add('active');
+    }
+
     async loadData() {
         try {
             await loadAdminCustomers();
@@ -119,6 +148,9 @@ class AdminDashboard {
         }
     }
 }
+
+// Store global reference
+window.adminDashboard = null;
 
 // ========== ADMIN CUSTOMERS - FIRESTORE ==========
 
@@ -137,6 +169,7 @@ async function addAdminCustomer() {
 
     if (!name || !email || !phone) return notify('error', '❌ Fill all fields');
     if (!db) return notify('error', '❌ Database not initialized');
+    if (!currentUser) return notify('error', '❌ User not authenticated');
 
     try {
         await db.collection('admin_customers').add({
@@ -162,7 +195,7 @@ async function addAdminCustomer() {
 }
 
 async function loadAdminCustomers() {
-    if (!db) return;
+    if (!db || !currentUser) return;
 
     try {
         const snapshot = await db.collection('admin_customers')
@@ -246,6 +279,7 @@ async function saveAdminPayments() {
 
     if (!telebirr || !cbe) return notify('error', '❌ Fill all fields');
     if (!db) return notify('error', '❌ Database not initialized');
+    if (!currentUser) return notify('error', '❌ User not authenticated');
 
     try {
         await db.collection('admin_settings').doc(currentUser.email).set({
@@ -262,7 +296,7 @@ async function saveAdminPayments() {
 }
 
 async function loadAdminPayments() {
-    if (!db) return;
+    if (!db || !currentUser) return;
 
     try {
         const doc = await db.collection('admin_settings').doc(currentUser.email).get();
@@ -279,7 +313,7 @@ async function loadAdminPayments() {
 // ========== ADMIN STATS ==========
 
 async function loadAdminStats() {
-    if (!db) return;
+    if (!db || !currentUser) return;
 
     try {
         const custSnapshot = await db.collection('admin_customers')
