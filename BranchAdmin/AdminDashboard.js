@@ -1,5 +1,5 @@
 // ============================================
-// ADMIN DASHBOARD - COMPLETE (FIXED)
+// ADMIN DASHBOARD - BRANCH ADMIN (FIXED)
 // ============================================
 
 class AdminDashboard {
@@ -22,7 +22,6 @@ class AdminDashboard {
                         <h2 class="text-3xl font-bold text-white">Admin Control Center</h2>
                         
                         <div class="flex gap-2 border-b border-yellow-400/10 pb-2 overflow-x-auto">
-                        
                             <button onclick="window.adminDashboard.switchTab('dashboard', event)" class="tab-button active px-4 py-2 text-xs font-bold text-yellow-400">📊 Dashboard</button>
                             <button onclick="window.adminDashboard.switchTab('customers', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">👥 Customers</button>
                             <button onclick="window.adminDashboard.switchTab('tickets', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">🎫 Tickets</button>
@@ -81,20 +80,12 @@ class AdminDashboard {
                         </div>
 
                         <!-- Settings Tab -->
-                        <!-- Updated Settings Tab -->
-<div id="admin-settings" class="tab-content" style="display: none;">
-    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
-        <h3 class="text-xl font-bold text-white mb-4">Admin Settings</h3>
-        <p class="text-slate-400">Admin ID: <span id="admin-id-display">${this.adminId}</span></p>
-        
-        <!-- Add these fields to make it useful -->
-        <div>
-            <label class="block text-xs text-slate-400 mb-2">Branch Name</label>
-            <input type="text" id="admin-branch-name" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white">
-        </div>
-        <button onclick="saveAdminSettings()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl">Save Changes</button>
-    </div>
-</div>
+                        <div id="admin-settings" class="tab-content" style="display: none;">
+                            <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                                <h3 class="text-xl font-bold text-white mb-4">Admin Settings</h3>
+                                <p class="text-slate-400">Admin ID: <span id="admin-id-display">${this.adminId}</span></p>
+                            </div>
+                        </div>
                     </div>
                 </main>
             </div>
@@ -117,7 +108,7 @@ class AdminDashboard {
     }
 
     switchTab(tabName, event) {
-        // Hide all admin tabs
+        // Hide all tabs
         document.getElementById('admin-dashboard-tab').style.display = 'none';
         document.getElementById('admin-customers').style.display = 'none';
         document.getElementById('admin-tickets').style.display = 'none';
@@ -142,44 +133,25 @@ class AdminDashboard {
         }
 
         // Activate clicked button
-        //event.target.classList.add('active');
         if (event && event.target) {
-        event.target.classList.add('active');
-    }
+            event.target.classList.add('active');
+            event.target.style.color = '#FCD34D';
+        }
     }
 
-   //async loadData() {
-        //try {
-            //await loadAdminCustomers();
-           // await loadAdminTickets();
-           // await loadAdminPayments();
-          //  await loadAdminStats();
-      //  } catch (error) {
-        //    console.error('Error loading admin data:', error);
-    //    }
-  //  }
-    // Update your loadData to pinpoint which function is failing
-async loadData() {
-    try {
-        console.log("Starting data load...");
-        
-        // Wrap each function in its own try/catch to see which one fails
-        await loadAdminCustomers().catch(e => console.error("Customers failed:", e));
-        await loadAdminTickets().catch(e => console.error("Tickets failed:", e));
-        await loadAdminPayments().catch(e => console.error("Payments failed:", e));
-        await loadAdminStats().catch(e => console.error("Stats failed:", e));
-        
-        console.log("All data load attempts finished.");
-    } catch (error) {
-        console.error('Critical failure in loadData:', error);
+    async loadData() {
+        try {
+            await loadAdminCustomers();
+            await loadAdminTickets();
+            await loadAdminPayments();
+            await loadAdminStats();
+        } catch (error) {
+            console.error('Error loading admin data:', error);
+        }
     }
 }
-}
 
-// Store global reference
-window.adminDashboard = null;
-
-// ========== ADMIN CUSTOMERS - FIRESTORE ==========
+// ========== ADMIN CUSTOMERS ==========
 
 async function openAddCustomerModal() {
     document.getElementById('customer-modal').style.display = 'flex';
