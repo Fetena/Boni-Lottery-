@@ -140,16 +140,32 @@ class AdminDashboard {
     }
     }
 
-    async loadData() {
-        try {
-            await loadAdminCustomers();
-            await loadAdminTickets();
-            await loadAdminPayments();
-            await loadAdminStats();
-        } catch (error) {
-            console.error('Error loading admin data:', error);
-        }
+   //async loadData() {
+        //try {
+            //await loadAdminCustomers();
+           // await loadAdminTickets();
+           // await loadAdminPayments();
+          //  await loadAdminStats();
+      //  } catch (error) {
+        //    console.error('Error loading admin data:', error);
+    //    }
+  //  }
+    // Update your loadData to pinpoint which function is failing
+async loadData() {
+    try {
+        console.log("Starting data load...");
+        
+        // Wrap each function in its own try/catch to see which one fails
+        await loadAdminCustomers().catch(e => console.error("Customers failed:", e));
+        await loadAdminTickets().catch(e => console.error("Tickets failed:", e));
+        await loadAdminPayments().catch(e => console.error("Payments failed:", e));
+        await loadAdminStats().catch(e => console.error("Stats failed:", e));
+        
+        console.log("All data load attempts finished.");
+    } catch (error) {
+        console.error('Critical failure in loadData:', error);
     }
+}
 }
 
 // Store global reference
