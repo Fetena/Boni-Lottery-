@@ -81,12 +81,20 @@ class AdminDashboard {
                         </div>
 
                         <!-- Settings Tab -->
-                        <div id="admin-settings" class="tab-content" style="display: none;">
-                            <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                                <h3 class="text-xl font-bold text-white mb-4">Admin Settings</h3>
-                                <p class="text-slate-400">Admin ID: <span id="admin-id-display">${this.adminId}</span></p>
-                            </div>
-                        </div>
+                        <!-- Updated Settings Tab -->
+<div id="admin-settings" class="tab-content" style="display: none;">
+    <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
+        <h3 class="text-xl font-bold text-white mb-4">Admin Settings</h3>
+        <p class="text-slate-400">Admin ID: <span id="admin-id-display">${this.adminId}</span></p>
+        
+        <!-- Add these fields to make it useful -->
+        <div>
+            <label class="block text-xs text-slate-400 mb-2">Branch Name</label>
+            <input type="text" id="admin-branch-name" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white">
+        </div>
+        <button onclick="saveAdminSettings()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl">Save Changes</button>
+    </div>
+</div>
                     </div>
                 </main>
             </div>
