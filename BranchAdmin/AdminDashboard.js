@@ -245,7 +245,7 @@ async function loadAdminTickets() {
     try {
         const snapshot = await db.collection('customer_tickets')
             .orderBy('createdAt', 'desc')
-            .limit(10)
+            .limit(50)
             .get();
 
         const content = document.getElementById('admin-tickets-list');
@@ -259,9 +259,17 @@ async function loadAdminTickets() {
         content.innerHTML = snapshot.docs.map(doc => {
             const ticket = doc.data();
             return `
-                <div class="glass-panel rounded-lg p-4 border border-yellow-400/10 text-xs">
-                    <p class="text-white">Numbers: ${ticket.numbers?.join(', ') || 'N/A'}</p>
-                    <p class="text-slate-400">Cost: ${ticket.cost} ETB • Status: ${ticket.status}</p>
+                <div class="glass-panel rounded-lg p-4 border border-yellow-400/10 text-xs space-y-2">
+                    <p class="text-white font-bold">Customer: ${ticket.customerName || 'N/A'} (${ticket.customerEmail || ''})</p>
+                    <p class="text-slate-400">Numbers: ${ticket.numbers?.join(', ') || 'N/A'}</p>
+                    <p class="text-slate-400">Cost: ${ticket.cost} ETB • Payment: ${ticket.paymentMethod || 'N/A'}</p>
+                    <div class="flex justify-between items-center pt-2 border-t border-yellow-400/10">
+                        <span class="px-2 py-1 bg-yellow-400/20 text-yellow-400 rounded">${ticket.status || 'Pending'}</span>
+                        <div class="flex gap-2">
+                            <button onclick="window.adminDashboard.approvePayment('${doc.id}')" class="px-3 py-1 bg-emerald-600 text-white font-bold rounded">Approve</button>
+                            <button onclick="window.adminDashboard.rejectPayment('${doc.id}')" class="px-3 py-1 bg-red-600 text-white font-bold rounded">Reject</button>
+                        </div>
+                    </div>
                 </div>
             `;
         }).join('');
