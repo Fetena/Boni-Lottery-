@@ -36,7 +36,35 @@ class AdminPayments {
             </div>
         `;
     }
+async approvePayment(docId) {
+        if (!db) return notify('error', '❌ Database not initialized');
+        try {
+            await db.collection('customer_tickets').doc(docId).update({
+                status: 'Approved',
+                approvedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            notify('success', '✅ Payment approved successfully!');
+            await loadAdminTickets(); // Refresh the branch admin ticket list
+            await loadAdminStats();  // Refresh revenue/stats
+        } catch (error) {
+            notify('error', `❌ Error: ${error.message}`);
+        }
+    }
 
+    async rejectPayment(docId) {
+        if (!db) return notify('error', '❌ Database not initialized');
+        try {
+            await db.collection('customer_tickets').doc(docId).update({
+                status: 'Rejected',
+                rejectedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            notify('error', '❌ Payment rejected');
+            await loadAdminTickets(); // Refresh the branch admin ticket list
+            await loadAdminStats();  // Refresh stats
+        } catch (error) {
+            notify('error', `❌ Error: ${error.message}`);
+        }
+    }
     savePaymentAccounts() {
         const telebirr = document.getElementById('admin-telebirr')?.value;
         const cbe = document.getElementById('admin-cbe')?.value;
