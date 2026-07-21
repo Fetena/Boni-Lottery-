@@ -35,6 +35,19 @@ class Transactions {
             console.error('Error loading transactions:', error);
         }
     }
+    async approvePayment(docId) {
+        if (!db) return notify('error', '❌ Database not initialized');
+        try {
+            await db.collection('customer_tickets').doc(docId).update({
+                status: 'Approved',
+                approvedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            notify('success', '✅ Payment approved successfully!');
+            await this.loadData(); // This refreshes the list
+        } catch (error) {
+            notify('error', `❌ Error: ${error.message}`);
+        }
+    }
     async rejectPayment(docId) {
         if (!db) return notify('error', '❌ Database not initialized');
         try {
