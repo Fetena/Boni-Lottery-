@@ -3,22 +3,38 @@ class Transactions {
         this.transactions = [];
     }
 
-    // ... your render and loadData methods ...
-
-    async approvePayment(docId) {
-        if (!db) return notify('error', '❌ Database not initialized');
-        try {
-            await db.collection('customer_tickets').doc(docId).update({
-                status: 'Approved',
-                approvedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            notify('success', '✅ Payment approved successfully!');
-            await this.loadData(); // Refresh the list
-        } catch (error) {
-            notify('error', `❌ Error: ${error.message}`);
-        }
+    render() {
+        return `
+            <div class="space-y-4">
+                <h3 class="text-2xl font-bold text-white">📋 Recent Transactions</h3>
+                <div id="transactions-list" class="space-y-3">${this.renderTransactionsList()}</div>
+            </div>
+        `;
     }
 
+    async loadData() {
+        try {
+            if (!db) return;
+
+            const snapshot = await db.collection('customer_tickets')
+                .orderBy('createdAt', 'desc')
+                .limit(50)
+                .get();
+
+            this.transactions = snapshot.docs.map((doc, index) => ({
+                id: doc.id,
+                index: index + 1,
+                ...doc.data()
+            }));
+
+            const listContainer = document.getElementById('transactions-list');
+            if (listContainer) {
+                listContainer.innerHTML = this.renderTransactionsList();
+            }
+        } catch (error) {
+            console.error('Error loading transactions:', error);
+        }
+    }
     async rejectPayment(docId) {
         if (!db) return notify('error', '❌ Database not initialized');
         try {
