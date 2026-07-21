@@ -150,57 +150,62 @@
         }
 
         async function handleLogin() {
-            const email = document.getElementById('login-email')?.value || '';
-            const password = document.getElementById('login-password')?.value || '';
+    const email = document.getElementById('login-email')?.value.trim() || '';
+    const password = document.getElementById('login-password')?.value || '';
 
-            if (!email || !password) {
-                notify('error', '❌ Fill all fields');
-                return;
-            }
+    if (!email || !password) {
+        notify('error', '❌ Fill all fields');
+        return;
+    }
 
-            // Main Admin
-            if (email === 'fita.regassa@gmail.com' && password === 'MainAdmin@123') {
-                currentUser = { type: 'main_admin', email };
-                closeLoginModal();
-                document.getElementById('public-page').innerHTML = '';
-                
-                if (!window.mainAdminDashboard) {
-                    window.mainAdminDashboard = new MainAdminDashboard();
-                }
-                document.getElementById('main-admin-container').innerHTML = window.mainAdminDashboard.render();
-                await window.mainAdminDashboard.loadData();
-                notify('success', '✅ Main Admin Login Successful');
-                return;
-            }
-
-            // Branch Admin
-            // Branch Admin
-            if (email === 'ahmed@company.com' && password === 'Ahmed123') { 
-                currentUser = { type: 'admin', email };
-                closeLoginModal();
-                document.getElementById('public-page').innerHTML = '';
-                
-                if (!window.adminDashboard) {
-                    window.adminDashboard = new AdminDashboard(email);
-                }
-                document.getElementById('admin-container').innerHTML = window.adminDashboard.render();
-                await window.adminDashboard.loadData();
-                notify('success', '✅ Admin Login Successful');
-                return;
-            }
-
-            // Customer (any email/password)
-            currentUser = { type: 'customer', email, name: email.split('@')[0] };
-            closeLoginModal();
-            document.getElementById('public-page').innerHTML = '';
-            
-            if (!window.customerDashboard) {
-                window.customerDashboard = new CustomerDashboard(email);
-            }
-            document.getElementById('customer-container').innerHTML = window.customerDashboard.render();
-            await window.customerDashboard.loadData();
-            notify('success', '✅ Login Successful');
+    // 1. Main Admin Check
+    if (email === 'fita.regassa@gmail.com' && password === 'MainAdmin@123') {
+        currentUser = { type: 'main_admin', email };
+        closeLoginModal();
+        document.getElementById('public-page').innerHTML = '';
+        
+        if (!window.mainAdminDashboard) {
+            window.mainAdminDashboard = new MainAdminDashboard();
         }
+        document.getElementById('main-admin-container').innerHTML = window.mainAdminDashboard.render();
+        await window.mainAdminDashboard.loadData();
+        notify('success', '✅ Main Admin Login Successful');
+        return;
+    }
+
+    // 2. Branch Admin Check
+    if (email === 'ahmed@company.com' && password === 'Ahmed123') {
+        currentUser = { type: 'admin', email };
+        closeLoginModal();
+        document.getElementById('public-page').innerHTML = '';
+        
+        if (!window.adminDashboard) {
+            window.adminDashboard = new AdminDashboard(email);
+        }
+        document.getElementById('admin-container').innerHTML = window.adminDashboard.render();
+        await window.adminDashboard.loadData();
+        notify('success', '✅ Admin Login Successful');
+        return;
+    }
+
+    // 3. Specific Customer Check (or validate against Firestore if customers register dynamically)
+    if (email === 'm@email.com' && password === 'Pass123') {
+        currentUser = { type: 'customer', email, name: email.split('@')[0] };
+        closeLoginModal();
+        document.getElementById('public-page').innerHTML = '';
+        
+        if (!window.customerDashboard) {
+            window.customerDashboard = new CustomerDashboard(email);
+        }
+        document.getElementById('customer-container').innerHTML = window.customerDashboard.render();
+        await window.customerDashboard.loadData();
+        notify('success', '✅ Login Successful');
+        return;
+    }
+
+    // 4. Block everything else if no match is found
+    notify('error', '❌ Invalid email or password. User does not exist.');
+}
 
         // Initialize app
         document.addEventListener('DOMContentLoaded', () => {
