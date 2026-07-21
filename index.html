@@ -187,7 +187,52 @@
         notify('success', '✅ Admin Login Successful');
         return;
     }
+// Global Ticket/Payment Approval Functions
+        async function approvePayment(docId) {
+            if (!db) return notify('error', '❌ Database not initialized');
 
+            try {
+                await db.collection('customer_tickets').doc(docId).update({
+                    status: 'Approved',
+                    approvedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                notify('success', '✅ Payment approved successfully!');
+                
+                // Refresh data based on who is logged in
+                if (window.adminDashboard?.loadData) {
+                    await window.adminDashboard.loadData();
+                }
+                if (window.mainAdminDashboard?.transactions?.loadData) {
+                    await window.mainAdminDashboard.transactions.loadData();
+                }
+            } catch (error) {
+                notify('error', `❌ Error approving payment: ${error.message}`);
+            }
+        }
+
+        async function rejectPayment(docId) {
+            if (!db) return notify('error', '❌ Database not initialized');
+
+            try {
+                await db.collection('customer_tickets').doc(docId).update({
+                    status: 'Rejected',
+                    rejectedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                notify('error', '❌ Payment rejected');
+                
+                // Refresh data based on who is logged in
+                if (window.adminDashboard?.loadData) {
+                    await window.adminDashboard.loadData();
+                }
+                if (window.mainAdminDashboard?.transactions?.loadData) {
+                    await window.mainAdminDashboard.transactions.loadData();
+                }
+            } catch (error) {
+                notify('error', `❌ Error rejecting payment: ${error.message}`);
+            }
+        }
     // 3. Specific Customer Check (or validate against Firestore if customers register dynamically)
     if (email === 'm@email.com' && password === 'Pass123') {
         currentUser = { type: 'customer', email, name: email.split('@')[0] };
