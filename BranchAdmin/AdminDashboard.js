@@ -106,7 +106,7 @@ class AdminDashboard {
             </div>
         `;
     }
-window.adminDashboard = new AdminDashboard();
+//window.adminDashboard = new AdminDashboard();
     switchTab(tabName, event) {
         // Hide all tabs
         document.getElementById('admin-dashboard-tab').style.display = 'none';
