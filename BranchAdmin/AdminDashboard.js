@@ -26,6 +26,8 @@ class AdminDashboard {
                             <button onclick="window.adminDashboard.switchTab('customers', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">👥 Customers</button>
                             <button onclick="window.adminDashboard.switchTab('tickets', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">🎫 Tickets</button>
                             <button onclick="window.adminDashboard.switchTab('payments', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">💳 Payments</button>
+                            <button onclick="window.adminDashboard.switchTab('notifications', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">💳 Notifications</button>
+                            <button onclick="window.adminDashboard.switchTab('bookAppointment', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">💳 BookAppointment</button>
                             <button onclick="window.adminDashboard.switchTab('settings', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">⚙️ Settings</button>
                         </div>
 
@@ -113,6 +115,8 @@ class AdminDashboard {
         document.getElementById('admin-customers').style.display = 'none';
         document.getElementById('admin-tickets').style.display = 'none';
         document.getElementById('admin-payments').style.display = 'none';
+        document.getElementById('admin-notifications').style.display = 'none';
+        document.getElementById('admin-bookAppointment').style.display = 'none';
         document.getElementById('admin-settings').style.display = 'none';
 
         // Deactivate all buttons
@@ -131,6 +135,11 @@ class AdminDashboard {
         } else if (tabName === 'settings') {
             document.getElementById('admin-settings').style.display = 'block';
         }
+        else if (tabName === 'notifications') {
+            document.getElementById('admin-notifications').style.display = 'block';
+        }else if (tabName === 'bookAppointment') {
+            document.getElementById('admin-bookAppointment').style.display = 'block';
+        }
 
         // Activate clicked button
         if (event && event.target) {
@@ -144,6 +153,8 @@ class AdminDashboard {
             await loadAdminCustomers();
             await loadAdminTickets();
             await loadAdminPayments();
+            await loadAdminNotifications();
+            await loadAdminBookAppointment();
             await loadAdminStats();
         } catch (error) {
             console.error('Error loading admin data:', error);
