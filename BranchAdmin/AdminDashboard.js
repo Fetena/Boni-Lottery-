@@ -167,14 +167,16 @@ class AdminDashboard {
             }
 
             const notifTab = document.getElementById('admin-notifications');
-            if (notifTab) notifTab.innerHTML = window.adminNotifications.render();
+            if (notifTab) {
+                notifTab.innerHTML = window.adminNotifications.render();
+                if (typeof window.adminNotifications.displayHistory === 'function') {
+                    window.adminNotifications.displayHistory();
+                }
+            }
 
             const apptTab = document.getElementById('admin-bookAppointment');
             if (apptTab) {
                 apptTab.innerHTML = window.adminBookAppointment.render();
-                if (typeof window.adminBookAppointment.displayHistory === 'function') {
-                    window.adminBookAppointment.displayHistory();
-                }
             }
         } catch (error) {
             console.error('Error loading admin data:', error);
