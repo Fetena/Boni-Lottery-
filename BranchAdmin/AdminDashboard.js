@@ -80,7 +80,11 @@ class AdminDashboard {
                                 <button onclick="saveAdminPayments()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl">Save Payments</button>
                             </div>
                         </div>
+                      <!-- Notifications Tab Content -->
+                     <div id="admin-notifications" class="tab-content" style="display: none;"></div>
 
+                     <!-- Book Appointment Tab Content -->
+                    <div id="admin-bookAppointment" class="tab-content" style="display: none;"></div>
                         <!-- Settings Tab -->
                         <div id="admin-settings" class="tab-content" style="display: none;">
                             <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
@@ -115,8 +119,8 @@ class AdminDashboard {
         document.getElementById('admin-customers').style.display = 'none';
         document.getElementById('admin-tickets').style.display = 'none';
         document.getElementById('admin-payments').style.display = 'none';
-        //document.getElementById('admin-notifications').style.display = 'none';
-        //document.getElementById('admin-bookAppointment').style.display = 'none';
+        document.getElementById('admin-notifications').style.display = 'none';
+        document.getElementById('admin-bookAppointment').style.display = 'none';
         document.getElementById('admin-settings').style.display = 'none';
 
         // Deactivate all buttons
@@ -132,13 +136,12 @@ class AdminDashboard {
             document.getElementById('admin-tickets').style.display = 'block';
         } else if (tabName === 'payments') {
             document.getElementById('admin-payments').style.display = 'block';
+        } else if (tabName === 'notifications') {
+            document.getElementById('admin-notifications').style.display = 'block';
+        } else if (tabName === 'bookAppointment') {
+            document.getElementById('admin-bookAppointment').style.display = 'block';
         } else if (tabName === 'settings') {
             document.getElementById('admin-settings').style.display = 'block';
-        }
-        else if (tabName === 'notifications') {
-            document.getElementById('admin-notifications').style.display = 'block';
-        }else if (tabName === 'bookAppointment') {
-            document.getElementById('admin-bookAppointment').style.display = 'block';
         }
 
         // Activate clicked button
@@ -153,9 +156,26 @@ class AdminDashboard {
             await loadAdminCustomers();
             await loadAdminTickets();
             await loadAdminPayments();
-            await loadAdminNotifications();
-            await loadAdminBookAppointment();
             await loadAdminStats();
+
+            // Initialize and render sub-components safely
+            if (!window.adminNotifications) {
+                window.adminNotifications = new AdminNotifications(this.adminId);
+            }
+            if (!window.adminBookAppointment) {
+                window.adminBookAppointment = new AdminBookAppointment(this.adminId);
+            }
+
+            const notifTab = document.getElementById('admin-notifications');
+            if (notifTab) notifTab.innerHTML = window.adminNotifications.render();
+
+            const apptTab = document.getElementById('admin-bookAppointment');
+            if (apptTab) {
+                apptTab.innerHTML = window.adminBookAppointment.render();
+                if (typeof window.adminBookAppointment.displayHistory === 'function') {
+                    window.adminBookAppointment.displayHistory();
+                }
+            }
         } catch (error) {
             console.error('Error loading admin data:', error);
         }
