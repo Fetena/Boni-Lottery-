@@ -153,8 +153,8 @@ class AdminDashboard {
             await loadAdminCustomers();
             await loadAdminTickets();
             await loadAdminPayments();
-            await loadAdminNotifications();
-            await loadAdminBookAppointment();
+            //await loadAdminNotifications();
+            //await loadAdminBookAppointment();
             await loadAdminStats();
         } catch (error) {
             console.error('Error loading admin data:', error);
