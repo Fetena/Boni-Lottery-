@@ -1,16 +1,33 @@
 // ============================================
-// ADMIN BOOKAPPOINTMENT (CHILD COMPONENT)
-// Parent: AdminDashboard
-// Manage customer appointment bookings
+// ADMIN BOOKAPPOINTMENT (CHILD COMPONENT) - FIXED
 // ============================================
 
 class AdminBookAppointment {
     constructor(adminId) {
         this.adminId = adminId;
+        this.appointments = [];
     }
 
-    render() {
-        const appointments = this.getAllAppointments();
+    async render() {
+        await this.loadAppointmentsData();
+        return this.renderContent();
+    }
+
+    async loadAppointmentsData() {
+        try {
+            if (!db) return;
+            const snapshot = await db.collection('appointments').get();
+            this.appointments = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+        } catch (error) {
+            console.error('Error loading appointments:', error);
+        }
+    }
+
+    renderContent() {
+        const appointments = this.appointments;
 
         return `
             <div class="space-y-4">
@@ -35,23 +52,21 @@ class AdminBookAppointment {
                 <!-- PENDING APPOINTMENTS -->
                 <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
                     <h4 class="font-bold text-white mb-4">⏳ Pending Appointments</h4>
-                    <div class="space-y-2">
-                        ${appointments.filter(a => a.status === 'Pending').map(apt => `
-                            <div class="bg-black/30 rounded-lg p-4 border border-yellow-400/10">
+                    <div class="space-y-2" id="pending-appointments-list">
+                        ${appointments.filter(a => a.status === 'Pending').length === 0 ? '<p class="text-slate-400 text-xs">No pending appointments</p>' : 
+                          appointments.filter(a => a.status === 'Pending').map(apt => `
+                            <div class="bg-black/30 rounded-lg p-4 border border-yellow-400/10 text-xs">
                                 <div class="flex justify-between items-start">
                                     <div>
-                                        <p class="font-bold text-white">${apt.date} ${apt.time}</p>
-                                        <p class="text-sm text-slate-300">${apt.customerName}</p>
-                                        <p class="text-xs text-slate-400 mt-1">📌 ${apt.purpose}</p>
-                                        <p class="text-xs text-slate-400">${apt.description}</p>
+                                        <p class="font-bold text-white">${apt.date || ''} ${apt.time || ''}</p>
+                                        <p class="text-sm text-slate-300">${apt.customerName || apt.email || 'Customer'}</p>
+                                        <p class="text-xs text-slate-400 mt-1">📌 ${apt.purpose || 'General'}</p>
                                     </div>
                                     <div class="flex gap-2">
-                                        <button onclick="adminBookAppointment.confirmAppointment('${apt.id}')" 
-                                            class="px-3 py-1 bg-emerald-950/30 text-emerald-400 text-xs rounded hover:bg-emerald-950/50">✅ Confirm</button>
-                                        <button onclick="adminBookAppointment.rescheduleAppointment('${apt.id}')" 
-                                            class="px-3 py-1 bg-blue-950/30 text-blue-400 text-xs rounded hover:bg-blue-950/50">📅 Reschedule</button>
-                                        <button onclick="adminBookAppointment.cancelAppointment('${apt.id}')" 
-                                            class="px-3 py-1 bg-red-950/30 text-red-400 text-xs rounded hover:bg-red-950/50">❌ Cancel</button>
+                                        <button onclick="window.adminBookAppointment.updateStatus('${apt.id}', 'Confirmed')" 
+                                            class="px-3 py-1 bg-emerald-600 text-white font-bold rounded">✅ Confirm</button>
+                                        <button onclick="window.adminBookAppointment.updateStatus('${apt.id}', 'Cancelled')" 
+                                            class="px-3 py-1 bg-red-600 text-white font-bold rounded">❌ Cancel</button>
                                     </div>
                                 </div>
                             </div>
@@ -62,17 +77,18 @@ class AdminBookAppointment {
                 <!-- CONFIRMED APPOINTMENTS -->
                 <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
                     <h4 class="font-bold text-white mb-4">✅ Confirmed Appointments</h4>
-                    <div class="space-y-2">
-                        ${appointments.filter(a => a.status === 'Confirmed').map(apt => `
-                            <div class="bg-black/30 rounded-lg p-4 border border-emerald-400/20">
+                    <div class="space-y-2" id="confirmed-appointments-list">
+                        ${appointments.filter(a => a.status === 'Confirmed').length === 0 ? '<p class="text-slate-400 text-xs">No confirmed appointments</p>' : 
+                          appointments.filter(a => a.status === 'Confirmed').map(apt => `
+                            <div class="bg-black/30 rounded-lg p-4 border border-emerald-400/20 text-xs">
                                 <div class="flex justify-between items-start">
                                     <div>
-                                        <p class="font-bold text-white">${apt.date} ${apt.time}</p>
-                                        <p class="text-sm text-slate-300">${apt.customerName}</p>
+                                        <p class="font-bold text-white">${apt.date || ''} ${apt.time || ''}</p>
+                                        <p class="text-sm text-slate-300">${apt.customerName || apt.email || 'Customer'}</p>
                                         <p class="text-xs text-emerald-400 mt-1">✅ Confirmed</p>
                                     </div>
-                                    <button onclick="adminBookAppointment.markCompleted('${apt.id}')" 
-                                        class="px-3 py-1 bg-yellow-950/30 text-yellow-400 text-xs rounded hover:bg-yellow-950/50">✔️ Complete</button>
+                                    <button onclick="window.adminBookAppointment.updateStatus('${apt.id}', 'Completed')" 
+                                        class="px-3 py-1 bg-yellow-400 text-black font-bold rounded">✔️ Complete</button>
                                 </div>
                             </div>
                         `).join('')}
@@ -82,50 +98,23 @@ class AdminBookAppointment {
         `;
     }
 
-    getAllAppointments() {
-        // Get all customers and their appointments
-        const customers = db.getCustomers() || {};
-        const allAppointments = [];
+    async updateStatus(aptId, status) {
+        if (!db) return notify('error', '❌ Database not initialized');
 
-        Object.values(customers).forEach(cust => {
-            const custAppointments = db.getAppointments(cust.id) || [];
-            custAppointments.forEach(apt => {
-                allAppointments.push({
-                    ...apt,
-                    customerName: cust.name
-                });
-            });
-        });
-
-        return allAppointments;
-    }
-
-    confirmAppointment(aptId) {
-        showNotification('success', '✅ Appointment confirmed! Customer notified.');
-        this.updateAppointmentStatus(aptId, 'Confirmed');
-    }
-
-    rescheduleAppointment(aptId) {
-        showNotification('info', '📅 Reschedule feature coming soon');
-    }
-
-    cancelAppointment(aptId) {
-        if (confirm('Cancel this appointment?')) {
-            showNotification('info', '❌ Appointment cancelled');
-            this.updateAppointmentStatus(aptId, 'Cancelled');
+        try {
+            await db.collection('appointments').doc(aptId).update({ status });
+            notify('success', `✅ Appointment marked as ${status}`);
+            
+            // Refresh view
+            const apptTab = document.getElementById('admin-bookAppointment');
+            if (apptTab) {
+                apptTab.innerHTML = await this.render();
+            }
+        } catch (error) {
+            notify('error', `❌ Error: ${error.message}`);
         }
-    }
-
-    markCompleted(aptId) {
-        showNotification('success', '✔️ Appointment marked as completed');
-        this.updateAppointmentStatus(aptId, 'Completed');
-    }
-
-    updateAppointmentStatus(aptId, status) {
-        // TODO: Implement status update in storage
-        console.log(`Updated appointment ${aptId} to ${status}`);
     }
 }
 
-// Global instance
-let adminBookAppointment;
+// Global instance mapping
+window.adminBookAppointment = null;
