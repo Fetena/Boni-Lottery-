@@ -115,8 +115,8 @@ class AdminDashboard {
         document.getElementById('admin-customers').style.display = 'none';
         document.getElementById('admin-tickets').style.display = 'none';
         document.getElementById('admin-payments').style.display = 'none';
-        document.getElementById('admin-notifications').style.display = 'none';
-        document.getElementById('admin-bookAppointment').style.display = 'none';
+        //document.getElementById('admin-notifications').style.display = 'none';
+        //document.getElementById('admin-bookAppointment').style.display = 'none';
         document.getElementById('admin-settings').style.display = 'none';
 
         // Deactivate all buttons
@@ -153,8 +153,8 @@ class AdminDashboard {
             await loadAdminCustomers();
             await loadAdminTickets();
             await loadAdminPayments();
-            //await loadAdminNotifications();
-            //await loadAdminBookAppointment();
+            await loadAdminNotifications();
+            await loadAdminBookAppointment();
             await loadAdminStats();
         } catch (error) {
             console.error('Error loading admin data:', error);
