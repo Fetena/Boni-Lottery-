@@ -176,7 +176,7 @@ class AdminDashboard {
 
             const apptTab = document.getElementById('admin-bookAppointment');
             if (apptTab) {
-                apptTab.innerHTML = window.adminBookAppointment.render();
+                apptTab.innerHTML = await window.adminBookAppointment.render();
             }
         } catch (error) {
             console.error('Error loading admin data:', error);
