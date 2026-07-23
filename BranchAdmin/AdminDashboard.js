@@ -190,6 +190,9 @@ class AdminDashboard {
             // Populate Appointments Tab
             const apptTab = document.getElementById('admin-bookAppointment');
             if (apptTab) {
+                if (!window.adminBookAppointment) {
+                    window.adminBookAppointment = new AdminBookAppointment(this.adminId);
+                }
                 apptTab.innerHTML = await window.adminBookAppointment.render();
             }
 
