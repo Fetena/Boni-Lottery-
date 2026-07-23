@@ -155,17 +155,29 @@ class AdminDashboard {
         try {
             await loadAdminCustomers();
             await loadAdminTickets();
-            await loadAdminPayments();
             await loadAdminStats();
 
-            // Initialize and render sub-components safely
+            // Initialize sub-components safely
+            if (!window.adminPayments) {
+                window.adminPayments = new AdminPayments(this.adminId);
+            }
             if (!window.adminNotifications) {
                 window.adminNotifications = new AdminNotifications(this.adminId);
             }
             if (!window.adminBookAppointment) {
                 window.adminBookAppointment = new AdminBookAppointment(this.adminId);
             }
+            if (!window.adminSettings) {
+                window.adminSettings = new AdminSettings(this.adminId);
+            }
 
+            // Populate Payments Tab
+            const paymentsTab = document.getElementById('admin-payments');
+            if (paymentsTab) {
+                paymentsTab.innerHTML = window.adminPayments.render();
+            }
+
+            // Populate Notifications Tab
             const notifTab = document.getElementById('admin-notifications');
             if (notifTab) {
                 notifTab.innerHTML = window.adminNotifications.render();
@@ -174,10 +186,18 @@ class AdminDashboard {
                 }
             }
 
+            // Populate Appointments Tab
             const apptTab = document.getElementById('admin-bookAppointment');
             if (apptTab) {
                 apptTab.innerHTML = await window.adminBookAppointment.render();
             }
+
+            // Populate Settings Tab
+            const settingsTab = document.getElementById('admin-settings');
+            if (settingsTab) {
+                settingsTab.innerHTML = window.adminSettings.render();
+            }
+
         } catch (error) {
             console.error('Error loading admin data:', error);
         }
