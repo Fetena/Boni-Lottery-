@@ -7,6 +7,7 @@ class MainAdminDashboard {
     constructor() {
         // Initialize ALL child components
         this.admins = new Admins();
+        this.bookings = new MainAdminBookings();
         this.customers = new Customers();
         this.ranges = new Ranges();
         this.payments = new Payments();
@@ -33,6 +34,7 @@ class MainAdminDashboard {
                         
                         <!-- TABS -->
                         <div class="flex gap-2 border-b border-yellow-400/10 pb-2 overflow-x-auto">
+                            <button onclick="window.mainAdminDashboard.switchTab('bookings', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📅 Bookings</button>
                             <button onclick="window.mainAdminDashboard.switchTab('dashboard', event)" class="tab-button active px-4 py-2 text-xs font-bold text-yellow-400">📊 Dashboard</button>
                             <button onclick="window.mainAdminDashboard.switchTab('admins', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🛡️ Admins</button>
                             <button onclick="window.mainAdminDashboard.switchTab('customers', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">👥 Customers</button>
@@ -66,7 +68,7 @@ class MainAdminDashboard {
                                 </div>
                             </div>
                         </div>
-                        
+                        <div id="main-bookings" class="tab-content" style="display: none;"></div>
                         <div id="main-admins" class="tab-content" style="display: none;"></div>
                         <div id="main-customers" class="tab-content" style="display: none;"></div>
                         <div id="main-ranges" class="tab-content" style="display: none;"></div>
@@ -96,7 +98,8 @@ class MainAdminDashboard {
                 this.transactions.loadData(),
                 this.auditLog.loadData(),
                 this.notifications.loadData(),
-                this.settings.loadData()
+                this.settings.loadData(),
+                this.bookings.loadData()
             ]);   
             //document.getElementById('admin-list').innerHTML = this.admins.renderAdminsList();
         //document.getElementById('customers-list').innerHTML = this.customers.renderCustomersList();
@@ -120,7 +123,9 @@ class MainAdminDashboard {
             const auditlogContent = document.getElementById('main-auditlog');
             const notificationsContent = document.getElementById('main-notifications');
             const settingsContent = document.getElementById('main-settings');
-
+            const bookingsContent = document.getElementById('main-bookings');
+            if (bookingsContent) bookingsContent.innerHTML = this.bookings.render();
+            if (bookingsContent) this.bookings.renderBookingsList();
             if (adminsContent) adminsContent.innerHTML = this.admins.render();
             if (customersContent) customersContent.innerHTML = this.customers.render();
             if (rangesContent) rangesContent.innerHTML = this.ranges.render();
