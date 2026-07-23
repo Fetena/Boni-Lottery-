@@ -260,7 +260,7 @@ async function loadAdminsForSignup() {
                 notify('error', `❌ Registration Error: ${error.message}`);
             }
         }
-       async function handleLogin() {
+   async function handleLogin() {
     const email = document.getElementById('login-email')?.value.trim() || '';
     const password = document.getElementById('login-password')?.value || '';
 
@@ -284,27 +284,35 @@ async function loadAdminsForSignup() {
         return;
     }
 
-    // 2. Branch Admin Check
-    if (email === 'ahmed@company.com' && password === 'Ahmed123') {
-        currentUser = { type: 'admin', email };
-        closeLoginModal();
-        document.getElementById('public-page').innerHTML = '';
+    // 2. Branch Admin Check (Dynamic Firestore & Auth Check)
+    try {
+        // First, sign in with Firebase Auth to verify email & password
+        await firebase.auth().signInWithEmailAndPassword(email, password);
+
+        // Next, check if this email exists as an admin in Firestore
+        const adminDoc = await db.collection('admins').doc(email).get();
         
-        if (!window.adminDashboard) {
-            window.adminDashboard = new AdminDashboard(email);
+        if (adminDoc.exists) {
+            currentUser = { type: 'admin', email };
+            closeLoginModal();
+            document.getElementById('public-page').innerHTML = '';
+            
+            if (!window.adminDashboard) {
+                window.adminDashboard = new AdminDashboard(email);
+            }
+            document.getElementById('admin-container').innerHTML = window.adminDashboard.render();
+            await window.adminDashboard.loadData();
+            notify('success', '✅ Admin Login Successful');
+            return;
         }
-        document.getElementById('admin-container').innerHTML = window.adminDashboard.render();
-        await window.adminDashboard.loadData();
-        notify('success', '✅ Admin Login Successful');
-        return;
+    } catch (error) {
+        console.log('Not a branch admin or auth failed:', error.message);
     }
 
     // 3. Dynamic Customer Check via Firebase Auth & Firestore
     try {
-        // Authenticate the user with Firebase Auth
         await firebase.auth().signInWithEmailAndPassword(email, password);
 
-        // Check if the user exists in the customer_settings collection
         const customerDoc = await db.collection('customer_settings').doc(email).get();
         
         if (customerDoc.exists) {
