@@ -176,51 +176,54 @@ class Admins {
     }
 
     async createAdmin() {
-        const name = document.getElementById('admin-name-input')?.value.trim() || '';
-        const email = document.getElementById('admin-email-input')?.value.trim() || '';
-        const password = document.getElementById('admin-password-input')?.value || '';
-        const phone = document.getElementById('admin-phone-input')?.value.trim() || '';
-        const rangeStart = parseInt(document.getElementById('admin-range-start')?.value || 1);
-        const rangeEnd = parseInt(document.getElementById('admin-range-end')?.value || 100);
+    const name = document.getElementById('admin-name-input')?.value.trim() || '';
+    const email = document.getElementById('admin-email').value.trim();
+    const password = document.getElementById('admin-password').value;
+    const phone = document.getElementById('admin-phone-input')?.value.trim() || '';
+    const rangeStart = parseInt(document.getElementById('admin-range-start')?.value || 1);
+    const rangeEnd = parseInt(document.getElementById('admin-range-end')?.value || 100);
 
-        const permissions = {
-            customers: document.getElementById('perm-customers')?.checked || false,
-            tickets: document.getElementById('perm-tickets')?.checked || false,
-            payments: document.getElementById('perm-payments')?.checked || false,
-            notifications: document.getElementById('perm-notifications')?.checked || false,
-            appointments: document.getElementById('perm-appointments')?.checked || false
-        };
+    const permissions = {
+        customers: document.getElementById('perm-customers')?.checked || false,
+        tickets: document.getElementById('perm-tickets')?.checked || false,
+        payments: document.getElementById('perm-payments')?.checked || false,
+        notifications: document.getElementById('perm-notifications')?.checked || false,
+        appointments: document.getElementById('perm-appointments')?.checked || false
+    };
 
-        if (!name || !email || !password || !phone) {
-            notify('error', '❌ Fill all required fields');
-            return;
-        }
-
-        if (!db) {
-            notify('error', '❌ Database not initialized');
-            return;
-        }
-
-        try {
-            await db.collection('admins').add({
-                name,
-                email,
-                password,
-                phone,
-                ticketRange: { start: rangeStart, end: rangeEnd },
-                permissions,
-                customers: 0,
-                revenue: 0,
-                createdAt: new Date()
-            });
-
-            notify('success', `✅ Admin ${name} created successfully!`);
-            this.closeCreateModal();
-            await this.loadData();
-        } catch (error) {
-            notify('error', `❌ Error: ${error.message}`);
-        }
+    if (!name || !email || !password || !phone) {
+        notify('error', '❌ Fill all required fields');
+        return;
     }
+
+    if (!db) {
+        notify('error', '❌ Database not initialized');
+        return;
+    }
+
+    try {
+        // 1. Create the Firebase Auth account credentials so they can log in later
+        await firebase.auth().createUserWithEmailAndPassword(email, password);
+
+        // 2. Save the admin info in Firestore using their email as the document ID
+        await db.collection('admins').doc(email).set({
+            name,
+            email,
+            phone,
+            ticketRange: { start: rangeStart, end: rangeEnd },
+            permissions,
+            customers: 0,
+            revenue: 0,
+            createdAt: new Date()
+        });
+
+        notify('success', `✅ Admin ${name} created successfully!`);
+        this.closeCreateModal();
+        await this.loadData();
+    } catch (error) {
+        notify('error', `❌ Error: ${error.message}`);
+    }
+}
 
     async updateAdmin() {
         if (!this.editingAdminId) return;
