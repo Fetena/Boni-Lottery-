@@ -78,7 +78,7 @@ class AdminNotifications {
             return;
         }
 
-        // Save notification ← PERSISTS
+        // Create notification object
         const notif = {
             id: Date.now(),
             adminId: this.adminId,
@@ -93,9 +93,14 @@ class AdminNotifications {
             }
         };
 
-        const notifs = db.getNotifications();
-        notifs.push(notif);
-        localStorage.setItem('notifications', JSON.stringify(notifs));
+        // Retrieve and update localStorage safely (Fixes the db.getNotifications error)
+        try {
+            const notifs = JSON.parse(localStorage.getItem('notifications') || '[]');
+            notifs.push(notif);
+            localStorage.setItem('notifications', JSON.stringify(notifs));
+        } catch (e) {
+            console.error('Error saving notification', e);
+        }
 
         showNotification('success', `✅ Notification sent to ${target}!`);
         document.getElementById('admin-notif-msg').value = '';
