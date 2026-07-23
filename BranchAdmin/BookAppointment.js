@@ -23,6 +23,18 @@ class AdminBookAppointment {
                 id: doc.id,
                 ...doc.data()
             }));
+
+            // 🔴 UPDATE BADGE COUNT HERE AUTOMATICALLY
+            const pendingCount = this.appointments.filter(a => a.status === 'Pending').length;
+            const badgeEl = document.getElementById('badge-branch-bookings');
+            if (badgeEl) {
+                if (pendingCount > 0) {
+                    badgeEl.textContent = pendingCount;
+                    badgeEl.classList.remove('hidden');
+                } else {
+                    badgeEl.classList.add('hidden');
+                }
+            }
         } catch (error) {
             console.error('Error loading appointments:', error);
         }
