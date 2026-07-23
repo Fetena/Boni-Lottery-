@@ -55,7 +55,7 @@ class AdminNotifications {
                         </select>
                     </div>
 
-                    <button onclick="adminNotifications.sendNotification()" 
+                    <button onclick="window.adminNotifications.sendNotification()" 
                         class="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">Send</button>
                 </div>
 
@@ -121,3 +121,4 @@ class AdminNotifications {
 
 // Global instance
 let adminNotifications;
+window.adminNotifications = null;
