@@ -63,7 +63,16 @@ class MainAdminBookings {
         const confirmedEl = document.getElementById('ma-confirmed-bookings');
 
         if (!container) return;
-
+const pendingCount = this.appointments.filter(a => a.status === 'Pending').length;
+const badgeEl = document.getElementById('badge-main-bookings');
+if (badgeEl) {
+    if (pendingCount > 0) {
+        badgeEl.textContent = pendingCount;
+        badgeEl.classList.remove('hidden');
+    } else {
+        badgeEl.classList.add('hidden');
+    }
+}
         const total = this.appointments.length;
         const pending = this.appointments.filter(a => a.status === 'Pending').length;
         const confirmed = this.appointments.filter(a => a.status === 'Confirmed').length;
