@@ -112,7 +112,7 @@ class AdminDashboard {
             </div>
         `;
     }
-//window.adminDashboard = new AdminDashboard();
+
     switchTab(tabName, event) {
         // Hide all tabs
         document.getElementById('admin-dashboard-tab').style.display = 'none';
@@ -155,6 +155,7 @@ class AdminDashboard {
         try {
             await loadAdminCustomers();
             await loadAdminTickets();
+            await loadAdminPayments();
             await loadAdminStats();
 
             // Initialize sub-components safely
@@ -174,7 +175,7 @@ class AdminDashboard {
             // Populate Payments Tab
             const paymentsTab = document.getElementById('admin-payments');
             if (paymentsTab) {
-                paymentsTab.innerHTML = window.adminPayments.render();
+                paymentsTab.innerHTML = await window.adminPayments.render();
             }
 
             // Populate Notifications Tab
@@ -200,6 +201,36 @@ class AdminDashboard {
 
         } catch (error) {
             console.error('Error loading admin data:', error);
+        }
+    }
+
+    async approvePayment(docId) {
+        if (!db) return notify('error', '❌ Database not initialized');
+        try {
+            await db.collection('customer_tickets').doc(docId).update({
+                status: 'Approved',
+                approvedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            notify('success', '✅ Payment approved successfully!');
+            await loadAdminTickets();
+            await loadAdminStats();
+        } catch (error) {
+            notify('error', `❌ Error: ${error.message}`);
+        }
+    }
+
+    async rejectPayment(docId) {
+        if (!db) return notify('error', '❌ Database not initialized');
+        try {
+            await db.collection('customer_tickets').doc(docId).update({
+                status: 'Rejected',
+                rejectedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            notify('error', '❌ Payment rejected');
+            await loadAdminTickets();
+            await loadAdminStats();
+        } catch (error) {
+            notify('error', `❌ Error: ${error.message}`);
         }
     }
 }
@@ -354,35 +385,7 @@ async function saveAdminPayments() {
         notify('error', `❌ Error: ${error.message}`);
     }
 }
-async approvePayment(docId) {
-        if (!db) return notify('error', '❌ Database not initialized');
-        try {
-            await db.collection('customer_tickets').doc(docId).update({
-                status: 'Approved',
-                approvedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            notify('success', '✅ Payment approved successfully!');
-            await loadAdminTickets();
-            await loadAdminStats();
-        } catch (error) {
-            notify('error', `❌ Error: ${error.message}`);
-        }
-    }
 
-    async rejectPayment(docId) {
-        if (!db) return notify('error', '❌ Database not initialized');
-        try {
-            await db.collection('customer_tickets').doc(docId).update({
-                status: 'Rejected',
-                rejectedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            notify('error', '❌ Payment rejected');
-            await loadAdminTickets();
-            await loadAdminStats();
-        } catch (error) {
-            notify('error', `❌ Error: ${error.message}`);
-        }
-    }
 async function loadAdminPayments() {
     if (!db || !currentUser) return;
 
