@@ -175,10 +175,15 @@ class Admins {
         if (modal) modal.style.display = 'none';
     }
 
-    async createAdmin() {
+async createAdmin() {
     const name = document.getElementById('admin-name-input')?.value.trim() || '';
-    const email = document.getElementById('admin-email').value.trim();
-    const password = document.getElementById('admin-password').value;
+    
+    // Check both potential email IDs to prevent null errors
+    const emailEl = document.getElementById('admin-email') || document.getElementById('admin-email-input');
+    const passwordEl = document.getElementById('admin-password') || document.getElementById('admin-password-input');
+    
+    const email = emailEl?.value.trim() || '';
+    const password = passwordEl?.value || '';
     const phone = document.getElementById('admin-phone-input')?.value.trim() || '';
     const rangeStart = parseInt(document.getElementById('admin-range-start')?.value || 1);
     const rangeEnd = parseInt(document.getElementById('admin-range-end')?.value || 100);
@@ -202,7 +207,7 @@ class Admins {
     }
 
     try {
-        // 1. Create the Firebase Auth account credentials so they can log in later
+        // 1. Create the Firebase Auth login credentials
         await firebase.auth().createUserWithEmailAndPassword(email, password);
 
         // 2. Save the admin info in Firestore using their email as the document ID
