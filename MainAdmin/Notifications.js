@@ -51,7 +51,16 @@ class Notifications {
                 id: doc.id,
                 ...doc.data()
             }));
-
+const notifs = JSON.parse(localStorage.getItem('notifications') || '[]');
+            const badgeEl = document.getElementById('badge-main-notifications');
+            if (badgeEl) {
+                if (notifs.length > 0) {
+                    badgeEl.textContent = notifs.length;
+                    badgeEl.classList.remove('hidden');
+                } else {
+                    badgeEl.classList.add('hidden');
+                }
+            }
             const listContainer = document.getElementById('notifications-list');
             if (listContainer) {
                 listContainer.innerHTML = this.renderNotificationsList();
