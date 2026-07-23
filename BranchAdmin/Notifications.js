@@ -103,14 +103,19 @@ class AdminNotifications {
     }
 
     displayHistory() {
-        const notifs = db.getNotifications().slice(-5).reverse();
-        const historyDiv = document.getElementById('admin-notif-history');
-        
-        if (!historyDiv) return;
+        try {
+            const notifs = JSON.parse(localStorage.getItem('notifications') || '[]');
+            const recent = notifs.slice(-5).reverse();
+            const historyDiv = document.getElementById('admin-notif-history');
+            
+            if (!historyDiv) return;
 
-        historyDiv.innerHTML = notifs.map(n => `
-            <p><strong>${n.type}:</strong> ${n.message.substring(0, 50)}... <span class="text-xs text-slate-500">(${n.timestamp})</span></p>
-        `).join('');
+            historyDiv.innerHTML = recent.length === 0 ? '<p class="text-slate-400">No notifications yet</p>' : recent.map(n => `
+                <p><strong>${n.type}:</strong> ${n.message ? n.message.substring(0, 50) : ''}... <span class="text-xs text-slate-500">(${n.timestamp})</span></p>
+            `).join('');
+        } catch (e) {
+            console.error('Error loading notification history', e);
+        }
     }
 }
 
