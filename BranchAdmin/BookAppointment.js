@@ -26,12 +26,15 @@ class AdminBookAppointment {
         }
     }
 
-    renderContent() {
+   renderContent() {
         const appointments = this.appointments;
 
         return `
             <div class="space-y-4">
-                <h3 class="text-2xl font-bold text-white">📅 Manage Appointments</h3>
+                <div class="flex justify-between items-center">
+                    <h3 class="text-2xl font-bold text-white">📅 Manage Appointments</h3>
+                    <button onclick="window.adminBookAppointment.openModal()" class="px-4 py-2 bg-yellow-400 text-black font-bold rounded-xl text-xs">+ Book Appointment</button>
+                </div>
 
                 <!-- APPOINTMENT STATS -->
                 <div class="grid grid-cols-3 gap-4">
@@ -52,7 +55,7 @@ class AdminBookAppointment {
                 <!-- PENDING APPOINTMENTS -->
                 <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
                     <h4 class="font-bold text-white mb-4">⏳ Pending Appointments</h4>
-                    <div class="space-y-2" id="pending-appointments-list">
+                    <div class="space-y-2">
                         ${appointments.filter(a => a.status === 'Pending').length === 0 ? '<p class="text-slate-400 text-xs">No pending appointments</p>' : 
                           appointments.filter(a => a.status === 'Pending').map(apt => `
                             <div class="bg-black/30 rounded-lg p-4 border border-yellow-400/10 text-xs">
@@ -77,7 +80,7 @@ class AdminBookAppointment {
                 <!-- CONFIRMED APPOINTMENTS -->
                 <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
                     <h4 class="font-bold text-white mb-4">✅ Confirmed Appointments</h4>
-                    <div class="space-y-2" id="confirmed-appointments-list">
+                    <div class="space-y-2">
                         ${appointments.filter(a => a.status === 'Confirmed').length === 0 ? '<p class="text-slate-400 text-xs">No confirmed appointments</p>' : 
                           appointments.filter(a => a.status === 'Confirmed').map(apt => `
                             <div class="bg-black/30 rounded-lg p-4 border border-emerald-400/20 text-xs">
@@ -94,17 +97,55 @@ class AdminBookAppointment {
                         `).join('')}
                     </div>
                 </div>
+
+                <!-- Add Appointment Modal -->
+                <div id="appointment-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50">
+                    <div class="glass-panel rounded-2xl p-6 w-full max-w-md border border-yellow-400/10 space-y-3">
+                        <h3 class="text-xl font-bold text-white mb-4">Book New Appointment</h3>
+                        <input type="text" id="apt-name-input" placeholder="Customer Name or Email" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs">
+                        <input type="date" id="apt-date-input" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs">
+                        <input type="time" id="apt-time-input" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs">
+                        <input type="text" id="apt-purpose-input" placeholder="Purpose (e.g. Ticket Consultation)" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs">
+                        <button onclick="window.adminBookAppointment.saveAppointment()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl text-xs">Save Appointment</button>
+                        <button onclick="window.adminBookAppointment.closeModal()" class="w-full py-2 bg-slate-700 text-white rounded-xl text-xs">Cancel</button>
+                    </div>
+                </div>
             </div>
         `;
     }
 
-    async updateStatus(aptId, status) {
-        if (!db) return notify('error', '❌ Database not initialized');
+    openModal() {
+        document.getElementById('appointment-modal').classList.remove('hidden');
+    }
+
+    closeModal() {
+        document.getElementById('appointment-modal').classList.add('hidden');
+    }
+
+    async saveAppointment() {
+        const customerName = document.getElementById('apt-name-input').value;
+        const date = document.getElementById('apt-date-input').value;
+        const time = document.getElementById('apt-time-input').value;
+        const purpose = document.getElementById('apt-purpose-input').value;
+
+        if (!customerName || !date || !time) {
+            notify('error', '❌ Fill out required fields');
+            return;
+        }
 
         try {
-            await db.collection('appointments').doc(aptId).update({ status });
-            notify('success', `✅ Appointment marked as ${status}`);
-            
+            await db.collection('appointments').add({
+                customerName,
+                date,
+                time,
+                purpose: purpose || 'General Consultation',
+                status: 'Pending',
+                createdAt: new Date()
+            });
+
+            notify('success', '✅ Appointment successfully booked!');
+            this.closeModal();
+
             // Refresh view
             const apptTab = document.getElementById('admin-bookAppointment');
             if (apptTab) {
