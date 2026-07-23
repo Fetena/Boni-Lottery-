@@ -34,7 +34,7 @@ class MainAdminDashboard {
                         
                         <!-- TABS -->
                         <div class="flex gap-2 border-b border-yellow-400/10 pb-2 overflow-x-auto">
-                            <button onclick="window.mainAdminDashboard.switchTab('bookings', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📅 Bookings</button>
+                            
                             <button onclick="window.mainAdminDashboard.switchTab('dashboard', event)" class="tab-button active px-4 py-2 text-xs font-bold text-yellow-400">📊 Dashboard</button>
                             <button onclick="window.mainAdminDashboard.switchTab('admins', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🛡️ Admins</button>
                             <button onclick="window.mainAdminDashboard.switchTab('customers', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">👥 Customers</button>
@@ -42,8 +42,13 @@ class MainAdminDashboard {
                             <button onclick="window.mainAdminDashboard.switchTab('payments', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">💳 Payments</button>
                             <button onclick="window.mainAdminDashboard.switchTab('analytics', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📈 Analytics</button>
                             <button onclick="window.mainAdminDashboard.switchTab('transactions', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📋 Transactions</button>
-                            <button onclick="window.mainAdminDashboard.switchTab('auditlog', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🔒 Audit</button>
-                            <button onclick="window.mainAdminDashboard.switchTab('notifications', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📢 Notify</button>
+                            <button onclick="window.mainAdminDashboard.switchTab('auditlog', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🔒 Audit</button>                         
+                            <button onclick="window.mainAdminDashboard.switchTab('bookings', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white relative">
+                         📅 Bookings <span id="badge-main-bookings" class="hidden absolute -top-1 -right-1 px-1.5 py-0.5 bg-red-500 text-white rounded-full text-[9px] font-bold">0</span>
+                                </button>
+                            <button onclick="window.mainAdminDashboard.switchTab('notifications', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white relative">
+                        📢 Notify <span id="badge-main-notifications" class="hidden absolute -top-1 -right-1 px-1.5 py-0.5 bg-red-500 text-white rounded-full text-[9px] font-bold">0</span>
+                               </button>
                             <button onclick="window.mainAdminDashboard.switchTab('settings', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">⚙️ Settings</button>
                         </div>
 
