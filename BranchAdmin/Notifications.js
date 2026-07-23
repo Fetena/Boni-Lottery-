@@ -74,7 +74,7 @@ class AdminNotifications {
         const target = document.getElementById('admin-notif-target')?.value;
 
         if (!message) {
-            showNotification('error', '❌ Enter message');
+            notify('error', '❌ Enter message');
             return;
         }
 
@@ -93,7 +93,7 @@ class AdminNotifications {
             }
         };
 
-        // Retrieve and update localStorage safely (Fixes the db.getNotifications error)
+        // Retrieve and update localStorage safely
         try {
             const notifs = JSON.parse(localStorage.getItem('notifications') || '[]');
             notifs.push(notif);
@@ -102,7 +102,7 @@ class AdminNotifications {
             console.error('Error saving notification', e);
         }
 
-        showNotification('success', `✅ Notification sent to ${target}!`);
+        notify('success', `✅ Notification sent to ${target}!`);
         document.getElementById('admin-notif-msg').value = '';
         this.displayHistory();
     }
@@ -125,5 +125,4 @@ class AdminNotifications {
 }
 
 // Global instance
-let adminNotifications;
 window.adminNotifications = null;
