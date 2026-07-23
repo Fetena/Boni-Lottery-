@@ -1,10 +1,11 @@
 // ============================================
-// MAIN ADMIN - RANGES MANAGEMENT
+// MAIN ADMIN - RANGES MANAGEMENT (WITH EDIT)
 // ============================================
 
 class Ranges {
     constructor() {
         this.ranges = [];
+        this.editingRangeId = null;
     }
 
     render() {
@@ -28,6 +29,21 @@ class Ranges {
                         <input type="number" id="range-end-input" placeholder="End Number" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white">
                         <button onclick="window.mainAdminDashboard.ranges.createRange()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl">Create</button>
                         <button onclick="window.mainAdminDashboard.ranges.closeCreateModal()" class="w-full py-2 bg-slate-700 text-white rounded-xl">Cancel</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Edit Range Modal -->
+            <div id="edit-range-modal" class="modal" style="display: none;">
+                <div class="modal-overlay"></div>
+                <div class="modal-content p-6 m-auto">
+                    <h3 class="text-xl font-bold text-white mb-4">Edit Range</h3>
+                    <div class="space-y-3">
+                        <input type="number" id="edit-range-admin-input" placeholder="Admin ID" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white">
+                        <input type="number" id="edit-range-start-input" placeholder="Start Number" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white">
+                        <input type="number" id="edit-range-end-input" placeholder="End Number" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white">
+                        <button onclick="window.mainAdminDashboard.ranges.updateRange()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl">Update</button>
+                        <button onclick="window.mainAdminDashboard.ranges.closeEditModal()" class="w-full py-2 bg-slate-700 text-white rounded-xl">Cancel</button>
                     </div>
                 </div>
             </div>
@@ -62,7 +78,10 @@ class Ranges {
                         <p class="text-xs text-slate-400">Numbers: ${range.start} - ${range.end}</p>
                         <p class="text-xs text-slate-400">Admin: ${range.adminId || 'N/A'}</p>
                     </div>
-                    <button onclick="window.mainAdminDashboard.ranges.deleteRange('${range.id}')" class="px-3 py-1 bg-red-400/20 text-red-400 text-xs rounded">Delete</button>
+                    <div class="flex gap-2">
+                        <button onclick="window.mainAdminDashboard.ranges.openEditModal('${range.id}')" class="px-3 py-1 bg-yellow-400/20 text-yellow-400 text-xs rounded">Edit</button>
+                        <button onclick="window.mainAdminDashboard.ranges.deleteRange('${range.id}')" class="px-3 py-1 bg-red-400/20 text-red-400 text-xs rounded">Delete</button>
+                    </div>
                 </div>
             </div>
         `).join('');
@@ -75,6 +94,25 @@ class Ranges {
 
     closeCreateModal() {
         const modal = document.getElementById('create-range-modal');
+        if (modal) modal.style.display = 'none';
+    }
+
+    openEditModal(rangeId) {
+        const range = this.ranges.find(r => r.id === rangeId);
+        if (!range) return;
+
+        this.editingRangeId = rangeId;
+        document.getElementById('edit-range-admin-input').value = range.adminId || '';
+        document.getElementById('edit-range-start-input').value = range.start || '';
+        document.getElementById('edit-range-end-input').value = range.end || '';
+
+        const modal = document.getElementById('edit-range-modal');
+        if (modal) modal.style.display = 'flex';
+    }
+
+    closeEditModal() {
+        this.editingRangeId = null;
+        const modal = document.getElementById('edit-range-modal');
         if (modal) modal.style.display = 'none';
     }
 
@@ -103,6 +141,39 @@ class Ranges {
 
             notify('success', '✅ Range created!');
             this.closeCreateModal();
+            await this.loadData();
+        } catch (error) {
+            notify('error', `❌ Error: ${error.message}`);
+        }
+    }
+
+    async updateRange() {
+        if (!this.editingRangeId) return;
+
+        const adminId = document.getElementById('edit-range-admin-input')?.value || '';
+        const start = parseInt(document.getElementById('edit-range-start-input')?.value || 0);
+        const end = parseInt(document.getElementById('edit-range-end-input')?.value || 0);
+
+        if (!adminId || !start || !end) {
+            notify('error', '❌ Fill all fields');
+            return;
+        }
+
+        if (!db) {
+            notify('error', '❌ Database not initialized');
+            return;
+        }
+
+        try {
+            await db.collection('ranges').doc(this.editingRangeId).update({
+                adminId: adminId,
+                start: start,
+                end: end,
+                updatedAt: new Date()
+            });
+
+            notify('success', '✅ Range updated successfully!');
+            this.closeEditModal();
             await this.loadData();
         } catch (error) {
             notify('error', `❌ Error: ${error.message}`);
