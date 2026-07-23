@@ -34,15 +34,25 @@ class Ranges {
             </div>
 
             <!-- Edit Range Modal -->
+            <!-- Edit Range Modal -->
             <div id="edit-range-modal" class="modal" style="display: none;">
                 <div class="modal-overlay"></div>
                 <div class="modal-content p-6 m-auto">
                     <h3 class="text-xl font-bold text-white mb-4">Edit Range</h3>
                     <div class="space-y-3">
-                        <input type="number" id="edit-range-admin-input" placeholder="Admin ID" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white">
-                        <input type="number" id="edit-range-start-input" placeholder="Start Number" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white">
-                        <input type="number" id="edit-range-end-input" placeholder="End Number" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white">
-                        <button onclick="window.mainAdminDashboard.ranges.updateRange()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl">Update</button>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Admin ID</label>
+                            <input type="number" id="edit-range-admin-input" placeholder="Admin ID" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Start Number</label>
+                            <input type="number" id="edit-range-start-input" placeholder="Start Number" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">End Number</label>
+                            <input type="number" id="edit-range-end-input" placeholder="End Number" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white">
+                        </div>
+                        <button onclick="window.mainAdminDashboard.ranges.updateRange()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl mt-2">Update</button>
                         <button onclick="window.mainAdminDashboard.ranges.closeEditModal()" class="w-full py-2 bg-slate-700 text-white rounded-xl">Cancel</button>
                     </div>
                 </div>
