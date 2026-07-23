@@ -100,16 +100,16 @@ class AdminBookAppointment {
 
                 <!-- Add Appointment Modal -->
                 <div id="appointment-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50">
-                    <div class="glass-panel rounded-2xl p-6 w-full max-w-md border border-yellow-400/10 space-y-3">
-                        <h3 class="text-xl font-bold text-white mb-4">Book New Appointment</h3>
-                        <input type="text" id="apt-name-input" placeholder="Customer Name or Email" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs">
-                        <input type="date" id="apt-date-input" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs">
-                        <input type="time" id="apt-time-input" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs">
-                        <input type="text" id="apt-purpose-input" placeholder="Purpose (e.g. Ticket Consultation)" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs">
-                        <button onclick="window.adminBookAppointment.saveAppointment()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl text-xs">Save Appointment</button>
-                        <button onclick="window.adminBookAppointment.closeModal()" class="w-full py-2 bg-slate-700 text-white rounded-xl text-xs">Cancel</button>
-                    </div>
-                </div>
+    <div class="glass-panel rounded-2xl p-6 w-full max-w-md border border-yellow-400/10 space-y-3">
+        <h3 class="text-xl font-bold text-white mb-4">Book New Appointment</h3>
+        <input type="text" id="apt-name-input" placeholder="Customer Name" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs">
+        <input type="text" id="apt-date-input" placeholder="Date (e.g., 2026-07-25)" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs">
+        <input type="text" id="apt-time-input" placeholder="Time (e.g., 10:00 AM)" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs">
+        <input type="text" id="apt-purpose-input" placeholder="Purpose (e.g., Ticket Consultation)" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs">
+        <button onclick="window.adminBookAppointment.saveAppointment()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl text-xs">Save Appointment</button>
+        <button onclick="window.adminBookAppointment.closeModal()" class="w-full py-2 bg-slate-700 text-white rounded-xl text-xs">Cancel</button>
+    </div>
+</div>
             </div>
         `;
     }
@@ -123,10 +123,10 @@ class AdminBookAppointment {
     }
 
     async saveAppointment() {
-        const customerName = document.getElementById('apt-name-input').value;
-        const date = document.getElementById('apt-date-input').value;
-        const time = document.getElementById('apt-time-input').value;
-        const purpose = document.getElementById('apt-purpose-input').value;
+        const customerName = document.getElementById('apt-name-input')?.value.trim();
+        const date = document.getElementById('apt-date-input')?.value.trim();
+        const time = document.getElementById('apt-time-input')?.value.trim();
+        const purpose = document.getElementById('apt-purpose-input')?.value.trim();
 
         if (!customerName || !date || !time) {
             notify('error', '❌ Fill out required fields');
