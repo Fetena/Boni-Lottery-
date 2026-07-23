@@ -354,7 +354,35 @@ async function saveAdminPayments() {
         notify('error', `❌ Error: ${error.message}`);
     }
 }
+async approvePayment(docId) {
+        if (!db) return notify('error', '❌ Database not initialized');
+        try {
+            await db.collection('customer_tickets').doc(docId).update({
+                status: 'Approved',
+                approvedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            notify('success', '✅ Payment approved successfully!');
+            await loadAdminTickets();
+            await loadAdminStats();
+        } catch (error) {
+            notify('error', `❌ Error: ${error.message}`);
+        }
+    }
 
+    async rejectPayment(docId) {
+        if (!db) return notify('error', '❌ Database not initialized');
+        try {
+            await db.collection('customer_tickets').doc(docId).update({
+                status: 'Rejected',
+                rejectedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            notify('error', '❌ Payment rejected');
+            await loadAdminTickets();
+            await loadAdminStats();
+        } catch (error) {
+            notify('error', `❌ Error: ${error.message}`);
+        }
+    }
 async function loadAdminPayments() {
     if (!db || !currentUser) return;
 
