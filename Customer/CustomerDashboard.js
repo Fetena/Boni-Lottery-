@@ -1,5 +1,5 @@
 // ============================================
-// CUSTOMER DASHBOARD - COMPLETE (FIXED)
+// CUSTOMER DASHBOARD - COMPLETE (WITH ADMIN SELECTION)
 // ============================================
 
 let selectedNumbers = [];
@@ -33,11 +33,12 @@ class CustomerDashboard {
 
                         <!-- Profile Tab -->
                         <div id="cust-profile" class="tab-content active">
-                            <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                            <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-2">
                                 <h3 class="text-xl font-bold text-white mb-4">Your Profile</h3>
-                                <p class="text-slate-400">Email: <span id="cust-email">${currentUser?.email || 'N/A'}</span></p>
-                                <p class="text-slate-400 mt-2">Total Tickets: <span id="cust-total-tickets">0</span></p>
-                                <p class="text-slate-400 mt-2">Total Spent: <span id="cust-total-spent">0 ETB</span></p>
+                                <p class="text-slate-400 text-xs">Email: <span id="cust-email" class="text-white">${currentUser?.email || 'N/A'}</span></p>
+                                <p class="text-slate-400 text-xs">Assigned Admin: <span id="cust-assigned-admin" class="text-yellow-400 font-bold">Not Selected</span></p>
+                                <p class="text-slate-400 text-xs mt-2">Total Tickets: <span id="cust-total-tickets" class="text-white">0</span></p>
+                                <p class="text-slate-400 text-xs mt-2">Total Spent: <span id="cust-total-spent" class="text-white">0 ETB</span></p>
                             </div>
                         </div>
 
@@ -46,10 +47,16 @@ class CustomerDashboard {
                             <div class="space-y-4">
                                 <h3 class="text-xl font-bold text-white">Select Numbers (1-300)</h3>
                                 <div id="numbers-grid" class="grid grid-cols-10 gap-2"></div>
-                                <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
-                                    <p class="text-white">Selected: <span id="selected-count">0</span> numbers</p>
-                                    <p class="text-white mt-2">Cost: <span id="ticket-cost">0</span> ETB</p>
-                                    <button onclick="submitCustomerTicket()" class="w-full mt-4 py-2 bg-yellow-400 text-black font-bold rounded-xl">Submit Ticket</button>
+                                <div class="glass-panel rounded-lg p-4 border border-yellow-400/10 space-y-3">
+                                    <div>
+                                        <label class="block text-xs text-slate-400 mb-1">Select Preferred Admin / Branch</label>
+                                        <select id="ticket-admin-select" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs">
+                                            <option value="">-- Choose Admin --</option>
+                                        </select>
+                                    </div>
+                                    <p class="text-white text-xs">Selected: <span id="selected-count">0</span> numbers</p>
+                                    <p class="text-white text-xs mt-1">Cost: <span id="ticket-cost">0</span> ETB</p>
+                                    <button onclick="submitCustomerTicket()" class="w-full mt-2 py-2 bg-yellow-400 text-black font-bold rounded-xl text-xs">Submit Ticket</button>
                                 </div>
                             </div>
                         </div>
@@ -62,20 +69,26 @@ class CustomerDashboard {
                         <!-- Settings Tab -->
                         <div id="cust-settings" class="tab-content" style="display: none;">
                             <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
-                                <h3 class="text-xl font-bold text-white">Settings</h3>
+                                <h3 class="text-xl font-bold text-white">Settings & Preferred Admin</h3>
                                 <div>
                                     <label class="block text-xs text-slate-400 mb-2">Phone Number</label>
-                                    <input type="tel" id="cust-phone" placeholder="0912345678" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white">
+                                    <input type="tel" id="cust-phone" placeholder="0912345678" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-slate-400 mb-2">Preferred Admin / Branch</label>
+                                    <select id="cust-admin-select" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs">
+                                        <option value="">-- Choose Admin --</option>
+                                    </select>
                                 </div>
                                 <div>
                                     <label class="block text-xs text-slate-400 mb-2">Preferred Payment Method</label>
-                                    <select id="cust-payment" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white">
+                                    <select id="cust-payment" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs">
                                         <option>Telebirr</option>
                                         <option>CBE Birr</option>
                                         <option>Bank Transfer</option>
                                     </select>
                                 </div>
-                                <button onclick="saveCustomerSettings()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl">Save Settings</button>
+                                <button onclick="saveCustomerSettings()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl text-xs">Save Settings</button>
                             </div>
                         </div>
                     </div>
@@ -87,6 +100,7 @@ class CustomerDashboard {
     async loadData() {
         try {
             generateNumbersGrid();
+            await loadAdminsDropdown();
             await loadCustomerSettings();
             await loadCustomerTickets();
             await loadCustomerStats();
@@ -102,20 +116,17 @@ window_customerDashboard = null;
 // ========== TAB SWITCHING ==========
 
 function switchCustomerTab(tabName) {
-    // Hide all customer tabs
     const allTabs = document.querySelectorAll('#customer-dashboard .tab-content');
     allTabs.forEach(tab => {
         tab.style.display = 'none';
     });
 
-    // Deactivate all buttons
     const allButtons = document.querySelectorAll('#customer-dashboard .tab-button');
     allButtons.forEach(btn => {
         btn.classList.remove('active');
         btn.style.color = '';
     });
 
-    // Show selected tab
     if (tabName === 'profile') {
         const el = document.getElementById('cust-profile');
         if (el) el.style.display = 'block';
@@ -131,10 +142,42 @@ function switchCustomerTab(tabName) {
         if (el) el.style.display = 'block';
     }
 
-    // Activate clicked button
     if (event && event.target) {
         event.target.classList.add('active');
         event.target.style.color = '#FCD34D';
+    }
+}
+
+// ========== LOAD ADMINS FOR SELECTION ==========
+
+async function loadAdminsDropdown() {
+    if (!db) return;
+
+    try {
+        const snapshot = await db.collection('admins').get();
+        const admins = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        const settingsSelect = document.getElementById('cust-admin-select');
+        const ticketSelect = document.getElementById('ticket-admin-select');
+
+        const optionsHtml = '<option value="">-- Choose Admin --</option>' + 
+            admins.map(admin => `<option value="${admin.email}">${admin.name || admin.email}</option>`).join('');
+
+        if (settingsSelect) settingsSelect.innerHTML = optionsHtml;
+        if (ticketSelect) ticketSelect.innerHTML = optionsHtml;
+
+        // Load saved selection into dropdowns if available
+        const doc = await db.collection('customer_settings').doc(currentUser.email).get();
+        if (doc.exists && doc.data().preferredAdmin) {
+            const prefAdmin = doc.data().preferredAdmin;
+            if (settingsSelect) settingsSelect.value = prefAdmin;
+            if (ticketSelect) ticketSelect.value = prefAdmin;
+            
+            const assignedEl = document.getElementById('cust-assigned-admin');
+            if (assignedEl) assignedEl.textContent = prefAdmin;
+        }
+    } catch (error) {
+        console.error('Error loading admins list:', error);
     }
 }
 
@@ -194,11 +237,20 @@ async function submitCustomerTicket() {
 
     const paymentMethodEl = document.getElementById('cust-payment');
     const paymentMethod = paymentMethodEl?.value || 'Telebirr';
+    
+    const adminSelectEl = document.getElementById('ticket-admin-select');
+    const assignedAdmin = adminSelectEl?.value || '';
+
+    if (!assignedAdmin) {
+        notify('error', '❌ Please select your preferred admin/branch');
+        return;
+    }
 
     try {
         await db.collection('customer_tickets').add({
             customerEmail: currentUser.email,
             customerName: currentUser.name || 'Customer',
+            assignedAdmin: assignedAdmin,
             numbers: selectedNumbers,
             cost: selectedNumbers.length * 100,
             paymentMethod: paymentMethod,
@@ -206,7 +258,7 @@ async function submitCustomerTicket() {
             createdAt: new Date()
         });
 
-        notify('success', `✅ Ticket submitted with ${selectedNumbers.length} numbers!`);
+        notify('success', `✅ Ticket submitted to admin successfully!`);
         selectedNumbers = [];
         generateNumbersGrid();
         await loadCustomerTickets();
@@ -236,16 +288,17 @@ async function loadCustomerTickets() {
             const ticket = doc.data();
             const createdDate = ticket.createdAt?.toDate?.() || new Date();
             return `
-                <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
+                <div class="glass-panel rounded-lg p-4 border border-yellow-400/10 text-xs space-y-1">
                     <div class="flex justify-between items-start">
                         <div>
                             <p class="font-bold text-white">Ticket #${i + 1}</p>
-                            <p class="text-xs text-slate-400">Numbers: ${ticket.numbers?.join(', ') || 'N/A'}</p>
-                            <p class="text-xs text-slate-400">Cost: ${ticket.cost || 0} ETB</p>
-                            <p class="text-xs text-slate-400">Payment: ${ticket.paymentMethod || 'N/A'}</p>
-                            <p class="text-xs text-slate-400">Date: ${createdDate.toLocaleDateString()}</p>
+                            <p class="text-slate-300">Admin: <span class="text-yellow-400">${ticket.assignedAdmin || 'N/A'}</span></p>
+                            <p class="text-slate-400">Numbers: ${ticket.numbers?.join(', ') || 'N/A'}</p>
+                            <p class="text-slate-400">Cost: ${ticket.cost || 0} ETB</p>
+                            <p class="text-slate-400">Payment: ${ticket.paymentMethod || 'N/A'}</p>
+                            <p class="text-slate-400">Date: ${createdDate.toLocaleDateString()}</p>
                         </div>
-                        <span class="px-2 py-1 bg-yellow-400/20 text-yellow-400 text-xs rounded">${ticket.status || 'N/A'}</span>
+                        <span class="px-2 py-1 bg-yellow-400/20 text-yellow-400 rounded">${ticket.status || 'N/A'}</span>
                     </div>
                 </div>
             `;
@@ -260,9 +313,11 @@ async function loadCustomerTickets() {
 async function saveCustomerSettings() {
     const phoneEl = document.getElementById('cust-phone');
     const paymentEl = document.getElementById('cust-payment');
+    const adminSelectEl = document.getElementById('cust-admin-select');
     
     const phone = phoneEl?.value || '';
     const payment = paymentEl?.value || 'Telebirr';
+    const preferredAdmin = adminSelectEl?.value || '';
 
     if (!phone) {
         notify('error', '❌ Enter phone number');
@@ -284,11 +339,15 @@ async function saveCustomerSettings() {
             customerEmail: currentUser.email,
             customerName: currentUser.name || 'Customer',
             phone: phone,
+            preferredAdmin: preferredAdmin,
             preferredPayment: payment,
             updatedAt: new Date()
         }, { merge: true });
 
-        notify('success', '✅ Settings saved!');
+        const assignedEl = document.getElementById('cust-assigned-admin');
+        if (assignedEl) assignedEl.textContent = preferredAdmin || 'Not Selected';
+
+        notify('success', '✅ Settings and preferred admin saved!');
     } catch (error) {
         notify('error', `❌ Error: ${error.message}`);
     }
@@ -303,9 +362,14 @@ async function loadCustomerSettings() {
             const data = doc.data();
             const phoneEl = document.getElementById('cust-phone');
             const paymentEl = document.getElementById('cust-payment');
+            const adminSelectEl = document.getElementById('cust-admin-select');
             
             if (data.phone && phoneEl) phoneEl.value = data.phone;
             if (data.preferredPayment && paymentEl) paymentEl.value = data.preferredPayment;
+            if (data.preferredAdmin && adminSelectEl) adminSelectEl.value = data.preferredAdmin;
+
+            const assignedEl = document.getElementById('cust-assigned-admin');
+            if (assignedEl) assignedEl.textContent = data.preferredAdmin || 'Not Selected';
         }
     } catch (error) {
         console.error('Error loading settings:', error);
