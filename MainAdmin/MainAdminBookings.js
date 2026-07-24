@@ -108,7 +108,31 @@ if (badgeEl) {
             </div>
         `).join('');
     }
+async function deleteBooking(bookingId) {
+    if (!confirm('Are you sure you want to delete this booking request?')) {
+        return;
+    }
 
+    if (!db) {
+        notify('error', '❌ Database not initialized');
+        return;
+    }
+
+    try {
+        // Delete the document from your bookings collection in Firestore
+        await db.collection('bookings').doc(bookingId).delete();
+
+        notify('success', '🗑️ Booking deleted successfully!');
+        
+        // Refresh the data to update the UI
+        if (window.mainAdminDashboard && typeof window.mainAdminDashboard.loadData === 'function') {
+            await window.mainAdminDashboard.loadData();
+        }
+    } catch (error) {
+        console.error('Error deleting booking:', error);
+        notify('error', `❌ Error deleting booking: ${error.message}`);
+    }
+}
     async updateBookingStatus(aptId, status) {
         if (!db) return notify('error', '❌ Database not initialized');
 
