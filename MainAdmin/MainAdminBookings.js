@@ -102,6 +102,8 @@ if (badgeEl) {
                         class="px-3 py-1 bg-emerald-600 text-white font-bold rounded">✅ Approve</button>
                     <button onclick="window.mainAdminDashboard.bookings.updateBookingStatus('${apt.id}', 'Cancelled')" 
                         class="px-3 py-1 bg-red-600 text-white font-bold rounded">❌ Reject</button>
+                    <button onclick="window.mainAdminDashboard.bookings.updateBookingStatus('${apt.id}')" 
+                        class="px-3 py-1 bg-red-600 text-white font-bold rounded">❌ Delete</button>
                 </div>
             </div>
         `).join('');
