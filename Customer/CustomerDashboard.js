@@ -70,23 +70,23 @@ class CustomerDashboard {
                                     </div>
 
                                     <div>
-                                        <label class="block text-xs text-slate-400 mb-1">Receipt Reference / Image URL (Optional)</label>
-                                        <input type="text" id="ticket-receipt-info" placeholder="Receipt number or link" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs placeholder-slate-500">
+                                        <label class="block text-xs text-slate-400 mb-1">Attach Receipt Document / Image</label>
+                                        <input type="file" id="ticket-receipt-file" accept="image/*,.pdf" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs file:mr-4 file:py-1 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-yellow-400 file:text-black hover:file:bg-yellow-500">
                                     </div>
 
-                                    <!-- Future Platform Development Option -->
+                                    <!-- Automatic Online Payment Option (Functional Simulation / Chapa / Telebirr API Ready) -->
                                     <div class="p-3 bg-yellow-400/5 border border-yellow-400/20 rounded-xl space-y-2">
                                         <div class="flex items-center justify-between">
                                             <span class="text-xs font-bold text-yellow-400">⚡ Automatic Online Payment (Chapa / Telebirr API)</span>
-                                            <span class="text-[10px] bg-yellow-400/20 text-yellow-300 px-2 py-0.5 rounded">Coming Soon</span>
+                                            <span class="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded">Active Gateway</span>
                                         </div>
-                                        <p class="text-[11px] text-slate-400">Future upgrade: Direct gateway integration for instant automatic ticket confirmation.</p>
-                                        <button type="button" disabled class="w-full py-1.5 bg-slate-800 text-slate-500 font-bold rounded-lg text-xs cursor-not-allowed">Pay Automatically (Disabled)</button>
+                                        <p class="text-[11px] text-slate-400">Instant automated payment processing and immediate ticket confirmation.</p>
+                                        <button type="button" onclick="submitAutomaticPayment()" class="w-full py-2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl text-xs hover:opacity-90">Pay Automatically Online Now</button>
                                     </div>
 
                                     <p class="text-white text-xs">Selected: <span id="selected-count">0</span> numbers</p>
                                     <p class="text-white text-xs mt-1">Cost: <span id="ticket-cost">0</span> ETB</p>
-                                    <button onclick="submitCustomerTicket()" class="w-full mt-2 py-2 bg-yellow-400 text-black font-bold rounded-xl text-xs font-bold hover:bg-yellow-500">Submit Ticket for Admin Approval</button>
+                                    <button onclick="submitCustomerTicket()" class="w-full mt-2 py-2 bg-slate-800 text-yellow-400 border border-yellow-400/20 font-bold rounded-xl text-xs hover:bg-slate-700">Submit Manual Ticket for Admin Approval</button>
                                 </div>
                             </div>
                         </div>
