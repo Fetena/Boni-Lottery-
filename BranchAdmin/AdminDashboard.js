@@ -225,7 +225,19 @@ class AdminDashboard {
             notify('error', `❌ Error: ${error.message}`);
         }
     }
+    async deleteTicket(docId) {
+        if (!confirm('Are you sure you want to delete this ticket?')) return;
+        if (!db) return notify('error', '❌ Database not initialized');
 
+        try {
+            await db.collection('customer_tickets').doc(docId).delete();
+            notify('success', '🗑️ Ticket deleted successfully!');
+            await loadAdminTickets();
+            await loadAdminStats();
+        } catch (error) {
+            notify('error', `❌ Error: ${error.message}`);
+        }
+    }
     async rejectPayment(docId) {
         if (!db) return notify('error', '❌ Database not initialized');
         try {
@@ -359,6 +371,7 @@ async function loadAdminTickets() {
                         <div class="flex gap-2">
                             <button onclick="window.adminDashboard.approvePayment('${doc.id}')" class="px-3 py-1 bg-emerald-600 text-white font-bold rounded">Approve</button>
                             <button onclick="window.adminDashboard.rejectPayment('${doc.id}')" class="px-3 py-1 bg-red-600 text-white font-bold rounded">Reject</button>
+                            <button onclick="window.adminDashboard.deleteTicket('${doc.id}')" class="px-3 py-1 bg-slate-800 hover:bg-rose-900 text-rose-400 border border-rose-500/20 font-bold rounded">🗑️ Delete</button>
                         </div>
                     </div>
                 </div>
