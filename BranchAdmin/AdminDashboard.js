@@ -311,29 +311,54 @@ async function loadAdminCustomers() {
     if (!db || !currentUser) return;
 
     try {
-        const snapshot = await db.collection('admin_customers')
+        // 1. Fetch manually added customers
+        const manualSnapshot = await db.collection('admin_customers')
             .where('adminEmail', '==', currentUser.email)
+            .get();
+
+        // 2. Fetch self-registered customers who selected this admin as preferred
+        const selfRegisteredSnapshot = await db.collection('customer_settings')
+            .where('preferredAdmin', '==', currentUser.email)
             .get();
 
         const content = document.getElementById('admin-customers-list');
         if (!content) return;
 
-        if (snapshot.empty) {
+        // Combine both lists into a single array
+        let allCustomers = [];
+
+        manualSnapshot.forEach(doc => {
+            allCustomers.push({ id: doc.id, type: 'manual', ...doc.data() });
+        });
+
+        selfRegisteredSnapshot.forEach(doc => {
+            const data = doc.data();
+            allCustomers.push({ 
+                id: doc.id, 
+                type: 'self', 
+                name: data.customerName || 'N/A',
+                email: data.customerEmail || doc.id,
+                phone: data.phone || 'N/A',
+                tickets: data.tickets || 0,
+                spent: data.spent || 0
+            });
+        });
+
+        if (allCustomers.length === 0) {
             content.innerHTML = '<p class="text-slate-400 text-center py-6">No customers yet</p>';
             return;
         }
 
-        content.innerHTML = snapshot.docs.map(doc => {
-            const cust = doc.data();
-            return `
-                <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
-                    <p class="font-bold text-white">${cust.name}</p>
-                    <p class="text-xs text-slate-400">${cust.email} • ${cust.phone}</p>
-                    <p class="text-xs text-slate-400">Tickets: ${cust.tickets} • Spent: ${cust.spent} ETB</p>
-                    <button onclick="deleteAdminCustomer('${doc.id}')" class="text-xs px-2 py-1 bg-red-400/20 text-red-400 rounded mt-2">Delete</button>
+        content.innerHTML = allCustomers.map(cust => `
+            <div class="glass-panel rounded-lg p-4 border border-yellow-400/10 flex justify-between items-center text-xs">
+                <div>
+                    <p class="font-bold text-white text-sm">${cust.name} ${cust.type === 'self' ? '<span class="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded ml-2">Self-Registered</span>' : ''}</p>
+                    <p class="text-slate-400 mt-0.5">${cust.email} • ${cust.phone}</p>
+                    <p class="text-slate-400 mt-0.5">Tickets: ${cust.tickets || 0} • Spent: ${cust.spent || 0} ETB</p>
                 </div>
-            `;
-        }).join('');
+                ${cust.type === 'manual' ? `<button onclick="deleteAdminCustomer('${cust.id}')" class="px-2.5 py-1 bg-red-400/20 text-red-400 rounded">Delete</button>` : '<span class="text-slate-500 italic">Platform User</span>'}
+            </div>
+        `).join('');
     } catch (error) {
         console.error('Error loading customers:', error);
     }
@@ -438,10 +463,17 @@ async function loadAdminStats() {
     if (!db || !currentUser) return;
 
     try {
-        const custSnapshot = await db.collection('admin_customers')
+        // Count both manual and self-registered customers for total customer stats
+        const manualSnapshot = await db.collection('admin_customers')
             .where('adminEmail', '==', currentUser.email)
             .get();
-        document.getElementById('admin-total-customers').textContent = custSnapshot.size;
+
+        const selfRegisteredSnapshot = await db.collection('customer_settings')
+            .where('preferredAdmin', '==', currentUser.email)
+            .get();
+
+        const totalCustomersCount = manualSnapshot.size + selfRegisteredSnapshot.size;
+        document.getElementById('admin-total-customers').textContent = totalCustomersCount;
 
         const ticketSnapshot = await db.collection('customer_tickets').get();
         document.getElementById('admin-total-tickets').textContent = ticketSnapshot.size;
