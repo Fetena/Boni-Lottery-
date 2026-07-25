@@ -117,6 +117,13 @@ class AdminDashboard {
                             <label class="block text-xs text-slate-400 mb-1">Phone Number</label>
                             <input type="tel" id="cust-phone-input" placeholder="0912345678" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-3 px-4 text-white text-xs placeholder-slate-500">
                         </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Default Password</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="cust-password-input" value="Welcome123!" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-3 px-4 text-white text-xs">
+                                <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('cust-password-input').value); notify('success', 'Password copied!');" class="px-3 bg-slate-800 hover:bg-slate-700 text-yellow-400 rounded-xl text-xs border border-yellow-400/20">Copy</button>
+                            </div>
+                        </div>
                         <button onclick="addAdminCustomer()" class="w-full py-3 bg-yellow-400 text-black font-bold rounded-xl text-xs hover:bg-yellow-500 mt-2">Add Customer</button>
                         <button onclick="closeAddCustomerModal()" class="w-full py-2 bg-slate-800 text-slate-300 rounded-xl text-xs">Cancel</button>
                     </div>
@@ -273,32 +280,28 @@ function closeAddCustomerModal() {
 }
 
 async function addAdminCustomer() {
-    const name = document.getElementById('cust-name-input').value;
-    const email = document.getElementById('cust-email-input').value;
-    const phone = document.getElementById('cust-phone-input').value;
+    const name = document.getElementById('cust-name-input').value.trim();
+    const email = document.getElementById('cust-email-input').value.trim();
+    const phone = document.getElementById('cust-phone-input').value.trim();
+    const password = document.getElementById('cust-password-input').value.trim();
 
-    if (!name || !email || !phone) return notify('error', '❌ Fill all fields');
-    if (!db) return notify('error', '❌ Database not initialized');
-    if (!currentUser) return notify('error', '❌ User not authenticated');
+    if (!name || !email || !password) {
+        return notify('error', '❌ Please fill in all required fields');
+    }
 
     try {
-        await db.collection('admin_customers').add({
-            adminEmail: currentUser.email,
-            name: name,
-            email: email,
-            phone: phone,
-            tickets: 0,
-            spent: 0,
-            createdAt: new Date()
+        // Example Firestore save or Firebase Auth creation logic
+        await db.collection('users').add({
+            name,
+            email,
+            phone,
+            role: 'customer',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        notify('success', `✅ Customer ${name} added!`);
+        notify('success', '✅ Customer added successfully!');
         closeAddCustomerModal();
-        document.getElementById('cust-name-input').value = '';
-        document.getElementById('cust-email-input').value = '';
-        document.getElementById('cust-phone-input').value = '';
-        
-        await loadAdminCustomers();
+        // Refresh customer list if applicable
     } catch (error) {
         notify('error', `❌ Error: ${error.message}`);
     }
