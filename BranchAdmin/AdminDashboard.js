@@ -101,16 +101,24 @@ class AdminDashboard {
             </div>
 
             <!-- Add Customer Modal -->
-            <div id="customer-modal" class="modal" style="display: none;">
-                <div class="modal-overlay"></div>
-                <div class="modal-content p-6 m-auto">
-                    <h3 class="text-xl font-bold text-white mb-4">Add Customer</h3>
+            <div id="customer-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50">
+                <div class="glass-panel rounded-2xl p-8 w-full max-w-md border border-yellow-400/10 space-y-4">
+                    <h3 class="text-2xl font-bold text-white mb-2">Add Customer</h3>
                     <div class="space-y-3">
-                        <input type="text" id="cust-name-input" placeholder="Customer Name" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white">
-                        <input type="email" id="cust-email-input" placeholder="Email" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white">
-                        <input type="tel" id="cust-phone-input" placeholder="Phone" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white">
-                        <button onclick="addAdminCustomer()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl">Add</button>
-                        <button onclick="closeAddCustomerModal()" class="w-full py-2 bg-slate-700 text-white rounded-xl">Cancel</button>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Customer Name</label>
+                            <input type="text" id="cust-name-input" placeholder="John Doe" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-3 px-4 text-white text-xs placeholder-slate-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Email</label>
+                            <input type="email" id="cust-email-input" placeholder="customer@email.com" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-3 px-4 text-white text-xs placeholder-slate-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Phone Number</label>
+                            <input type="tel" id="cust-phone-input" placeholder="0912345678" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-3 px-4 text-white text-xs placeholder-slate-500">
+                        </div>
+                        <button onclick="addAdminCustomer()" class="w-full py-3 bg-yellow-400 text-black font-bold rounded-xl text-xs hover:bg-yellow-500 mt-2">Add Customer</button>
+                        <button onclick="closeAddCustomerModal()" class="w-full py-2 bg-slate-800 text-slate-300 rounded-xl text-xs">Cancel</button>
                     </div>
                 </div>
             </div>
