@@ -63,18 +63,20 @@ class MainAdminBookings {
         const confirmedEl = document.getElementById('ma-confirmed-bookings');
 
         if (!container) return;
-const pendingCount = this.appointments.filter(a => a.status === 'Pending').length;
-const badgeEl = document.getElementById('badge-main-bookings');
-if (badgeEl) {
-    if (pendingCount > 0) {
-        badgeEl.textContent = pendingCount;
-        badgeEl.classList.remove('hidden');
-    } else {
-        badgeEl.classList.add('hidden');
-    }
-}
+
+        const pendingCount = this.appointments.filter(a => a.status === 'Pending').length;
+        const badgeEl = document.getElementById('badge-main-bookings');
+        if (badgeEl) {
+            if (pendingCount > 0) {
+                badgeEl.textContent = pendingCount;
+                badgeEl.classList.remove('hidden');
+            } else {
+                badgeEl.classList.add('hidden');
+            }
+        }
+
         const total = this.appointments.length;
-        const pending = this.appointments.filter(a => a.status === 'Pending').length;
+        const pending = pendingCount;
         const confirmed = this.appointments.filter(a => a.status === 'Confirmed').length;
 
         if (totalEl) totalEl.textContent = total;
@@ -102,37 +104,13 @@ if (badgeEl) {
                         class="px-3 py-1 bg-emerald-600 text-white font-bold rounded">✅ Approve</button>
                     <button onclick="window.mainAdminDashboard.bookings.updateBookingStatus('${apt.id}', 'Cancelled')" 
                         class="px-3 py-1 bg-red-600 text-white font-bold rounded">❌ Reject</button>
-                    <button onclick="window.mainAdminDashboard.bookings.updateBookingStatus('${apt.id}')" 
-                        class="px-3 py-1 bg-red-600 text-white font-bold rounded">❌ Delete</button>
+                    <button onclick="window.mainAdminDashboard.bookings.deleteBooking('${apt.id}')" 
+                        class="px-3 py-1 bg-slate-800 hover:bg-rose-900 text-rose-400 border border-rose-500/20 font-bold rounded">🗑️ Delete</button>
                 </div>
             </div>
         `).join('');
     }
-async function deleteBooking(bookingId) {
-    if (!confirm('Are you sure you want to delete this booking request?')) {
-        return;
-    }
 
-    if (!db) {
-        notify('error', '❌ Database not initialized');
-        return;
-    }
-
-    try {
-        // Delete the document from your bookings collection in Firestore
-        await db.collection('bookings').doc(bookingId).delete();
-
-        notify('success', '🗑️ Booking deleted successfully!');
-        
-        // Refresh the data to update the UI
-        if (window.mainAdminDashboard && typeof window.mainAdminDashboard.loadData === 'function') {
-            await window.mainAdminDashboard.loadData();
-        }
-    } catch (error) {
-        console.error('Error deleting booking:', error);
-        notify('error', `❌ Error deleting booking: ${error.message}`);
-    }
-}
     async updateBookingStatus(aptId, status) {
         if (!db) return notify('error', '❌ Database not initialized');
 
@@ -142,6 +120,26 @@ async function deleteBooking(bookingId) {
             await this.loadData();
         } catch (error) {
             notify('error', `❌ Error: ${error.message}`);
+        }
+    }
+
+    async deleteBooking(aptId) {
+        if (!confirm('Are you sure you want to delete this request?')) {
+            return;
+        }
+
+        if (!db) {
+            notify('error', '❌ Database not initialized');
+            return;
+        }
+
+        try {
+            await db.collection('appointments').doc(aptId).delete();
+            notify('success', '🗑️ Request deleted successfully!');
+            await this.loadData();
+        } catch (error) {
+            console.error('Error deleting booking:', error);
+            notify('error', `❌ Error deleting booking: ${error.message}`);
         }
     }
 }
