@@ -54,9 +54,39 @@ class CustomerDashboard {
                                             <option value="">-- Choose Admin --</option>
                                         </select>
                                     </div>
+                                    
+                                    <div>
+                                        <label class="block text-xs text-slate-400 mb-1">Payment Method</label>
+                                        <select id="ticket-payment-method" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs">
+                                            <option value="Telebirr">Telebirr</option>
+                                            <option value="CBE Birr">CBE Birr</option>
+                                            <option value="Bank Transfer">Bank Transfer</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-xs text-slate-400 mb-1">Transaction ID / Reference Number</label>
+                                        <input type="text" id="ticket-transaction-id" placeholder="e.g. TXN12345678" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs placeholder-slate-500">
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-xs text-slate-400 mb-1">Receipt Reference / Image URL (Optional)</label>
+                                        <input type="text" id="ticket-receipt-info" placeholder="Receipt number or link" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs placeholder-slate-500">
+                                    </div>
+
+                                    <!-- Future Platform Development Option -->
+                                    <div class="p-3 bg-yellow-400/5 border border-yellow-400/20 rounded-xl space-y-2">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-xs font-bold text-yellow-400">⚡ Automatic Online Payment (Chapa / Telebirr API)</span>
+                                            <span class="text-[10px] bg-yellow-400/20 text-yellow-300 px-2 py-0.5 rounded">Coming Soon</span>
+                                        </div>
+                                        <p class="text-[11px] text-slate-400">Future upgrade: Direct gateway integration for instant automatic ticket confirmation.</p>
+                                        <button type="button" disabled class="w-full py-1.5 bg-slate-800 text-slate-500 font-bold rounded-lg text-xs cursor-not-allowed">Pay Automatically (Disabled)</button>
+                                    </div>
+
                                     <p class="text-white text-xs">Selected: <span id="selected-count">0</span> numbers</p>
                                     <p class="text-white text-xs mt-1">Cost: <span id="ticket-cost">0</span> ETB</p>
-                                    <button onclick="submitCustomerTicket()" class="w-full mt-2 py-2 bg-yellow-400 text-black font-bold rounded-xl text-xs">Submit Ticket</button>
+                                    <button onclick="submitCustomerTicket()" class="w-full mt-2 py-2 bg-yellow-400 text-black font-bold rounded-xl text-xs font-bold hover:bg-yellow-500">Submit Ticket for Admin Approval</button>
                                 </div>
                             </div>
                         </div>
@@ -235,14 +265,25 @@ async function submitCustomerTicket() {
         return;
     }
 
-    const paymentMethodEl = document.getElementById('cust-payment');
-    const paymentMethod = paymentMethodEl?.value || 'Telebirr';
-    
     const adminSelectEl = document.getElementById('ticket-admin-select');
     const assignedAdmin = adminSelectEl?.value || '';
 
+    const paymentMethodEl = document.getElementById('ticket-payment-method');
+    const paymentMethod = paymentMethodEl?.value || 'Telebirr';
+
+    const transactionIdEl = document.getElementById('ticket-transaction-id');
+    const transactionId = transactionIdEl?.value.trim() || '';
+
+    const receiptInfoEl = document.getElementById('ticket-receipt-info');
+    const receiptInfo = receiptInfoEl?.value.trim() || '';
+
     if (!assignedAdmin) {
         notify('error', '❌ Please select your preferred admin/branch');
+        return;
+    }
+
+    if (!transactionId) {
+        notify('error', '❌ Please enter your transaction ID or reference number');
         return;
     }
 
@@ -254,12 +295,18 @@ async function submitCustomerTicket() {
             numbers: selectedNumbers,
             cost: selectedNumbers.length * 100,
             paymentMethod: paymentMethod,
+            transactionId: transactionId,
+            receiptInfo: receiptInfo,
             status: 'Pending',
             createdAt: new Date()
         });
 
-        notify('success', `✅ Ticket submitted to admin successfully!`);
+        notify('success', '✅ Ticket submitted successfully! Waiting for admin approval.');
+        
+        // Reset fields
         selectedNumbers = [];
+        if (transactionIdEl) transactionIdEl.value = '';
+        if (receiptInfoEl) receiptInfoEl.value = '';
         generateNumbersGrid();
         await loadCustomerTickets();
     } catch (error) {
