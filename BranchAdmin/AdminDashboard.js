@@ -42,6 +42,31 @@ class AdminDashboard {
     <p class="text-xs text-slate-400">Trigger a randomized lucky draw from all approved customer tickets assigned to your branch.</p>
     <button onclick="runLotteryDraw('${this.adminId}')" class="w-full py-3 bg-yellow-400 text-black font-bold rounded-xl text-xs hover:bg-yellow-500">🎲 Draw Branch Winner Now</button>
 </div>
+                        <!-- Dashboard Tab -->
+                        <div id="admin-dashboard-tab" class="tab-content active space-y-4">
+                            <div class="grid grid-cols-1 gap-4">
+                                <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                                    <p class="text-xs text-slate-400">Total Customers</p>
+                                    <h3 id="admin-total-customers" class="text-3xl font-bold text-blue-400 mt-1">0</h3>
+                                </div>
+                                <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                                    <p class="text-xs text-slate-400">Total Tickets</p>
+                                    <h3 id="admin-total-tickets" class="text-3xl font-bold text-emerald-400 mt-1">0</h3>
+                                </div>
+                                <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                                    <p class="text-xs text-slate-400">Total Revenue</p>
+                                    <h3 id="admin-total-revenue" class="text-3xl font-bold text-purple-400 mt-1">0 ETB</h3>
+                                </div>
+                            </div>
+
+                            <!-- Lottery Draw Control Panel -->
+                            <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
+                                <h3 class="text-xl font-bold text-gradient">🎰 Branch Lottery Draw Center</h3>
+                                <p class="text-xs text-slate-400">Trigger a randomized lucky draw from all approved customer tickets assigned to your branch.</p>
+                                <button onclick="runLotteryDraw(currentUser?.email)" class="w-full py-3 bg-yellow-400 text-black font-bold rounded-xl text-xs hover:bg-yellow-500">🎲 Draw Branch Winner Now</button>
+                            </div>
+                        </div>
+
 
                         <div id="admin-dashboard-tab" class="tab-content active space-y-6">
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
