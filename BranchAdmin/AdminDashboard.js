@@ -36,12 +36,7 @@ class AdminDashboard {
                         </div>
 
                         <!-- Dashboard Tab -->
-                        // Inside Dashboard Tab in AdminDashboard.js render():
-<div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
-    <h3 class="text-xl font-bold text-gradient">🎰 Branch Lottery Draw Center</h3>
-    <p class="text-xs text-slate-400">Trigger a randomized lucky draw from all approved customer tickets assigned to your branch.</p>
-    <button onclick="runLotteryDraw('${this.adminId}')" class="w-full py-3 bg-yellow-400 text-black font-bold rounded-xl text-xs hover:bg-yellow-500">🎲 Draw Branch Winner Now</button>
-</div>
+ 
                         <!-- Dashboard Tab -->
                         <div id="admin-dashboard-tab" class="tab-content active space-y-4">
                             <div class="grid grid-cols-1 gap-4">
