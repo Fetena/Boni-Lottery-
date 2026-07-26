@@ -51,6 +51,13 @@ class MainAdminDashboard {
                                </button>
                             <button onclick="window.mainAdminDashboard.switchTab('settings', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">⚙️ Settings</button>
                         </div>
+                        // Inside Main Admin Dashboard render markup:
+<div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
+    <h3 class="text-xl font-bold text-gradient">🌐 Global Platform Lottery Draw</h3>
+    <p class="text-xs text-slate-400">Run a certified platform-wide random draw across all branches and active tickets.</p>
+    <button onclick="runLotteryDraw(null)" class="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl text-xs hover:opacity-90">🏆 Run Global Lucky Draw</button>
+</div>
+
 
                         <!-- TAB CONTENTS -->
                         <div id="main-dashboard" class="tab-content active space-y-6">
