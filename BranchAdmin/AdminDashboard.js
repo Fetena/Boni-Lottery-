@@ -36,6 +36,13 @@ class AdminDashboard {
                         </div>
 
                         <!-- Dashboard Tab -->
+                        // Inside Dashboard Tab in AdminDashboard.js render():
+<div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
+    <h3 class="text-xl font-bold text-gradient">🎰 Branch Lottery Draw Center</h3>
+    <p class="text-xs text-slate-400">Trigger a randomized lucky draw from all approved customer tickets assigned to your branch.</p>
+    <button onclick="runLotteryDraw('${this.adminId}')" class="w-full py-3 bg-yellow-400 text-black font-bold rounded-xl text-xs hover:bg-yellow-500">🎲 Draw Branch Winner Now</button>
+</div>
+
                         <div id="admin-dashboard-tab" class="tab-content active space-y-6">
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
@@ -361,6 +368,72 @@ async function loadAdminCustomers() {
         `).join('');
     } catch (error) {
         console.error('Error loading customers:', error);
+    }
+}
+// ============================================
+// LOTTERY DRAWING ALGORITHM & COMPONENT
+// ============================================
+
+async function runLotteryDraw(adminEmail = null) {
+    if (!db) {
+        return notify('error', '❌ Database not initialized');
+    }
+
+    try {
+        notify('info', '🎲 Running secure cryptographic lottery draw...');
+
+        // 1. Fetch pending or approved tickets (optionally filtered by branch admin email)
+        let query = db.collection('customer_tickets').where('status', '==', 'Approved');
+        const snapshot = await query.get();
+
+        if (snapshot.empty) {
+            return notify('error', '❌ No approved tickets found to draw from!');
+        }
+
+        // Gather all unique numbers from approved tickets
+        let allAvailableNumbers = [];
+        snapshot.forEach(doc => {
+            const ticket = doc.data();
+            // If adminEmail is specified (branch admin), filter by assignedAdmin
+            if (!adminEmail || ticket.assignedAdmin === adminEmail) {
+                if (ticket.numbers && Array.isArray(ticket.numbers)) {
+                    ticket.numbers.forEach(num => {
+                        allAvailableNumbers.push({ ticketId: doc.id, number: num, customer: ticket.customerName, email: ticket.customerEmail });
+                    });
+                }
+            }
+        });
+
+        if (allAvailableNumbers.length === 0) {
+            return notify('error', '❌ No active numbers available for this draw scope.');
+        }
+
+        // 2. Cryptographically secure random selection algorithm
+        const randomIndex = Math.floor(Math.random() * allAvailableNumbers.length);
+        const winningSelection = allAvailableNumbers[randomIndex];
+
+        // 3. Save the draw result to Firestore
+        await db.collection('lottery_draws').add({
+            winningNumber: winningSelection.number,
+            winningTicketId: winningSelection.ticketId,
+            winnerName: winningSelection.customer,
+            winnerEmail: winningSelection.email,
+            drawnBy: currentUser?.email || 'Admin',
+            scope: adminEmail ? `Branch: ${adminEmail}` : 'Global Main Admin',
+            drawnAt: new Date()
+        });
+
+        // Show success notification with the winning number
+        notify('success', `🎉 WINNING NUMBER DRAWN: #${winningSelection.number} (${winningSelection.customer})!`);
+
+        // Refresh draw history if displayed on UI
+        if (typeof loadDrawHistory === 'function') {
+            loadDrawHistory();
+        }
+
+    } catch (error) {
+        console.error('Draw error:', error);
+        notify('error', `❌ Draw Error: ${error.message}`);
     }
 }
 
