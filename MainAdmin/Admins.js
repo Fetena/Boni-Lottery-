@@ -19,11 +19,10 @@ class Admins {
             </div>
 
             <!-- Create Admin Modal -->
-            <div id="create-admin-modal" class="modal" style="display: none;">
-                <div class="modal-overlay"></div>
-                <div class="modal-content p-6 m-auto max-w-lg w-full space-y-4">
+            <div id="create-admin-modal" class="modal fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" style="display: none;">
+                <div class="modal-content glass-panel border border-yellow-400/20 rounded-2xl p-6 max-w-lg w-full space-y-4 max-h-[90vh] overflow-y-auto">
                     <h3 class="text-xl font-bold text-white">Create New Admin & Payment Details</h3>
-                    <div class="space-y-3 max-h-[75vh] overflow-y-auto pr-2">
+                    <div class="space-y-3 pr-2">
                         <div>
                             <label class="block text-xs text-slate-400 mb-1">Full Name</label>
                             <input type="text" id="admin-name-input" placeholder="Full Name" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs">
@@ -83,11 +82,10 @@ class Admins {
             </div>
 
             <!-- Edit Admin Modal -->
-            <div id="edit-admin-modal" class="modal" style="display: none;">
-                <div class="modal-overlay"></div>
-                <div class="modal-content p-6 m-auto max-w-lg w-full space-y-4">
+            <div id="edit-admin-modal" class="modal fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" style="display: none;">
+                <div class="modal-content glass-panel border border-yellow-400/20 rounded-2xl p-6 max-w-lg w-full space-y-4 max-h-[90vh] overflow-y-auto">
                     <h3 class="text-xl font-bold text-white">Edit Admin, Payments & Permissions</h3>
-                    <div class="space-y-3 max-h-[75vh] overflow-y-auto pr-2">
+                    <div class="space-y-3 pr-2">
                         <div>
                             <label class="block text-xs text-slate-400 mb-1">Full Name</label>
                             <input type="text" id="edit-admin-name" placeholder="Full Name" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs">
