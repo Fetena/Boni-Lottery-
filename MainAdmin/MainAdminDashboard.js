@@ -54,43 +54,7 @@ class MainAdminDashboard {
                        
 
                         <!-- TAB CONTENTS -->
-                        
-                        <div id="main-dashboard" class="tab-content active space-y-6">
-                            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                                <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                                    <p class="text-xs text-slate-400">Total Admins</p>
-                                    <p class="text-3xl font-bold text-yellow-400 mt-2" id="total-admins">0</p>
-                                </div>
-                                <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                                    <p class="text-xs text-slate-400">Total Customers</p>
-                                    <p class="text-3xl font-bold text-blue-400 mt-2" id="total-customers">0</p>
-                                </div>
-                                <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                                    <p class="text-xs text-slate-400">Total Tickets</p>
-                                    <p class="text-3xl font-bold text-emerald-400 mt-2" id="total-tickets">0</p>
-                                </div>
-                                <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                                    <p class="text-xs text-slate-400">Platform Revenue</p>
-                                    <p class="text-3xl font-bold text-purple-400 mt-2" id="total-revenue">0 ETB</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div id="main-bookings" class="tab-content" style="display: none;"></div>
-                        <div id="main-admins" class="tab-content" style="display: none;"></div>
-                        <div id="main-customers" class="tab-content" style="display: none;"></div>
-                        <div id="main-ranges" class="tab-content" style="display: none;"></div>
-                        <div id="main-payments" class="tab-content" style="display: none;"></div>
-                        <div id="main-analytics" class="tab-content" style="display: none;"></div>
-                        <div id="main-transactions" class="tab-content" style="display: none;"></div>
-                        <div id="main-auditlog" class="tab-content" style="display: none;"></div>
-                        <div id="main-notifications" class="tab-content" style="display: none;"></div>
-                        <div id="main-settings" class="tab-content" style="display: none;"></div>
-                    </div>
-                </main>
-            </div>
-        `;
-    }
-<!-- Dashboard Tab -->
+                        <!-- Dashboard Tab -->
                         <div id="admin-dashboard-tab" class="tab-content active space-y-4">
                             <!-- Compact Stat Cards -->
                             <div class="grid grid-cols-3 gap-3">
@@ -127,6 +91,42 @@ class MainAdminDashboard {
                                 <button onclick="runLotteryDraw(currentUser?.email)" class="w-full py-3.5 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 text-black font-black rounded-xl text-sm shadow-lg hover:opacity-95 transform active:scale-95 transition-all">🎲 SPIN & DRAW WINNER NOW</button>
                             </div>
                         </div>
+                        <div id="main-dashboard" class="tab-content active space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                                <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                                    <p class="text-xs text-slate-400">Total Admins</p>
+                                    <p class="text-3xl font-bold text-yellow-400 mt-2" id="total-admins">0</p>
+                                </div>
+                                <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                                    <p class="text-xs text-slate-400">Total Customers</p>
+                                    <p class="text-3xl font-bold text-blue-400 mt-2" id="total-customers">0</p>
+                                </div>
+                                <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                                    <p class="text-xs text-slate-400">Total Tickets</p>
+                                    <p class="text-3xl font-bold text-emerald-400 mt-2" id="total-tickets">0</p>
+                                </div>
+                                <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                                    <p class="text-xs text-slate-400">Platform Revenue</p>
+                                    <p class="text-3xl font-bold text-purple-400 mt-2" id="total-revenue">0 ETB</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="main-bookings" class="tab-content" style="display: none;"></div>
+                        <div id="main-admins" class="tab-content" style="display: none;"></div>
+                        <div id="main-customers" class="tab-content" style="display: none;"></div>
+                        <div id="main-ranges" class="tab-content" style="display: none;"></div>
+                        <div id="main-payments" class="tab-content" style="display: none;"></div>
+                        <div id="main-analytics" class="tab-content" style="display: none;"></div>
+                        <div id="main-transactions" class="tab-content" style="display: none;"></div>
+                        <div id="main-auditlog" class="tab-content" style="display: none;"></div>
+                        <div id="main-notifications" class="tab-content" style="display: none;"></div>
+                        <div id="main-settings" class="tab-content" style="display: none;"></div>
+                    </div>
+                </main>
+            </div>
+        `;
+    }
+
     async loadData() {
         try {
             console.log('📥 Starting loadData...');
