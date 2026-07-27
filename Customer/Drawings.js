@@ -7,7 +7,26 @@
 class CustomerDrawings {
     constructor(custId) {
         this.custId = custId;
-        this.draws = db.getDrawings() || this.defaultDraws();
+        this.draws = [];
+        this.loadDrawings();
+    }
+
+    async loadDrawings() {
+        try {
+            const snapshot = await db.collection('drawings').get();
+            if (!snapshot.empty) {
+                this.draws = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            } else {
+                this.draws = this.defaultDraws();
+            }
+        } catch (e) {
+            this.draws = this.defaultDraws();
+        }
+        
+        const container = document.getElementById('customer-content');
+        if (container && typeof customerDashboard !== 'undefined') {
+            // Re-render container if needed, or update sub-section
+        }
     }
 
     defaultDraws() {
@@ -35,7 +54,7 @@ class CustomerDrawings {
     }
 
     render() {
-        const nextDraw = this.draws[0];
+        const nextDraw = this.draws[0] || this.defaultDraws()[0];
         const pastDraws = this.draws.slice(1);
 
         return `
@@ -100,17 +119,24 @@ class CustomerDrawings {
         `;
     }
 
-    checkWinner() {
+    async checkWinner() {
         const winningNumber = document.getElementById('check-number')?.value;
         if (!winningNumber) {
             showNotification('error', '❌ Enter a winning number');
             return;
         }
 
-        const customer = db.getCustomer(this.custId);
-        const tickets = customer.tickets || [];
-        const matchingTickets = tickets.filter(t => t.numbers.includes(parseInt(winningNumber)));
+        let tickets = [];
+        try {
+            const doc = await db.collection('customers').doc(this.custId).get();
+            if (doc.exists) {
+                tickets = doc.data().tickets || [];
+            }
+        } catch (e) {
+            tickets = JSON.parse(localStorage.getItem(`tickets_${this.custId}`) || '[]');
+        }
 
+        const matchingTickets = tickets.filter(t => t.numbers && t.numbers.includes(parseInt(winningNumber)));
         const resultDiv = document.getElementById('win-result');
         
         if (matchingTickets.length > 0) {
