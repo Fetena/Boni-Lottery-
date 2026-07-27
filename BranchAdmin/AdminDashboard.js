@@ -7,7 +7,7 @@ class AdminDashboard {
         this.adminId = adminId;
     }
 
-    render() {
+   render() {
         return `
             <div id="admin-dashboard" class="min-h-screen bg-black flex flex-col">
                 <header class="sticky top-0 z-40 w-full glass-panel border-b border-yellow-400/10 px-6 py-4">
@@ -35,9 +35,7 @@ class AdminDashboard {
                             <button onclick="window.adminDashboard.switchTab('settings', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">⚙️ Settings</button>
                         </div>
 
-                        
- 
-                       <!-- Dashboard Tab -->
+                        <!-- Dashboard Tab -->
                         <div id="admin-dashboard-tab" class="tab-content active space-y-4">
                             <!-- Compact Stat Cards -->
                             <div class="grid grid-cols-3 gap-3">
@@ -73,7 +71,6 @@ class AdminDashboard {
 
                                 <button onclick="runLotteryDraw(currentUser?.email)" class="w-full py-3.5 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 text-black font-black rounded-xl text-sm shadow-lg hover:opacity-95 transform active:scale-95 transition-all">🎲 SPIN & DRAW WINNER NOW</button>
                             </div>
-                        </div>
                         </div>
 
                         <!-- Customers Tab -->
