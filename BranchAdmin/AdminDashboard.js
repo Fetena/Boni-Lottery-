@@ -1,6 +1,8 @@
 // ============================================
-// ADMIN DASHBOARD - BRANCH ADMIN (FIXED)
+// ADMIN DASHBOARD - BRANCH ADMIN (FIXED & FULLY FEATURED)
 // ============================================
+
+let countdownInterval = null;
 
 class AdminDashboard {
     constructor(adminId) {
@@ -54,22 +56,47 @@ class AdminDashboard {
                             </div>
 
                             <!-- High-Visibility Lottery Draw Control Panel & Spinner -->
-                            <div class="glass-panel rounded-2xl p-6 border-2 border-yellow-400/40 bg-gradient-to-b from-yellow-400/10 to-black space-y-4 text-center shadow-[0_0_25px_rgba(252,211,77,0.15)]">
+                            <div class="glass-panel rounded-2xl p-6 border-2 border-yellow-400/40 bg-gradient-to-b from-yellow-400/10 to-black space-y-6 shadow-[0_0_25px_rgba(252,211,77,0.15)]">
                                 <div>
                                     <span class="bg-yellow-400/20 text-yellow-300 border border-yellow-400/30 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">⚡ Live Draw Center</span>
                                     <h3 class="text-2xl font-black text-gradient mt-2">🎰 Branch Lucky Draw</h3>
-                                    <p class="text-xs text-slate-300 mt-1">Spin the cryptographic wheel to randomly select a verified winner from your branch pool.</p>
+                                    <p class="text-xs text-slate-300 mt-1">Configure schedule, countdown to draw time, and spin for verified branch winners.</p>
                                 </div>
 
-                                <!-- Spinner Display Box -->
-                                <div class="py-6 bg-black/60 rounded-xl border border-yellow-400/30 flex flex-col items-center justify-center relative overflow-hidden">
+                                <!-- Admin Schedule Controller -->
+                                <div class="bg-black/40 p-4 rounded-xl border border-yellow-400/20 space-y-3">
+                                    <h4 class="text-xs font-bold text-yellow-400 uppercase tracking-wide">⚙️ Set Draw Schedule & Time</h4>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block text-[10px] text-slate-400 mb-1">Scheduled Date & Time</label>
+                                            <input type="datetime-local" id="draw-schedule-input" class="w-full bg-black/60 border border-yellow-400/30 rounded-xl py-2 px-3 text-white text-xs">
+                                        </div>
+                                        <div class="flex items-end">
+                                            <button onclick="saveDrawSchedule()" class="w-full py-2 bg-yellow-400/20 hover:bg-yellow-400/30 border border-yellow-400/40 text-yellow-300 font-bold rounded-xl text-xs transition-all">💾 Save Schedule</button>
+                                        </div>
+                                    </div>
+                                    <p id="schedule-status-text" class="text-[11px] text-slate-400 italic">No draw time scheduled yet.</p>
+                                </div>
+
+                                <!-- Countdown & Spinner Box -->
+                                <div class="py-6 bg-black/60 rounded-xl border border-yellow-400/30 flex flex-col items-center justify-center relative overflow-hidden space-y-2">
                                     <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-yellow-400/10 via-transparent to-transparent pointer-events-none"></div>
-                                    <span class="text-[10px] uppercase tracking-widest text-slate-400 mb-1">Winning Number Result</span>
+                                    <span id="draw-countdown-timer" class="text-xs font-mono font-bold text-amber-400 bg-amber-400/10 px-3 py-1 rounded-full border border-amber-400/20">⏳ LOCKED UNTIL SCHEDULED TIME</span>
+                                    <span class="text-[10px] uppercase tracking-widest text-slate-400 mt-1">Winning Number Result</span>
                                     <div id="lottery-spinner-box" class="text-5xl font-black text-yellow-400 tracking-wider drop-shadow-[0_0_15px_rgba(252,211,77,0.6)]">---</div>
-                                    <div id="winner-info-display" class="text-xs text-slate-300 mt-2 font-medium"></div>
+                                    <div id="winner-info-display" class="text-xs text-slate-300 mt-2 font-medium text-center px-4"></div>
                                 </div>
 
-                                <button onclick="runLotteryDraw(currentUser?.email)" class="w-full py-3.5 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 text-black font-black rounded-xl text-sm shadow-lg hover:opacity-95 transform active:scale-95 transition-all">🎲 SPIN & DRAW WINNER NOW</button>
+                                <!-- Spin Action Button (Disabled by Default until schedule + 30 mins) -->
+                                <button id="spin-draw-btn" onclick="runLotteryDraw(currentUser?.email)" disabled class="w-full py-3.5 bg-slate-800 text-slate-500 font-black rounded-xl text-sm cursor-not-allowed transition-all shadow-none">🔒 DRAW LOCKED (WAITING FOR SCHEDULE)</button>
+
+                                <!-- Recent Winners History (1 Week Auto-Purge) -->
+                                <div class="space-y-3 pt-4 border-t border-yellow-400/10">
+                                    <h4 class="text-xs font-bold text-white uppercase tracking-wider">🏆 Past Winners (Last 7 Days)</h4>
+                                    <div id="lottery-history-list" class="space-y-2 max-h-48 overflow-y-auto">
+                                        <p class="text-slate-500 text-xs italic text-center py-2">Loading recent history...</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -153,7 +180,6 @@ class AdminDashboard {
     }
 
     switchTab(tabName, event) {
-        // Hide all tabs
         document.getElementById('admin-dashboard-tab').style.display = 'none';
         document.getElementById('admin-customers').style.display = 'none';
         document.getElementById('admin-tickets').style.display = 'none';
@@ -162,11 +188,9 @@ class AdminDashboard {
         document.getElementById('admin-bookAppointment').style.display = 'none';
         document.getElementById('admin-settings').style.display = 'none';
 
-        // Deactivate all buttons
         const buttons = document.querySelectorAll('#admin-dashboard .tab-button');
         buttons.forEach(btn => btn.classList.remove('active'));
 
-        // Show selected tab
         if (tabName === 'dashboard') {
             document.getElementById('admin-dashboard-tab').style.display = 'block';
         } else if (tabName === 'customers') {
@@ -183,7 +207,6 @@ class AdminDashboard {
             document.getElementById('admin-settings').style.display = 'block';
         }
 
-        // Activate clicked button
         if (event && event.target) {
             event.target.classList.add('active');
             event.target.style.color = '#FCD34D';
@@ -196,8 +219,10 @@ class AdminDashboard {
             await loadAdminTickets();
             await loadAdminPayments();
             await loadAdminStats();
+            
+            // Initialize Lottery Schedule & History Module
+            await initLotteryModule();
 
-            // Initialize sub-components safely
             if (!window.adminPayments) {
                 window.adminPayments = new AdminPayments(this.adminId);
             }
@@ -211,13 +236,11 @@ class AdminDashboard {
                 window.adminSettings = new AdminSettings(this.adminId);
             }
 
-            // Populate Payments Tab
             const paymentsTab = document.getElementById('admin-payments');
             if (paymentsTab) {
                 paymentsTab.innerHTML = await window.adminPayments.render();
             }
 
-            // Populate Notifications Tab
             const notifTab = document.getElementById('admin-notifications');
             if (notifTab) {
                 notifTab.innerHTML = window.adminNotifications.render();
@@ -226,16 +249,11 @@ class AdminDashboard {
                 }
             }
 
-            // Populate Appointments Tab
             const apptTab = document.getElementById('admin-bookAppointment');
             if (apptTab) {
-                if (!window.adminBookAppointment) {
-                    window.adminBookAppointment = new AdminBookAppointment(this.adminId);
-                }
                 apptTab.innerHTML = await window.adminBookAppointment.render();
             }
 
-            // Populate Settings Tab
             const settingsTab = document.getElementById('admin-settings');
             if (settingsTab) {
                 settingsTab.innerHTML = window.adminSettings.render();
@@ -310,18 +328,18 @@ async function addAdminCustomer() {
     }
 
     try {
-        // Example Firestore save or Firebase Auth creation logic
-        await db.collection('users').add({
+        await db.collection('admin_customers').add({
+            adminEmail: currentUser.email,
             name,
             email,
             phone,
-            role: 'customer',
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
         notify('success', '✅ Customer added successfully!');
         closeAddCustomerModal();
-        // Refresh customer list if applicable
+        await loadAdminCustomers();
+        await loadAdminStats();
     } catch (error) {
         notify('error', `❌ Error: ${error.message}`);
     }
@@ -331,12 +349,10 @@ async function loadAdminCustomers() {
     if (!db || !currentUser) return;
 
     try {
-        // 1. Fetch manually added customers
         const manualSnapshot = await db.collection('admin_customers')
             .where('adminEmail', '==', currentUser.email)
             .get();
 
-        // 2. Fetch self-registered customers who selected this admin as preferred
         const selfRegisteredSnapshot = await db.collection('customer_settings')
             .where('preferredAdmin', '==', currentUser.email)
             .get();
@@ -344,7 +360,6 @@ async function loadAdminCustomers() {
         const content = document.getElementById('admin-customers-list');
         if (!content) return;
 
-        // Combine both lists into a single array
         let allCustomers = [];
 
         manualSnapshot.forEach(doc => {
@@ -383,14 +398,96 @@ async function loadAdminCustomers() {
         console.error('Error loading customers:', error);
     }
 }
+
 // ============================================
-// LOTTERY DRAWING ALGORITHM & COMPONENT
+// LOTTERY DRAWING MODULE (SCHEDULE, 30M BUFFER, PHONE & 1-WEEK HISTORY)
 // ============================================
 
-async function runLotteryDraw(adminEmail = null) {
-    if (!db) {
-        return notify('error', '❌ Database not initialized');
+async function initLotteryModule() {
+    await loadDrawSchedule();
+    await loadDrawHistory();
+}
+
+async function saveDrawSchedule() {
+    if (!db || !currentUser) return notify('error', '❌ Database or user not ready');
+    const scheduleVal = document.getElementById('draw-schedule-input').value;
+    if (!scheduleVal) return notify('error', '❌ Please pick a valid date and time');
+
+    try {
+        const scheduleDate = new Date(scheduleVal);
+        await db.collection('admin_settings').doc(`draw_schedule_${currentUser.email}`).set({
+            adminEmail: currentUser.email,
+            scheduledTime: firebase.firestore.Timestamp.fromDate(scheduleDate),
+            updatedAt: new Date()
+        }, { merge: true });
+
+        notify('success', '✅ Draw schedule saved successfully!');
+        loadDrawSchedule();
+    } catch (error) {
+        notify('error', `❌ Error saving schedule: ${error.message}`);
     }
+}
+
+async function loadDrawSchedule() {
+    if (!db || !currentUser) return;
+    try {
+        const doc = await db.collection('admin_settings').doc(`draw_schedule_${currentUser.email}`).get();
+        const statusText = document.getElementById('schedule-status-text');
+        const spinBtn = document.getElementById('spin-draw-btn');
+        const timerBox = document.getElementById('draw-countdown-timer');
+        const scheduleInput = document.getElementById('draw-schedule-input');
+
+        if (!doc.exists) return;
+        const data = doc.data();
+        if (!data.scheduledTime) return;
+
+        const scheduledDate = data.scheduledTime.toDate();
+        // Applies 30-minute lock buffer requirement
+        const unlockedDate = new Date(scheduledDate.getTime() + (30 * 60000));
+
+        if (scheduleInput) {
+            scheduleInput.value = scheduledDate.toISOString().slice(0, 16);
+        }
+
+        if (statusText) {
+            statusText.innerHTML = `📅 Scheduled for: <span class="text-white font-bold">${scheduledDate.toLocaleString()}</span> (Unlocked with 30m buffer at ${unlockedDate.toLocaleTimeString()})`;
+        }
+
+        if (countdownInterval) clearInterval(countdownInterval);
+
+        countdownInterval = setInterval(() => {
+            const now = new Date();
+            const diff = unlockedDate - now;
+
+            if (diff <= 0) {
+                if (timerBox) {
+                    timerBox.textContent = '🟢 DRAW UNLOCKED & READY!';
+                    timerBox.className = 'text-xs font-mono font-bold text-emerald-400 bg-emerald-400/10 px-3 py-1 rounded-full border border-emerald-400/20';
+                }
+                if (spinBtn) {
+                    spinBtn.disabled = false;
+                    spinBtn.className = 'w-full py-3.5 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 text-black font-black rounded-xl text-sm shadow-lg hover:opacity-95 transform active:scale-95 transition-all cursor-pointer';
+                    spinBtn.textContent = '🎲 SPIN & DRAW WINNER NOW';
+                }
+                clearInterval(countdownInterval);
+            } else {
+                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+                if (timerBox) {
+                    timerBox.textContent = `⏳ UNLOCKS IN: ${hours}h ${minutes}m ${seconds}s`;
+                }
+            }
+        }, 1000);
+
+    } catch (error) {
+        console.error('Error loading schedule:', error);
+    }
+}
+
+async function runLotteryDraw(adminEmail = null) {
+    if (!db) return notify('error', '❌ Database not initialized');
 
     try {
         let query = db.collection('customer_tickets').where('status', '==', 'Approved');
@@ -406,7 +503,13 @@ async function runLotteryDraw(adminEmail = null) {
             if (!adminEmail || ticket.assignedAdmin === adminEmail) {
                 if (ticket.numbers && Array.isArray(ticket.numbers)) {
                     ticket.numbers.forEach(num => {
-                        allAvailableNumbers.push({ ticketId: doc.id, number: num, customer: ticket.customerName, email: ticket.customerEmail });
+                        allAvailableNumbers.push({ 
+                            ticketId: doc.id, 
+                            number: num, 
+                            customer: ticket.customerName || 'N/A', 
+                            email: ticket.customerEmail || 'N/A',
+                            phone: ticket.customerPhone || ticket.phone || 'N/A' 
+                        });
                     });
                 }
             }
@@ -420,10 +523,9 @@ async function runLotteryDraw(adminEmail = null) {
         const winnerInfoBox = document.getElementById('winner-info-display');
         if (winnerInfoBox) winnerInfoBox.textContent = '';
 
-        // Live Spinning Animation Loop
         let spinCount = 0;
         const maxSpins = 30;
-        const spinInterval = setInterval(() => {
+        const spinInterval = setInterval(async () => {
             const randomNum = Math.floor(Math.random() * 300) + 1;
             if (spinnerBox) spinnerBox.textContent = `#${randomNum}`;
             spinCount++;
@@ -431,33 +533,82 @@ async function runLotteryDraw(adminEmail = null) {
             if (spinCount >= maxSpins) {
                 clearInterval(spinInterval);
 
-                // Select Final Winner
                 const randomIndex = Math.floor(Math.random() * allAvailableNumbers.length);
                 const winningSelection = allAvailableNumbers[randomIndex];
 
                 if (spinnerBox) spinnerBox.textContent = `#${winningSelection.number}`;
                 if (winnerInfoBox) {
-                    winnerInfoBox.innerHTML = `🏆 Winner: <span class="text-yellow-400 font-bold">${winningSelection.customer}</span> (${winningSelection.email})`;
+                    winnerInfoBox.innerHTML = `🏆 Winner: <span class="text-yellow-400 font-bold">${winningSelection.customer}</span><br>📧 Email: ${winningSelection.email} • 📞 Phone: <span class="text-emerald-400 font-bold">${winningSelection.phone}</span>`;
                 }
 
-                // Save to Firestore
-                db.collection('lottery_draws').add({
+                // Saves to Firestore including phone number and timestamp for 1-week auto-removal rule
+                await db.collection('lottery_draws').add({
                     winningNumber: winningSelection.number,
                     winningTicketId: winningSelection.ticketId,
                     winnerName: winningSelection.customer,
                     winnerEmail: winningSelection.email,
+                    winnerPhone: winningSelection.phone,
                     drawnBy: currentUser?.email || 'Admin',
                     scope: adminEmail ? `Branch: ${adminEmail}` : 'Global Main Admin',
-                    drawnAt: new Date()
+                    drawnAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
                 notify('success', `🎉 WINNING NUMBER DRAWN: #${winningSelection.number} (${winningSelection.customer})!`);
+                loadDrawHistory();
             }
         }, 60);
 
     } catch (error) {
         console.error('Draw error:', error);
         notify('error', `❌ Draw Error: ${error.message}`);
+    }
+}
+
+async function loadDrawHistory() {
+    if (!db) return;
+    try {
+        const snapshot = await db.collection('lottery_draws')
+            .orderBy('drawnAt', 'desc')
+            .get();
+
+        const historyList = document.getElementById('lottery-history-list');
+        if (!historyList) return;
+
+        if (snapshot.empty) {
+            historyList.innerHTML = '<p class="text-slate-500 text-xs italic text-center py-2">No recent draw history</p>';
+            return;
+        }
+
+        const now = new Date();
+        const oneWeekMs = 7 * 24 * 60 * 60 * 1000;
+        let validHistoryHTML = '';
+
+        for (const docSnap of snapshot.docs) {
+            const record = docSnap.data();
+            const drawnDate = record.drawnAt ? record.drawnAt.toDate() : new Date();
+            
+            // Automatic removal condition: deletes entries older than 7 days from Firestore
+            if ((now - drawnDate) > oneWeekMs) {
+                await db.collection('lottery_draws').doc(docSnap.id).delete();
+                continue;
+            }
+
+            validHistoryHTML += `
+                <div class="bg-black/40 border border-yellow-400/10 rounded-xl p-3 flex justify-between items-center text-xs">
+                    <div>
+                        <p class="text-yellow-400 font-bold">#${record.winningNumber} — ${record.winnerName}</p>
+                        <p class="text-slate-400 text-[10px]">📞 ${record.winnerPhone || 'N/A'} • 📧 ${record.winnerEmail || 'N/A'}</p>
+                        <p class="text-slate-500 text-[9px]">Drawn: ${drawnDate.toLocaleString()}</p>
+                    </div>
+                    <span class="px-2 py-1 bg-yellow-400/10 text-yellow-300 rounded text-[10px] font-mono">${record.scope || 'Branch'}</span>
+                </div>
+            `;
+        }
+
+        historyList.innerHTML = validHistoryHTML || '<p class="text-slate-500 text-xs italic text-center py-2">No active history within the last 7 days</p>';
+
+    } catch (error) {
+        console.error('Error loading draw history:', error);
     }
 }
 
@@ -468,6 +619,7 @@ async function deleteAdminCustomer(docId) {
         await db.collection('admin_customers').doc(docId).delete();
         notify('success', '✅ Customer deleted');
         await loadAdminCustomers();
+        await loadAdminStats();
     } catch (error) {
         notify('error', `❌ Error: ${error.message}`);
     }
@@ -560,7 +712,6 @@ async function loadAdminStats() {
     if (!db || !currentUser) return;
 
     try {
-        // Count both manual and self-registered customers for total customer stats
         const manualSnapshot = await db.collection('admin_customers')
             .where('adminEmail', '==', currentUser.email)
             .get();
