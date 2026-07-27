@@ -1,5 +1,5 @@
 // ============================================
-// ADMIN DASHBOARD - BRANCH ADMIN (FIXED & FULLY FEATURED)
+// ADMIN DASHBOARD - BRANCH ADMIN (AM/PM & FIXED SYNTAX)
 // ============================================
 
 let countdownInterval = null;
@@ -29,11 +29,11 @@ class AdminDashboard {
                             <button onclick="window.adminDashboard.switchTab('tickets', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">🎫 Tickets</button>
                             <button onclick="window.adminDashboard.switchTab('payments', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">💳 Payments</button>
                             <button onclick="window.adminDashboard.switchTab('notifications', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 relative">
-                       🔔 Notifications <span id="badge-branch-notifications" class="hidden absolute -top-1 -right-1 px-1.5 py-0.5 bg-red-500 text-white rounded-full text-[9px] font-bold">0</span>
-                                </button>
-                           <button onclick="window.adminDashboard.switchTab('bookAppointment', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 relative">
-                     📅 BookAppointment <span id="badge-branch-bookings" class="hidden absolute -top-1 -right-1 px-1.5 py-0.5 bg-red-500 text-white rounded-full text-[9px] font-bold">0</span>
-                               </button>
+                                🔔 Notifications <span id="badge-branch-notifications" class="hidden absolute -top-1 -right-1 px-1.5 py-0.5 bg-red-500 text-white rounded-full text-[9px] font-bold">0</span>
+                            </button>
+                            <button onclick="window.adminDashboard.switchTab('bookAppointment', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 relative">
+                                📅 BookAppointment <span id="badge-branch-bookings" class="hidden absolute -top-1 -right-1 px-1.5 py-0.5 bg-red-500 text-white rounded-full text-[9px] font-bold">0</span>
+                            </button>
                             <button onclick="window.adminDashboard.switchTab('settings', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">⚙️ Settings</button>
                         </div>
 
@@ -55,33 +55,38 @@ class AdminDashboard {
                                 </div>
                             </div>
 
-                            <!-- Automated Lottery Draw Control Panel & Spinner -->
+                            <!-- Lottery Draw Control Panel & Spinner -->
                             <div class="glass-panel rounded-2xl p-6 border-2 border-yellow-400/40 bg-gradient-to-b from-yellow-400/10 to-black space-y-6 shadow-[0_0_25px_rgba(252,211,77,0.15)]">
                                 <div>
-                                    <span class="bg-yellow-400/20 text-yellow-300 border border-yellow-400/30 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">⚡ Automated Live Draw Center</span>
+                                    <span class="bg-yellow-400/20 text-yellow-300 border border-yellow-400/30 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">⚡ Live Draw Center</span>
                                     <h3 class="text-2xl font-black text-gradient mt-2">🎰 Branch Lucky Draw</h3>
-                                    <p class="text-xs text-slate-300 mt-1">Select an automated timer duration to set the draw schedule and unlock the wheel.</p>
+                                    <p class="text-xs text-slate-300 mt-1">Set your exact target date and AM/PM time below to schedule the draw and unlock the wheel.</p>
                                 </div>
 
-                                <!-- Automated Quick Schedule Selector -->
+                                <!-- AM/PM Custom Schedule Selector -->
                                 <div class="bg-black/40 p-4 rounded-xl border border-yellow-400/20 space-y-3">
-                                    <h4 class="text-xs font-bold text-yellow-400 uppercase tracking-wide">⚙️ Automated Schedule Trigger</h4>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <h4 class="text-xs font-bold text-yellow-400 uppercase tracking-wide">⚙️ Precise Date & AM/PM Schedule</h4>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                                         <div>
-                                            <label class="block text-[10px] text-slate-400 mb-1">Auto-Schedule Duration</label>
-                                            <select id="draw-schedule-select" class="w-full bg-black/60 border border-yellow-400/30 rounded-xl py-2 px-3 text-white text-xs">
-                                                <option value="5">In 5 Minutes (Quick Test)</option>
-                                                <option value="30">In 30 Minutes</option>
-                                                <option value="60" selected>In 1 Hour</option>
-                                                <option value="360">In 6 Hours</option>
-                                                <option value="1440">In 24 Hours (1 Day)</option>
+                                            <label class="block text-[10px] text-slate-400 mb-1">Target Date</label>
+                                            <input type="date" id="draw-target-date" class="w-full bg-black/60 border border-yellow-400/30 rounded-xl py-2 px-3 text-white text-xs">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10px] text-slate-400 mb-1">Hour & Minute</label>
+                                            <input type="time" id="draw-target-time" class="w-full bg-black/60 border border-yellow-400/30 rounded-xl py-2 px-3 text-white text-xs">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10px] text-slate-400 mb-1">AM / PM</label>
+                                            <select id="draw-target-ampm" class="w-full bg-black/60 border border-yellow-400/30 rounded-xl py-2 px-3 text-white text-xs">
+                                                <option value="AM">AM</option>
+                                                <option value="PM" selected>PM</option>
                                             </select>
                                         </div>
                                         <div class="flex items-end">
-                                            <button onclick="saveAutomatedDrawSchedule()" class="w-full py-2 bg-yellow-400/20 hover:bg-yellow-400/30 border border-yellow-400/40 text-yellow-300 font-bold rounded-xl text-xs transition-all">⚡ Set & Start Timer</button>
+                                            <button onclick="saveAutomatedDrawSchedule()" class="w-full py-2 bg-yellow-400/20 hover:bg-yellow-400/30 border border-yellow-400/40 text-yellow-300 font-bold rounded-xl text-xs transition-all">💾 Save Schedule</button>
                                         </div>
                                     </div>
-                                    <p id="schedule-status-text" class="text-[11px] text-slate-400 italic">No automated schedule active.</p>
+                                    <p id="schedule-status-text" class="text-[11px] text-slate-400 italic">No schedule active.</p>
                                 </div>
 
                                 <!-- Countdown & Spinner Box -->
@@ -96,7 +101,7 @@ class AdminDashboard {
                                 <!-- Spin Action Button -->
                                 <button id="spin-draw-btn" onclick="runLotteryDraw(currentUser?.email)" disabled class="w-full py-3.5 bg-slate-800 text-slate-500 font-black rounded-xl text-sm cursor-not-allowed transition-all shadow-none">🔒 DRAW LOCKED (WAITING FOR TIMER)</button>
 
-                                <!-- Recent Winners History (1 Week Auto-Purge) -->
+                                <!-- Recent Winners History -->
                                 <div class="space-y-3 pt-4 border-t border-yellow-400/10">
                                     <h4 class="text-xs font-bold text-white uppercase tracking-wider">🏆 Past Winners (Last 7 Days)</h4>
                                     <div id="lottery-history-list" class="space-y-2 max-h-48 overflow-y-auto">
@@ -123,32 +128,16 @@ class AdminDashboard {
                         </div>
 
                         <!-- Payments Tab -->
-                        <div id="admin-payments" class="tab-content" style="display: none;">
-                            <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
-                                <h3 class="text-xl font-bold text-white">Payment Accounts</h3>
-                                <div>
-                                    <label class="block text-xs text-slate-400 mb-2">Telebirr Phone</label>
-                                    <input type="tel" id="admin-telebirr" placeholder="0945792677" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white">
-                                </div>
-                                <div>
-                                    <label class="block text-xs text-slate-400 mb-2">CBE Account</label>
-                                    <input type="text" id="admin-cbe" placeholder="Account number" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white">
-                                </div>
-                                <button onclick="saveAdminPayments()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl">Save Payments</button>
-                            </div>
-                        </div>
-                      <!-- Notifications Tab Content -->
-                     <div id="admin-notifications" class="tab-content" style="display: none;"></div>
+                        <div id="admin-payments" class="tab-content" style="display: none;"></div>
 
-                     <!-- Book Appointment Tab Content -->
-                    <div id="admin-bookAppointment" class="tab-content" style="display: none;"></div>
+                        <!-- Notifications Tab Content -->
+                        <div id="admin-notifications" class="tab-content" style="display: none;"></div>
+
+                        <!-- Book Appointment Tab Content -->
+                        <div id="admin-bookAppointment" class="tab-content" style="display: none;"></div>
+
                         <!-- Settings Tab -->
-                        <div id="admin-settings" class="tab-content" style="display: none;">
-                            <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                                <h3 class="text-xl font-bold text-white mb-4">Admin Settings</h3>
-                                <p class="text-slate-400">Admin ID: <span id="admin-id-display">${this.adminId}</span></p>
-                            </div>
-                        </div>
+                        <div id="admin-settings" class="tab-content" style="display: none;"></div>
                     </div>
                 </main>
             </div>
@@ -225,44 +214,27 @@ class AdminDashboard {
             await loadAdminTickets();
             await loadAdminPayments();
             await loadAdminStats();
-            
             await initLotteryModule();
 
-            if (!window.adminPayments) {
-                window.adminPayments = new AdminPayments(this.adminId);
-            }
-            if (!window.adminNotifications) {
-                window.adminNotifications = new AdminNotifications(this.adminId);
-            }
-            if (!window.adminBookAppointment) {
-                window.adminBookAppointment = new AdminBookAppointment(this.adminId);
-            }
-            if (!window.adminSettings) {
-                window.adminSettings = new AdminSettings(this.adminId);
-            }
+            if (!window.adminPayments) window.adminPayments = new AdminPayments(this.adminId);
+            if (!window.adminNotifications) window.adminNotifications = new AdminNotifications(this.adminId);
+            if (!window.adminBookAppointment) window.adminBookAppointment = new AdminBookAppointment(this.adminId);
+            if (!window.adminSettings) window.adminSettings = new AdminSettings(this.adminId);
 
             const paymentsTab = document.getElementById('admin-payments');
-            if (paymentsTab) {
-                paymentsTab.innerHTML = await window.adminPayments.render();
-            }
+            if (paymentsTab) paymentsTab.innerHTML = await window.adminPayments.render();
 
             const notifTab = document.getElementById('admin-notifications');
             if (notifTab) {
                 notifTab.innerHTML = window.adminNotifications.render();
-                if (typeof window.adminNotifications.displayHistory === 'function') {
-                    window.adminNotifications.displayHistory();
-                }
+                if (typeof window.adminNotifications.displayHistory === 'function') window.adminNotifications.displayHistory();
             }
 
             const apptTab = document.getElementById('admin-bookAppointment');
-            if (apptTab) {
-                apptTab.innerHTML = await window.adminBookAppointment.render();
-            }
+            if (apptTab) apptTab.innerHTML = await window.adminBookAppointment.render();
 
             const settingsTab = document.getElementById('admin-settings');
-            if (settingsTab) {
-                settingsTab.innerHTML = window.adminSettings.render();
-            }
+            if (settingsTab) settingsTab.innerHTML = window.adminSettings.render();
 
         } catch (error) {
             console.error('Error loading admin data:', error);
@@ -368,11 +340,7 @@ async function loadAdminCustomers() {
         if (!content) return;
 
         let allCustomers = [];
-
-        manualSnapshot.forEach(doc => {
-            allCustomers.push({ id: doc.id, type: 'manual', ...doc.data() });
-        });
-
+        manualSnapshot.forEach(doc => allCustomers.push({ id: doc.id, type: 'manual', ...doc.data() }));
         selfRegisteredSnapshot.forEach(doc => {
             const data = doc.data();
             allCustomers.push({ 
@@ -407,7 +375,7 @@ async function loadAdminCustomers() {
 }
 
 // ============================================
-// AUTOMATED LOTTERY MODULE
+// AUTOMATED & AM/PM LOTTERY MODULE
 // ============================================
 
 async function initLotteryModule() {
@@ -417,17 +385,31 @@ async function initLotteryModule() {
 
 async function saveAutomatedDrawSchedule() {
     if (!db || !currentUser) return notify('error', '❌ Database or user not ready');
-    const minutesToAdd = parseInt(document.getElementById('draw-schedule-select').value) || 60;
+
+    const dateVal = document.getElementById('draw-target-date').value;
+    const timeVal = document.getElementById('draw-target-time').value;
+    const ampmVal = document.getElementById('draw-target-ampm').value;
+
+    if (!dateVal || !timeVal) {
+        return notify('error', '❌ Please select both a valid date and time');
+    }
 
     try {
-        const targetTime = new Date(Date.now() + (minutesToAdd * 60000));
+        let [hours, minutes] = timeVal.split(':').map(Number);
+        
+        if (ampmVal === 'PM' && hours < 12) hours += 12;
+        if (ampmVal === 'AM' && hours === 12) hours = 0;
+
+        const targetDate = new Date(dateVal);
+        targetDate.setHours(hours, minutes, 0, 0);
+
         await db.collection('admin_settings').doc(`draw_schedule_${currentUser.email}`).set({
             adminEmail: currentUser.email,
-            scheduledTime: firebase.firestore.Timestamp.fromDate(targetTime),
+            scheduledTime: firebase.firestore.Timestamp.fromDate(targetDate),
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
 
-        notify('success', `✅ Automated schedule set for ${minutesToAdd} minutes from now!`);
+        notify('success', `✅ Schedule successfully saved for ${targetDate.toLocaleString()}!`);
         loadDrawSchedule();
     } catch (error) {
         notify('error', `❌ Error saving schedule: ${error.message}`);
@@ -447,17 +429,32 @@ async function loadDrawSchedule() {
         if (!data.scheduledTime) return;
 
         const scheduledDate = data.scheduledTime.toDate();
-        const unlockedDate = new Date(scheduledDate.getTime() + (30 * 60000)); // 30 mins buffer lock
+        
+        // Populate inputs if they exist
+        const dateInput = document.getElementById('draw-target-date');
+        const timeInput = document.getElementById('draw-target-time');
+        const ampmInput = document.getElementById('draw-target-ampm');
+
+        if (dateInput && !dateInput.value) {
+            dateInput.value = scheduledDate.toISOString().split('T')[0];
+        }
+        if (timeInput && !timeInput.value) {
+            let h = scheduledDate.getHours();
+            const ampm = h >= 12 ? 'PM' : 'AM';
+            h = h % 12 || 12;
+            timeInput.value = `${String(h).padStart(2, '0')}:${String(scheduledDate.getMinutes()).padStart(2, '0')}`;
+            if (ampmInput) ampmInput.value = ampm;
+        }
 
         if (statusText) {
-            statusText.innerHTML = `📅 Automated Target: <span class="text-white font-bold">${scheduledDate.toLocaleString()}</span> (Unlocked at ${unlockedDate.toLocaleTimeString()})`;
+            statusText.innerHTML = `📅 Target Draw Time: <span class="text-white font-bold">${scheduledDate.toLocaleString()}</span>`;
         }
 
         if (countdownInterval) clearInterval(countdownInterval);
 
         countdownInterval = setInterval(() => {
             const now = new Date();
-            const diff = unlockedDate - now;
+            const diff = scheduledDate - now;
 
             if (diff <= 0) {
                 if (timerBox) {
@@ -471,12 +468,13 @@ async function loadDrawSchedule() {
                 }
                 clearInterval(countdownInterval);
             } else {
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
                 const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                 const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
                 const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
                 if (timerBox) {
-                    timerBox.textContent = `⏳ UNLOCKS IN: ${hours}h ${minutes}m ${seconds}s`;
+                    timerBox.textContent = `⏳ UNLOCKS IN: ${days > 0 ? days + 'd ' : ''}${hours}h ${minutes}m ${seconds}s`;
                 }
             }
         }, 1000);
