@@ -496,22 +496,44 @@ async function runLotteryDraw(adminEmail = null) {
         }
 
         let allAvailableNumbers = [];
-        snapshot.forEach(doc => {
+        for (const doc of snapshot.docs) {
             const ticket = doc.data();
             if (!adminEmail || ticket.assignedAdmin === adminEmail) {
                 if (ticket.numbers && Array.isArray(ticket.numbers)) {
+                    // Try getting phone from ticket first
+                    let phoneNum = ticket.phone || ticket.customerPhone || null;
+
+                    // If missing on ticket, fallback to lookup in customer profiles by email
+                    if (!phoneNum && ticket.customerEmail) {
+                        try {
+                            const custSettingDoc = await db.collection('customer_settings').doc(ticket.customerEmail).get();
+                            if (custSettingDoc.exists && custSettingDoc.data().phone) {
+                                phoneNum = custSettingDoc.data().phone;
+                            } else {
+                                const manualCustSnap = await db.collection('admin_customers')
+                                    .where('email', '==', ticket.customerEmail)
+                                    .get();
+                                if (!manualCustSnap.empty) {
+                                    phoneNum = manualCustSnap.docs[0].data().phone;
+                                }
+                            }
+                        } catch (err) {
+                            console.error('Error fetching fallback phone:', err);
+                        }
+                    }
+
                     ticket.numbers.forEach(num => {
                         allAvailableNumbers.push({ 
                             ticketId: doc.id, 
                             number: num, 
                             customer: ticket.customerName || 'N/A', 
                             email: ticket.customerEmail || 'N/A',
-                            phone: ticket.customerPhone || ticket.phone || 'N/A' 
+                            phone: phoneNum || 'N/A' 
                         });
                     });
                 }
             }
-        });
+        }
 
         if (allAvailableNumbers.length === 0) {
             return notify('error', '❌ No active numbers available for this draw scope.');
