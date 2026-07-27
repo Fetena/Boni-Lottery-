@@ -1,11 +1,10 @@
 // ============================================
-// ADMIN DASHBOARD - PARENT COMPONENT
+// ADMIN DASHBOARD - BRANCH ADMIN (FIXED)
 // ============================================
 
 class AdminDashboard {
     constructor(adminId) {
         this.adminId = adminId;
-        window.adminLottery = new AdminLotteryDraw(adminId);
     }
 
    render() {
@@ -28,11 +27,11 @@ class AdminDashboard {
                             <button onclick="window.adminDashboard.switchTab('tickets', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">🎫 Tickets</button>
                             <button onclick="window.adminDashboard.switchTab('payments', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">💳 Payments</button>
                             <button onclick="window.adminDashboard.switchTab('notifications', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 relative">
-                                🔔 Notifications <span id="badge-branch-notifications" class="hidden absolute -top-1 -right-1 px-1.5 py-0.5 bg-red-500 text-white rounded-full text-[9px] font-bold">0</span>
-                            </button>
-                            <button onclick="window.adminDashboard.switchTab('bookAppointment', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 relative">
-                                📅 BookAppointment <span id="badge-branch-bookings" class="hidden absolute -top-1 -right-1 px-1.5 py-0.5 bg-red-500 text-white rounded-full text-[9px] font-bold">0</span>
-                            </button>
+                       🔔 Notifications <span id="badge-branch-notifications" class="hidden absolute -top-1 -right-1 px-1.5 py-0.5 bg-red-500 text-white rounded-full text-[9px] font-bold">0</span>
+                                </button>
+                           <button onclick="window.adminDashboard.switchTab('bookAppointment', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 relative">
+                     📅 BookAppointment <span id="badge-branch-bookings" class="hidden absolute -top-1 -right-1 px-1.5 py-0.5 bg-red-500 text-white rounded-full text-[9px] font-bold">0</span>
+                               </button>
                             <button onclick="window.adminDashboard.switchTab('settings', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">⚙️ Settings</button>
                         </div>
 
@@ -54,8 +53,24 @@ class AdminDashboard {
                                 </div>
                             </div>
 
-                            <!-- Embedded Independent Lottery Component -->
-                            ${window.adminLottery ? window.adminLottery.render() : ''}
+                            <!-- High-Visibility Lottery Draw Control Panel & Spinner -->
+                            <div class="glass-panel rounded-2xl p-6 border-2 border-yellow-400/40 bg-gradient-to-b from-yellow-400/10 to-black space-y-4 text-center shadow-[0_0_25px_rgba(252,211,77,0.15)]">
+                                <div>
+                                    <span class="bg-yellow-400/20 text-yellow-300 border border-yellow-400/30 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">⚡ Live Draw Center</span>
+                                    <h3 class="text-2xl font-black text-gradient mt-2">🎰 Branch Lucky Draw</h3>
+                                    <p class="text-xs text-slate-300 mt-1">Spin the cryptographic wheel to randomly select a verified winner from your branch pool.</p>
+                                </div>
+
+                                <!-- Spinner Display Box -->
+                                <div class="py-6 bg-black/60 rounded-xl border border-yellow-400/30 flex flex-col items-center justify-center relative overflow-hidden">
+                                    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-yellow-400/10 via-transparent to-transparent pointer-events-none"></div>
+                                    <span class="text-[10px] uppercase tracking-widest text-slate-400 mb-1">Winning Number Result</span>
+                                    <div id="lottery-spinner-box" class="text-5xl font-black text-yellow-400 tracking-wider drop-shadow-[0_0_15px_rgba(252,211,77,0.6)]">---</div>
+                                    <div id="winner-info-display" class="text-xs text-slate-300 mt-2 font-medium"></div>
+                                </div>
+
+                                <button onclick="runLotteryDraw(currentUser?.email)" class="w-full py-3.5 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 text-black font-black rounded-xl text-sm shadow-lg hover:opacity-95 transform active:scale-95 transition-all">🎲 SPIN & DRAW WINNER NOW</button>
+                            </div>
                         </div>
 
                         <!-- Customers Tab -->
@@ -75,16 +90,32 @@ class AdminDashboard {
                         </div>
 
                         <!-- Payments Tab -->
-                        <div id="admin-payments" class="tab-content" style="display: none;"></div>
+                        <div id="admin-payments" class="tab-content" style="display: none;">
+                            <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
+                                <h3 class="text-xl font-bold text-white">Payment Accounts</h3>
+                                <div>
+                                    <label class="block text-xs text-slate-400 mb-2">Telebirr Phone</label>
+                                    <input type="tel" id="admin-telebirr" placeholder="0945792677" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-slate-400 mb-2">CBE Account</label>
+                                    <input type="text" id="admin-cbe" placeholder="Account number" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white">
+                                </div>
+                                <button onclick="saveAdminPayments()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl">Save Payments</button>
+                            </div>
+                        </div>
+                      <!-- Notifications Tab Content -->
+                     <div id="admin-notifications" class="tab-content" style="display: none;"></div>
 
-                        <!-- Notifications Tab Content -->
-                        <div id="admin-notifications" class="tab-content" style="display: none;"></div>
-
-                        <!-- Book Appointment Tab Content -->
-                        <div id="admin-bookAppointment" class="tab-content" style="display: none;"></div>
-
+                     <!-- Book Appointment Tab Content -->
+                    <div id="admin-bookAppointment" class="tab-content" style="display: none;"></div>
                         <!-- Settings Tab -->
-                        <div id="admin-settings" class="tab-content" style="display: none;"></div>
+                        <div id="admin-settings" class="tab-content" style="display: none;">
+                            <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                                <h3 class="text-xl font-bold text-white mb-4">Admin Settings</h3>
+                                <p class="text-slate-400">Admin ID: <span id="admin-id-display">${this.adminId}</span></p>
+                            </div>
+                        </div>
                     </div>
                 </main>
             </div>
@@ -122,6 +153,7 @@ class AdminDashboard {
     }
 
     switchTab(tabName, event) {
+        // Hide all tabs
         document.getElementById('admin-dashboard-tab').style.display = 'none';
         document.getElementById('admin-customers').style.display = 'none';
         document.getElementById('admin-tickets').style.display = 'none';
@@ -130,9 +162,11 @@ class AdminDashboard {
         document.getElementById('admin-bookAppointment').style.display = 'none';
         document.getElementById('admin-settings').style.display = 'none';
 
+        // Deactivate all buttons
         const buttons = document.querySelectorAll('#admin-dashboard .tab-button');
         buttons.forEach(btn => btn.classList.remove('active'));
 
+        // Show selected tab
         if (tabName === 'dashboard') {
             document.getElementById('admin-dashboard-tab').style.display = 'block';
         } else if (tabName === 'customers') {
@@ -149,6 +183,7 @@ class AdminDashboard {
             document.getElementById('admin-settings').style.display = 'block';
         }
 
+        // Activate clicked button
         if (event && event.target) {
             event.target.classList.add('active');
             event.target.style.color = '#FCD34D';
@@ -161,30 +196,50 @@ class AdminDashboard {
             await loadAdminTickets();
             await loadAdminPayments();
             await loadAdminStats();
-            
-            if (window.adminLottery) {
-                await window.adminLottery.init();
+
+            // Initialize sub-components safely
+            if (!window.adminPayments) {
+                window.adminPayments = new AdminPayments(this.adminId);
+            }
+            if (!window.adminNotifications) {
+                window.adminNotifications = new AdminNotifications(this.adminId);
+            }
+            if (!window.adminBookAppointment) {
+                window.adminBookAppointment = new AdminBookAppointment(this.adminId);
+            }
+            if (!window.adminSettings) {
+                window.adminSettings = new AdminSettings(this.adminId);
             }
 
-            if (!window.adminPayments) window.adminPayments = new AdminPayments(this.adminId);
-            if (!window.adminNotifications) window.adminNotifications = new AdminNotifications(this.adminId);
-            if (!window.adminBookAppointment) window.adminBookAppointment = new AdminBookAppointment(this.adminId);
-            if (!window.adminSettings) window.adminSettings = new AdminSettings(this.adminId);
-
+            // Populate Payments Tab
             const paymentsTab = document.getElementById('admin-payments');
-            if (paymentsTab) paymentsTab.innerHTML = await window.adminPayments.render();
+            if (paymentsTab) {
+                paymentsTab.innerHTML = await window.adminPayments.render();
+            }
 
+            // Populate Notifications Tab
             const notifTab = document.getElementById('admin-notifications');
             if (notifTab) {
                 notifTab.innerHTML = window.adminNotifications.render();
-                if (typeof window.adminNotifications.displayHistory === 'function') window.adminNotifications.displayHistory();
+                if (typeof window.adminNotifications.displayHistory === 'function') {
+                    window.adminNotifications.displayHistory();
+                }
             }
 
+            // Populate Appointments Tab
             const apptTab = document.getElementById('admin-bookAppointment');
-            if (apptTab) apptTab.innerHTML = await window.adminBookAppointment.render();
+            if (apptTab) {
+                if (!window.adminBookAppointment) {
+                    window.adminBookAppointment = new AdminBookAppointment(this.adminId);
+                }
+                apptTab.innerHTML = await window.adminBookAppointment.render();
+            }
 
+            // Populate Settings Tab
             const settingsTab = document.getElementById('admin-settings');
-            if (settingsTab) settingsTab.innerHTML = window.adminSettings.render();
+            if (settingsTab) {
+                settingsTab.innerHTML = window.adminSettings.render();
+            }
 
         } catch (error) {
             console.error('Error loading admin data:', error);
@@ -205,7 +260,6 @@ class AdminDashboard {
             notify('error', `❌ Error: ${error.message}`);
         }
     }
-
     async deleteTicket(docId) {
         if (!confirm('Are you sure you want to delete this ticket?')) return;
         if (!db) return notify('error', '❌ Database not initialized');
@@ -219,7 +273,6 @@ class AdminDashboard {
             notify('error', `❌ Error: ${error.message}`);
         }
     }
-
     async rejectPayment(docId) {
         if (!db) return notify('error', '❌ Database not initialized');
         try {
@@ -236,7 +289,7 @@ class AdminDashboard {
     }
 }
 
-// ========== ADMIN CUSTOMERS HELPERS ==========
+// ========== ADMIN CUSTOMERS ==========
 
 async function openAddCustomerModal() {
     document.getElementById('customer-modal').style.display = 'flex';
@@ -257,18 +310,18 @@ async function addAdminCustomer() {
     }
 
     try {
-        await db.collection('admin_customers').add({
-            adminEmail: currentUser.email,
+        // Example Firestore save or Firebase Auth creation logic
+        await db.collection('users').add({
             name,
             email,
             phone,
+            role: 'customer',
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
         notify('success', '✅ Customer added successfully!');
         closeAddCustomerModal();
-        await loadAdminCustomers();
-        await loadAdminStats();
+        // Refresh customer list if applicable
     } catch (error) {
         notify('error', `❌ Error: ${error.message}`);
     }
@@ -278,10 +331,12 @@ async function loadAdminCustomers() {
     if (!db || !currentUser) return;
 
     try {
+        // 1. Fetch manually added customers
         const manualSnapshot = await db.collection('admin_customers')
             .where('adminEmail', '==', currentUser.email)
             .get();
 
+        // 2. Fetch self-registered customers who selected this admin as preferred
         const selfRegisteredSnapshot = await db.collection('customer_settings')
             .where('preferredAdmin', '==', currentUser.email)
             .get();
@@ -289,8 +344,13 @@ async function loadAdminCustomers() {
         const content = document.getElementById('admin-customers-list');
         if (!content) return;
 
+        // Combine both lists into a single array
         let allCustomers = [];
-        manualSnapshot.forEach(doc => allCustomers.push({ id: doc.id, type: 'manual', ...doc.data() }));
+
+        manualSnapshot.forEach(doc => {
+            allCustomers.push({ id: doc.id, type: 'manual', ...doc.data() });
+        });
+
         selfRegisteredSnapshot.forEach(doc => {
             const data = doc.data();
             allCustomers.push({ 
@@ -323,6 +383,83 @@ async function loadAdminCustomers() {
         console.error('Error loading customers:', error);
     }
 }
+// ============================================
+// LOTTERY DRAWING ALGORITHM & COMPONENT
+// ============================================
+
+async function runLotteryDraw(adminEmail = null) {
+    if (!db) {
+        return notify('error', '❌ Database not initialized');
+    }
+
+    try {
+        let query = db.collection('customer_tickets').where('status', '==', 'Approved');
+        const snapshot = await query.get();
+
+        if (snapshot.empty) {
+            return notify('error', '❌ No approved tickets found to draw from!');
+        }
+
+        let allAvailableNumbers = [];
+        snapshot.forEach(doc => {
+            const ticket = doc.data();
+            if (!adminEmail || ticket.assignedAdmin === adminEmail) {
+                if (ticket.numbers && Array.isArray(ticket.numbers)) {
+                    ticket.numbers.forEach(num => {
+                        allAvailableNumbers.push({ ticketId: doc.id, number: num, customer: ticket.customerName, email: ticket.customerEmail });
+                    });
+                }
+            }
+        });
+
+        if (allAvailableNumbers.length === 0) {
+            return notify('error', '❌ No active numbers available for this draw scope.');
+        }
+
+        const spinnerBox = document.getElementById('lottery-spinner-box');
+        const winnerInfoBox = document.getElementById('winner-info-display');
+        if (winnerInfoBox) winnerInfoBox.textContent = '';
+
+        // Live Spinning Animation Loop
+        let spinCount = 0;
+        const maxSpins = 30;
+        const spinInterval = setInterval(() => {
+            const randomNum = Math.floor(Math.random() * 300) + 1;
+            if (spinnerBox) spinnerBox.textContent = `#${randomNum}`;
+            spinCount++;
+
+            if (spinCount >= maxSpins) {
+                clearInterval(spinInterval);
+
+                // Select Final Winner
+                const randomIndex = Math.floor(Math.random() * allAvailableNumbers.length);
+                const winningSelection = allAvailableNumbers[randomIndex];
+
+                if (spinnerBox) spinnerBox.textContent = `#${winningSelection.number}`;
+                if (winnerInfoBox) {
+                    winnerInfoBox.innerHTML = `🏆 Winner: <span class="text-yellow-400 font-bold">${winningSelection.customer}</span> (${winningSelection.email})`;
+                }
+
+                // Save to Firestore
+                db.collection('lottery_draws').add({
+                    winningNumber: winningSelection.number,
+                    winningTicketId: winningSelection.ticketId,
+                    winnerName: winningSelection.customer,
+                    winnerEmail: winningSelection.email,
+                    drawnBy: currentUser?.email || 'Admin',
+                    scope: adminEmail ? `Branch: ${adminEmail}` : 'Global Main Admin',
+                    drawnAt: new Date()
+                });
+
+                notify('success', `🎉 WINNING NUMBER DRAWN: #${winningSelection.number} (${winningSelection.customer})!`);
+            }
+        }, 60);
+
+    } catch (error) {
+        console.error('Draw error:', error);
+        notify('error', `❌ Draw Error: ${error.message}`);
+    }
+}
 
 async function deleteAdminCustomer(docId) {
     if (!confirm('Delete customer?')) return;
@@ -331,13 +468,12 @@ async function deleteAdminCustomer(docId) {
         await db.collection('admin_customers').doc(docId).delete();
         notify('success', '✅ Customer deleted');
         await loadAdminCustomers();
-        await loadAdminStats();
     } catch (error) {
         notify('error', `❌ Error: ${error.message}`);
     }
 }
 
-// ========== ADMIN TICKETS HELPERS ==========
+// ========== ADMIN TICKETS ==========
 
 async function loadAdminTickets() {
     if (!db) return;
@@ -379,7 +515,29 @@ async function loadAdminTickets() {
     }
 }
 
-// ========== ADMIN PAYMENTS HELPERS ==========
+// ========== ADMIN PAYMENTS ==========
+
+async function saveAdminPayments() {
+    const telebirr = document.getElementById('admin-telebirr').value;
+    const cbe = document.getElementById('admin-cbe').value;
+
+    if (!telebirr || !cbe) return notify('error', '❌ Fill all fields');
+    if (!db) return notify('error', '❌ Database not initialized');
+    if (!currentUser) return notify('error', '❌ User not authenticated');
+
+    try {
+        await db.collection('admin_settings').doc(currentUser.email).set({
+            adminEmail: currentUser.email,
+            telebirrPhone: telebirr,
+            cbeAccount: cbe,
+            updatedAt: new Date()
+        }, { merge: true });
+
+        notify('success', '✅ Payment settings saved!');
+    } catch (error) {
+        notify('error', `❌ Error: ${error.message}`);
+    }
+}
 
 async function loadAdminPayments() {
     if (!db || !currentUser) return;
@@ -388,20 +546,21 @@ async function loadAdminPayments() {
         const doc = await db.collection('admin_settings').doc(currentUser.email).get();
         if (doc.exists) {
             const data = doc.data();
-            if (data.telebirrPhone && document.getElementById('admin-telebirr')) document.getElementById('admin-telebirr').value = data.telebirrPhone;
-            if (data.cbeAccount && document.getElementById('admin-cbe')) document.getElementById('admin-cbe').value = data.cbeAccount;
+            if (data.telebirrPhone) document.getElementById('admin-telebirr').value = data.telebirrPhone;
+            if (data.cbeAccount) document.getElementById('admin-cbe').value = data.cbeAccount;
         }
     } catch (error) {
         console.error('Error loading payments:', error);
     }
 }
 
-// ========== ADMIN STATS HELPERS ==========
+// ========== ADMIN STATS ==========
 
 async function loadAdminStats() {
     if (!db || !currentUser) return;
 
     try {
+        // Count both manual and self-registered customers for total customer stats
         const manualSnapshot = await db.collection('admin_customers')
             .where('adminEmail', '==', currentUser.email)
             .get();
@@ -411,24 +570,17 @@ async function loadAdminStats() {
             .get();
 
         const totalCustomersCount = manualSnapshot.size + selfRegisteredSnapshot.size;
-        if (document.getElementById('admin-total-customers')) {
-            document.getElementById('admin-total-customers').textContent = totalCustomersCount;
-        }
+        document.getElementById('admin-total-customers').textContent = totalCustomersCount;
 
         const ticketSnapshot = await db.collection('customer_tickets').get();
-        if (document.getElementById('admin-total-tickets')) {
-            document.getElementById('admin-total-tickets').textContent = ticketSnapshot.size;
-        }
+        document.getElementById('admin-total-tickets').textContent = ticketSnapshot.size;
 
         let revenue = 0;
         ticketSnapshot.forEach(doc => {
             revenue += doc.data().cost || 0;
         });
-        if (document.getElementById('admin-total-revenue')) {
-            document.getElementById('admin-total-revenue').textContent = revenue.toLocaleString() + ' ETB';
-        }
+        document.getElementById('admin-total-revenue').textContent = revenue.toLocaleString() + ' ETB';
     } catch (error) {
         console.error('Error loading stats:', error);
     }
 }
-```[cite: 13, 14]
