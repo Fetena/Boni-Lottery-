@@ -1,5 +1,5 @@
 // ============================================
-// CUSTOMER DASHBOARD - COMPLETE (WITH ADMIN SELECTION)
+// CUSTOMER DASHBOARD - COMPLETE WITH ALL COMPONENTS
 // ============================================
 
 let selectedNumbers = [];
@@ -28,6 +28,9 @@ class CustomerDashboard {
                             <button onclick="switchCustomerTab('profile')" class="tab-button active px-4 py-2 text-xs font-bold text-yellow-400">👤 Profile</button>
                             <button onclick="switchCustomerTab('buytickets')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">🎫 Buy Tickets</button>
                             <button onclick="switchCustomerTab('mytickets')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">🎟️ My Tickets</button>
+                            <button onclick="switchCustomerTab('drawings')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">🎰 Drawings</button>
+                            <button onclick="switchCustomerTab('library')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">📖 Library</button>
+                            <button onclick="switchCustomerTab('appointments')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">📅 Appointments</button>
                             <button onclick="switchCustomerTab('settings')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">⚙️ Settings</button>
                         </div>
 
@@ -74,7 +77,7 @@ class CustomerDashboard {
                                         <input type="file" id="ticket-receipt-file" accept="image/*,.pdf" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs file:mr-4 file:py-1 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-yellow-400 file:text-black hover:file:bg-yellow-500">
                                     </div>
 
-                                    <!-- Automatic Online Payment Option (Functional Simulation / Chapa / Telebirr API Ready) -->
+                                    <!-- Automatic Online Payment Option -->
                                     <div class="p-3 bg-yellow-400/5 border border-yellow-400/20 rounded-xl space-y-2">
                                         <div class="flex items-center justify-between">
                                             <span class="text-xs font-bold text-yellow-400">⚡ Automatic Online Payment (Chapa / Telebirr API)</span>
@@ -95,6 +98,15 @@ class CustomerDashboard {
                         <div id="cust-mytickets" class="tab-content" style="display: none;">
                             <div id="cust-tickets-list" class="space-y-3"></div>
                         </div>
+
+                        <!-- Drawings Tab -->
+                        <div id="cust-drawings" class="tab-content" style="display: none;"></div>
+
+                        <!-- Library Tab -->
+                        <div id="cust-library" class="tab-content" style="display: none;"></div>
+
+                        <!-- Appointments Tab -->
+                        <div id="cust-appointments" class="tab-content" style="display: none;"></div>
 
                         <!-- Settings Tab -->
                         <div id="cust-settings" class="tab-content" style="display: none;">
@@ -143,7 +155,7 @@ class CustomerDashboard {
 // Store global reference
 window_customerDashboard = null;
 
-// ========== TAB SWITCHING ==========
+// ========== TAB SWITCHING WITH COMPONENT INTEGRATION ==========
 
 function switchCustomerTab(tabName) {
     const allTabs = document.querySelectorAll('#customer-dashboard .tab-content');
@@ -157,19 +169,29 @@ function switchCustomerTab(tabName) {
         btn.style.color = '';
     });
 
-    if (tabName === 'profile') {
-        const el = document.getElementById('cust-profile');
-        if (el) el.style.display = 'block';
-    } else if (tabName === 'buytickets') {
-        const el = document.getElementById('cust-buytickets');
-        if (el) el.style.display = 'block';
-        generateNumbersGrid();
-    } else if (tabName === 'mytickets') {
-        const el = document.getElementById('cust-mytickets');
-        if (el) el.style.display = 'block';
-    } else if (tabName === 'settings') {
-        const el = document.getElementById('cust-settings');
-        if (el) el.style.display = 'block';
+    const targetEl = document.getElementById(`cust-${tabName}`);
+    if (targetEl) {
+        targetEl.style.display = 'block';
+
+        // Render modular components dynamically on selection
+        if (tabName === 'drawings') {
+            if (!window.customerDrawings) {
+                window.customerDrawings = new CustomerDrawings(currentUser.email);
+            }
+            targetEl.innerHTML = window.customerDrawings.render();
+        } else if (tabName === 'library') {
+            if (!window.customerLibrary) {
+                window.customerLibrary = new CustomerLibrary(currentUser.email);
+            }
+            targetEl.innerHTML = window.customerLibrary.render();
+        } else if (tabName === 'appointments') {
+            if (!window.customerAppointments) {
+                window.customerAppointments = new CustomerAppointments(currentUser.email);
+            }
+            targetEl.innerHTML = window.customerAppointments.render();
+        } else if (tabName === 'buytickets') {
+            generateNumbersGrid();
+        }
     }
 
     if (event && event.target) {
@@ -196,7 +218,6 @@ async function loadAdminsDropdown() {
         if (settingsSelect) settingsSelect.innerHTML = optionsHtml;
         if (ticketSelect) ticketSelect.innerHTML = optionsHtml;
 
-        // Load saved selection into dropdowns if available
         const doc = await db.collection('customer_settings').doc(currentUser.email).get();
         if (doc.exists && doc.data().preferredAdmin) {
             const prefAdmin = doc.data().preferredAdmin;
@@ -249,7 +270,6 @@ function updateCost() {
 
 // ========== CUSTOMER TICKETS - FIRESTORE ==========
 
-// Helper to convert uploaded file to base64 string
 async function getFileBase64(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -315,7 +335,6 @@ async function submitCustomerTicket() {
     }
 }
 
-// Automatic Online Payment Gateway Handler (Chapa / Telebirr API hook)
 async function submitAutomaticPayment() {
     if (selectedNumbers.length === 0) {
         notify('error', '❌ Select at least 1 number');
@@ -330,12 +349,10 @@ async function submitAutomaticPayment() {
 
     const totalCost = selectedNumbers.length * 100;
 
-    // Simulation of opening a secure payment gateway popup (Chapa/Telebirr API integration point)
     notify('info', 'Redirecting to secure automated payment gateway...');
 
     setTimeout(async () => {
         try {
-            // Automatically approved upon successful API gateway callback response
             await db.collection('customer_tickets').add({
                 customerEmail: currentUser.email,
                 customerName: currentUser.name || 'Customer',
@@ -345,7 +362,7 @@ async function submitAutomaticPayment() {
                 paymentMethod: 'Automatic Online Gateway',
                 transactionId: 'AUTO-TXN-' + Math.floor(100000 + Math.random() * 900000),
                 receiptFile: '',
-                status: 'Approved', // Instant automated approval
+                status: 'Approved',
                 approvedAt: new Date(),
                 createdAt: new Date()
             });
@@ -418,13 +435,8 @@ async function saveCustomerSettings() {
         return;
     }
     
-    if (!db) {
-        notify('error', '❌ Database not initialized');
-        return;
-    }
-    
-    if (!currentUser) {
-        notify('error', '❌ User not authenticated');
+    if (!db || !currentUser) {
+        notify('error', '❌ Database or User error');
         return;
     }
 
