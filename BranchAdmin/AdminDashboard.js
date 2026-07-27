@@ -431,3 +431,4 @@ async function loadAdminStats() {
         console.error('Error loading stats:', error);
     }
 }
+```[cite: 13, 14]
