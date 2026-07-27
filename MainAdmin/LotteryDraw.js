@@ -1,5 +1,5 @@
 // ============================================
-// MAIN ADMIN LOTTERY DRAW COMPONENT (FULL WITH SCHEDULE & 7-DAY HISTORY)
+// MAIN ADMIN LOTTERY DRAW COMPONENT (WITH PHONE, SCHEDULE & 7-DAY HISTORY)
 // ============================================
 
 class MainAdminLotteryDraw {
@@ -186,7 +186,7 @@ class MainAdminLotteryDraw {
                 if (drawnDate >= sevenDaysAgo) {
                     count++;
                     const formattedDate = drawnDate.toLocaleString();
-                    const phone = draw.winnerPhone || 'N/A';
+                    const phone = draw.winnerPhone || draw.phone || 'N/A';
                     const email = draw.winnerEmail || 'N/A';
                     const scopeText = draw.scope || 'Global Main Admin';
 
@@ -245,9 +245,9 @@ class MainAdminLotteryDraw {
                         allAvailableNumbers.push({ 
                             ticketId: doc.id, 
                             number: num, 
-                            customer: ticket.customerName || 'N/A', 
-                            email: ticket.customerEmail || 'N/A',
-                            phone: ticket.phone || ticket.customerPhone || 'N/A'
+                            customer: ticket.customerName || ticket.name || 'N/A', 
+                            email: ticket.customerEmail || ticket.email || 'N/A',
+                            phone: ticket.phone || ticket.customerPhone || ticket.phoneNumber || 'N/A'
                         });
                     });
                 }
