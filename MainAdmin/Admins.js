@@ -22,7 +22,7 @@ class Admins {
             <div id="create-admin-modal" class="modal" style="display: none;">
                 <div class="modal-overlay"></div>
                 <div class="modal-content p-6 m-auto max-w-lg w-full space-y-4">
-                    <h3 class="text-xl font-bold text-white">Create New Admin</h3>
+                    <h3 class="text-xl font-bold text-white">Create New Admin & Payment Details</h3>
                     <div class="space-y-3 max-h-[75vh] overflow-y-auto pr-2">
                         <div>
                             <label class="block text-xs text-slate-400 mb-1">Full Name</label>
@@ -41,7 +41,20 @@ class Admins {
                             <input type="tel" id="admin-phone-input" placeholder="Phone" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs">
                         </div>
                         
-                        <div class="grid grid-cols-2 gap-2">
+                        <!-- Assigned Payment Accounts -->
+                        <div class="border-t border-yellow-400/10 pt-3 space-y-3">
+                            <p class="text-xs font-bold text-yellow-400">💳 Assigned Payment Accounts</p>
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-1">Telebirr Number</label>
+                                <input type="text" id="admin-telebirr-input" placeholder="e.g. 0911223344" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-1">CBE Birr Account</label>
+                                <input type="text" id="admin-cbe-input" placeholder="e.g. 100022334455" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 pt-2 border-t border-yellow-400/10">
                             <div>
                                 <label class="block text-xs text-slate-400 mb-1">Ticket Range Start</label>
                                 <input type="number" id="admin-range-start" value="1" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs">
@@ -73,7 +86,7 @@ class Admins {
             <div id="edit-admin-modal" class="modal" style="display: none;">
                 <div class="modal-overlay"></div>
                 <div class="modal-content p-6 m-auto max-w-lg w-full space-y-4">
-                    <h3 class="text-xl font-bold text-white">Edit Admin & Permissions</h3>
+                    <h3 class="text-xl font-bold text-white">Edit Admin, Payments & Permissions</h3>
                     <div class="space-y-3 max-h-[75vh] overflow-y-auto pr-2">
                         <div>
                             <label class="block text-xs text-slate-400 mb-1">Full Name</label>
@@ -88,7 +101,20 @@ class Admins {
                             <input type="tel" id="edit-admin-phone" placeholder="Phone" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs">
                         </div>
 
-                        <div class="grid grid-cols-2 gap-2">
+                        <!-- Assigned Payment Accounts (Edit) -->
+                        <div class="border-t border-yellow-400/10 pt-3 space-y-3">
+                            <p class="text-xs font-bold text-yellow-400">💳 Assigned Payment Accounts</p>
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-1">Telebirr Number</label>
+                                <input type="text" id="edit-admin-telebirr" placeholder="Telebirr" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-1">CBE Birr Account</label>
+                                <input type="text" id="edit-admin-cbe" placeholder="CBE Birr" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 pt-2 border-t border-yellow-400/10">
                             <div>
                                 <label class="block text-xs text-slate-400 mb-1">Ticket Range Start</label>
                                 <input type="number" id="edit-admin-range-start" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs">
@@ -155,6 +181,8 @@ class Admins {
         document.getElementById('edit-admin-name').value = admin.name || '';
         document.getElementById('edit-admin-email').value = admin.email || '';
         document.getElementById('edit-admin-phone').value = admin.phone || '';
+        document.getElementById('edit-admin-telebirr').value = admin.telebirrPhone || '';
+        document.getElementById('edit-admin-cbe').value = admin.cbeAccount || '';
         document.getElementById('edit-admin-range-start').value = admin.ticketRange?.start || 1;
         document.getElementById('edit-admin-range-end').value = admin.ticketRange?.end || 100;
 
@@ -175,60 +203,68 @@ class Admins {
         if (modal) modal.style.display = 'none';
     }
 
-async createAdmin() {
-    const name = document.getElementById('admin-name-input')?.value.trim() || '';
-    
-    // Check both potential email IDs to prevent null errors
-    const emailEl = document.getElementById('admin-email') || document.getElementById('admin-email-input');
-    const passwordEl = document.getElementById('admin-password') || document.getElementById('admin-password-input');
-    
-    const email = emailEl?.value.trim() || '';
-    const password = passwordEl?.value || '';
-    const phone = document.getElementById('admin-phone-input')?.value.trim() || '';
-    const rangeStart = parseInt(document.getElementById('admin-range-start')?.value || 1);
-    const rangeEnd = parseInt(document.getElementById('admin-range-end')?.value || 100);
+    async createAdmin() {
+        const name = document.getElementById('admin-name-input')?.value.trim() || '';
+        const email = document.getElementById('admin-email-input')?.value.trim() || '';
+        const password = document.getElementById('admin-password-input')?.value || '';
+        const phone = document.getElementById('admin-phone-input')?.value.trim() || '';
+        const telebirrPhone = document.getElementById('admin-telebirr-input')?.value.trim() || '';
+        const cbeAccount = document.getElementById('admin-cbe-input')?.value.trim() || '';
+        
+        const rangeStart = parseInt(document.getElementById('admin-range-start')?.value || 1);
+        const rangeEnd = parseInt(document.getElementById('admin-range-end')?.value || 100);
 
-    const permissions = {
-        customers: document.getElementById('perm-customers')?.checked || false,
-        tickets: document.getElementById('perm-tickets')?.checked || false,
-        payments: document.getElementById('perm-payments')?.checked || false,
-        notifications: document.getElementById('perm-notifications')?.checked || false,
-        appointments: document.getElementById('perm-appointments')?.checked || false
-    };
+        const permissions = {
+            customers: document.getElementById('perm-customers')?.checked || false,
+            tickets: document.getElementById('perm-tickets')?.checked || false,
+            payments: document.getElementById('perm-payments')?.checked || false,
+            notifications: document.getElementById('perm-notifications')?.checked || false,
+            appointments: document.getElementById('perm-appointments')?.checked || false
+        };
 
-    if (!name || !email || !password || !phone) {
-        notify('error', '❌ Fill all required fields');
-        return;
+        if (!name || !email || !password || !phone) {
+            notify('error', '❌ Fill all required fields');
+            return;
+        }
+
+        if (!db) {
+            notify('error', '❌ Database not initialized');
+            return;
+        }
+
+        try {
+            // 1. Create Firebase Auth credentials
+            await firebase.auth().createUserWithEmailAndPassword(email, password);
+
+            // 2. Save admin info, ticket range, permissions, AND assigned payment accounts in Firestore
+            await db.collection('admins').doc(email).set({
+                name,
+                email,
+                phone,
+                telebirrPhone,
+                cbeAccount,
+                ticketRange: { start: rangeStart, end: rangeEnd },
+                permissions,
+                customers: 0,
+                revenue: 0,
+                createdAt: new Date()
+            });
+
+            // 3. Sync to admin settings profile so individual admin views pick it up
+            await db.collection('admin_settings').doc(email).set({
+                adminEmail: email,
+                telebirrPhone: telebirrPhone,
+                cbeAccount: cbeAccount,
+                updatedAt: new Date()
+            }, { merge: true });
+
+            notify('success', `✅ Admin ${name} created with assigned payment accounts!`);
+            this.closeCreateModal();
+            await this.loadData();
+        } catch (error) {
+            notify('error', `❌ Error: ${error.message}`);
+        }
     }
-
-    if (!db) {
-        notify('error', '❌ Database not initialized');
-        return;
-    }
-
-    try {
-        // 1. Create the Firebase Auth login credentials
-        await firebase.auth().createUserWithEmailAndPassword(email, password);
-
-        // 2. Save the admin info in Firestore using their email as the document ID
-        await db.collection('admins').doc(email).set({
-            name,
-            email,
-            phone,
-            ticketRange: { start: rangeStart, end: rangeEnd },
-            permissions,
-            customers: 0,
-            revenue: 0,
-            createdAt: new Date()
-        });
-
-        notify('success', `✅ Admin ${name} created successfully!`);
-        this.closeCreateModal();
-        await this.loadData();
-    } catch (error) {
-        notify('error', `❌ Error: ${error.message}`);
-    }
-}
 
     async updateAdmin() {
         if (!this.editingAdminId) return;
@@ -236,6 +272,9 @@ async createAdmin() {
         const name = document.getElementById('edit-admin-name')?.value.trim() || '';
         const email = document.getElementById('edit-admin-email')?.value.trim() || '';
         const phone = document.getElementById('edit-admin-phone')?.value.trim() || '';
+        const telebirrPhone = document.getElementById('edit-admin-telebirr')?.value.trim() || '';
+        const cbeAccount = document.getElementById('edit-admin-cbe')?.value.trim() || '';
+        
         const rangeStart = parseInt(document.getElementById('edit-admin-range-start')?.value || 1);
         const rangeEnd = parseInt(document.getElementById('edit-admin-range-end')?.value || 100);
 
@@ -262,12 +301,22 @@ async createAdmin() {
                 name,
                 email,
                 phone,
+                telebirrPhone,
+                cbeAccount,
                 ticketRange: { start: rangeStart, end: rangeEnd },
                 permissions,
                 updatedAt: new Date()
             });
 
-            notify('success', '✅ Admin updated successfully!');
+            // Sync update to settings as well
+            await db.collection('admin_settings').doc(this.editingAdminId).set({
+                adminEmail: email,
+                telebirrPhone: telebirrPhone,
+                cbeAccount: cbeAccount,
+                updatedAt: new Date()
+            }, { merge: true });
+
+            notify('success', '✅ Admin details & accounts updated successfully!');
             this.closeEditModal();
             await this.loadData();
         } catch (error) {
@@ -293,6 +342,10 @@ async createAdmin() {
                         <div class="space-y-1">
                             <p class="font-bold text-white text-sm">${admin.name || 'N/A'}</p>
                             <p class="text-xs text-slate-400">${admin.email || 'N/A'} • ${admin.phone || 'N/A'}</p>
+                            <div class="bg-black/30 p-2 rounded border border-yellow-400/10 my-1 text-xs space-y-0.5">
+                                <p class="text-slate-300">📱 Telebirr: <span class="text-yellow-400">${admin.telebirrPhone || 'Not Set'}</span></p>
+                                <p class="text-slate-300">🏦 CBE Birr: <span class="text-yellow-400">${admin.cbeAccount || 'Not Set'}</span></p>
+                            </div>
                             <p class="text-xs text-yellow-400/80">🎟️ Ticket Range: ${admin.ticketRange?.start || 1} - ${admin.ticketRange?.end || 100}</p>
                             <p class="text-xs text-slate-400">🛡️ Allowed Services: <span class="text-slate-200">${allowedServices || 'None'}</span></p>
                             <p class="text-xs text-slate-500">Customers: ${admin.customers || 0} • Revenue: ${admin.revenue || 0} ETB</p>
@@ -317,6 +370,9 @@ async createAdmin() {
 
         try {
             await db.collection('admins').doc(adminId).delete();
+            // Optionally delete settings doc too
+            await db.collection('admin_settings').doc(adminId).delete().catch(() => {});
+            
             notify('success', '✅ Admin deleted');
             await this.loadData();
         } catch (error) {
