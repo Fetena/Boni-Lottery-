@@ -1,5 +1,5 @@
 // ============================================
-// MAIN ADMIN LOTTERY DRAW COMPONENT
+// MAIN ADMIN LOTTERY DRAW COMPONENT (WITH DATE/TIME & PHONE)
 // ============================================
 
 class MainAdminLotteryDraw {
@@ -14,6 +14,18 @@ class MainAdminLotteryDraw {
                     <span class="bg-yellow-400/20 text-yellow-300 border border-yellow-400/30 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">⚡ Live Draw Center</span>
                     <h3 class="text-2xl font-black text-gradient mt-2">🎰 Global Lucky Draw</h3>
                     <p class="text-xs text-slate-300 mt-1">Spin the cryptographic wheel to randomly select a verified winner from all approved platform pools.</p>
+                </div>
+
+                <!-- Schedule Controls: Set Date & Time -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-xl mx-auto text-left bg-black/40 p-4 rounded-xl border border-yellow-400/20">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">📅 Draw Schedule Date</label>
+                        <input type="date" id="main-draw-date-input" class="w-full bg-black/60 border border-yellow-400/30 rounded-lg py-2 px-3 text-white text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">⏰ Draw Schedule Time</label>
+                        <input type="time" id="main-draw-time-input" class="w-full bg-black/60 border border-yellow-400/30 rounded-lg py-2 px-3 text-white text-xs">
+                    </div>
                 </div>
 
                 <!-- Spinner Display Box -->
@@ -31,12 +43,26 @@ class MainAdminLotteryDraw {
 
     async init() {
         console.log('✅ MainAdminLotteryDraw initialized');
+        // Pre-fill date and time with current local values if inputs exist
+        const dateInput = document.getElementById('main-draw-date-input');
+        const timeInput = document.getElementById('main-draw-time-input');
+        
+        const now = new Date();
+        if (dateInput && !dateInput.value) {
+            dateInput.value = now.toISOString().split('T')[0];
+        }
+        if (timeInput && !timeInput.value) {
+            timeInput.value = now.toTimeString().substring(0, 5);
+        }
     }
 
     async runDraw() {
         if (!db) {
             return notify('error', '❌ Database not initialized');
         }
+
+        const scheduledDate = document.getElementById('main-draw-date-input')?.value;
+        const scheduledTime = document.getElementById('main-draw-time-input')?.value;
 
         try {
             let query = db.collection('customer_tickets').where('status', '==', 'Approved');
@@ -54,8 +80,9 @@ class MainAdminLotteryDraw {
                         allAvailableNumbers.push({ 
                             ticketId: doc.id, 
                             number: num, 
-                            customer: ticket.customerName, 
-                            email: ticket.customerEmail 
+                            customer: ticket.customerName || 'N/A', 
+                            email: ticket.customerEmail || 'N/A',
+                            phone: ticket.phone || ticket.customerPhone || 'N/A'
                         });
                     });
                 }
@@ -86,18 +113,21 @@ class MainAdminLotteryDraw {
 
                     if (spinnerBox) spinnerBox.textContent = `#${winningSelection.number}`;
                     if (winnerInfoBox) {
-                        winnerInfoBox.innerHTML = `🏆 Winner: <span class="text-yellow-400 font-bold">${winningSelection.customer}</span> (${winningSelection.email})`;
+                        winnerInfoBox.innerHTML = `🏆 Winner: <span class="text-yellow-400 font-bold">${winningSelection.customer}</span> (${winningSelection.email} • ${winningSelection.phone})`;
                     }
 
-                    // Save to Firestore
+                    // Save to Firestore with Date, Time, and Phone metadata
                     db.collection('lottery_draws').add({
                         winningNumber: winningSelection.number,
                         winningTicketId: winningSelection.ticketId,
                         winnerName: winningSelection.customer,
                         winnerEmail: winningSelection.email,
+                        winnerPhone: winningSelection.phone,
+                        scheduledDate: scheduledDate || null,
+                        scheduledTime: scheduledTime || null,
                         drawnBy: currentUser?.email || 'Main Admin',
                         scope: 'Global Main Admin',
-                        drawnAt: new Date()
+                        drawnAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
 
                     notify('success', `🎉 WINNING NUMBER DRAWN: #${winningSelection.number} (${winningSelection.customer})!`);
