@@ -35,9 +35,10 @@ class AdminDashboard {
                             <button onclick="window.adminDashboard.switchTab('settings', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">⚙️ Settings</button>
                         </div>
 
-                        <!-- Dashboard Tab -->
+                        
  
                         <!-- Dashboard Tab -->
+                      
                         <div id="admin-dashboard-tab" class="tab-content active space-y-4">
                             <div class="grid grid-cols-1 gap-4">
                                 <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
@@ -61,23 +62,6 @@ class AdminDashboard {
                                 <button onclick="runLotteryDraw(currentUser?.email)" class="w-full py-3 bg-yellow-400 text-black font-bold rounded-xl text-xs hover:bg-yellow-500">🎲 Draw Branch Winner Now</button>
                             </div>
                         </div>
-
-
-                        <div id="admin-dashboard-tab" class="tab-content active space-y-6">
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                                    <p class="text-xs text-slate-400">Total Customers</p>
-                                    <p class="text-3xl font-bold text-blue-400 mt-2" id="admin-total-customers">0</p>
-                                </div>
-                                <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                                    <p class="text-xs text-slate-400">Total Tickets</p>
-                                    <p class="text-3xl font-bold text-emerald-400 mt-2" id="admin-total-tickets">0</p>
-                                </div>
-                                <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                                    <p class="text-xs text-slate-400">Total Revenue</p>
-                                    <p class="text-3xl font-bold text-purple-400 mt-2" id="admin-total-revenue">0 ETB</p>
-                                </div>
-                            </div>
                         </div>
 
                         <!-- Customers Tab -->
