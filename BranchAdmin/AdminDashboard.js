@@ -393,9 +393,6 @@ async function runLotteryDraw(adminEmail = null) {
     }
 
     try {
-        notify('info', '🎲 Running secure cryptographic lottery draw...');
-
-        // 1. Fetch pending or approved tickets (optionally filtered by branch admin email)
         let query = db.collection('customer_tickets').where('status', '==', 'Approved');
         const snapshot = await query.get();
 
@@ -403,11 +400,9 @@ async function runLotteryDraw(adminEmail = null) {
             return notify('error', '❌ No approved tickets found to draw from!');
         }
 
-        // Gather all unique numbers from approved tickets
         let allAvailableNumbers = [];
         snapshot.forEach(doc => {
             const ticket = doc.data();
-            // If adminEmail is specified (branch admin), filter by assignedAdmin
             if (!adminEmail || ticket.assignedAdmin === adminEmail) {
                 if (ticket.numbers && Array.isArray(ticket.numbers)) {
                     ticket.numbers.forEach(num => {
@@ -421,28 +416,44 @@ async function runLotteryDraw(adminEmail = null) {
             return notify('error', '❌ No active numbers available for this draw scope.');
         }
 
-        // 2. Cryptographically secure random selection algorithm
-        const randomIndex = Math.floor(Math.random() * allAvailableNumbers.length);
-        const winningSelection = allAvailableNumbers[randomIndex];
+        const spinnerBox = document.getElementById('lottery-spinner-box');
+        const winnerInfoBox = document.getElementById('winner-info-display');
+        if (winnerInfoBox) winnerInfoBox.textContent = '';
 
-        // 3. Save the draw result to Firestore
-        await db.collection('lottery_draws').add({
-            winningNumber: winningSelection.number,
-            winningTicketId: winningSelection.ticketId,
-            winnerName: winningSelection.customer,
-            winnerEmail: winningSelection.email,
-            drawnBy: currentUser?.email || 'Admin',
-            scope: adminEmail ? `Branch: ${adminEmail}` : 'Global Main Admin',
-            drawnAt: new Date()
-        });
+        // Live Spinning Animation Loop
+        let spinCount = 0;
+        const maxSpins = 30;
+        const spinInterval = setInterval(() => {
+            const randomNum = Math.floor(Math.random() * 300) + 1;
+            if (spinnerBox) spinnerBox.textContent = `#${randomNum}`;
+            spinCount++;
 
-        // Show success notification with the winning number
-        notify('success', `🎉 WINNING NUMBER DRAWN: #${winningSelection.number} (${winningSelection.customer})!`);
+            if (spinCount >= maxSpins) {
+                clearInterval(spinInterval);
 
-        // Refresh draw history if displayed on UI
-        if (typeof loadDrawHistory === 'function') {
-            loadDrawHistory();
-        }
+                // Select Final Winner
+                const randomIndex = Math.floor(Math.random() * allAvailableNumbers.length);
+                const winningSelection = allAvailableNumbers[randomIndex];
+
+                if (spinnerBox) spinnerBox.textContent = `#${winningSelection.number}`;
+                if (winnerInfoBox) {
+                    winnerInfoBox.innerHTML = `🏆 Winner: <span class="text-yellow-400 font-bold">${winningSelection.customer}</span> (${winningSelection.email})`;
+                }
+
+                // Save to Firestore
+                db.collection('lottery_draws').add({
+                    winningNumber: winningSelection.number,
+                    winningTicketId: winningSelection.ticketId,
+                    winnerName: winningSelection.customer,
+                    winnerEmail: winningSelection.email,
+                    drawnBy: currentUser?.email || 'Admin',
+                    scope: adminEmail ? `Branch: ${adminEmail}` : 'Global Main Admin',
+                    drawnAt: new Date()
+                });
+
+                notify('success', `🎉 WINNING NUMBER DRAWN: #${winningSelection.number} (${winningSelection.customer})!`);
+            }
+        }, 60);
 
     } catch (error) {
         console.error('Draw error:', error);
