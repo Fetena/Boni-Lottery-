@@ -7,7 +7,17 @@
 class CustomerAppointments {
     constructor(custId) {
         this.custId = custId;
-        this.appointments = db.getAppointments(custId) || [];
+        this.appointments = [];
+        this.loadAppointments();
+    }
+
+    loadAppointments() {
+        try {
+            const data = localStorage.getItem(`appointments_${this.custId}`);
+            this.appointments = data ? JSON.parse(data) : [];
+        } catch (e) {
+            this.appointments = [];
+        }
     }
 
     render() {
@@ -69,13 +79,13 @@ class CustomerAppointments {
     }
 
     renderAppointments() {
-        const appointments = db.getAppointments(this.custId) || [];
+        this.loadAppointments();
         
-        if (appointments.length === 0) {
+        if (this.appointments.length === 0) {
             return '<p class="text-slate-400 text-center py-6">No appointments scheduled</p>';
         }
 
-        return appointments.map(apt => `
+        return this.appointments.map(apt => `
             <div class="bg-black/30 rounded-lg p-4 border border-yellow-400/10">
                 <div class="flex justify-between items-start">
                     <div>
@@ -115,9 +125,9 @@ class CustomerAppointments {
             bookedAt: new Date().toLocaleTimeString()
         };
 
-        const appointments = db.getAppointments(this.custId) || [];
-        appointments.push(appointment);
-        localStorage.setItem(`appointments_${this.custId}`, JSON.stringify(appointments));
+        this.loadAppointments();
+        this.appointments.push(appointment);
+        localStorage.setItem(`appointments_${this.custId}`, JSON.stringify(this.appointments));
 
         showNotification('success', '✅ Appointment booked! Admin will confirm shortly.');
         
@@ -131,9 +141,9 @@ class CustomerAppointments {
 
     cancelAppointment(aptId) {
         if (confirm('Cancel this appointment?')) {
-            let appointments = db.getAppointments(this.custId) || [];
-            appointments = appointments.filter(a => a.id !== aptId);
-            localStorage.setItem(`appointments_${this.custId}`, JSON.stringify(appointments));
+            this.loadAppointments();
+            this.appointments = this.appointments.filter(a => a.id !== aptId);
+            localStorage.setItem(`appointments_${this.custId}`, JSON.stringify(this.appointments));
             
             showNotification('info', '❌ Appointment cancelled');
             document.getElementById('appointments-list').innerHTML = this.renderAppointments();
