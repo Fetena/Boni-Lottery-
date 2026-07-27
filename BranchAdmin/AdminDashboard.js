@@ -55,40 +55,46 @@ class AdminDashboard {
                                 </div>
                             </div>
 
-                            <!-- High-Visibility Lottery Draw Control Panel & Spinner -->
+                            <!-- Automated Lottery Draw Control Panel & Spinner -->
                             <div class="glass-panel rounded-2xl p-6 border-2 border-yellow-400/40 bg-gradient-to-b from-yellow-400/10 to-black space-y-6 shadow-[0_0_25px_rgba(252,211,77,0.15)]">
                                 <div>
-                                    <span class="bg-yellow-400/20 text-yellow-300 border border-yellow-400/30 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">⚡ Live Draw Center</span>
+                                    <span class="bg-yellow-400/20 text-yellow-300 border border-yellow-400/30 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">⚡ Automated Live Draw Center</span>
                                     <h3 class="text-2xl font-black text-gradient mt-2">🎰 Branch Lucky Draw</h3>
-                                    <p class="text-xs text-slate-300 mt-1">Configure schedule, countdown to draw time, and spin for verified branch winners.</p>
+                                    <p class="text-xs text-slate-300 mt-1">Select an automated timer duration to set the draw schedule and unlock the wheel.</p>
                                 </div>
 
-                                <!-- Admin Schedule Controller -->
+                                <!-- Automated Quick Schedule Selector -->
                                 <div class="bg-black/40 p-4 rounded-xl border border-yellow-400/20 space-y-3">
-                                    <h4 class="text-xs font-bold text-yellow-400 uppercase tracking-wide">⚙️ Set Draw Schedule & Time</h4>
+                                    <h4 class="text-xs font-bold text-yellow-400 uppercase tracking-wide">⚙️ Automated Schedule Trigger</h4>
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                                         <div>
-                                            <label class="block text-[10px] text-slate-400 mb-1">Scheduled Date & Time</label>
-                                            <input type="datetime-local" id="draw-schedule-input" class="w-full bg-black/60 border border-yellow-400/30 rounded-xl py-2 px-3 text-white text-xs">
+                                            <label class="block text-[10px] text-slate-400 mb-1">Auto-Schedule Duration</label>
+                                            <select id="draw-schedule-select" class="w-full bg-black/60 border border-yellow-400/30 rounded-xl py-2 px-3 text-white text-xs">
+                                                <option value="5">In 5 Minutes (Quick Test)</option>
+                                                <option value="30">In 30 Minutes</option>
+                                                <option value="60" selected>In 1 Hour</option>
+                                                <option value="360">In 6 Hours</option>
+                                                <option value="1440">In 24 Hours (1 Day)</option>
+                                            </select>
                                         </div>
                                         <div class="flex items-end">
-                                            <button onclick="saveDrawSchedule()" class="w-full py-2 bg-yellow-400/20 hover:bg-yellow-400/30 border border-yellow-400/40 text-yellow-300 font-bold rounded-xl text-xs transition-all">💾 Save Schedule</button>
+                                            <button onclick="saveAutomatedDrawSchedule()" class="w-full py-2 bg-yellow-400/20 hover:bg-yellow-400/30 border border-yellow-400/40 text-yellow-300 font-bold rounded-xl text-xs transition-all">⚡ Set & Start Timer</button>
                                         </div>
                                     </div>
-                                    <p id="schedule-status-text" class="text-[11px] text-slate-400 italic">No draw time scheduled yet.</p>
+                                    <p id="schedule-status-text" class="text-[11px] text-slate-400 italic">No automated schedule active.</p>
                                 </div>
 
                                 <!-- Countdown & Spinner Box -->
                                 <div class="py-6 bg-black/60 rounded-xl border border-yellow-400/30 flex flex-col items-center justify-center relative overflow-hidden space-y-2">
                                     <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-yellow-400/10 via-transparent to-transparent pointer-events-none"></div>
-                                    <span id="draw-countdown-timer" class="text-xs font-mono font-bold text-amber-400 bg-amber-400/10 px-3 py-1 rounded-full border border-amber-400/20">⏳ LOCKED UNTIL SCHEDULED TIME</span>
+                                    <span id="draw-countdown-timer" class="text-xs font-mono font-bold text-amber-400 bg-amber-400/10 px-3 py-1 rounded-full border border-amber-400/20">⏳ LOCKED UNTIL TIMER ENDS</span>
                                     <span class="text-[10px] uppercase tracking-widest text-slate-400 mt-1">Winning Number Result</span>
                                     <div id="lottery-spinner-box" class="text-5xl font-black text-yellow-400 tracking-wider drop-shadow-[0_0_15px_rgba(252,211,77,0.6)]">---</div>
                                     <div id="winner-info-display" class="text-xs text-slate-300 mt-2 font-medium text-center px-4"></div>
                                 </div>
 
-                                <!-- Spin Action Button (Disabled by Default until schedule + 30 mins) -->
-                                <button id="spin-draw-btn" onclick="runLotteryDraw(currentUser?.email)" disabled class="w-full py-3.5 bg-slate-800 text-slate-500 font-black rounded-xl text-sm cursor-not-allowed transition-all shadow-none">🔒 DRAW LOCKED (WAITING FOR SCHEDULE)</button>
+                                <!-- Spin Action Button -->
+                                <button id="spin-draw-btn" onclick="runLotteryDraw(currentUser?.email)" disabled class="w-full py-3.5 bg-slate-800 text-slate-500 font-black rounded-xl text-sm cursor-not-allowed transition-all shadow-none">🔒 DRAW LOCKED (WAITING FOR TIMER)</button>
 
                                 <!-- Recent Winners History (1 Week Auto-Purge) -->
                                 <div class="space-y-3 pt-4 border-t border-yellow-400/10">
@@ -220,7 +226,6 @@ class AdminDashboard {
             await loadAdminPayments();
             await loadAdminStats();
             
-            // Initialize Lottery Schedule & History Module
             await initLotteryModule();
 
             if (!window.adminPayments) {
@@ -278,6 +283,7 @@ class AdminDashboard {
             notify('error', `❌ Error: ${error.message}`);
         }
     }
+
     async deleteTicket(docId) {
         if (!confirm('Are you sure you want to delete this ticket?')) return;
         if (!db) return notify('error', '❌ Database not initialized');
@@ -291,6 +297,7 @@ class AdminDashboard {
             notify('error', `❌ Error: ${error.message}`);
         }
     }
+
     async rejectPayment(docId) {
         if (!db) return notify('error', '❌ Database not initialized');
         try {
@@ -400,7 +407,7 @@ async function loadAdminCustomers() {
 }
 
 // ============================================
-// LOTTERY DRAWING MODULE (SCHEDULE, 30M BUFFER, PHONE & 1-WEEK HISTORY)
+// AUTOMATED LOTTERY MODULE
 // ============================================
 
 async function initLotteryModule() {
@@ -408,20 +415,19 @@ async function initLotteryModule() {
     await loadDrawHistory();
 }
 
-async function saveDrawSchedule() {
+async function saveAutomatedDrawSchedule() {
     if (!db || !currentUser) return notify('error', '❌ Database or user not ready');
-    const scheduleVal = document.getElementById('draw-schedule-input').value;
-    if (!scheduleVal) return notify('error', '❌ Please pick a valid date and time');
+    const minutesToAdd = parseInt(document.getElementById('draw-schedule-select').value) || 60;
 
     try {
-        const scheduleDate = new Date(scheduleVal);
+        const targetTime = new Date(Date.now() + (minutesToAdd * 60000));
         await db.collection('admin_settings').doc(`draw_schedule_${currentUser.email}`).set({
             adminEmail: currentUser.email,
-            scheduledTime: firebase.firestore.Timestamp.fromDate(scheduleDate),
-            updatedAt: new Date()
+            scheduledTime: firebase.firestore.Timestamp.fromDate(targetTime),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
 
-        notify('success', '✅ Draw schedule saved successfully!');
+        notify('success', `✅ Automated schedule set for ${minutesToAdd} minutes from now!`);
         loadDrawSchedule();
     } catch (error) {
         notify('error', `❌ Error saving schedule: ${error.message}`);
@@ -435,22 +441,16 @@ async function loadDrawSchedule() {
         const statusText = document.getElementById('schedule-status-text');
         const spinBtn = document.getElementById('spin-draw-btn');
         const timerBox = document.getElementById('draw-countdown-timer');
-        const scheduleInput = document.getElementById('draw-schedule-input');
 
         if (!doc.exists) return;
         const data = doc.data();
         if (!data.scheduledTime) return;
 
         const scheduledDate = data.scheduledTime.toDate();
-        // Applies 30-minute lock buffer requirement
-        const unlockedDate = new Date(scheduledDate.getTime() + (30 * 60000));
-
-        if (scheduleInput) {
-            scheduleInput.value = scheduledDate.toISOString().slice(0, 16);
-        }
+        const unlockedDate = new Date(scheduledDate.getTime() + (30 * 60000)); // 30 mins buffer lock
 
         if (statusText) {
-            statusText.innerHTML = `📅 Scheduled for: <span class="text-white font-bold">${scheduledDate.toLocaleString()}</span> (Unlocked with 30m buffer at ${unlockedDate.toLocaleTimeString()})`;
+            statusText.innerHTML = `📅 Automated Target: <span class="text-white font-bold">${scheduledDate.toLocaleString()}</span> (Unlocked at ${unlockedDate.toLocaleTimeString()})`;
         }
 
         if (countdownInterval) clearInterval(countdownInterval);
@@ -541,7 +541,6 @@ async function runLotteryDraw(adminEmail = null) {
                     winnerInfoBox.innerHTML = `🏆 Winner: <span class="text-yellow-400 font-bold">${winningSelection.customer}</span><br>📧 Email: ${winningSelection.email} • 📞 Phone: <span class="text-emerald-400 font-bold">${winningSelection.phone}</span>`;
                 }
 
-                // Saves to Firestore including phone number and timestamp for 1-week auto-removal rule
                 await db.collection('lottery_draws').add({
                     winningNumber: winningSelection.number,
                     winningTicketId: winningSelection.ticketId,
@@ -587,7 +586,6 @@ async function loadDrawHistory() {
             const record = docSnap.data();
             const drawnDate = record.drawnAt ? record.drawnAt.toDate() : new Date();
             
-            // Automatic removal condition: deletes entries older than 7 days from Firestore
             if ((now - drawnDate) > oneWeekMs) {
                 await db.collection('lottery_draws').doc(docSnap.id).delete();
                 continue;
