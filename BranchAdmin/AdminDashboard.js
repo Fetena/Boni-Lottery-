@@ -37,29 +37,41 @@ class AdminDashboard {
 
                         
  
-                        <!-- Dashboard Tab -->
-                      
+                       <!-- Dashboard Tab -->
                         <div id="admin-dashboard-tab" class="tab-content active space-y-4">
-                            <div class="grid grid-cols-1 gap-4">
-                                <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                                    <p class="text-xs text-slate-400">Total Customers</p>
-                                    <h3 id="admin-total-customers" class="text-3xl font-bold text-blue-400 mt-1">0</h3>
+                            <!-- Compact Stat Cards -->
+                            <div class="grid grid-cols-3 gap-3">
+                                <div class="glass-panel rounded-xl p-3 border border-yellow-400/10">
+                                    <p class="text-[10px] text-slate-400">Total Customers</p>
+                                    <h3 id="admin-total-customers" class="text-xl font-bold text-blue-400 mt-0.5">0</h3>
                                 </div>
-                                <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                                    <p class="text-xs text-slate-400">Total Tickets</p>
-                                    <h3 id="admin-total-tickets" class="text-3xl font-bold text-emerald-400 mt-1">0</h3>
+                                <div class="glass-panel rounded-xl p-3 border border-yellow-400/10">
+                                    <p class="text-[10px] text-slate-400">Total Tickets</p>
+                                    <h3 id="admin-total-tickets" class="text-xl font-bold text-emerald-400 mt-0.5">0</h3>
                                 </div>
-                                <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                                    <p class="text-xs text-slate-400">Total Revenue</p>
-                                    <h3 id="admin-total-revenue" class="text-3xl font-bold text-purple-400 mt-1">0 ETB</h3>
+                                <div class="glass-panel rounded-xl p-3 border border-yellow-400/10">
+                                    <p class="text-[10px] text-slate-400">Total Revenue</p>
+                                    <h3 id="admin-total-revenue" class="text-xl font-bold text-purple-400 mt-0.5">0 ETB</h3>
                                 </div>
                             </div>
 
-                            <!-- Lottery Draw Control Panel -->
-                            <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
-                                <h3 class="text-xl font-bold text-gradient">🎰 Branch Lottery Draw Center</h3>
-                                <p class="text-xs text-slate-400">Trigger a randomized lucky draw from all approved customer tickets assigned to your branch.</p>
-                                <button onclick="runLotteryDraw(currentUser?.email)" class="w-full py-3 bg-yellow-400 text-black font-bold rounded-xl text-xs hover:bg-yellow-500">🎲 Draw Branch Winner Now</button>
+                            <!-- High-Visibility Lottery Draw Control Panel & Spinner -->
+                            <div class="glass-panel rounded-2xl p-6 border-2 border-yellow-400/40 bg-gradient-to-b from-yellow-400/10 to-black space-y-4 text-center shadow-[0_0_25px_rgba(252,211,77,0.15)]">
+                                <div>
+                                    <span class="bg-yellow-400/20 text-yellow-300 border border-yellow-400/30 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">⚡ Live Draw Center</span>
+                                    <h3 class="text-2xl font-black text-gradient mt-2">🎰 Branch Lucky Draw</h3>
+                                    <p class="text-xs text-slate-300 mt-1">Spin the cryptographic wheel to randomly select a verified winner from your branch pool.</p>
+                                </div>
+
+                                <!-- Spinner Display Box -->
+                                <div class="py-6 bg-black/60 rounded-xl border border-yellow-400/30 flex flex-col items-center justify-center relative overflow-hidden">
+                                    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-yellow-400/10 via-transparent to-transparent pointer-events-none"></div>
+                                    <span class="text-[10px] uppercase tracking-widest text-slate-400 mb-1">Winning Number Result</span>
+                                    <div id="lottery-spinner-box" class="text-5xl font-black text-yellow-400 tracking-wider drop-shadow-[0_0_15px_rgba(252,211,77,0.6)]">---</div>
+                                    <div id="winner-info-display" class="text-xs text-slate-300 mt-2 font-medium"></div>
+                                </div>
+
+                                <button onclick="runLotteryDraw(currentUser?.email)" class="w-full py-3.5 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 text-black font-black rounded-xl text-sm shadow-lg hover:opacity-95 transform active:scale-95 transition-all">🎲 SPIN & DRAW WINNER NOW</button>
                             </div>
                         </div>
                         </div>
