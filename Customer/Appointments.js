@@ -65,7 +65,7 @@ class CustomerAppointments {
     }
 
     render() {
-        // Load latest appointments whenever the layout renders
+        // Load latest appointments immediately upon rendering the component
         this.loadAppointments();
 
         return `
@@ -136,23 +136,29 @@ class CustomerAppointments {
             return '<p class="text-slate-400 text-center py-6">No appointments scheduled</p>';
         }
 
-        return this.appointments.map(apt => `
-            <div class="bg-black/30 rounded-lg p-4 border border-yellow-400/10 space-y-1">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <p class="font-bold text-yellow-400">Admin: ${apt.adminName || 'Main Admin'}</p>
-                        <p class="text-sm text-white font-medium mt-1">📅 ${apt.date} at ${apt.time}</p>
-                        <p class="text-xs text-slate-300 mt-1">Purpose: <span class="text-white">${apt.purpose}</span></p>
-                        ${apt.description ? `<p class="text-xs text-slate-400 mt-1">Note: ${apt.description}</p>` : ''}
-                        <p class="text-xs text-emerald-400 mt-2 font-semibold">Status: ${apt.status}</p>
-                    </div>
-                    <div>
-                        <button onclick="customerAppointments.cancelAppointment('${apt.id}')" 
-                            class="px-3 py-1 bg-red-950/30 text-red-400 text-xs rounded hover:bg-red-950/50">Cancel</button>
+        return this.appointments.map(apt => {
+            let statusColor = 'text-yellow-400';
+            if (apt.status === 'Approved' || apt.status === 'Confirmed') statusColor = 'text-emerald-400';
+            if (apt.status === 'Rejected' || apt.status === 'Cancelled') statusColor = 'text-red-400';
+
+            return `
+                <div class="bg-black/30 rounded-lg p-4 border border-yellow-400/10 space-y-1">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="font-bold text-yellow-400">Admin: ${apt.adminName || 'Main Admin'}</p>
+                            <p class="text-sm text-white font-medium mt-1">📅 ${apt.date} at ${apt.time}</p>
+                            <p class="text-xs text-slate-300 mt-1">Purpose: <span class="text-white">${apt.purpose}</span></p>
+                            ${apt.description ? `<p class="text-xs text-slate-400 mt-1">Note: ${apt.description}</p>` : ''}
+                            <p class="text-xs ${statusColor} mt-2 font-semibold">Status: ${apt.status}</p>
+                        </div>
+                        <div>
+                            <button onclick="customerAppointments.cancelAppointment('${apt.id}')" 
+                                class="px-3 py-1 bg-red-950/30 text-red-400 text-xs rounded hover:bg-red-950/50">Cancel</button>
+                        </div>
                     </div>
                 </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
     }
 
     bookAppointment() {
@@ -183,15 +189,12 @@ class CustomerAppointments {
         this.appointments.push(appointment);
         localStorage.setItem(`appointments_${this.custId}`, JSON.stringify(this.appointments));
 
-        // Trigger top-right notification popup immediately for customer booking
-        notify('success', `✅ Appointment successfully booked with ${adminName} for approval![cite: 12]`);
+        notify('success', `✅ Appointment successfully booked with ${adminName} for approval!`);
         
-        // Clear form fields
         document.getElementById('apt-date').value = '';
         document.getElementById('apt-time').value = '';
         document.getElementById('apt-desc').value = '';
         
-        // Refresh list
         this.refreshList();
     }
 
