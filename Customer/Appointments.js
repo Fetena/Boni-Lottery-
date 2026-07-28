@@ -183,8 +183,8 @@ class CustomerAppointments {
         this.appointments.push(appointment);
         localStorage.setItem(`appointments_${this.custId}`, JSON.stringify(this.appointments));
 
-        // Trigger top-right notification popup immediately
-        notify('success', `✅ Appointment submitted to ${adminName} for approval!`);
+        // Trigger top-right notification popup immediately for customer booking
+        notify('success', `✅ Appointment successfully booked with ${adminName} for approval![cite: 12]`);
         
         // Clear form fields
         document.getElementById('apt-date').value = '';
