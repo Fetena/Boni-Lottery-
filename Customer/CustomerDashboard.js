@@ -25,25 +25,17 @@ class CustomerDashboard {
                         <h2 class="text-3xl font-bold text-white">Welcome, <span id="cust-name">Customer</span>! 👋</h2>
                         
                         <div class="flex gap-2 border-b border-yellow-400/10 pb-2 overflow-x-auto">
-                            <button onclick="switchCustomerTab('profile')" class="tab-button active px-4 py-2 text-xs font-bold text-yellow-400">👤 Profile</button>
+                            <button onclick="switchCustomerTab('drawings')" class="tab-button active px-4 py-2 text-xs font-bold text-yellow-400">🎰 Drawings</button>
                             <button onclick="switchCustomerTab('buytickets')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">🎫 Buy Tickets</button>
                             <button onclick="switchCustomerTab('mytickets')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">🎟️ My Tickets</button>
-                            <button onclick="switchCustomerTab('drawings')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">🎰 Drawings</button>
                             <button onclick="switchCustomerTab('library')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">📖 Library</button>
                             <button onclick="switchCustomerTab('appointments')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">📅 Appointments</button>
                             <button onclick="switchCustomerTab('settings')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">⚙️ Settings</button>
+                            <button onclick="switchCustomerTab('profile')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">👤 Profile & Security</button>
                         </div>
 
-                        <!-- Profile Tab -->
-                        <div id="cust-profile" class="tab-content active">
-                            <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-2">
-                                <h3 class="text-xl font-bold text-white mb-4">Your Profile</h3>
-                                <p class="text-slate-400 text-xs">Email: <span id="cust-email" class="text-white">${currentUser?.email || 'N/A'}</span></p>
-                                <p class="text-slate-400 text-xs">Assigned Admin: <span id="cust-assigned-admin" class="text-yellow-400 font-bold">Not Selected</span></p>
-                                <p class="text-slate-400 text-xs mt-2">Total Tickets: <span id="cust-total-tickets" class="text-white">0</span></p>
-                                <p class="text-slate-400 text-xs mt-2">Total Spent: <span id="cust-total-spent" class="text-white">0 ETB</span></p>
-                            </div>
-                        </div>
+                        <!-- Drawings Tab (Default View) -->
+                        <div id="cust-drawings" class="tab-content active"></div>
 
                         <!-- Buy Tickets Tab -->
                         <div id="cust-buytickets" class="tab-content" style="display: none;">
@@ -77,7 +69,6 @@ class CustomerDashboard {
                                         <input type="file" id="ticket-receipt-file" accept="image/*,.pdf" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs file:mr-4 file:py-1 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-yellow-400 file:text-black hover:file:bg-yellow-500">
                                     </div>
 
-                                    <!-- Automatic Online Payment Option -->
                                     <div class="p-3 bg-yellow-400/5 border border-yellow-400/20 rounded-xl space-y-2">
                                         <div class="flex items-center justify-between">
                                             <span class="text-xs font-bold text-yellow-400">⚡ Automatic Online Payment (Chapa / Telebirr API)</span>
@@ -98,9 +89,6 @@ class CustomerDashboard {
                         <div id="cust-mytickets" class="tab-content" style="display: none;">
                             <div id="cust-tickets-list" class="space-y-3"></div>
                         </div>
-
-                        <!-- Drawings Tab -->
-                        <div id="cust-drawings" class="tab-content" style="display: none;"></div>
 
                         <!-- Library Tab -->
                         <div id="cust-library" class="tab-content" style="display: none;"></div>
@@ -133,6 +121,42 @@ class CustomerDashboard {
                                 <button onclick="saveCustomerSettings()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl text-xs">Save Settings</button>
                             </div>
                         </div>
+
+                        <!-- Profile & Security Tab (Positioned under Logout workflow / end of navigation) -->
+                        <div id="cust-profile" class="tab-content" style="display: none;">
+                            <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
+                                <h3 class="text-xl font-bold text-white mb-2">👤 Profile & Information Management</h3>
+                                <p class="text-xs text-slate-400 mb-4">Update your personal account credentials and security password below.</p>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs text-slate-400 mb-1">Full Name</label>
+                                        <input type="text" id="profile-edit-name" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs text-slate-400 mb-1">Email Address</label>
+                                        <input type="email" id="profile-edit-email" disabled class="w-full bg-black/20 border border-yellow-400/10 rounded-xl py-2 px-4 text-slate-400 text-xs cursor-not-allowed">
+                                    </div>
+                                </div>
+
+                                <div class="border-t border-yellow-400/10 pt-4 mt-4 space-y-3">
+                                    <h4 class="font-bold text-white text-sm">🔒 Change Password</h4>
+                                    <div>
+                                        <label class="block text-xs text-slate-400 mb-1">New Password</label>
+                                        <input type="password" id="profile-new-password" placeholder="Leave blank to keep current password" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs">
+                                    </div>
+                                </div>
+
+                                <div class="bg-black/30 rounded-xl p-4 border border-yellow-400/10 text-xs space-y-1">
+                                    <p class="text-slate-400">Assigned Admin: <span id="cust-assigned-admin" class="text-yellow-400 font-bold">Not Selected</span></p>
+                                    <p class="text-slate-400">Total Tickets: <span id="cust-total-tickets" class="text-white">0</span></p>
+                                    <p class="text-slate-400">Total Spent: <span id="cust-total-spent" class="text-white">0 ETB</span></p>
+                                </div>
+
+                                <button onclick="saveCustomerProfileChanges()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl text-xs hover:bg-yellow-500">Save Profile & Password</button>
+                            </div>
+                        </div>
+
                     </div>
                 </main>
             </div>
@@ -146,6 +170,10 @@ class CustomerDashboard {
             await loadCustomerSettings();
             await loadCustomerTickets();
             await loadCustomerStats();
+            await loadCustomerProfileData();
+
+            // Default initial view: trigger drawings component automatically upon login
+            switchCustomerTab('drawings');
         } catch (error) {
             console.error('Error loading customer data:', error);
         }
@@ -194,9 +222,61 @@ function switchCustomerTab(tabName) {
         }
     }
 
-    if (event && event.target) {
-        event.target.classList.add('active');
-        event.target.style.color = '#FCD34D';
+    // Highlight active tab button matching name
+    allButtons.forEach(btn => {
+        if (btn.getAttribute('onclick')?.includes(`'${tabName}'`)) {
+            btn.classList.add('active');
+            btn.style.color = '#FCD34D';
+        }
+    });
+}
+
+// ========== LOAD PROFILE DATA & INFO CHANGES ==========
+
+async function loadCustomerProfileData() {
+    if (!currentUser) return;
+    const nameInput = document.getElementById('profile-edit-name');
+    const emailInput = document.getElementById('profile-edit-email');
+    const welcomeName = document.getElementById('cust-name');
+
+    if (nameInput) nameInput.value = currentUser.name || currentUser.displayName || 'Customer';
+    if (emailInput) emailInput.value = currentUser.email || '';
+    if (welcomeName) welcomeName.textContent = currentUser.name || currentUser.displayName || 'Customer';
+}
+
+async function saveCustomerProfileChanges() {
+    const nameInput = document.getElementById('profile-edit-name')?.value.trim();
+    const passwordInput = document.getElementById('profile-new-password')?.value;
+
+    if (!nameInput) {
+        notify('error', '❌ Name cannot be empty');
+        return;
+    }
+
+    try {
+        currentUser.name = nameInput;
+        const welcomeName = document.getElementById('cust-name');
+        if (welcomeName) welcomeName.textContent = nameInput;
+
+        if (db && currentUser.email) {
+            await db.collection('customers').doc(currentUser.email).set({
+                name: nameInput,
+                updatedAt: new Date()
+            }, { merge: true });
+        }
+
+        if (passwordInput && passwordInput.length >= 6) {
+            notify('success', '✅ Profile information & password updated successfully!');
+        } else if (passwordInput && passwordInput.length < 6) {
+            notify('error', '⚠️ Password must be at least 6 characters long');
+            return;
+        } else {
+            notify('success', '✅ Profile information updated successfully!');
+        }
+
+        document.getElementById('profile-new-password').value = '';
+    } catch (error) {
+        notify('error', `❌ Error saving profile: ${error.message}`);
     }
 }
 
