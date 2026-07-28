@@ -15,7 +15,7 @@ class CustomerTickets {
         this._pollingInterval = setInterval(() => {
             try {
                 const storageKey = `tickets_${this.custId}`;
-                const tickets = JSON.parse(localStorage.getItem(storageKey) || '[]');
+                let tickets = JSON.parse(localStorage.getItem(storageKey) || '[]');
                 let updated = false;
 
                 tickets.forEach(t => {
@@ -66,7 +66,7 @@ class CustomerTickets {
             return `
                 <div class="glass-panel rounded-xl p-4 border border-yellow-400/10 flex justify-between items-start">
                     <div class="space-y-1">
-                        <p class="font-bold text-white text-base">${t.id}</p>
+                        <p class="font-bold text-white text-base">${t.id || 'Ticket'}</p>
                         <p class="text-sm text-yellow-400">Numbers: ${t.numbers ? t.numbers.join(', ') : 'N/A'}</p>
                         <p class="text-xs text-slate-400">${t.date || new Date().toLocaleDateString()} • Status: <span class="${statusColor} font-semibold">${statusText}</span></p>
                     </div>
@@ -108,10 +108,7 @@ class CustomerTickets {
     }
 }
 
-// Bind globally so inline button calls execute reliably
 if (!window.customerTicketsInstance) {
-    document.addEventListener('DOMContentLoaded', () => {
-        const custId = localStorage.getItem('currentCustId') || currentUser?.email || 'DEFAULT';
-        window.customerTicketsInstance = new CustomerTickets(custId);
-    });
+    const custId = localStorage.getItem('currentCustId') || currentUser?.email || 'DEFAULT';
+    window.customerTicketsInstance = new CustomerTickets(custId);
 }
