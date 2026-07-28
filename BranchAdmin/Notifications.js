@@ -85,7 +85,6 @@ class AdminNotifications {
 
     loadPendingApprovals() {
         try {
-            // Load pending requests from local storage (or sync with DB if needed)
             const allKeys = Object.keys(localStorage);
             this.pendingApprovals = [];
             
@@ -129,11 +128,13 @@ class AdminNotifications {
 
     approveBooking(aptId, custId) {
         this.updateBookingStatus(aptId, custId, 'Approved');
-        notify('success', '✅ Booking successfully approved!');
+        // Trigger popup notification for admin action
+        notify('success', '✅ Booking approved successfully!');
     }
 
     rejectBooking(aptId, custId) {
         this.updateBookingStatus(aptId, custId, 'Rejected');
+        // Trigger popup notification for admin action
         notify('error', '❌ Booking request rejected');
     }
 
@@ -149,7 +150,7 @@ class AdminNotifications {
             });
             localStorage.setItem(storageKey, JSON.stringify(updated));
             
-            // Refresh approval list display
+            // Refresh approval list display inside admin panel
             const listEl = document.getElementById('admin-approval-list');
             if (listEl) {
                 this.loadPendingApprovals();
@@ -170,7 +171,6 @@ class AdminNotifications {
             return;
         }
 
-        // Create notification object
         const notif = {
             id: Date.now(),
             adminId: this.adminId,
@@ -185,7 +185,6 @@ class AdminNotifications {
             }
         };
 
-        // Retrieve and update localStorage safely
         try {
             const notifs = JSON.parse(localStorage.getItem('notifications') || '[]');
             notifs.push(notif);
@@ -211,7 +210,6 @@ class AdminNotifications {
                 `).join('');
             }
 
-            // Badge Update Logic for Branch Admin Notifications
             const badgeEl = document.getElementById('badge-branch-notifications');
             if (badgeEl) {
                 const totalPendingCount = this.pendingApprovals.length + notifs.length;
@@ -228,5 +226,4 @@ class AdminNotifications {
     }
 }
 
-// Global instance
 window.adminNotifications = null;
