@@ -22,11 +22,6 @@ class CustomerDrawings {
         } catch (e) {
             this.draws = this.defaultDraws();
         }
-        
-        const container = document.getElementById('customer-content');
-        if (container && typeof customerDashboard !== 'undefined') {
-            // Re-render container if needed, or update sub-section
-        }
     }
 
     defaultDraws() {
@@ -163,5 +158,8 @@ class CustomerDrawings {
     }
 }
 
-// Global instance
+// Global instance auto-initializer
 let customerDrawings;
+document.addEventListener('DOMContentLoaded', () => {
+    customerDrawings = new CustomerDrawings(localStorage.getItem('currentCustId') || 'DEFAULT');
+});
