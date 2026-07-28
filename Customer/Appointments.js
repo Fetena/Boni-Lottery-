@@ -30,20 +30,31 @@ class CustomerAppointments {
                     <h4 class="font-bold text-white mb-4">Book New Appointment</h4>
                     
                     <div>
-                        <label class="text-sm text-slate-400">Date</label>
-                        <input type="date" id="apt-date" 
-                            class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
+                        <label class="text-sm text-slate-400">Select Branch Admin</label>
+                        <select id="apt-admin" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
+                            <option value="Admin - Main Branch (Bole)">Main Branch Admin (Bole)</option>
+                            <option value="Admin - Branch 2 (Piassa)">Branch 2 Admin (Piassa)</option>
+                            <option value="Admin - Branch 3 (CMC)">Branch 3 Admin (CMC)</option>
+                            <option value="General Support Admin">General Support Admin</option>
+                        </select>
                     </div>
 
-                    <div>
-                        <label class="text-sm text-slate-400">Time</label>
-                        <select id="apt-time" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
-                            <option>10:00 AM</option>
-                            <option>11:00 AM</option>
-                            <option>2:00 PM</option>
-                            <option>3:00 PM</option>
-                            <option>4:00 PM</option>
-                        </select>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-sm text-slate-400">Date</label>
+                            <input type="date" id="apt-date" 
+                                class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
+                        </div>
+                        <div>
+                            <label class="text-sm text-slate-400">Time Slot</label>
+                            <select id="apt-time" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
+                                <option>10:00 AM - 11:00 AM</option>
+                                <option>11:00 AM - 12:00 PM</option>
+                                <option>02:00 PM - 03:00 PM</option>
+                                <option>03:00 PM - 04:00 PM</option>
+                                <option>04:00 PM - 05:00 PM</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div>
@@ -64,7 +75,7 @@ class CustomerAppointments {
                     </div>
 
                     <button onclick="customerAppointments.bookAppointment()" 
-                        class="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">📅 Book Appointment</button>
+                        class="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">📅 Confirm & Book Appointment</button>
                 </div>
 
                 <!-- SCHEDULED APPOINTMENTS -->
@@ -86,15 +97,16 @@ class CustomerAppointments {
         }
 
         return this.appointments.map(apt => `
-            <div class="bg-black/30 rounded-lg p-4 border border-yellow-400/10">
+            <div class="bg-black/30 rounded-lg p-4 border border-yellow-400/10 space-y-1">
                 <div class="flex justify-between items-start">
                     <div>
-                        <p class="font-bold text-yellow-400">${apt.date} ${apt.time}</p>
-                        <p class="text-sm text-white mt-1">${apt.purpose}</p>
-                        <p class="text-xs text-slate-400 mt-1">${apt.description}</p>
-                        <p class="text-xs text-emerald-400 mt-2">Status: ${apt.status}</p>
+                        <p class="font-bold text-yellow-400">Assigned Admin: ${apt.adminName}</p>
+                        <p class="text-sm text-white font-medium mt-1">📅 ${apt.date} at ${apt.time}</p>
+                        <p class="text-xs text-slate-300 mt-1">Purpose: <span class="text-white">${apt.purpose}</span></p>
+                        ${apt.description ? `<p class="text-xs text-slate-400 mt-1">Note: ${apt.description}</p>` : ''}
+                        <p class="text-xs text-emerald-400 mt-2 font-semibold">Status: ${apt.status}</p>
                     </div>
-                    <div class="flex gap-2">
+                    <div>
                         <button onclick="customerAppointments.cancelAppointment('${apt.id}')" 
                             class="px-3 py-1 bg-red-950/30 text-red-400 text-xs rounded hover:bg-red-950/50">Cancel</button>
                     </div>
@@ -104,24 +116,26 @@ class CustomerAppointments {
     }
 
     bookAppointment() {
+        const adminName = document.getElementById('apt-admin')?.value;
         const date = document.getElementById('apt-date')?.value;
         const time = document.getElementById('apt-time')?.value;
         const purpose = document.getElementById('apt-purpose')?.value;
         const description = document.getElementById('apt-desc')?.value;
 
-        if (!date || !time || !purpose) {
-            this.notify('error', '❌ Fill all required fields');
+        if (!date || !time || !purpose || !adminName) {
+            this.notify('error', '❌ Please fill all required fields');
             return;
         }
 
         const appointment = {
             id: 'APT' + Date.now(),
             custId: this.custId,
+            adminName,
             date,
             time,
             purpose,
             description,
-            status: 'Pending',
+            status: 'Pending Confirmation',
             bookedAt: new Date().toLocaleTimeString()
         };
 
@@ -129,7 +143,7 @@ class CustomerAppointments {
         this.appointments.push(appointment);
         localStorage.setItem(`appointments_${this.custId}`, JSON.stringify(this.appointments));
 
-        this.notify('success', '✅ Appointment booked! Admin will confirm shortly.');
+        this.notify('success', `✅ Booked with ${adminName}!`);
         
         // Clear form
         document.getElementById('apt-date').value = '';
@@ -159,7 +173,6 @@ class CustomerAppointments {
     }
 }
 
-// Global instance auto-initializer
 let customerAppointments;
 document.addEventListener('DOMContentLoaded', () => {
     customerAppointments = new CustomerAppointments(localStorage.getItem('currentCustId') || 'DEFAULT');
