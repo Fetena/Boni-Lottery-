@@ -20,31 +20,49 @@ class CustomerAppointments {
     }
 
     startCustomerNotificationPoller() {
-        // Poll every 3 seconds for new approval notifications from admin
         if (this._pollingInterval) clearInterval(this._pollingInterval);
         
+        // Poll every 2.5 seconds to instantly catch admin approvals
         this._pollingInterval = setInterval(() => {
             try {
-                const custNotifKey = `customer_notifications_${this.custId}`;
-                const rawNotifs = localStorage.getItem(custNotifKey);
-                if (rawNotifs) {
-                    const notifs = JSON.parse(rawNotifs);
-                    const unread = notifs.filter(n => !n.viewed);
-                    
-                    if (unread.length > 0) {
-                        unread.forEach(n => {
-                            const notifType = n.status === 'Approved' ? 'success' : 'error';
-                            notify(notifType, `🔔 Update: Your appointment was ${n.status}!`);
-                            n.viewed = true;
-                        });
-                        localStorage.setItem(custNotifKey, JSON.stringify(notifs));
-                        this.refreshList();
+                // Check general notifications and all customer specific notification keys
+                let allNotifs = [];
+                const generalNotifs = JSON.parse(localStorage.getItem('customer_notifications') || '[]');
+                allNotifs = allNotifs.concat(generalNotifs);
+
+                Object.keys(localStorage).forEach(key => {
+                    if (key.startsWith('customer_notifications_')) {
+                        const items = JSON.parse(localStorage.getItem(key) || '[]');
+                        allNotifs = allNotifs.concat(items);
                     }
+                });
+
+                const unread = allNotifs.filter(n => !n.viewedByCustomer);
+                if (unread.length > 0) {
+                    unread.forEach(n => {
+                        const notifType = n.status === 'Approved' ? 'success' : 'error';
+                        // Force global notification popup to trigger
+                        if (typeof notify === 'function') {
+                            notify(notifType, `🔔 ${n.message || 'Your appointment status was updated!'}`);
+                        }
+                        n.viewedByCustomer = true;
+                    });
+
+                    // Save back as viewed so it doesn't spam repeatedly
+                    localStorage.setItem('customer_notifications', JSON.stringify(generalNotifs));
+                    Object.keys(localStorage).forEach(key => {
+                        if (key.startsWith('customer_notifications_')) {
+                            localStorage.setItem(key, JSON.stringify(allNotifs));
+                        }
+                    });
+
+                    this.loadAppointments();
+                    this.refreshList();
                 }
             } catch (e) {
-                console.error('Polling notification error:', e);
+                console.error('Customer notification polling error:', e);
             }
-        }, 3000);
+        }, 2500);
     }
 
     async loadAdmins() {
@@ -82,6 +100,7 @@ class CustomerAppointments {
                 foundAppointments = foundAppointments.concat(JSON.parse(specificData));
             }
 
+            // Fallback scan across all appointment keys to guarantee history displays
             Object.keys(localStorage).forEach(key => {
                 if (key.startsWith('appointments_')) {
                     const items = JSON.parse(localStorage.getItem(key) || '[]');
