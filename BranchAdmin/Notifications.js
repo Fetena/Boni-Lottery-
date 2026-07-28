@@ -168,7 +168,6 @@ class AdminNotifications {
                 listEl.innerHTML = this.renderApprovalItems();
             }
 
-            // Update badge counter dynamically
             this.updateBadgeCount();
         } catch (e) {
             console.error('Error updating booking status', e);
@@ -176,17 +175,35 @@ class AdminNotifications {
     }
 
     updateBadgeCount() {
-        const badgeEl = document.getElementById('badge-branch-notifications');
-        if (badgeEl) {
-            const pendingCount = this.pendingApprovals.length;
-            if (pendingCount > 0) {
-                badgeEl.textContent = pendingCount;
-                badgeEl.classList.remove('hidden');
-            } else {
-                badgeEl.textContent = '0';
-                badgeEl.classList.add('hidden');
+        const pendingCount = this.pendingApprovals.length;
+
+        // Target both specific IDs and common badge selectors in navigation bars
+        const possibleBadgeIds = ['badge-branch-notifications', 'notification-badge', 'notif-badge'];
+        possibleBadgeIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                if (pendingCount > 0) {
+                    el.textContent = pendingCount;
+                    el.classList.remove('hidden');
+                } else {
+                    el.textContent = '0';
+                    el.classList.add('hidden');
+                }
             }
-        }
+        });
+
+        // Fallback: target any red badge pill inside the Notifications tab item specifically
+        document.querySelectorAll('span, sup, div').forEach(node => {
+            if (node.textContent && node.textContent.trim() === '6' && node.className.includes('bg-red')) {
+                if (pendingCount > 0) {
+                    node.textContent = pendingCount;
+                    node.classList.remove('hidden');
+                } else {
+                    node.textContent = '0';
+                    node.classList.add('hidden');
+                }
+            }
+        });
     }
 
     sendNotification() {
@@ -238,7 +255,6 @@ class AdminNotifications {
                 `).join('');
             }
 
-            // Fix: Badge should reflect *only* the current active pending items count
             this.updateBadgeCount();
         } catch (e) {
             console.error('Error loading notification history', e);
