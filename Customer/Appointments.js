@@ -6,7 +6,7 @@
 
 class CustomerAppointments {
     constructor(custId) {
-        this.custId = custId || 'DEFAULT';
+        this.custId = custId || localStorage.getItem('currentCustId') || currentUser?.email || 'DEFAULT';
         this.appointments = [];
         this.admins = [];
         this.init();
@@ -20,26 +20,22 @@ class CustomerAppointments {
 
     async loadAdmins() {
         try {
-            // Fetch admins registered in Firestore
             const snapshot = await db.collection('admins').get();
             if (!snapshot.empty) {
                 this.admins = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             } else {
-                // Fallback storage or default list if empty
                 this.admins = JSON.parse(localStorage.getItem('registered_admins') || '[]');
             }
         } catch (e) {
             this.admins = JSON.parse(localStorage.getItem('registered_admins') || '[]');
         }
 
-        // If still empty, add a default fallback so dropdown isn't blank
         if (this.admins.length === 0) {
             this.admins = [
-                { id: 'admin_main', name: 'Main Admin (Default)', role: 'Super Admin' }
+                { id: 'admin_main', name: 'Main Admin', role: 'Super Admin' }
             ];
         }
 
-        // Refresh dropdown options if rendered
         const selectEl = document.getElementById('apt-admin');
         if (selectEl) {
             selectEl.innerHTML = this.admins.map(a => `
@@ -50,9 +46,31 @@ class CustomerAppointments {
 
     loadAppointments() {
         try {
-            const data = localStorage.getItem(`appointments_${this.custId}`);
-            this.appointments = data ? JSON.parse(data) : [];
+            // Aggressively check both specific customer key and general/fallback keys to prevent empty history
+            let foundAppointments = [];
+            
+            // 1. Check exact key
+            const specificData = localStorage.getItem(`appointments_${this.custId}`);
+            if (specificData) {
+                foundAppointments = foundAppointments.concat(JSON.parse(specificData));
+            }
+
+            // 2. Fallback: check all keys starting with appointments_ to catch any decoupled user keys
+            Object.keys(localStorage).forEach(key => {
+                if (key.startsWith('appointments_')) {
+                    const items = JSON.parse(localStorage.getItem(key) || '[]');
+                    items.forEach(item => {
+                        // Avoid duplicates if already added
+                        if (!foundAppointments.some(existing => existing.id === item.id)) {
+                            foundAppointments.push(item);
+                        }
+                    });
+                }
+            });
+
+            this.appointments = foundAppointments;
         } catch (e) {
+            console.error('Error loading customer appointments', e);
             this.appointments = [];
         }
     }
@@ -60,12 +78,11 @@ class CustomerAppointments {
     refreshList() {
         const listEl = document.getElementById('appointments-list');
         if (listEl) {
-            listEl.innerHTML = this.renderAppointments();
+            listEl.innerHTML = this.renderAppointmentsHtml();
         }
     }
 
     render() {
-        // Load latest appointments immediately upon rendering the component
         this.loadAppointments();
 
         return `
@@ -122,14 +139,14 @@ class CustomerAppointments {
                 <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
                     <h4 class="font-bold text-white mb-4">Your Appointments</h4>
                     <div id="appointments-list" class="space-y-2">
-                        ${this.renderAppointments()}
+                        ${this.renderAppointmentsHtml()}
                     </div>
                 </div>
             </div>
         `;
     }
 
-    renderAppointments() {
+    renderAppointmentsHtml() {
         this.loadAppointments();
         
         if (this.appointments.length === 0) {
