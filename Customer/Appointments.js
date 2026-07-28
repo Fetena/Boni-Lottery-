@@ -6,11 +6,16 @@
 
 class CustomerAppointments {
     constructor(custId) {
-        this.custId = custId;
+        this.custId = custId || 'DEFAULT';
         this.appointments = [];
         this.admins = [];
-        this.loadAdmins();
+        this.init();
+    }
+
+    async init() {
         this.loadAppointments();
+        await this.loadAdmins();
+        this.refreshList();
     }
 
     async loadAdmins() {
@@ -52,7 +57,17 @@ class CustomerAppointments {
         }
     }
 
+    refreshList() {
+        const listEl = document.getElementById('appointments-list');
+        if (listEl) {
+            listEl.innerHTML = this.renderAppointments();
+        }
+    }
+
     render() {
+        // Load latest appointments whenever the layout renders
+        this.loadAppointments();
+
         return `
             <div class="space-y-4">
                 <h3 class="text-2xl font-bold text-white">📅 Appointments</h3>
@@ -125,7 +140,7 @@ class CustomerAppointments {
             <div class="bg-black/30 rounded-lg p-4 border border-yellow-400/10 space-y-1">
                 <div class="flex justify-between items-start">
                     <div>
-                        <p class="font-bold text-yellow-400">Admin: ${apt.adminName}</p>
+                        <p class="font-bold text-yellow-400">Admin: ${apt.adminName || 'Main Admin'}</p>
                         <p class="text-sm text-white font-medium mt-1">📅 ${apt.date} at ${apt.time}</p>
                         <p class="text-xs text-slate-300 mt-1">Purpose: <span class="text-white">${apt.purpose}</span></p>
                         ${apt.description ? `<p class="text-xs text-slate-400 mt-1">Note: ${apt.description}</p>` : ''}
@@ -176,7 +191,7 @@ class CustomerAppointments {
         document.getElementById('apt-desc').value = '';
         
         // Refresh list
-        document.getElementById('appointments-list').innerHTML = this.renderAppointments();
+        this.refreshList();
     }
 
     cancelAppointment(aptId) {
@@ -186,7 +201,7 @@ class CustomerAppointments {
             localStorage.setItem(`appointments_${this.custId}`, JSON.stringify(this.appointments));
             
             this.notify('info', '❌ Appointment cancelled');
-            document.getElementById('appointments-list').innerHTML = this.renderAppointments();
+            this.refreshList();
         }
     }
 
@@ -201,5 +216,5 @@ class CustomerAppointments {
 
 let customerAppointments;
 document.addEventListener('DOMContentLoaded', () => {
-    customerAppointments = new CustomerAppointments(localStorage.getItem('currentCustId') || 'DEFAULT');
+    customerAppointments = new CustomerAppointments(localStorage.getItem('currentCustId') || currentUser?.email || 'DEFAULT');
 });
