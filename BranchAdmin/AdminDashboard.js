@@ -64,10 +64,13 @@ class AdminDashboard {
                             </div>
                         </div>
 
-                        <!-- Tickets Tab (Delegated to AdminTickets component) -->
+                        <!-- Tickets Tab (Delegated safely via sync shell) -->
                         <div id="admin-tickets" class="tab-content" style="display: none;">
                             <div id="admin-tickets-wrapper">
-                                ${window.adminTickets ? await window.adminTickets.render() : ''}
+                                <div class="space-y-4">
+                                    <h3 class="text-xl font-bold text-white">Recent Tickets</h3>
+                                    <div id="admin-tickets-list" class="space-y-3">Loading tickets...</div>
+                                </div>
                             </div>
                         </div>
 
