@@ -8,7 +8,7 @@ class AdminTickets {
         this.adminId = adminId;
     }
 
-    render() {
+    async render() {
         return `
             <div class="space-y-4">
                 <h3 class="text-xl font-bold text-white">Recent Tickets</h3>
