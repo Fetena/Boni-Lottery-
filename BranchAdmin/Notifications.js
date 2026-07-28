@@ -12,6 +12,7 @@ class AdminNotifications {
 
     render() {
         this.loadPendingApprovals();
+        this.displayHistory();
 
         return `
             <div class="space-y-6">
@@ -148,25 +149,43 @@ class AdminNotifications {
             });
             localStorage.setItem(storageKey, JSON.stringify(updated));
             
-            // 🔔 Push a customer-facing notification so the customer dashboard pops it up
+            // Push customer notification popup log
             const custNotifKey = `customer_notifications_${custId}`;
             const custNotifs = JSON.parse(localStorage.getItem(custNotifKey) || '[]');
             custNotifs.push({
                 id: Date.now(),
-                message: `Your appointment (${newStatus.toLowerCase()}) for ${newStatus === 'Approved' ? 'Confirmed' : 'Review'}`,
+                message: `Your appointment was ${newStatus.toLowerCase()}`,
                 status: newStatus,
                 timestamp: new Date().toLocaleTimeString()
             });
             localStorage.setItem(custNotifKey, JSON.stringify(custNotifs));
 
-            // Refresh approval list display inside admin panel
+            // Reload pending list & update UI elements immediately
+            this.loadPendingApprovals();
+            
             const listEl = document.getElementById('admin-approval-list');
             if (listEl) {
-                this.loadPendingApprovals();
                 listEl.innerHTML = this.renderApprovalItems();
             }
+
+            // Update badge counter dynamically
+            this.updateBadgeCount();
         } catch (e) {
             console.error('Error updating booking status', e);
+        }
+    }
+
+    updateBadgeCount() {
+        const badgeEl = document.getElementById('badge-branch-notifications');
+        if (badgeEl) {
+            const pendingCount = this.pendingApprovals.length;
+            if (pendingCount > 0) {
+                badgeEl.textContent = pendingCount;
+                badgeEl.classList.remove('hidden');
+            } else {
+                badgeEl.textContent = '0';
+                badgeEl.classList.add('hidden');
+            }
         }
     }
 
@@ -219,16 +238,8 @@ class AdminNotifications {
                 `).join('');
             }
 
-            const badgeEl = document.getElementById('badge-branch-notifications');
-            if (badgeEl) {
-                const totalPendingCount = this.pendingApprovals.length + notifs.length;
-                if (totalPendingCount > 0) {
-                    badgeEl.textContent = totalPendingCount;
-                    badgeEl.classList.remove('hidden');
-                } else {
-                    badgeEl.classList.add('hidden');
-                }
-            }
+            // Fix: Badge should reflect *only* the current active pending items count
+            this.updateBadgeCount();
         } catch (e) {
             console.error('Error loading notification history', e);
         }
