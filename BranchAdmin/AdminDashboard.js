@@ -59,15 +59,15 @@ class AdminDashboard {
                         <!-- Customers Tab -->
                         <div id="admin-customers" class="tab-content" style="display: none;">
                             <div class="space-y-4">
-                                <button onclick="openAddCustomerModal()" class="px-6 py-2 bg-yellow-400 text-black font-bold rounded-xl">+ Add Customer</button>
+                                <button onclick="if(typeof openAddCustomerModal === 'function') openAddCustomerModal();" class="px-6 py-2 bg-yellow-400 text-black font-bold rounded-xl">+ Add Customer</button>
                                 <div id="admin-customers-list" class="space-y-3"></div>
                             </div>
                         </div>
 
-                        <!-- Tickets Tab (Delegated to AdminTickets component) -->
+                        <!-- Tickets Tab (Delegated safely) -->
                         <div id="admin-tickets" class="tab-content" style="display: none;">
                             <div id="admin-tickets-wrapper">
-                                ${window.adminTickets ? await window.adminTickets.render() : ''}
+                                ${window.adminTickets ? window.adminTickets.render() : ''}
                             </div>
                         </div>
 
@@ -124,33 +124,33 @@ class AdminDashboard {
 
     async loadData() {
         try {
-            await loadAdminCustomers();
+            if (typeof loadAdminCustomers === 'function') await loadAdminCustomers();
             if (window.adminTickets) await window.adminTickets.loadTicketsContent();
-            await loadAdminStats();
+            if (typeof loadAdminStats === 'function') await loadAdminStats();
             
             if (window.adminLottery) {
                 await window.adminLottery.init();
             }
 
-            if (!window.adminPayments) window.adminPayments = new AdminPayments(this.adminId);
-            if (!window.adminNotifications) window.adminNotifications = new AdminNotifications(this.adminId);
-            if (!window.adminBookAppointment) window.adminBookAppointment = new AdminBookAppointment(this.adminId);
-            if (!window.adminSettings) window.adminSettings = new AdminSettings(this.adminId);
+            if (typeof AdminPayments !== 'undefined' && !window.adminPayments) window.adminPayments = new AdminPayments(this.adminId);
+            if (typeof AdminNotifications !== 'undefined' && !window.adminNotifications) window.adminNotifications = new AdminNotifications(this.adminId);
+            if (typeof AdminBookAppointment !== 'undefined' && !window.adminBookAppointment) window.adminBookAppointment = new AdminBookAppointment(this.adminId);
+            if (typeof AdminSettings !== 'undefined' && !window.adminSettings) window.adminSettings = new AdminSettings(this.adminId);
 
             const paymentsTab = document.getElementById('admin-payments');
-            if (paymentsTab) paymentsTab.innerHTML = await window.adminPayments.render();
+            if (paymentsTab && window.adminPayments) paymentsTab.innerHTML = await window.adminPayments.render();
 
             const notifTab = document.getElementById('admin-notifications');
-            if (notifTab) {
+            if (notifTab && window.adminNotifications) {
                 notifTab.innerHTML = window.adminNotifications.render();
                 if (typeof window.adminNotifications.displayHistory === 'function') window.adminNotifications.displayHistory();
             }
 
             const apptTab = document.getElementById('admin-bookAppointment');
-            if (apptTab) apptTab.innerHTML = await window.adminBookAppointment.render();
+            if (apptTab && window.adminBookAppointment) apptTab.innerHTML = await window.adminBookAppointment.render();
 
             const settingsTab = document.getElementById('admin-settings');
-            if (settingsTab) settingsTab.innerHTML = window.adminSettings.render();
+            if (settingsTab && window.adminSettings) settingsTab.innerHTML = window.adminSettings.render();
 
         } catch (error) {
             console.error('Error loading admin data:', error);
