@@ -8,7 +8,39 @@ class CustomerAppointments {
     constructor(custId) {
         this.custId = custId;
         this.appointments = [];
+        this.admins = [];
+        this.loadAdmins();
         this.loadAppointments();
+    }
+
+    async loadAdmins() {
+        try {
+            // Fetch admins registered in Firestore
+            const snapshot = await db.collection('admins').get();
+            if (!snapshot.empty) {
+                this.admins = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            } else {
+                // Fallback storage or default list if empty
+                this.admins = JSON.parse(localStorage.getItem('registered_admins') || '[]');
+            }
+        } catch (e) {
+            this.admins = JSON.parse(localStorage.getItem('registered_admins') || '[]');
+        }
+
+        // If still empty, add a default fallback so dropdown isn't blank
+        if (this.admins.length === 0) {
+            this.admins = [
+                { id: 'admin_main', name: 'Main Admin (Default)', role: 'Super Admin' }
+            ];
+        }
+
+        // Refresh dropdown options if rendered
+        const selectEl = document.getElementById('apt-admin');
+        if (selectEl) {
+            selectEl.innerHTML = this.admins.map(a => `
+                <option value="${a.name || a.id}">${a.name || a.id} ${a.role ? '('+a.role+')' : ''}</option>
+            `).join('');
+        }
     }
 
     loadAppointments() {
@@ -30,12 +62,10 @@ class CustomerAppointments {
                     <h4 class="font-bold text-white mb-4">Book New Appointment</h4>
                     
                     <div>
-                        <label class="text-sm text-slate-400">Select Branch Admin</label>
+                        <label class="text-sm text-slate-400">Select Registered Admin</label>
                         <select id="apt-admin" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
-                            <option value="Admin - Main Branch (Bole)">Main Branch Admin (Bole)</option>
-                            <option value="Admin - Branch 2 (Piassa)">Branch 2 Admin (Piassa)</option>
-                            <option value="Admin - Branch 3 (CMC)">Branch 3 Admin (CMC)</option>
-                            <option value="General Support Admin">General Support Admin</option>
+                            <option value="">Loading registered admins...</option>
+                            ${this.admins.map(a => `<option value="${a.name || a.id}">${a.name || a.id} ${a.role ? '('+a.role+')' : ''}</option>`).join('')}
                         </select>
                     </div>
 
@@ -46,14 +76,9 @@ class CustomerAppointments {
                                 class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
                         </div>
                         <div>
-                            <label class="text-sm text-slate-400">Time Slot</label>
-                            <select id="apt-time" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
-                                <option>10:00 AM - 11:00 AM</option>
-                                <option>11:00 AM - 12:00 PM</option>
-                                <option>02:00 PM - 03:00 PM</option>
-                                <option>03:00 PM - 04:00 PM</option>
-                                <option>04:00 PM - 05:00 PM</option>
-                            </select>
+                            <label class="text-sm text-slate-400">Time</label>
+                            <input type="time" id="apt-time" 
+                                class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
                         </div>
                     </div>
 
@@ -100,7 +125,7 @@ class CustomerAppointments {
             <div class="bg-black/30 rounded-lg p-4 border border-yellow-400/10 space-y-1">
                 <div class="flex justify-between items-start">
                     <div>
-                        <p class="font-bold text-yellow-400">Assigned Admin: ${apt.adminName}</p>
+                        <p class="font-bold text-yellow-400">Admin: ${apt.adminName}</p>
                         <p class="text-sm text-white font-medium mt-1">📅 ${apt.date} at ${apt.time}</p>
                         <p class="text-xs text-slate-300 mt-1">Purpose: <span class="text-white">${apt.purpose}</span></p>
                         ${apt.description ? `<p class="text-xs text-slate-400 mt-1">Note: ${apt.description}</p>` : ''}
@@ -145,8 +170,9 @@ class CustomerAppointments {
 
         this.notify('success', `✅ Booked with ${adminName}!`);
         
-        // Clear form
+        // Clear form fields
         document.getElementById('apt-date').value = '';
+        document.getElementById('apt-time').value = '';
         document.getElementById('apt-desc').value = '';
         
         // Refresh list
