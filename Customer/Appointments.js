@@ -163,7 +163,7 @@ class CustomerAppointments {
         const description = document.getElementById('apt-desc')?.value;
 
         if (!date || !time || !purpose || !adminName) {
-            this.notify('error', '❌ Please fill all required fields');
+            notify('error', '❌ Please fill all required fields');
             return;
         }
 
@@ -183,7 +183,8 @@ class CustomerAppointments {
         this.appointments.push(appointment);
         localStorage.setItem(`appointments_${this.custId}`, JSON.stringify(this.appointments));
 
-        this.notify('success', `✅ Booked with ${adminName}!`);
+        // Trigger top-right notification popup immediately
+        notify('success', `✅ Appointment submitted to ${adminName} for approval!`);
         
         // Clear form fields
         document.getElementById('apt-date').value = '';
@@ -200,16 +201,8 @@ class CustomerAppointments {
             this.appointments = this.appointments.filter(a => a.id !== aptId);
             localStorage.setItem(`appointments_${this.custId}`, JSON.stringify(this.appointments));
             
-            this.notify('info', '❌ Appointment cancelled');
+            notify('info', '❌ Appointment cancelled');
             this.refreshList();
-        }
-    }
-
-    notify(type, message) {
-        if (typeof showNotification === 'function') {
-            showNotification(type, message);
-        } else {
-            alert(message);
         }
     }
 }
