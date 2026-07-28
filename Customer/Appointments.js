@@ -1,7 +1,7 @@
 // ============================================
 // CUSTOMER APPOINTMENTS (CHILD COMPONENT)
 // Parent: CustomerDashboard
-// Book & manage appointments with branch admin
+// Optimized for zero lag & instant notifications
 // ============================================
 
 class CustomerAppointments {
@@ -13,76 +13,45 @@ class CustomerAppointments {
         this.startCustomerNotificationPoller();
     }
 
-    async init() {
+    init() {
+        // Load instantly from localStorage cache first to prevent any UI lag
+        this.loadAdminsSync();
         this.loadAppointments();
-        await this.loadAdmins();
         this.refreshList();
+
+        // Fetch remote admins in background without blocking rendering
+        this.loadAdminsAsync();
     }
 
-    startCustomerNotificationPoller() {
-        if (this._pollingInterval) clearInterval(this._pollingInterval);
-        
-        // Poll every 2.5 seconds to instantly catch admin approvals
-        this._pollingInterval = setInterval(() => {
-            try {
-                // Check general notifications and all customer specific notification keys
-                let allNotifs = [];
-                const generalNotifs = JSON.parse(localStorage.getItem('customer_notifications') || '[]');
-                allNotifs = allNotifs.concat(generalNotifs);
-
-                Object.keys(localStorage).forEach(key => {
-                    if (key.startsWith('customer_notifications_')) {
-                        const items = JSON.parse(localStorage.getItem(key) || '[]');
-                        allNotifs = allNotifs.concat(items);
-                    }
-                });
-
-                const unread = allNotifs.filter(n => !n.viewedByCustomer);
-                if (unread.length > 0) {
-                    unread.forEach(n => {
-                        const notifType = n.status === 'Approved' ? 'success' : 'error';
-                        // Force global notification popup to trigger
-                        if (typeof notify === 'function') {
-                            notify(notifType, `🔔 ${n.message || 'Your appointment status was updated!'}`);
-                        }
-                        n.viewedByCustomer = true;
-                    });
-
-                    // Save back as viewed so it doesn't spam repeatedly
-                    localStorage.setItem('customer_notifications', JSON.stringify(generalNotifs));
-                    Object.keys(localStorage).forEach(key => {
-                        if (key.startsWith('customer_notifications_')) {
-                            localStorage.setItem(key, JSON.stringify(allNotifs));
-                        }
-                    });
-
-                    this.loadAppointments();
-                    this.refreshList();
-                }
-            } catch (e) {
-                console.error('Customer notification polling error:', e);
-            }
-        }, 2500);
-    }
-
-    async loadAdmins() {
+    loadAdminsSync() {
         try {
-            const snapshot = await db.collection('admins').get();
-            if (!snapshot.empty) {
-                this.admins = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            } else {
-                this.admins = JSON.parse(localStorage.getItem('registered_admins') || '[]');
+            this.admins = JSON.parse(localStorage.getItem('registered_admins') || '[]');
+            if (this.admins.length === 0) {
+                this.admins = [{ id: 'admin_main', name: 'Main Admin', role: 'Super Admin' }];
+            }
+            this.populateAdminDropdown();
+        } catch (e) {
+            this.admins = [{ id: 'admin_main', name: 'Main Admin', role: 'Super Admin' }];
+            this.populateAdminDropdown();
+        }
+    }
+
+    async loadAdminsAsync() {
+        try {
+            if (typeof db !== 'undefined' && db.collection) {
+                const snapshot = await db.collection('admins').get();
+                if (!snapshot.empty) {
+                    this.admins = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    localStorage.setItem('registered_admins', JSON.stringify(this.admins));
+                    this.populateAdminDropdown();
+                }
             }
         } catch (e) {
-            this.admins = JSON.parse(localStorage.getItem('registered_admins') || '[]');
+            // Silently fallback to cached admins if offline or timeout
         }
+    }
 
-        if (this.admins.length === 0) {
-            this.admins = [
-                { id: 'admin_main', name: 'Main Admin', role: 'Super Admin' }
-            ];
-        }
-
+    populateAdminDropdown() {
         const selectEl = document.getElementById('apt-admin');
         if (selectEl) {
             selectEl.innerHTML = this.admins.map(a => `
@@ -91,16 +60,51 @@ class CustomerAppointments {
         }
     }
 
+    startCustomerNotificationPoller() {
+        if (this._pollingInterval) clearInterval(this._pollingInterval);
+        
+        // Poll storage every 2 seconds for admin approval triggers
+        this._pollingInterval = setInterval(() => {
+            try {
+                const key = `customer_notifications_${this.custId}`;
+                const raw = localStorage.getItem(key);
+                if (raw) {
+                    const notifs = JSON.parse(raw);
+                    const unread = notifs.filter(n => !n.viewed);
+
+                    if (unread.length > 0) {
+                        unread.forEach(n => {
+                            const type = n.status === 'Approved' ? 'success' : 'error';
+                            
+                            // Trigger both local notify function or window fallback
+                            if (typeof notify === 'function') {
+                                notify(type, `🔔 ${n.message}`);
+                            } else if (window.notify) {
+                                window.notify(type, `🔔 ${n.message}`);
+                            }
+
+                            n.viewed = true;
+                        });
+
+                        localStorage.setItem(key, JSON.stringify(notifs));
+                        this.loadAppointments();
+                        this.refreshList();
+                    }
+                }
+            } catch (e) {
+                console.error('Polling error:', e);
+            }
+        }, 2000);
+    }
+
     loadAppointments() {
         try {
             let foundAppointments = [];
-            
             const specificData = localStorage.getItem(`appointments_${this.custId}`);
             if (specificData) {
                 foundAppointments = foundAppointments.concat(JSON.parse(specificData));
             }
 
-            // Fallback scan across all appointment keys to guarantee history displays
             Object.keys(localStorage).forEach(key => {
                 if (key.startsWith('appointments_')) {
                     const items = JSON.parse(localStorage.getItem(key) || '[]');
@@ -114,7 +118,6 @@ class CustomerAppointments {
 
             this.appointments = foundAppointments;
         } catch (e) {
-            console.error('Error loading customer appointments', e);
             this.appointments = [];
         }
     }
@@ -140,8 +143,7 @@ class CustomerAppointments {
                     <div>
                         <label class="text-sm text-slate-400">Select Registered Admin</label>
                         <select id="apt-admin" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
-                            <option value="">Loading registered admins...</option>
-                            ${this.admins.map(a => `<option value="${a.name || a.id}">${a.name || a.id} ${a.role ? '('+a.role+')' : ''}</option>`).join('')}
+                            ${this.admins.map(a => `<option value="${a.name || a.id}">${a.name || a.id}</option>`).join('')}
                         </select>
                     </div>
 
@@ -230,7 +232,7 @@ class CustomerAppointments {
         const description = document.getElementById('apt-desc')?.value;
 
         if (!date || !time || !purpose || !adminName) {
-            notify('error', '❌ Please fill all required fields');
+            if (typeof notify === 'function') notify('error', '❌ Please fill all required fields');
             return;
         }
 
@@ -250,7 +252,9 @@ class CustomerAppointments {
         this.appointments.push(appointment);
         localStorage.setItem(`appointments_${this.custId}`, JSON.stringify(this.appointments));
 
-        notify('success', `✅ Appointment successfully booked with ${adminName} for approval!`);
+        if (typeof notify === 'function') {
+            notify('success', `✅ Appointment successfully booked with ${adminName} for approval!`);
+        }
         
         document.getElementById('apt-date').value = '';
         document.getElementById('apt-time').value = '';
@@ -265,7 +269,7 @@ class CustomerAppointments {
             this.appointments = this.appointments.filter(a => a.id !== aptId);
             localStorage.setItem(`appointments_${this.custId}`, JSON.stringify(this.appointments));
             
-            notify('info', '❌ Appointment cancelled');
+            if (typeof notify === 'function') notify('info', '❌ Appointment cancelled');
             this.refreshList();
         }
     }
