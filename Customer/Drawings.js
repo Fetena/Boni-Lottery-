@@ -117,7 +117,7 @@ class CustomerDrawings {
     async checkWinner() {
         const winningNumber = document.getElementById('check-number')?.value;
         if (!winningNumber) {
-            showNotification('error', '❌ Enter a winning number');
+            this.notify('error', '❌ Enter a winning number');
             return;
         }
 
@@ -153,8 +153,16 @@ class CustomerDrawings {
     }
 
     goToTikTok() {
-        showNotification('info', '📱 Opening TikTok @BoniLottery...');
+        this.notify('info', '📱 Opening TikTok @BoniLottery...');
         window.open('https://tiktok.com/@boniLottery', '_blank');
+    }
+
+    notify(type, message) {
+        if (typeof showNotification === 'function') {
+            showNotification(type, message);
+        } else {
+            alert(message);
+        }
     }
 }
 
