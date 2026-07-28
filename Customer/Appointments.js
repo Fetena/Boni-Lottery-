@@ -110,7 +110,7 @@ class CustomerAppointments {
         const description = document.getElementById('apt-desc')?.value;
 
         if (!date || !time || !purpose) {
-            showNotification('error', '❌ Fill all required fields');
+            this.notify('error', '❌ Fill all required fields');
             return;
         }
 
@@ -129,7 +129,7 @@ class CustomerAppointments {
         this.appointments.push(appointment);
         localStorage.setItem(`appointments_${this.custId}`, JSON.stringify(this.appointments));
 
-        showNotification('success', '✅ Appointment booked! Admin will confirm shortly.');
+        this.notify('success', '✅ Appointment booked! Admin will confirm shortly.');
         
         // Clear form
         document.getElementById('apt-date').value = '';
@@ -145,8 +145,16 @@ class CustomerAppointments {
             this.appointments = this.appointments.filter(a => a.id !== aptId);
             localStorage.setItem(`appointments_${this.custId}`, JSON.stringify(this.appointments));
             
-            showNotification('info', '❌ Appointment cancelled');
+            this.notify('info', '❌ Appointment cancelled');
             document.getElementById('appointments-list').innerHTML = this.renderAppointments();
+        }
+    }
+
+    notify(type, message) {
+        if (typeof showNotification === 'function') {
+            showNotification(type, message);
+        } else {
+            alert(message);
         }
     }
 }
