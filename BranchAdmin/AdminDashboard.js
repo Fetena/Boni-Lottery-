@@ -59,15 +59,22 @@ class AdminDashboard {
                         <!-- Customers Tab -->
                         <div id="admin-customers" class="tab-content" style="display: none;">
                             <div class="space-y-4">
-                                <button onclick="if(typeof openAddCustomerModal === 'function') openAddCustomerModal();" class="px-6 py-2 bg-yellow-400 text-black font-bold rounded-xl">+ Add Customer</button>
-                                <div id="admin-customers-list" class="space-y-3"></div>
+                                <button onclick="if(typeof openAddCustomerModal === 'function') openAddCustomerModal(); else alert('Modal handler not defined');" class="px-6 py-2 bg-yellow-400 text-black font-bold rounded-xl">+ Add Customer</button>
+                                <div id="admin-customers-list" class="space-y-3">
+                                    <p class="text-slate-400 text-center py-4">Loading customers...</p>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Tickets Tab (Delegated safely) -->
+                        <!-- Tickets Tab (Resolved wrapper target) -->
                         <div id="admin-tickets" class="tab-content" style="display: none;">
                             <div id="admin-tickets-wrapper">
-                                ${window.adminTickets ? window.adminTickets.render() : ''}
+                                <div class="space-y-4">
+                                    <h3 class="text-xl font-bold text-white">Recent Tickets</h3>
+                                    <div id="admin-tickets-list" class="space-y-3">
+                                        <p class="text-slate-400 text-center py-4">Loading tickets...</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -124,8 +131,19 @@ class AdminDashboard {
 
     async loadData() {
         try {
-            if (typeof loadAdminCustomers === 'function') await loadAdminCustomers();
-            if (window.adminTickets) await window.adminTickets.loadTicketsContent();
+            // Load Customers safely
+            if (typeof loadAdminCustomers === 'function') {
+                await loadAdminCustomers();
+            } else {
+                const custContainer = document.getElementById('admin-customers-list');
+                if (custContainer) custContainer.innerHTML = '<p class="text-slate-400 text-center py-4">Customer list loader function not found.</p>';
+            }
+
+            // Load Tickets safely
+            if (window.adminTickets && typeof window.adminTickets.loadTicketsContent === 'function') {
+                await window.adminTickets.loadTicketsContent();
+            }
+
             if (typeof loadAdminStats === 'function') await loadAdminStats();
             
             if (window.adminLottery) {
