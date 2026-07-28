@@ -10,12 +10,41 @@ class CustomerAppointments {
         this.appointments = [];
         this.admins = [];
         this.init();
+        this.startCustomerNotificationPoller();
     }
 
     async init() {
         this.loadAppointments();
         await this.loadAdmins();
         this.refreshList();
+    }
+
+    startCustomerNotificationPoller() {
+        // Poll every 3 seconds for new approval notifications from admin
+        if (this._pollingInterval) clearInterval(this._pollingInterval);
+        
+        this._pollingInterval = setInterval(() => {
+            try {
+                const custNotifKey = `customer_notifications_${this.custId}`;
+                const rawNotifs = localStorage.getItem(custNotifKey);
+                if (rawNotifs) {
+                    const notifs = JSON.parse(rawNotifs);
+                    const unread = notifs.filter(n => !n.viewed);
+                    
+                    if (unread.length > 0) {
+                        unread.forEach(n => {
+                            const notifType = n.status === 'Approved' ? 'success' : 'error';
+                            notify(notifType, `🔔 Update: Your appointment was ${n.status}!`);
+                            n.viewed = true;
+                        });
+                        localStorage.setItem(custNotifKey, JSON.stringify(notifs));
+                        this.refreshList();
+                    }
+                }
+            } catch (e) {
+                console.error('Polling notification error:', e);
+            }
+        }, 3000);
     }
 
     async loadAdmins() {
@@ -46,21 +75,17 @@ class CustomerAppointments {
 
     loadAppointments() {
         try {
-            // Aggressively check both specific customer key and general/fallback keys to prevent empty history
             let foundAppointments = [];
             
-            // 1. Check exact key
             const specificData = localStorage.getItem(`appointments_${this.custId}`);
             if (specificData) {
                 foundAppointments = foundAppointments.concat(JSON.parse(specificData));
             }
 
-            // 2. Fallback: check all keys starting with appointments_ to catch any decoupled user keys
             Object.keys(localStorage).forEach(key => {
                 if (key.startsWith('appointments_')) {
                     const items = JSON.parse(localStorage.getItem(key) || '[]');
                     items.forEach(item => {
-                        // Avoid duplicates if already added
                         if (!foundAppointments.some(existing => existing.id === item.id)) {
                             foundAppointments.push(item);
                         }
