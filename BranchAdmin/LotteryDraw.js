@@ -1,5 +1,5 @@
 // ============================================
-// INDEPENDENT LOTTERY COMPONENT
+// INDEPENDENT LOTTERY COMPONENT (FIXED)
 // ============================================
 
 let countdownInterval = null;
@@ -38,7 +38,7 @@ class AdminLotteryDraw {
                             </select>
                         </div>
                         <div class="flex items-end">
-                            <button onclick="window.adminLottery.saveAutomatedDrawSchedule()" class="w-full py-2 bg-yellow-400/20 hover:bg-yellow-400/30 border border-yellow-400/40 text-yellow-300 font-bold rounded-xl text-xs transition-all">💾 Save Schedule</button>
+                            <button onclick="window.adminLottery.saveSchedule()" class="w-full py-2 bg-yellow-400/20 hover:bg-yellow-400/30 border border-yellow-400/40 text-yellow-300 font-bold rounded-xl text-xs transition-all">💾 Save Schedule</button>
                         </div>
                     </div>
                     <p id="schedule-status-text" class="text-[11px] text-slate-400 italic">No schedule active.</p>
@@ -54,7 +54,7 @@ class AdminLotteryDraw {
                 </div>
 
                 <!-- Spin Action Button -->
-                <button id="spin-draw-btn" onclick="window.adminLottery.runLotteryDraw(currentUser?.email)" disabled class="w-full py-3.5 bg-slate-800 text-slate-500 font-black rounded-xl text-sm cursor-not-allowed transition-all shadow-none">🔒 DRAW LOCKED (WAITING FOR TIMER)</button>
+                <button id="spin-draw-btn" onclick="window.adminLottery.runDraw()" disabled class="w-full py-3.5 bg-slate-800 text-slate-500 font-black rounded-xl text-sm cursor-not-allowed transition-all shadow-none">🔒 DRAW LOCKED (WAITING FOR TIMER)</button>
 
                 <!-- Recent Winners History -->
                 <div class="space-y-3 pt-4 border-t border-yellow-400/10">
@@ -68,11 +68,11 @@ class AdminLotteryDraw {
     }
 
     async init() {
-        console.log('✅ MainAdminLotteryDraw initialized');
+        console.log('✅ AdminLotteryDraw initialized');
         
-        const dateInput = document.getElementById('main-draw-date-input');
-        const timeInput = document.getElementById('main-draw-time-input');
-        const ampmInput = document.getElementById('main-draw-ampm-input');
+        const dateInput = document.getElementById('draw-target-date');
+        const timeInput = document.getElementById('draw-target-time');
+        const ampmInput = document.getElementById('draw-target-ampm');
 
         const now = new Date();
         if (dateInput && !dateInput.value) {
@@ -96,9 +96,9 @@ class AdminLotteryDraw {
     }
 
     getTargetDateTime() {
-        const dateStr = document.getElementById('main-draw-date-input')?.value;
-        const timeStr = document.getElementById('main-draw-time-input')?.value;
-        const ampmStr = document.getElementById('main-draw-ampm-input')?.value;
+        const dateStr = document.getElementById('draw-target-date')?.value;
+        const timeStr = document.getElementById('draw-target-time')?.value;
+        const ampmStr = document.getElementById('draw-target-ampm')?.value;
 
         if (!dateStr || !timeStr) return null;
 
@@ -112,19 +112,19 @@ class AdminLotteryDraw {
 
     checkScheduleTiming() {
         const targetDateObj = this.getTargetDateTime();
-        const drawBtn = document.getElementById('main-spin-draw-btn');
-        const statusBadge = document.getElementById('main-draw-status-badge');
-        const displayText = document.getElementById('main-target-display-text');
+        const drawBtn = document.getElementById('spin-draw-btn');
+        const statusBadge = document.getElementById('draw-countdown-timer');
+        const scheduleStatusText = document.getElementById('schedule-status-text');
 
         if (!targetDateObj || !drawBtn || !statusBadge) return;
 
         const now = new Date();
-        const dateStr = document.getElementById('main-draw-date-input')?.value;
-        const timeStr = document.getElementById('main-draw-time-input')?.value;
-        const ampmStr = document.getElementById('main-draw-ampm-input')?.value;
+        const dateStr = document.getElementById('draw-target-date')?.value;
+        const timeStr = document.getElementById('draw-target-time')?.value;
+        const ampmStr = document.getElementById('draw-target-ampm')?.value;
 
-        if (displayText) {
-            displayText.textContent = `📅 Target Draw Time: ${dateStr}, ${timeStr} ${ampmStr}`;
+        if (scheduleStatusText) {
+            scheduleStatusText.textContent = `Active Schedule Target: ${dateStr}, ${timeStr} ${ampmStr}`;
         }
 
         if (now >= targetDateObj) {
@@ -133,12 +133,12 @@ class AdminLotteryDraw {
             drawBtn.className = "w-full py-4 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 text-black font-black rounded-xl text-sm shadow-lg hover:opacity-95 transform active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer";
             drawBtn.innerHTML = "🎲 SPIN & DRAW WINNER NOW";
 
-            statusBadge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-950/40 text-emerald-400 border border-emerald-500/30";
-            statusBadge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> DRAW UNLOCKED & READY!';
+            statusBadge.className = "text-xs font-mono font-bold text-emerald-400 bg-emerald-950/40 px-3 py-1 rounded-full border border-emerald-500/30";
+            statusBadge.innerHTML = '🟢 DRAW UNLOCKED & READY!';
         } else {
             // Locked
             drawBtn.disabled = true;
-            drawBtn.className = "w-full py-4 bg-slate-800 text-slate-500 font-black rounded-xl text-sm shadow-lg cursor-not-allowed transition-all flex items-center justify-center gap-2";
+            drawBtn.className = "w-full py-3.5 bg-slate-800 text-slate-500 font-black rounded-xl text-sm cursor-not-allowed transition-all shadow-none";
             
             const diffMs = targetDateObj - now;
             const diffMins = Math.floor(diffMs / 60000);
@@ -146,17 +146,17 @@ class AdminLotteryDraw {
             const mins = diffMins % 60;
             const secs = Math.floor((diffMs % 60000) / 1000);
 
-            drawBtn.innerHTML = `🔒 LOCKED (OPENS IN ${hrs}h ${mins}m ${secs}s)`;
+            drawBtn.innerHTML = `🔒 DRAW LOCKED (OPENS IN ${hrs}h ${mins}m ${secs}s)`;
 
-            statusBadge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-amber-950/40 text-amber-400 border border-amber-500/30";
-            statusBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> WAITING FOR TARGET TIME`;
+            statusBadge.className = "text-xs font-mono font-bold text-amber-400 bg-amber-400/10 px-3 py-1 rounded-full border border-amber-400/20";
+            statusBadge.innerHTML = `⏳ OPENS IN: ${hrs}h ${mins}m ${secs}s`;
         }
     }
 
     async saveSchedule() {
-        const date = document.getElementById('main-draw-date-input')?.value;
-        const time = document.getElementById('main-draw-time-input')?.value;
-        const ampm = document.getElementById('main-draw-ampm-input')?.value;
+        const date = document.getElementById('draw-target-date')?.value;
+        const time = document.getElementById('draw-target-time')?.value;
+        const ampm = document.getElementById('draw-target-ampm')?.value;
 
         if (!date || !time) {
             return notify('error', '❌ Please provide both date and time.');
@@ -186,9 +186,9 @@ class AdminLotteryDraw {
             const doc = await db.collection('settings').doc('main_draw_schedule').get();
             if (doc.exists) {
                 const data = doc.data();
-                const dateInput = document.getElementById('main-draw-date-input');
-                const timeInput = document.getElementById('main-draw-time-input');
-                const ampmInput = document.getElementById('main-draw-ampm-input');
+                const dateInput = document.getElementById('draw-target-date');
+                const timeInput = document.getElementById('draw-target-time');
+                const ampmInput = document.getElementById('draw-target-ampm');
 
                 if (dateInput && data.targetDate) dateInput.value = data.targetDate;
                 if (timeInput && data.targetTime) timeInput.value = data.targetTime;
@@ -202,12 +202,12 @@ class AdminLotteryDraw {
     }
 
     async loadPastWinners() {
-        const container = document.getElementById('main-past-winners-list');
+        const container = document.getElementById('lottery-history-list');
         if (!container) return;
 
         try {
             if (!db) {
-                container.innerHTML = `<p class="text-xs text-slate-500 italic py-2">Database not connected.</p>`;
+                container.innerHTML = `<p class="text-xs text-slate-500 italic text-center py-2">Database not connected.</p>`;
                 return;
             }
 
@@ -219,7 +219,7 @@ class AdminLotteryDraw {
                 .get();
 
             if (snapshot.empty) {
-                container.innerHTML = `<p class="text-xs text-slate-500 italic py-2">No past winners recorded yet.</p>`;
+                container.innerHTML = `<p class="text-xs text-slate-500 italic text-center py-2">No past winners recorded yet.</p>`;
                 return;
             }
 
@@ -261,13 +261,13 @@ class AdminLotteryDraw {
             });
 
             if (count === 0) {
-                container.innerHTML = `<p class="text-xs text-slate-500 italic py-2">No winners found within the last 7 days.</p>`;
+                container.innerHTML = `<p class="text-xs text-slate-500 italic text-center py-2">No winners found within the last 7 days.</p>`;
             } else {
                 container.innerHTML = html;
             }
         } catch (error) {
             console.error('Error loading past winners:', error);
-            container.innerHTML = `<p class="text-xs text-red-400 italic py-2">Error loading draw history.</p>`;
+            container.innerHTML = `<p class="text-xs text-red-400 italic text-center py-2">Error loading draw history.</p>`;
         }
     }
 
@@ -309,8 +309,8 @@ class AdminLotteryDraw {
                 return notify('error', '❌ No active numbers available for this draw scope.');
             }
 
-            const spinnerBox = document.getElementById('main-lottery-spinner-box');
-            const winnerInfoBox = document.getElementById('main-winner-info-display');
+            const spinnerBox = document.getElementById('lottery-spinner-box');
+            const winnerInfoBox = document.getElementById('winner-info-display');
             if (winnerInfoBox) winnerInfoBox.textContent = '';
 
             let spinCount = 0;
