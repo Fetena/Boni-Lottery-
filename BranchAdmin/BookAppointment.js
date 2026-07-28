@@ -181,7 +181,9 @@ class AdminBookAppointment {
 
         try {
             await db.collection('appointments').doc(aptId).update({ status });
-            notify('success', `✅ Request marked as ${status}`);
+            
+            // Trigger top-right notification popup immediately for admin approval/status action[cite: 13]
+            notify('success', `✅ Booking status successfully updated to ${status}!`);
             
             // Refresh view
             const apptTab = document.getElementById('admin-bookAppointment');
