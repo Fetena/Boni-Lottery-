@@ -68,14 +68,24 @@ class CustomerDrawings {
                 <!-- CHECK IF WON -->
                 <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
                     <h4 class="font-bold text-white">🏆 Check Your Tickets</h4>
-                    <p class="text-sm text-slate-300">Enter a winning number to check if you won</p>
+                    <p class="text-sm text-slate-300">Select a drawing date and enter your winning number</p>
                     
-                    <div class="flex gap-2">
-                        <input type="number" id="check-number" placeholder="Enter winning number..." 
-                            class="flex-1 bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
-                        <button onclick="customerDrawings.checkWinner()" 
-                            class="px-6 py-2 bg-yellow-400 text-black font-bold rounded-xl">Check</button>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-xs text-slate-400 mb-1 block">Select Drawing Date</label>
+                            <select id="check-draw-date" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
+                                ${this.draws.map(d => `<option value="${d.id}">${d.date} (${d.status})</option>`).join('')}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-400 mb-1 block">Winning Number</label>
+                            <input type="number" id="check-number" placeholder="Enter number..." 
+                                class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
+                        </div>
                     </div>
+
+                    <button onclick="customerDrawings.checkWinner()" 
+                        class="w-full py-3 bg-yellow-400 text-black font-bold rounded-xl mt-2">Check Winning Status</button>
 
                     <div id="win-result"></div>
                 </div>
@@ -166,7 +176,6 @@ class CustomerDrawings {
     }
 }
 
-// Global instance auto-initializer
 let customerDrawings;
 document.addEventListener('DOMContentLoaded', () => {
     customerDrawings = new CustomerDrawings(localStorage.getItem('currentCustId') || 'DEFAULT');
