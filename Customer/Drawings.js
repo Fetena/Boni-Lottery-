@@ -28,32 +28,48 @@ class CustomerDrawings {
                 customerData = localCusts.find(c => c.id === this.custId) || {};
             }
 
-            this.customerAdmin = customerData.assignedAdmin || customerData.adminId || customerData.branchAdmin || 'Main Admin';
+            this.customerAdmin = customerData.assignedAdmin || customerData.adminId || customerData.branchAdmin || customerData.preferredAdmin || 'Main Admin';
 
-            // 2. Fetch drawings managed by this specific admin
-            let snapshot = await db.collection('drawings')
+            // 2. Fetch drawings managed by this specific admin from Firestore collections
+            let snapshot = await db.collection('draws')
                 .where('adminId', '==', this.customerAdmin)
                 .get();
 
             if (snapshot.empty) {
-                // Fallback: try fetching all drawings if admin-specific query yields nothing
-                snapshot = await db.collection('drawings').get();
+                snapshot = await db.collection('drawings')
+                    .where('adminId', '==', this.customerAdmin)
+                    .get();
+            }
+
+            if (snapshot.empty) {
+                // Fallback: try fetching all draws / drawings if admin-specific query yields nothing
+                snapshot = await db.collection('draws').get();
+                if (snapshot.empty) {
+                    snapshot = await db.collection('drawings').get();
+                }
             }
 
             if (!snapshot.empty) {
-                this.draws = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                this.draws = snapshot.docs.map(doc => {
+                    const data = doc.data();
+                    return {
+                        id: doc.id,
+                        adminId: data.adminId || this.customerAdmin,
+                        date: data.date || data.targetDate || 'Upcoming Draw',
+                        time: data.time || data.hourMinute ? `${data.hourMinute} ${data.amPm || ''}` : '20:00',
+                        status: data.status || 'Upcoming',
+                        winningNumber: data.winningNumber || null,
+                        tickets: data.tickets || 0,
+                        prizePool: data.prizePool || data.pool || 5000
+                    };
+                });
             } else {
                 this.draws = this.defaultDraws();
             }
         } catch (e) {
+            console.error('Error fetching admin drawings:', e);
             this.customerAdmin = 'Main Admin';
             this.draws = this.defaultDraws();
-        }
-
-        // Re-render drawings component view if container exists
-        const container = document.getElementById('customer-content');
-        if (container && typeof customerDashboard !== 'undefined' && typeof customerDashboard.renderDrawings === 'function') {
-            // Safe update if managed by parent dashboard router
         }
     }
 
@@ -62,29 +78,18 @@ class CustomerDrawings {
             {
                 id: 'DRAW001',
                 adminId: this.customerAdmin || 'Main Admin',
-                date: 'Sunday, Next Draw',
+                date: 'Next Scheduled Draw',
                 time: '20:00',
                 status: 'Upcoming',
                 winningNumber: null,
                 tickets: 0,
                 prizePool: 5000
-            },
-            {
-                id: 'DRAW002',
-                adminId: this.customerAdmin || 'Main Admin',
-                date: 'Sunday, Previous Draw',
-                time: '20:00',
-                status: 'Completed',
-                winningNumber: '247',
-                tickets: 45,
-                prizePool: 3150,
-                winners: 3
             }
         ];
     }
 
     render() {
-        const adminDraws = this.draws.filter(d => !d.adminId || d.adminId === this.customerAdmin);
+        const adminDraws = this.draws.filter(d => !d.adminId || d.adminId === this.customerAdmin || d.adminId === 'Main Admin');
         const activeDraws = adminDraws.length > 0 ? adminDraws : this.defaultDraws();
         const nextDraw = activeDraws.find(d => d.status === 'Upcoming') || activeDraws[0];
         const pastDraws = activeDraws.filter(d => d.id !== nextDraw.id);
@@ -92,11 +97,11 @@ class CustomerDrawings {
         return `
             <div class="space-y-4">
                 <div class="flex justify-between items-center">
-                    <h3 class="text-2xl font-bold text-white">🎰 Home</h3>
+                    <h3 class="text-2xl font-bold text-white">🎰 Home Dashboard</h3>
                     <span class="text-xs bg-yellow-400/10 text-yellow-400 border border-yellow-400/20 px-3 py-1 rounded-full">Managed by: ${this.customerAdmin}</span>
                 </div>
 
-                <!-- UPCOMING DRAW -->
+                <!-- UPCOMING DRAW (DYNAMICALLY FETCHED FROM ADMIN SCHEDULE) -->
                 <div class="glass-panel rounded-2xl p-8 border border-yellow-400/10 text-center space-y-4 bg-gradient-to-br from-yellow-400/10 to-transparent">
                     <h4 class="text-2xl font-bold text-yellow-400">Next Admin Drawing</h4>
                     <p class="text-3xl font-bold text-white">${nextDraw.date} • ${nextDraw.time}</p>
