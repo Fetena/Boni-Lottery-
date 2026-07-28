@@ -151,5 +151,8 @@ class CustomerAppointments {
     }
 }
 
-// Global instance
+// Global instance auto-initializer
 let customerAppointments;
+document.addEventListener('DOMContentLoaded', () => {
+    customerAppointments = new CustomerAppointments(localStorage.getItem('currentCustId') || 'DEFAULT');
+});
