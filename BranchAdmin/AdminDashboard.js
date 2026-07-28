@@ -8,7 +8,7 @@ class AdminDashboard {
         window.adminLottery = new AdminLotteryDraw(adminId);
     }
 
-    render() {
+   render() {
         return `
             <div id="admin-dashboard" class="min-h-screen bg-black flex flex-col">
                 <header class="sticky top-0 z-40 w-full glass-panel border-b border-yellow-400/10 px-6 py-4">
@@ -233,5 +233,201 @@ class AdminDashboard {
         } catch (error) {
             notify('error', `❌ Error: ${error.message}`);
         }
+    }
+}
+
+// ========== ADMIN CUSTOMERS HELPERS ==========
+
+async function openAddCustomerModal() {
+    document.getElementById('customer-modal').style.display = 'flex';
+}
+
+function closeAddCustomerModal() {
+    document.getElementById('customer-modal').style.display = 'none';
+}
+
+async function addAdminCustomer() {
+    const name = document.getElementById('cust-name-input').value.trim();
+    const email = document.getElementById('cust-email-input').value.trim();
+    const phone = document.getElementById('cust-phone-input').value.trim();
+    const password = document.getElementById('cust-password-input').value.trim();
+
+    if (!name || !email || !password) {
+        return notify('error', '❌ Please fill in all required fields');
+    }
+
+    try {
+        await db.collection('admin_customers').add({
+            adminEmail: currentUser.email,
+            name,
+            email,
+            phone,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        notify('success', '✅ Customer added successfully!');
+        closeAddCustomerModal();
+        await loadAdminCustomers();
+        await loadAdminStats();
+    } catch (error) {
+        notify('error', `❌ Error: ${error.message}`);
+    }
+}
+
+async function loadAdminCustomers() {
+    if (!db || !currentUser) return;
+
+    try {
+        const manualSnapshot = await db.collection('admin_customers')
+            .where('adminEmail', '==', currentUser.email)
+            .get();
+
+        const selfRegisteredSnapshot = await db.collection('customer_settings')
+            .where('preferredAdmin', '==', currentUser.email)
+            .get();
+
+        const content = document.getElementById('admin-customers-list');
+        if (!content) return;
+
+        let allCustomers = [];
+        manualSnapshot.forEach(doc => allCustomers.push({ id: doc.id, type: 'manual', ...doc.data() }));
+        selfRegisteredSnapshot.forEach(doc => {
+            const data = doc.data();
+            allCustomers.push({ 
+                id: doc.id, 
+                type: 'self', 
+                name: data.customerName || 'N/A',
+                email: data.customerEmail || doc.id,
+                phone: data.phone || 'N/A',
+                tickets: data.tickets || 0,
+                spent: data.spent || 0
+            });
+        });
+
+        if (allCustomers.length === 0) {
+            content.innerHTML = '<p class="text-slate-400 text-center py-6">No customers yet</p>';
+            return;
+        }
+
+        content.innerHTML = allCustomers.map(cust => `
+            <div class="glass-panel rounded-lg p-4 border border-yellow-400/10 flex justify-between items-center text-xs">
+                <div>
+                    <p class="font-bold text-white text-sm">${cust.name} ${cust.type === 'self' ? '<span class="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded ml-2">Self-Registered</span>' : ''}</p>
+                    <p class="text-slate-400 mt-0.5">${cust.email} • ${cust.phone}</p>
+                    <p class="text-slate-400 mt-0.5">Tickets: ${cust.tickets || 0} • Spent: ${cust.spent || 0} ETB</p>
+                </div>
+                ${cust.type === 'manual' ? `<button onclick="deleteAdminCustomer('${cust.id}')" class="px-2.5 py-1 bg-red-400/20 text-red-400 rounded">Delete</button>` : '<span class="text-slate-500 italic">Platform User</span>'}
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error('Error loading customers:', error);
+    }
+}
+
+async function deleteAdminCustomer(docId) {
+    if (!confirm('Delete customer?')) return;
+
+    try {
+        await db.collection('admin_customers').doc(docId).delete();
+        notify('success', '✅ Customer deleted');
+        await loadAdminCustomers();
+        await loadAdminStats();
+    } catch (error) {
+        notify('error', `❌ Error: ${error.message}`);
+    }
+}
+
+// ========== ADMIN TICKETS HELPERS ==========
+
+async function loadAdminTickets() {
+    if (!db) return;
+
+    try {
+        const snapshot = await db.collection('customer_tickets')
+            .orderBy('createdAt', 'desc')
+            .limit(50)
+            .get();
+
+        const content = document.getElementById('admin-tickets-list');
+        if (!content) return;
+
+        if (snapshot.empty) {
+            content.innerHTML = '<p class="text-slate-400">No tickets yet</p>';
+            return;
+        }
+
+        content.innerHTML = snapshot.docs.map(doc => {
+            const ticket = doc.data();
+            return `
+                <div class="glass-panel rounded-lg p-4 border border-yellow-400/10 text-xs space-y-2">
+                    <p class="text-white font-bold">Customer: ${ticket.customerName || 'N/A'} (${ticket.customerEmail || ''})</p>
+                    <p class="text-slate-400">Numbers: ${ticket.numbers?.join(', ') || 'N/A'}</p>
+                    <p class="text-slate-400">Cost: ${ticket.cost} ETB • Payment: ${ticket.paymentMethod || 'N/A'}</p>
+                    <div class="flex justify-between items-center pt-2 border-t border-yellow-400/10">
+                        <span class="px-2 py-1 bg-yellow-400/20 text-yellow-400 rounded">${ticket.status || 'Pending'}</span>
+                        <div class="flex gap-2">
+                            <button onclick="window.adminDashboard.approvePayment('${doc.id}')" class="px-3 py-1 bg-emerald-600 text-white font-bold rounded">Approve</button>
+                            <button onclick="window.adminDashboard.rejectPayment('${doc.id}')" class="px-3 py-1 bg-red-600 text-white font-bold rounded">Reject</button>
+                            <button onclick="window.adminDashboard.deleteTicket('${doc.id}')" class="px-3 py-1 bg-slate-800 hover:bg-rose-900 text-rose-400 border border-rose-500/20 font-bold rounded">🗑️ Delete</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    } catch (error) {
+        console.error('Error loading tickets:', error);
+    }
+}
+
+// ========== ADMIN PAYMENTS HELPERS ==========
+
+async function loadAdminPayments() {
+    if (!db || !currentUser) return;
+
+    try {
+        const doc = await db.collection('admin_settings').doc(currentUser.email).get();
+        if (doc.exists) {
+            const data = doc.data();
+            if (data.telebirrPhone && document.getElementById('admin-telebirr')) document.getElementById('admin-telebirr').value = data.telebirrPhone;
+            if (data.cbeAccount && document.getElementById('admin-cbe')) document.getElementById('admin-cbe').value = data.cbeAccount;
+        }
+    } catch (error) {
+        console.error('Error loading payments:', error);
+    }
+}
+
+// ========== ADMIN STATS HELPERS ==========
+
+async function loadAdminStats() {
+    if (!db || !currentUser) return;
+
+    try {
+        const manualSnapshot = await db.collection('admin_customers')
+            .where('adminEmail', '==', currentUser.email)
+            .get();
+
+        const selfRegisteredSnapshot = await db.collection('customer_settings')
+            .where('preferredAdmin', '==', currentUser.email)
+            .get();
+
+        const totalCustomersCount = manualSnapshot.size + selfRegisteredSnapshot.size;
+        if (document.getElementById('admin-total-customers')) {
+            document.getElementById('admin-total-customers').textContent = totalCustomersCount;
+        }
+
+        const ticketSnapshot = await db.collection('customer_tickets').get();
+        if (document.getElementById('admin-total-tickets')) {
+            document.getElementById('admin-total-tickets').textContent = ticketSnapshot.size;
+        }
+
+        let revenue = 0;
+        ticketSnapshot.forEach(doc => {
+            revenue += doc.data().cost || 0;
+        });
+        if (document.getElementById('admin-total-revenue')) {
+            document.getElementById('admin-total-revenue').textContent = revenue.toLocaleString() + ' ETB';
+        }
+    } catch (error) {
+        console.error('Error loading stats:', error);
     }
 }
