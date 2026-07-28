@@ -10,37 +10,45 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <style>
-        .glass-panel {
-            background: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(10px);
-        }
-        .text-gradient {
-            background: linear-gradient(135deg, #FCD34D 0%, #F59E0B 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        .tab-button.active {
-            border-bottom: 2px solid #FCD34D;
-            color: #FCD34D;
-        }
-        .notification-toast {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 16px;
-            border-radius: 8px;
-            z-index: 10000;
-            animation: slideIn 0.3s ease;
-        }
-        .notification-toast.success { background: #10b981; color: white; }
-        .notification-toast.error { background: #ef4444; color: white; }
-        .notification-toast.info { background: #3b82f6; color: white; }
-        @keyframes slideIn {
-            from { transform: translateX(400px); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-    </style>
+    .glass-panel {
+        background: rgba(15, 23, 42, 0.8);
+        backdrop-filter: blur(10px);
+    }
+    .text-gradient {
+        background: linear-gradient(135deg, #FCD34D 0%, #F59E0B 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    .tab-button.active {
+        border-bottom: 2px solid #FCD34D;
+        color: #FCD34D;
+    }
+    .notification-toast {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 16px;
+        border-radius: 8px;
+        z-index: 10000;
+        animation: slideIn 0.3s ease;
+    }
+    .notification-toast.success { background: #10b981; color: white; }
+    .notification-toast.error { background: #ef4444; color: white; }
+    .notification-toast.info { background: #3b82f6; color: white; }
+    @keyframes slideIn {
+        from { transform: translateX(400px); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* === ADD THIS FIX HERE === */
+    input[type="date"]::-webkit-calendar-picker-indicator,
+    input[type="time"]::-webkit-calendar-picker-indicator {
+        filter: invert(1) brightness(2);
+        cursor: pointer;
+        opacity: 1;
+    }
+</style>
 </head>
 
 <body class="bg-black text-white">
