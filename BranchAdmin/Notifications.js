@@ -128,13 +128,11 @@ class AdminNotifications {
 
     approveBooking(aptId, custId) {
         this.updateBookingStatus(aptId, custId, 'Approved');
-        // Trigger popup notification for admin action
         notify('success', '✅ Booking approved successfully!');
     }
 
     rejectBooking(aptId, custId) {
         this.updateBookingStatus(aptId, custId, 'Rejected');
-        // Trigger popup notification for admin action
         notify('error', '❌ Booking request rejected');
     }
 
@@ -150,6 +148,17 @@ class AdminNotifications {
             });
             localStorage.setItem(storageKey, JSON.stringify(updated));
             
+            // 🔔 Push a customer-facing notification so the customer dashboard pops it up
+            const custNotifKey = `customer_notifications_${custId}`;
+            const custNotifs = JSON.parse(localStorage.getItem(custNotifKey) || '[]');
+            custNotifs.push({
+                id: Date.now(),
+                message: `Your appointment (${newStatus.toLowerCase()}) for ${newStatus === 'Approved' ? 'Confirmed' : 'Review'}`,
+                status: newStatus,
+                timestamp: new Date().toLocaleTimeString()
+            });
+            localStorage.setItem(custNotifKey, JSON.stringify(custNotifs));
+
             // Refresh approval list display inside admin panel
             const listEl = document.getElementById('admin-approval-list');
             if (listEl) {
