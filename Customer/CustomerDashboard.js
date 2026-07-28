@@ -477,25 +477,51 @@ async function loadCustomerTickets() {
 
         content.innerHTML = snapshot.docs.map((doc, i) => {
             const ticket = doc.data();
+            const docId = doc.id;
             const createdDate = ticket.createdAt?.toDate?.() || new Date();
             return `
                 <div class="glass-panel rounded-lg p-4 border border-yellow-400/10 text-xs space-y-1">
                     <div class="flex justify-between items-start">
-                        <div>
-                            <p class="font-bold text-white">Ticket #${i + 1}</p>
+                        <div class="space-y-1">
+                            <p class="font-bold text-white text-base">Ticket #${i + 1}</p>
                             <p class="text-slate-300">Admin: <span class="text-yellow-400">${ticket.assignedAdmin || 'N/A'}</span></p>
                             <p class="text-slate-400">Numbers: ${ticket.numbers?.join(', ') || 'N/A'}</p>
                             <p class="text-slate-400">Cost: ${ticket.cost || 0} ETB</p>
                             <p class="text-slate-400">Payment: ${ticket.paymentMethod || 'N/A'}</p>
                             <p class="text-slate-400">Date: ${createdDate.toLocaleDateString()}</p>
                         </div>
-                        <span class="px-2 py-1 bg-yellow-400/20 text-yellow-400 rounded">${ticket.status || 'N/A'}</span>
+                        <div class="text-right space-y-3">
+                            <span class="inline-block px-2 py-1 bg-yellow-400/20 text-yellow-400 rounded">${ticket.status || 'N/A'}</span>
+                            <div>
+                                <button onclick="cancelCustomerTicket('${docId}')" 
+                                    class="px-3 py-1 bg-red-950/40 hover:bg-red-900/60 text-red-400 text-xs font-semibold rounded-lg border border-red-500/25 transition-all">
+                                    🗑️ Cancel / Delete
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             `;
         }).join('');
     } catch (error) {
         console.error('Error loading tickets:', error);
+    }
+}
+
+async function cancelCustomerTicket(docId) {
+    if (!confirm('Are you sure you want to cancel and delete this ticket?')) return;
+    if (!db) {
+        notify('error', '❌ Database not initialized');
+        return;
+    }
+
+    try {
+        await db.collection('customer_tickets').doc(docId).delete();
+        notify('success', '🗑️ Ticket deleted successfully!');
+        await loadCustomerTickets();
+        await loadCustomerStats();
+    } catch (error) {
+        notify('error', `❌ Error deleting ticket: ${error.message}`);
     }
 }
 
