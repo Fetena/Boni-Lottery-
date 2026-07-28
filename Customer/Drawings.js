@@ -1,26 +1,59 @@
 // ============================================
 // CUSTOMER DRAWINGS (CHILD COMPONENT)
 // Parent: CustomerDashboard
-// View drawings, check winners, watch live
+// View drawings managed by the customer's registered admin
 // ============================================
 
 class CustomerDrawings {
     constructor(custId) {
         this.custId = custId;
+        this.customerAdmin = null;
         this.draws = [];
-        this.loadDrawings();
+        this.init();
     }
 
-    async loadDrawings() {
+    async init() {
+        await this.loadCustomerAndDrawings();
+    }
+
+    async loadCustomerAndDrawings() {
         try {
-            const snapshot = await db.collection('drawings').get();
+            // 1. Get customer profile to see which admin they are registered under
+            let customerData = null;
+            const doc = await db.collection('customers').doc(this.custId).get();
+            if (doc.exists) {
+                customerData = doc.data();
+            } else {
+                const localCusts = JSON.parse(localStorage.getItem('registered_customers') || '[]');
+                customerData = localCusts.find(c => c.id === this.custId) || {};
+            }
+
+            this.customerAdmin = customerData.assignedAdmin || customerData.adminId || customerData.branchAdmin || 'Main Admin';
+
+            // 2. Fetch drawings managed by this specific admin
+            let snapshot = await db.collection('drawings')
+                .where('adminId', '==', this.customerAdmin)
+                .get();
+
+            if (snapshot.empty) {
+                // Fallback: try fetching all drawings if admin-specific query yields nothing
+                snapshot = await db.collection('drawings').get();
+            }
+
             if (!snapshot.empty) {
                 this.draws = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             } else {
                 this.draws = this.defaultDraws();
             }
         } catch (e) {
+            this.customerAdmin = 'Main Admin';
             this.draws = this.defaultDraws();
+        }
+
+        // Re-render drawings component view if container exists
+        const container = document.getElementById('customer-content');
+        if (container && typeof customerDashboard !== 'undefined' && typeof customerDashboard.renderDrawings === 'function') {
+            // Safe update if managed by parent dashboard router
         }
     }
 
@@ -28,16 +61,18 @@ class CustomerDrawings {
         return [
             {
                 id: 'DRAW001',
-                date: 'Sunday',
+                adminId: this.customerAdmin || 'Main Admin',
+                date: 'Sunday, Next Draw',
                 time: '20:00',
                 status: 'Upcoming',
                 winningNumber: null,
                 tickets: 0,
-                prizePool: 0
+                prizePool: 5000
             },
             {
                 id: 'DRAW002',
-                date: 'Sunday, July 6',
+                adminId: this.customerAdmin || 'Main Admin',
+                date: 'Sunday, Previous Draw',
                 time: '20:00',
                 status: 'Completed',
                 winningNumber: '247',
@@ -49,18 +84,23 @@ class CustomerDrawings {
     }
 
     render() {
-        const nextDraw = this.draws[0] || this.defaultDraws()[0];
-        const pastDraws = this.draws.slice(1);
+        const adminDraws = this.draws.filter(d => !d.adminId || d.adminId === this.customerAdmin);
+        const activeDraws = adminDraws.length > 0 ? adminDraws : this.defaultDraws();
+        const nextDraw = activeDraws.find(d => d.status === 'Upcoming') || activeDraws[0];
+        const pastDraws = activeDraws.filter(d => d.id !== nextDraw.id);
 
         return `
             <div class="space-y-4">
-                <h3 class="text-2xl font-bold text-white">🎰 Drawings</h3>
+                <div class="flex justify-between items-center">
+                    <h3 class="text-2xl font-bold text-white">🎰 Drawings</h3>
+                    <span class="text-xs bg-yellow-400/10 text-yellow-400 border border-yellow-400/20 px-3 py-1 rounded-full">Managed by: ${this.customerAdmin}</span>
+                </div>
 
                 <!-- UPCOMING DRAW -->
                 <div class="glass-panel rounded-2xl p-8 border border-yellow-400/10 text-center space-y-4 bg-gradient-to-br from-yellow-400/10 to-transparent">
-                    <h4 class="text-2xl font-bold text-yellow-400">Next Drawing</h4>
+                    <h4 class="text-2xl font-bold text-yellow-400">Next Admin Drawing</h4>
                     <p class="text-3xl font-bold text-white">${nextDraw.date} • ${nextDraw.time}</p>
-                    <p class="text-slate-300">Prize Pool: ${nextDraw.prizePool || 'TBD'}</p>
+                    <p class="text-slate-300 font-medium">Prize Pool: <span class="text-yellow-400">${nextDraw.prizePool || 0} ETB</span></p>
                     <button onclick="customerDrawings.goToTikTok()" 
                         class="px-8 py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">📱 Watch Live on TikTok</button>
                 </div>
@@ -74,7 +114,7 @@ class CustomerDrawings {
                         <div>
                             <label class="text-xs text-slate-400 mb-1 block">Select Drawing Date</label>
                             <select id="check-draw-date" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
-                                ${this.draws.map(d => `<option value="${d.id}">${d.date} (${d.status})</option>`).join('')}
+                                ${activeDraws.map(d => `<option value="${d.id}">${d.date} - Pool: ${d.prizePool || 0} ETB (${d.status})</option>`).join('')}
                             </select>
                         </div>
                         <div>
@@ -92,20 +132,20 @@ class CustomerDrawings {
 
                 <!-- PAST DRAWS -->
                 <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
-                    <h4 class="font-bold text-white mb-4">📜 Past Drawings</h4>
+                    <h4 class="font-bold text-white mb-4">📜 Past Admin Drawings</h4>
                     <div class="space-y-3">
-                        ${pastDraws.map(draw => `
+                        ${pastDraws.length > 0 ? pastDraws.map(draw => `
                             <div class="bg-black/30 rounded-lg p-4 border border-yellow-400/10">
                                 <div class="flex justify-between items-start">
                                     <div>
                                         <p class="font-bold text-white">${draw.date}</p>
-                                        <p class="text-sm text-yellow-400">Winning Number: ${draw.winningNumber}</p>
-                                        <p class="text-xs text-slate-400 mt-1">${draw.tickets} tickets • ${draw.prizePool} ETB pool</p>
+                                        <p class="text-sm text-yellow-400">Winning Number: ${draw.winningNumber || 'Pending'}</p>
+                                        <p class="text-xs text-slate-400 mt-1">${draw.tickets || 0} tickets • ${draw.prizePool || 0} ETB pool</p>
                                     </div>
                                     <span class="text-xs bg-emerald-400/20 text-emerald-400 px-3 py-1 rounded">${draw.status}</span>
                                 </div>
                             </div>
-                        `).join('')}
+                        `).join('') : '<p class="text-slate-400 text-sm">No past drawings available.</p>'}
                     </div>
                 </div>
 
