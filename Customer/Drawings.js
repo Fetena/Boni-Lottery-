@@ -92,7 +92,7 @@ class CustomerDrawings {
         return `
             <div class="space-y-4">
                 <div class="flex justify-between items-center">
-                    <h3 class="text-2xl font-bold text-white">🎰 Drawings</h3>
+                    <h3 class="text-2xl font-bold text-white">🎰 Home</h3>
                     <span class="text-xs bg-yellow-400/10 text-yellow-400 border border-yellow-400/20 px-3 py-1 rounded-full">Managed by: ${this.customerAdmin}</span>
                 </div>
 
