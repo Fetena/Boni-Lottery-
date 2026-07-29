@@ -128,7 +128,6 @@ class AdminLotteryDraw {
         }
 
         if (now >= targetDateObj) {
-            // Unlocked
             drawBtn.disabled = false;
             drawBtn.className = "w-full py-4 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 text-black font-black rounded-xl text-sm shadow-lg hover:opacity-95 transform active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer";
             drawBtn.innerHTML = "🎲 SPIN & DRAW WINNER NOW";
@@ -136,7 +135,6 @@ class AdminLotteryDraw {
             statusBadge.className = "text-xs font-mono font-bold text-emerald-400 bg-emerald-950/40 px-3 py-1 rounded-full border border-emerald-500/30";
             statusBadge.innerHTML = '🟢 DRAW UNLOCKED & READY!';
         } else {
-            // Locked
             drawBtn.disabled = true;
             drawBtn.className = "w-full py-3.5 bg-slate-800 text-slate-500 font-black rounded-xl text-sm cursor-not-allowed transition-all shadow-none";
             
@@ -168,7 +166,7 @@ class AdminLotteryDraw {
                     targetDate: date,
                     targetTime: time,
                     ampm: ampm,
-                    updatedAt: new Date()
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 }, { merge: true });
             }
             
