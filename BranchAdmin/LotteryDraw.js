@@ -76,7 +76,10 @@ class AdminLotteryDraw {
 
         const now = new Date();
         if (dateInput && !dateInput.value) {
-            dateInput.value = now.toISOString().split('T')[0];
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            dateInput.value = `${year}-${month}-${day}`;
         }
         if (timeInput && !timeInput.value) {
             let hours = now.getHours();
@@ -90,35 +93,29 @@ class AdminLotteryDraw {
         await this.loadSchedule();
         await this.loadPastWinners();
 
-        // Start real-time check loop every second
         if (this.scheduleCheckInterval) clearInterval(this.scheduleCheckInterval);
         this.scheduleCheckInterval = setInterval(() => this.checkScheduleTiming(), 1000);
     }
 
-   getTargetDateTime() {
+    getTargetDateTime() {
         const dateStr = document.getElementById('draw-target-date')?.value;
         const timeStr = document.getElementById('draw-target-time')?.value;
         const ampmStr = document.getElementById('draw-target-ampm')?.value;
 
         if (!dateStr || !timeStr) return null;
 
-        const parts = dateStr.split(/[-/.]/).map(Number);
+        // Force split strictly assuming standard HTML5 date picker YYYY-MM-DD format
+        const parts = dateStr.split('-').map(Number);
         if (parts.length !== 3) return null;
 
-        let year, month, day;
-        if (parts[0] > 1000) {
-            [year, month, day] = parts;
-        } else {
-            month = parts[0];
-            day = parts[1];
-            year = parts[2];
-        }
-
+        const [year, month, day] = parts;
         let [hours, minutes] = timeStr.split(':').map(Number);
+
         if (ampmStr === 'PM' && hours < 12) hours += 12;
         if (ampmStr === 'AM' && hours === 12) hours = 0;
 
-        return new Date(year, month - 1, day, hours, minutes, 0);
+        // Construct standard local date object safely
+        return new Date(year, month - 1, day, hours, minutes, 0, 0);
     }
 
     checkScheduleTiming() {
@@ -199,15 +196,9 @@ class AdminLotteryDraw {
                 const timeInput = document.getElementById('draw-target-time');
                 const ampmInput = document.getElementById('draw-target-ampm');
 
-                // Only load saved schedule if it's actually valid and not a past/broken date
-                if (data.targetDate && dateInput) {
-                    const savedDate = new Date(data.targetDate);
-                    if (!isNaN(savedDate.getTime())) {
-                        dateInput.value = data.targetDate;
-                    }
-                }
-                if (timeInput && data.targetTime) timeInput.value = data.targetTime;
-                if (ampmInput && data.ampm) ampmInput.value = data.ampm;
+                if (data.targetDate && dateInput) dateInput.value = data.targetDate;
+                if (data.targetTime && timeInput) timeInput.value = data.targetTime;
+                if (data.ampm && ampmInput) ampmInput.value = data.ampm;
 
                 this.checkScheduleTiming();
             }
