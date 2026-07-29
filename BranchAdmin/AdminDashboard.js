@@ -160,7 +160,7 @@ class AdminDashboard {
     async loadData() {
         try {
             await loadAdminCustomers();
-            await loadAdminTickets();
+            //await loadAdminTickets();
             await loadAdminPayments();
             await loadAdminStats();
             
