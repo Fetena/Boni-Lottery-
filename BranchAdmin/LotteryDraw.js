@@ -102,29 +102,22 @@ class AdminLotteryDraw {
 
         if (!dateStr || !timeStr) return null;
 
-        // Split by any common separator (- or / or .)
         const parts = dateStr.split(/[-/.]/).map(Number);
         if (parts.length !== 3) return null;
 
         let year, month, day;
-
-        // Automatically detect if the year is first (YYYY-MM-DD) or last (MM-DD-YYYY / DD-MM-YYYY)
         if (parts[0] > 1000) {
             [year, month, day] = parts;
         } else {
-            // Assume MM/DD/YYYY or DD/MM/YYYY. Let's check which is month vs day based on values, 
-            // or default standard browser ISO order (parts[0] = month, parts[1] = day, parts[2] = year)
             month = parts[0];
             day = parts[1];
             year = parts[2];
         }
 
-        // Parse 12-hour time to 24-hour format
         let [hours, minutes] = timeStr.split(':').map(Number);
         if (ampmStr === 'PM' && hours < 12) hours += 12;
         if (ampmStr === 'AM' && hours === 12) hours = 0;
 
-        // JavaScript months are 0-indexed (0 = January)
         return new Date(year, month - 1, day, hours, minutes, 0);
     }
 
@@ -206,7 +199,13 @@ class AdminLotteryDraw {
                 const timeInput = document.getElementById('draw-target-time');
                 const ampmInput = document.getElementById('draw-target-ampm');
 
-                if (dateInput && data.targetDate) dateInput.value = data.targetDate;
+                // Only load saved schedule if it's actually valid and not a past/broken date
+                if (data.targetDate && dateInput) {
+                    const savedDate = new Date(data.targetDate);
+                    if (!isNaN(savedDate.getTime())) {
+                        dateInput.value = data.targetDate;
+                    }
+                }
                 if (timeInput && data.targetTime) timeInput.value = data.targetTime;
                 if (ampmInput && data.ampm) ampmInput.value = data.ampm;
 
