@@ -14,6 +14,7 @@ class CustomerDrawings {
 
     async init() {
         await this.loadCustomerAndDrawings();
+        this.initCustomerScheduleListener();
     }
 
     async loadCustomerAndDrawings() {
@@ -56,7 +57,7 @@ class CustomerDrawings {
                         id: doc.id,
                         adminId: data.adminId || this.customerAdmin,
                         date: data.date || data.targetDate || 'Upcoming Draw',
-                        time: data.time || data.hourMinute ? `${data.hourMinute} ${data.amPm || ''}` : '20:00',
+                        time: data.time || (data.targetTime ? `${data.targetTime} ${data.ampm || data.amPm || ''}` : '20:00'),
                         status: data.status || 'Upcoming',
                         winningNumber: data.winningNumber || null,
                         tickets: data.tickets || 0,
@@ -71,6 +72,36 @@ class CustomerDrawings {
             this.customerAdmin = 'Main Admin';
             this.draws = this.defaultDraws();
         }
+    }
+
+    // Real-time listener for the admin's saved schedule updates
+    async initCustomerScheduleListener() {
+        if (!db) return;
+
+        db.collection('settings').doc('main_draw_schedule').onSnapshot(doc => {
+            const scheduleBanner = document.getElementById('customer-active-draw-schedule');
+            
+            if (doc.exists) {
+                const data = doc.data();
+                const targetDate = data.targetDate || 'Upcoming Draw';
+                const targetTime = data.targetTime || '';
+                const ampm = data.ampm || '';
+
+                if (scheduleBanner) {
+                    scheduleBanner.innerHTML = `🎯 Next Scheduled Draw: <span class="text-yellow-400 font-bold">${targetDate} at ${targetTime} ${ampm}</span>`;
+                }
+
+                // Also update the dynamic next draw details on the UI if present
+                const nextDrawTitleEl = document.getElementById('next-draw-datetime-display');
+                if (nextDrawTitleEl) {
+                    nextDrawTitleEl.textContent = `${targetDate} • ${targetTime} ${ampm}`;
+                }
+            } else {
+                if (scheduleBanner) {
+                    scheduleBanner.innerHTML = `🎯 Next Scheduled Draw: <span class="text-slate-400 italic">Not scheduled yet</span>`;
+                }
+            }
+        });
     }
 
     defaultDraws() {
@@ -101,10 +132,15 @@ class CustomerDrawings {
                     <span class="text-xs bg-yellow-400/10 text-yellow-400 border border-yellow-400/20 px-3 py-1 rounded-full">Managed by: ${this.customerAdmin}</span>
                 </div>
 
+                <!-- LIVE SCHEDULE SYNC BANNER -->
+                <div id="customer-active-draw-schedule" class="bg-black/50 border border-yellow-400/30 rounded-xl px-4 py-2.5 text-xs text-slate-300 flex items-center justify-between">
+                    🎯 Next Scheduled Draw: <span class="text-slate-400 italic">Loading live schedule...</span>
+                </div>
+
                 <!-- UPCOMING DRAW (DYNAMICALLY FETCHED FROM ADMIN SCHEDULE) -->
                 <div class="glass-panel rounded-2xl p-8 border border-yellow-400/10 text-center space-y-4 bg-gradient-to-br from-yellow-400/10 to-transparent">
                     <h4 class="text-2xl font-bold text-yellow-400">Next Admin Drawing</h4>
-                    <p class="text-3xl font-bold text-white">${nextDraw.date} • ${nextDraw.time}</p>
+                    <p id="next-draw-datetime-display" class="text-3xl font-bold text-white">${nextDraw.date} • ${nextDraw.time}</p>
                     <p class="text-slate-300 font-medium">Prize Pool: <span class="text-yellow-400">${nextDraw.prizePool || 0} ETB</span></p>
                     <button onclick="customerDrawings.goToTikTok()" 
                         class="px-8 py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">📱 Watch Live on TikTok</button>
