@@ -167,12 +167,16 @@ class AdminDashboard {
             if (window.adminLottery) {
                 await window.adminLottery.init();
             }
-
+            if (!window.adminTickets) window.adminTickets = new AdminTickets(this.adminId);
             if (!window.adminPayments) window.adminPayments = new AdminPayments(this.adminId);
             if (!window.adminNotifications) window.adminNotifications = new AdminNotifications(this.adminId);
             if (!window.adminBookAppointment) window.adminBookAppointment = new AdminBookAppointment(this.adminId);
             if (!window.adminSettings) window.adminSettings = new AdminSettings(this.adminId);
-
+            const ticketsTab = document.getElementById('admin-tickets');
+if (ticketsTab) {
+    ticketsTab.innerHTML = window.adminTickets.render();
+    await window.adminTickets.init();
+}
             const paymentsTab = document.getElementById('admin-payments');
             if (paymentsTab) paymentsTab.innerHTML = await window.adminPayments.render();
 
