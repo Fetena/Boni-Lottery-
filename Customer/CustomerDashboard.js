@@ -164,20 +164,25 @@ class CustomerDashboard {
     }
 
     async loadData() {
-        try {
-            generateNumbersGrid();
-            await loadAdminsDropdown();
-            await loadCustomerSettings();
-            await loadCustomerTickets();
-            await loadCustomerStats();
-            await loadCustomerProfileData();
-
-            // Default initial view: trigger drawings component automatically upon login
-            switchCustomerTab('drawings');
-        } catch (error) {
-            console.error('Error loading customer data:', error);
+    try {
+        generateNumbersGrid();
+        await loadAdminsDropdown();
+        await loadCustomerSettings();
+        
+        // Initialize modular CustomerTickets component
+        if (!window.customerTicketsInstance) {
+            window.customerTicketsInstance = new CustomerTickets(currentUser.email);
         }
+        await window.customerTicketsInstance.init();
+
+        await loadCustomerStats();
+        await loadCustomerProfileData();
+
+        switchCustomerTab('drawings');
+    } catch (error) {
+        console.error('Error loading customer data:', error);
     }
+}
 }
 
 // Store global reference
@@ -201,12 +206,18 @@ function switchCustomerTab(tabName) {
     if (targetEl) {
         targetEl.style.display = 'block';
 
-        // Render modular components dynamically on selection
         if (tabName === 'drawings') {
             if (!window.customerDrawings) {
                 window.customerDrawings = new CustomerDrawings(currentUser.email);
             }
             targetEl.innerHTML = window.customerDrawings.render();
+        } else if (tabName === 'mytickets') {
+            // Render modular customer tickets component here
+            if (!window.customerTicketsInstance) {
+                window.customerTicketsInstance = new CustomerTickets(currentUser.email);
+            }
+            targetEl.innerHTML = window.customerTicketsInstance.render();
+            window.customerTicketsInstance.init();
         } else if (tabName === 'library') {
             if (!window.customerLibrary) {
                 window.customerLibrary = new CustomerLibrary(currentUser.email);
@@ -222,7 +233,6 @@ function switchCustomerTab(tabName) {
         }
     }
 
-    // Highlight active tab button matching name
     allButtons.forEach(btn => {
         if (btn.getAttribute('onclick')?.includes(`'${tabName}'`)) {
             btn.classList.add('active');
