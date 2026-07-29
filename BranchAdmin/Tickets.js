@@ -1,5 +1,5 @@
 // ============================================
-// ADMIN TICKETS MODULE COMPONENT (WITH DOCUMENT PREVIEW)
+// ADMIN TICKETS MODULE COMPONENT
 // ============================================
 
 class AdminTickets {
@@ -21,9 +21,7 @@ class AdminTickets {
                         <h4 class="text-base font-bold text-yellow-400">📄 Attached Payment Document / Receipt</h4>
                         <button onclick="window.adminTickets.closeReceiptModal()" class="text-slate-400 hover:text-white text-lg font-bold">&times;</button>
                     </div>
-                    <div id="receipt-modal-content" class="flex justify-center items-center max-h-[70vh] overflow-auto py-2">
-                        <!-- Dynamic Receipt Content -->
-                    </div>
+                    <div id="receipt-modal-content" class="flex justify-center items-center max-h-[70vh] overflow-auto py-2"></div>
                     <div class="flex justify-end pt-3 border-t border-yellow-400/20">
                         <button onclick="window.adminTickets.closeReceiptModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold">Close Preview</button>
                     </div>
@@ -33,7 +31,7 @@ class AdminTickets {
     }
 
     async init() {
-        if (!db) return[cite: 9];
+        if (!db) return;
 
         try {
             const snapshot = await db.collection('customer_tickets')
@@ -42,10 +40,10 @@ class AdminTickets {
                 .get();
 
             const content = document.getElementById('admin-tickets-list');
-            if (!content) return[cite: 9];
+            if (!content) return;
 
             if (snapshot.empty) {
-                content.innerHTML = '<p class="text-slate-400">No tickets yet</p>[cite: 9]';
+                content.innerHTML = '<p class="text-slate-400">No tickets yet</p>';
                 this.updateTicketsTabBadge(0);
                 return;
             }
@@ -71,12 +69,9 @@ class AdminTickets {
                     `;
                 }
 
-                // Check for various potential attachment field names stored from the customer side
                 const attachmentUrl = ticket.receiptUrl || ticket.attachment || ticket.fileUrl || ticket.imageUrl || null;
-                
                 let attachmentButton = '';
                 if (attachmentUrl) {
-                    // Escape single quotes safely for inline JS click parameters
                     const safeUrl = attachmentUrl.replace(/'/g, "\\'");
                     attachmentButton = `
                         <button onclick="window.adminTickets.viewReceipt('${safeUrl}')" class="px-3 py-1.5 bg-yellow-400/10 hover:bg-yellow-400/20 text-yellow-300 border border-yellow-400/30 font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all">
@@ -84,9 +79,7 @@ class AdminTickets {
                         </button>
                     `;
                 } else {
-                    attachmentButton = `
-                        <span class="text-[11px] text-slate-500 italic">No receipt attached</span>
-                    `;
+                    attachmentButton = `<span class="text-[11px] text-slate-500 italic">No receipt attached</span>`;
                 }
 
                 return `
@@ -96,7 +89,6 @@ class AdminTickets {
                         <p class="text-slate-400">Numbers: ${ticket.numbers?.join(', ') || 'N/A'}</p>
                         <p class="text-slate-400">Cost: ${ticket.cost} ETB • Payment: ${ticket.paymentMethod || 'N/A'}</p>
                         
-                        <!-- Attached Receipt Row -->
                         <div class="py-1 flex items-center justify-between">
                             ${attachmentButton}
                         </div>
@@ -126,7 +118,6 @@ class AdminTickets {
         const container = document.getElementById('receipt-modal-content');
         if (!modal || !container) return;
 
-        // Check if the file is an image or a PDF/document link
         const isImage = /\.(jpeg|jpg|gif|png|webp|avif)(?=\?|#|$)/i.test(url) || url.startsWith('data:image');
 
         if (isImage) {
