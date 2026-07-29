@@ -167,33 +167,34 @@ class CustomerDashboard {
         `;
     }
 
-    async loadData() {
-        try {
-            generateNumbersGrid();
-            await loadAdminsDropdown();
-            await loadCustomerSettings();
-            
-            if (!window.customerTicketsInstance) {
-                window.customerTicketsInstance = new CustomerTickets(currentUser.email);
-            }
-            await window.customerTicketsInstance.init();
-
-            // ✅ Synchronize Appointments component with logged-in user email
-            const activeCustId = window.currentUser?.email || localStorage.getItem('currentCustId') || 'DEFAULT';
-            if (!window.customerAppointments) {
-                window.customerAppointments = new CustomerAppointments(activeCustId);
-            } else {
-                window.customerAppointments.setCustId(activeCustId);
-            }
-
-            await loadCustomerStats();
-            await loadCustomerProfileData();
-
-            switchCustomerTab('drawings');
-        } catch (error) {
-            console.error('Error loading customer data:', error);
+   
+async loadData() {
+    try {
+        generateNumbersGrid();
+        await loadAdminsDropdown();
+        await loadCustomerSettings();
+        
+        if (!window.customerTicketsInstance) {
+            window.customerTicketsInstance = new CustomerTickets(currentUser.email);
         }
+        await window.customerTicketsInstance.init();
+
+        // ✅ FIX: Force synchronized email binding for appointments
+        const activeCustId = currentUser?.email || window.currentUser?.email || 'DEFAULT';
+        if (!window.customerAppointments) {
+            window.customerAppointments = new CustomerAppointments(activeCustId);
+        } else {
+            window.customerAppointments.setCustId(activeCustId);
+        }
+
+        await loadCustomerStats();
+        await loadCustomerProfileData();
+
+        switchCustomerTab('drawings');
+    } catch (error) {
+        console.error('Error loading customer data:', error);
     }
+}
 }
 
 window_customerDashboard = null;
