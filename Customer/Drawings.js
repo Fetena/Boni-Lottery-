@@ -1,5 +1,5 @@
 // ============================================
-// CUSTOMER DRAWINGS (CHILD COMPONENT)
+// CUSTOMER DRAWINGS (CHILD COMPONENT - WITH LIVE COUNTDOWN)
 // Parent: CustomerDashboard
 // View drawings managed by the customer's registered admin
 // ============================================
@@ -9,6 +9,8 @@ class CustomerDrawings {
         this.custId = custId;
         this.customerAdmin = null;
         this.draws = [];
+        this.targetDateObj = null;
+        this.countdownTimer = null;
         this.init();
     }
 
@@ -43,7 +45,6 @@ class CustomerDrawings {
             }
 
             if (snapshot.empty) {
-                // Fallback: try fetching all draws / drawings if admin-specific query yields nothing
                 snapshot = await db.collection('draws').get();
                 if (snapshot.empty) {
                     snapshot = await db.collection('drawings').get();
@@ -74,7 +75,7 @@ class CustomerDrawings {
         }
     }
 
-    // Real-time listener for the admin's saved schedule updates
+    // Real-time listener for the admin's saved schedule updates & countdown calculation
     async initCustomerScheduleListener() {
         if (!db) return;
 
@@ -83,18 +84,36 @@ class CustomerDrawings {
             
             if (doc.exists) {
                 const data = doc.data();
-                const targetDate = data.targetDate || 'Upcoming Draw';
+                const targetDate = data.targetDate || '';
                 const targetTime = data.targetTime || '';
-                const ampm = data.ampm || '';
+                const ampm = data.ampm || 'PM';
 
                 if (scheduleBanner) {
                     scheduleBanner.innerHTML = `🎯 Next Scheduled Draw: <span class="text-yellow-400 font-bold">${targetDate} at ${targetTime} ${ampm}</span>`;
                 }
 
-                // Also update the dynamic next draw details on the UI if present
                 const nextDrawTitleEl = document.getElementById('next-draw-datetime-display');
                 if (nextDrawTitleEl) {
                     nextDrawTitleEl.textContent = `${targetDate} • ${targetTime} ${ampm}`;
+                }
+
+                // Parse exact target date for live countdown calculation
+                if (targetDate && targetTime) {
+                    const parts = targetDate.split('-').map(Number);
+                    if (parts.length === 3) {
+                        const [year, month, day] = parts;
+                        let [hours, minutes] = targetTime.split(':').map(Number);
+
+                        if (ampm === 'PM' && hours < 12) hours += 12;
+                        if (ampm === 'AM' && hours === 12) hours = 0;
+
+                        this.targetDateObj = new Date(year, month - 1, day, hours, minutes, 0, 0);
+                        
+                        // Start interval ticker
+                        if (this.countdownTimer) clearInterval(this.countdownTimer);
+                        this.updateCountdownDisplay();
+                        this.countdownTimer = setInterval(() => this.updateCountdownDisplay(), 1000);
+                    }
                 }
             } else {
                 if (scheduleBanner) {
@@ -102,6 +121,45 @@ class CustomerDrawings {
                 }
             }
         });
+    }
+
+    updateCountdownDisplay() {
+        const timerBadge = document.getElementById('customer-live-countdown-badge');
+        const watchBtn = document.getElementById('customer-tiktok-btn');
+        if (!timerBadge || !this.targetDateObj) return;
+
+        const now = new Date();
+        const diffMs = this.targetDateObj - now;
+
+        if (diffMs <= 0) {
+            timerBadge.className = "text-xs font-mono font-bold text-emerald-400 bg-emerald-950/40 px-3 py-1 rounded-full border border-emerald-500/30 inline-block my-1";
+            timerBadge.innerHTML = '🟢 DRAW LIVE / UNLOCKED NOW!';
+            
+            if (watchBtn) {
+                watchBtn.disabled = false;
+                watchBtn.className = "px-8 py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-black rounded-xl shadow-lg cursor-pointer hover:opacity-95 transition-all";
+                watchBtn.innerHTML = "📱 Watch Live on TikTok (Active)";
+            }
+        } else {
+            const diffMins = Math.floor(diffMs / 60000);
+            const days = Math.floor(diffMins / (60 * 24));
+            const hrs = Math.floor((diffMins % (60 * 24)) / 60);
+            const mins = diffMins % 60;
+            const secs = Math.floor((diffMs % 60000) / 1000);
+
+            let timeStr = '';
+            if (days > 0) timeStr += `${days}d `;
+            timeStr += `${hrs}h ${mins}m ${secs}s`;
+
+            timerBadge.className = "text-xs font-mono font-bold text-amber-400 bg-amber-400/10 px-3 py-1 rounded-full border border-amber-400/20 inline-block my-1";
+            timerBadge.innerHTML = `⏳ COUNTDOWN: ${timeStr}`;
+
+            if (watchBtn) {
+                watchBtn.disabled = true;
+                watchBtn.className = "px-8 py-3 bg-slate-800 text-slate-500 font-bold rounded-xl cursor-not-allowed transition-all";
+                watchBtn.innerHTML = `🔒 TikTok Live Opens in ${timeStr}`;
+            }
+        }
     }
 
     defaultDraws() {
@@ -137,13 +195,22 @@ class CustomerDrawings {
                     🎯 Next Scheduled Draw: <span class="text-slate-400 italic">Loading live schedule...</span>
                 </div>
 
-                <!-- UPCOMING DRAW (DYNAMICALLY FETCHED FROM ADMIN SCHEDULE) -->
+                <!-- UPCOMING DRAW & LIVE COUNTDOWN -->
                 <div class="glass-panel rounded-2xl p-8 border border-yellow-400/10 text-center space-y-4 bg-gradient-to-br from-yellow-400/10 to-transparent">
                     <h4 class="text-2xl font-bold text-yellow-400">Next Admin Drawing</h4>
                     <p id="next-draw-datetime-display" class="text-3xl font-bold text-white">${nextDraw.date} • ${nextDraw.time}</p>
+                    
+                    <!-- DYNAMIC COUNTDOWN BADGE -->
+                    <div>
+                        <span id="customer-live-countdown-badge" class="text-xs font-mono font-bold text-amber-400 bg-amber-400/10 px-3 py-1 rounded-full border border-amber-400/20 inline-block my-1">
+                            ⏳ Calculating Countdown...
+                        </span>
+                    </div>
+
                     <p class="text-slate-300 font-medium">Prize Pool: <span class="text-yellow-400">${nextDraw.prizePool || 0} ETB</span></p>
-                    <button onclick="customerDrawings.goToTikTok()" 
-                        class="px-8 py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">📱 Watch Live on TikTok</button>
+                    
+                    <button id="customer-tiktok-btn" onclick="customerDrawings.goToTikTok()" 
+                        class="px-8 py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl transition-all">📱 Watch Live on TikTok</button>
                 </div>
 
                 <!-- CHECK IF WON -->
