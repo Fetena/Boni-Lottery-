@@ -65,43 +65,49 @@ class CustomerAppointments {
         }
     }
 
-    startCustomerNotificationPoller() {
-        if (this._pollingInterval) clearInterval(this._pollingInterval);
-        
-        this._pollingInterval = setInterval(() => {
-            try {
-                Object.keys(localStorage).forEach(key => {
-                    if (key.startsWith('customer_notifications_')) {
-                        const raw = localStorage.getItem(key);
-                        if (raw) {
-                            const notifs = JSON.parse(raw);
-                            const unread = notifs.filter(n => !n.viewed);
+    // Inside CustomerAppointments -> startCustomerNotificationPoller()
+startCustomerNotificationPoller() {
+    if (this._pollingInterval) clearInterval(this._pollingInterval);
+    
+    this._pollingInterval = setInterval(() => {
+        try {
+            const currentEmail = currentUser?.email || this.custId;
+            
+            // Check both specific user keys and generic fallback keys
+            const keysToCheck = [
+                `customer_notifications_${currentEmail}`,
+                `customer_notifications_${this.custId}`,
+                'customer_notifications_DEFAULT'
+            ];
 
-                            if (unread.length > 0) {
-                                unread.forEach(n => {
-                                    // Trigger visual popup modal
-                                    this.showPopupModal(n.message, n.status);
-                                    
-                                    // Trigger toast notification if available
-                                    const type = n.status === 'Approved' ? 'success' : 'error';
-                                    if (typeof notify === 'function') notify(type, `🔔 ${n.message}`);
-                                    
-                                    n.viewed = true;
-                                });
+            keysToCheck.forEach(key => {
+                const raw = localStorage.getItem(key);
+                if (raw) {
+                    const notifs = JSON.parse(raw);
+                    const unread = notifs.filter(n => !n.viewed);
 
-                                localStorage.setItem(key, JSON.stringify(notifs));
-                                this.loadAppointments();
-                                this.refreshList();
-                                this.updateBadgeCount();
-                            }
-                        }
+                    if (unread.length > 0) {
+                        unread.forEach(n => {
+                            this.showPopupModal(n.message, n.status);
+                            
+                            const type = n.status === 'Approved' ? 'success' : 'error';
+                            if (typeof notify === 'function') notify(type, `🔔 ${n.message}`);
+                            
+                            n.viewed = true;
+                        });
+
+                        localStorage.setItem(key, JSON.stringify(notifs));
+                        this.loadAppointments();
+                        this.refreshList();
+                        this.updateBadgeCount();
                     }
-                });
-            } catch (e) {
-                console.error('Polling error:', e);
-            }
-        }, 2000);
-    }
+                }
+            });
+        } catch (e) {
+            console.error('Polling error:', e);
+        }
+    }, 2000);
+}
 
     showPopupModal(message, status) {
         // Remove any existing popup modal first
