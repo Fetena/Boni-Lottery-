@@ -96,17 +96,22 @@ class AdminLotteryDraw {
     }
 
     getTargetDateTime() {
-        const dateStr = document.getElementById('draw-target-date')?.value;
-        const timeStr = document.getElementById('draw-target-time')?.value;
-        const ampmStr = document.getElementById('draw-target-ampm')?.value;
+        const dateStr = document.getElementById('draw-target-date')?.value; // Format: YYYY-MM-DD
+        const timeStr = document.getElementById('draw-target-time')?.value; // Format: HH:MM
+        const ampmStr = document.getElementById('draw-target-ampm')?.value; // AM or PM
 
         if (!dateStr || !timeStr) return null;
 
+        // Parse YYYY-MM-DD safely
+        const [year, month, day] = dateStr.split('-').map(Number);
+        if (!year || !month || !day) return null;
+
+        // Parse 12-hour time to 24-hour format
         let [hours, minutes] = timeStr.split(':').map(Number);
         if (ampmStr === 'PM' && hours < 12) hours += 12;
         if (ampmStr === 'AM' && hours === 12) hours = 0;
 
-        const [year, month, day] = dateStr.split('-').map(Number);
+        // Note: JavaScript months are 0-indexed (0 = January, 7 = August)
         return new Date(year, month - 1, day, hours, minutes, 0);
     }
 
