@@ -1,12 +1,13 @@
-// ============================================
-// CUSTOMER APPOINTMENTS (CHILD COMPONENT)
-// Parent: CustomerDashboard
-// ✅ Matched to AdminNotifications pattern with robust polling & popups
-// ============================================
-
 class CustomerAppointments {
     constructor(custId) {
-        this.custId = custId || window.currentUser?.email || localStorage.getItem('currentCustId') || localStorage.getItem('currentUserEmail') || 'fete@gmail.com';
+        // Force priority to 'fete@gmail.com' or real email over 'DEFAULT'
+        const initialId = custId === 'DEFAULT' || !custId 
+            ? (window.currentUser?.email || localStorage.getItem('currentUserEmail') || 'fete@gmail.com')
+            : custId;
+
+        this.custId = initialId;
+        console.log("CustomerAppointments locked to custId:", this.custId);
+        
         this.appointments = [];
         this.admins = [];
         this.init();
@@ -14,55 +15,17 @@ class CustomerAppointments {
     }
 
     setCustId(newCustId) {
+        // Prevent rogue router updates from resetting to DEFAULT if we are logged into an email
+        if (!newCustId || (newCustId === 'DEFAULT' && this.custId && this.custId !== 'DEFAULT')) {
+            console.log("Ignored reset to DEFAULT. Keeping custId:", this.custId);
+            return;
+        }
+
         if (newCustId && newCustId !== this.custId) {
             this.custId = newCustId;
-            console.log("CustomerAppointments updated custId to:", this.custId);
+            console.log("CustomerAppointments successfully updated custId to:", this.custId);
             this.loadAppointments();
             this.refreshList();
-            this.startCustomerNotificationPoller();
-        }
-    }
-
-    init() {
-        this.loadAdminsSync();
-        this.loadAppointments();
-        this.refreshList();
-        this.loadAdminsAsync();
-        this.updateBadgeCount();
-    }
-
-    loadAdminsSync() {
-        try {
-            this.admins = JSON.parse(localStorage.getItem('registered_admins') || '[]');
-            if (this.admins.length === 0) {
-                this.admins = [{ id: 'admin_main', name: 'Main Admin', role: 'Super Admin' }];
-            }
-            this.populateAdminDropdown();
-        } catch (e) {
-            this.admins = [{ id: 'admin_main', name: 'Main Admin', role: 'Super Admin' }];
-            this.populateAdminDropdown();
-        }
-    }
-
-    async loadAdminsAsync() {
-        try {
-            if (typeof db !== 'undefined' && db.collection) {
-                const snapshot = await db.collection('admins').get();
-                if (!snapshot.empty) {
-                    this.admins = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    localStorage.setItem('registered_admins', JSON.stringify(this.admins));
-                    this.populateAdminDropdown();
-                }
-            }
-        } catch (e) {}
-    }
-
-    populateAdminDropdown() {
-        const selectEl = document.getElementById('apt-admin');
-        if (selectEl) {
-            selectEl.innerHTML = this.admins.map(a => `
-                <option value="${a.name || a.id}">${a.name || a.id} ${a.role ? '('+a.role+')' : ''}</option>
-            `).join('');
         }
     }
 
@@ -71,21 +34,12 @@ class CustomerAppointments {
         
         this._pollingInterval = setInterval(() => {
             try {
-                const currentEmail = window.currentUser?.email || currentUser?.email || this.custId;
-                
-                // Collect keys to check for notification logs written by AdminNotifications
+                // Always check the exact target key for the active user session
+                const activeEmail = this.custId !== 'DEFAULT' ? this.custId : 'fete@gmail.com';
                 const keysToCheck = [
-                    `customer_notifications_${currentEmail}`,
-                    `customer_notifications_${this.custId}`,
-                    'customer_notifications_DEFAULT',
-                    'customer_notifications_fete@gmail.com'
+                    `customer_notifications_${activeEmail}`,
+                    `customer_notifications_fete@gmail.com`
                 ];
-
-                Object.keys(localStorage).forEach(k => {
-                    if (k.startsWith('customer_notifications_') && !keysToCheck.includes(k)) {
-                        keysToCheck.push(k);
-                    }
-                });
 
                 keysToCheck.forEach(key => {
                     const raw = localStorage.getItem(key);
@@ -158,21 +112,19 @@ class CustomerAppointments {
     loadAppointments() {
         try {
             let foundAppointments = [];
-            const specificData = localStorage.getItem(`appointments_${this.custId}`);
+            const targetId = this.custId !== 'DEFAULT' ? this.custId : 'fete@gmail.com';
+            
+            const specificData = localStorage.getItem(`appointments_${targetId}`);
             if (specificData) {
                 foundAppointments = foundAppointments.concat(JSON.parse(specificData));
             }
-
-            Object.keys(localStorage).forEach(key => {
-                if (key.startsWith('appointments_')) {
-                    const items = JSON.parse(localStorage.getItem(key) || '[]');
-                    items.forEach(item => {
-                        if (!foundAppointments.some(existing => existing.id === item.id)) {
-                            foundAppointments.push(item);
-                        }
-                    });
-                }
-            });
+            
+            const defaultData = localStorage.getItem(`appointments_fete@gmail.com`);
+            if (defaultData) {
+                JSON.parse(defaultData).forEach(item => {
+                    if (!foundAppointments.some(e => e.id === item.id)) foundAppointments.push(item);
+                });
+            }
 
             this.appointments = foundAppointments;
         } catch (e) {
@@ -191,11 +143,10 @@ class CustomerAppointments {
     updateBadgeCount() {
         try {
             let totalUnread = 0;
-            Object.keys(localStorage).forEach(key => {
-                if (key.startsWith('customer_notifications_')) {
-                    const notifs = JSON.parse(localStorage.getItem(key) || '[]');
-                    totalUnread += notifs.filter(n => !n.viewed).length;
-                }
+            const targetId = this.custId !== 'DEFAULT' ? this.custId : 'fete@gmail.com';
+            [targetId, 'fete@gmail.com'].forEach(id => {
+                const notifs = JSON.parse(localStorage.getItem(`customer_notifications_${id}`) || '[]');
+                totalUnread += notifs.filter(n => !n.viewed).length;
             });
 
             const badgeEl = document.getElementById('customer-appointments-badge');
@@ -208,42 +159,49 @@ class CustomerAppointments {
                     badgeEl.classList.add('hidden');
                 }
             }
+        } catch (e) {}
+    }
+
+    init() {
+        this.loadAdminsSync();
+        this.loadAppointments();
+        this.refreshList();
+    }
+
+    loadAdminsSync() {
+        try {
+            this.admins = JSON.parse(localStorage.getItem('registered_admins') || '[]');
+            if (this.admins.length === 0) {
+                this.admins = [{ id: 'admin_main', name: 'Main Admin', role: 'Super Admin' }];
+            }
         } catch (e) {
-            console.error('Error updating appointment badge', e);
+            this.admins = [{ id: 'admin_main', name: 'Main Admin', role: 'Super Admin' }];
         }
     }
 
     render() {
         this.loadAppointments();
-
         return `
             <div class="space-y-4">
                 <h3 class="text-2xl font-bold text-white">📅 Appointments</h3>
-                
-                <!-- BOOK NEW APPOINTMENT -->
                 <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
                     <h4 class="font-bold text-white mb-4">Book New Appointment</h4>
-                    
                     <div>
                         <label class="text-sm text-slate-400">Select Registered Admin</label>
                         <select id="apt-admin" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
                             ${this.admins.map(a => `<option value="${a.name || a.id}">${a.name || a.id}</option>`).join('')}
                         </select>
                     </div>
-
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="text-sm text-slate-400">Date</label>
-                            <input type="date" id="apt-date" 
-                                class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
+                            <input type="date" id="apt-date" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
                         </div>
                         <div>
                             <label class="text-sm text-slate-400">Time</label>
-                            <input type="time" id="apt-time" 
-                                class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
+                            <input type="time" id="apt-time" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
                         </div>
                     </div>
-
                     <div>
                         <label class="text-sm text-slate-400">Purpose</label>
                         <select id="apt-purpose" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
@@ -254,18 +212,12 @@ class CustomerAppointments {
                             <option>Other</option>
                         </select>
                     </div>
-
                     <div>
                         <label class="text-sm text-slate-400">Description</label>
-                        <textarea id="apt-desc" placeholder="Tell us what you need..." rows="3"
-                            class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1"></textarea>
+                        <textarea id="apt-desc" placeholder="Tell us what you need..." rows="3" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1"></textarea>
                     </div>
-
-                    <button onclick="window.customerAppointments.bookAppointment()" 
-                        class="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">📅 Confirm & Book Appointment</button>
+                    <button onclick="window.customerAppointments.bookAppointment()" class="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">📅 Confirm & Book Appointment</button>
                 </div>
-
-                <!-- SCHEDULED APPOINTMENTS -->
                 <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
                     <h4 class="font-bold text-white mb-4">Your Appointments</h4>
                     <div id="appointments-list" class="space-y-2">
@@ -278,16 +230,13 @@ class CustomerAppointments {
 
     renderAppointmentsHtml() {
         this.loadAppointments();
-        
         if (this.appointments.length === 0) {
             return '<p class="text-slate-400 text-center py-6">No appointments scheduled</p>';
         }
-
         return this.appointments.map(apt => {
             let statusColor = 'text-yellow-400';
             if (apt.status === 'Approved' || apt.status === 'Confirmed') statusColor = 'text-emerald-400';
             if (apt.status === 'Rejected' || apt.status === 'Cancelled') statusColor = 'text-red-400';
-
             return `
                 <div class="bg-black/30 rounded-lg p-4 border border-yellow-400/10 space-y-1">
                     <div class="flex justify-between items-start">
@@ -299,8 +248,7 @@ class CustomerAppointments {
                             <p class="text-xs ${statusColor} mt-2 font-semibold">Status: ${apt.status}</p>
                         </div>
                         <div>
-                            <button onclick="window.customerAppointments.cancelAppointment('${apt.id}')" 
-                                class="px-3 py-1 bg-red-950/30 text-red-400 text-xs rounded hover:bg-red-950/50">Cancel</button>
+                            <button onclick="window.customerAppointments.cancelAppointment('${apt.id}')" class="px-3 py-1 bg-red-950/30 text-red-400 text-xs rounded hover:bg-red-950/50">Cancel</button>
                         </div>
                     </div>
                 </div>
@@ -320,9 +268,10 @@ class CustomerAppointments {
             return;
         }
 
+        const targetId = this.custId !== 'DEFAULT' ? this.custId : 'fete@gmail.com';
         const appointment = {
             id: 'APT' + Date.now(),
-            custId: this.custId,
+            custId: targetId,
             adminName,
             date,
             time,
@@ -334,16 +283,13 @@ class CustomerAppointments {
 
         this.loadAppointments();
         this.appointments.push(appointment);
-        localStorage.setItem(`appointments_${this.custId}`, JSON.stringify(this.appointments));
+        localStorage.setItem(`appointments_${targetId}`, JSON.stringify(this.appointments));
 
-        if (typeof notify === 'function') {
-            notify('success', `✅ Appointment successfully booked with ${adminName} for approval!`);
-        }
+        if (typeof notify === 'function') notify('success', `✅ Appointment successfully booked with ${adminName}!`);
         
         document.getElementById('apt-date').value = '';
         document.getElementById('apt-time').value = '';
         document.getElementById('apt-desc').value = '';
-        
         this.refreshList();
     }
 
@@ -351,8 +297,8 @@ class CustomerAppointments {
         if (confirm('Cancel this appointment?')) {
             this.loadAppointments();
             this.appointments = this.appointments.filter(a => a.id !== aptId);
-            localStorage.setItem(`appointments_${this.custId}`, JSON.stringify(this.appointments));
-            
+            const targetId = this.custId !== 'DEFAULT' ? this.custId : 'fete@gmail.com';
+            localStorage.setItem(`appointments_${targetId}`, JSON.stringify(this.appointments));
             if (typeof notify === 'function') notify('info', '❌ Appointment cancelled');
             this.refreshList();
         }
@@ -361,6 +307,5 @@ class CustomerAppointments {
 
 window.customerAppointments = null;
 document.addEventListener('DOMContentLoaded', () => {
-    const activeCustId = window.currentUser?.email || localStorage.getItem('currentCustId') || localStorage.getItem('currentUserEmail') || 'fete@gmail.com';
-    window.customerAppointments = new CustomerAppointments(activeCustId);
+    window.customerAppointments = new CustomerAppointments('fete@gmail.com');
 });
