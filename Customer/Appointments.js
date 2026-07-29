@@ -1,7 +1,7 @@
 // ============================================
 // CUSTOMER APPOINTMENTS (CHILD COMPONENT)
 // Parent: CustomerDashboard
-// Optimized for zero lag & instant notifications
+// ✅ Supports instant notifications & badge updates
 // ============================================
 
 class CustomerAppointments {
@@ -14,13 +14,11 @@ class CustomerAppointments {
     }
 
     init() {
-        // Load instantly from localStorage cache first to prevent any UI lag
         this.loadAdminsSync();
         this.loadAppointments();
         this.refreshList();
-
-        // Fetch remote admins in background without blocking rendering
         this.loadAdminsAsync();
+        this.updateBadgeCount();
     }
 
     loadAdminsSync() {
@@ -46,9 +44,7 @@ class CustomerAppointments {
                     this.populateAdminDropdown();
                 }
             }
-        } catch (e) {
-            // Silently fallback to cached admins if offline or timeout
-        }
+        } catch (e) {}
     }
 
     populateAdminDropdown() {
@@ -76,7 +72,6 @@ class CustomerAppointments {
                         unread.forEach(n => {
                             const type = n.status === 'Approved' ? 'success' : 'error';
                             
-                            // Trigger both local notify function or window fallback
                             if (typeof notify === 'function') {
                                 notify(type, `🔔 ${n.message}`);
                             } else if (window.notify) {
@@ -89,6 +84,7 @@ class CustomerAppointments {
                         localStorage.setItem(key, JSON.stringify(notifs));
                         this.loadAppointments();
                         this.refreshList();
+                        this.updateBadgeCount();
                     }
                 }
             } catch (e) {
@@ -127,10 +123,41 @@ class CustomerAppointments {
         if (listEl) {
             listEl.innerHTML = this.renderAppointmentsHtml();
         }
+        this.updateBadgeCount();
+    }
+
+    updateBadgeCount() {
+        try {
+            const key = `customer_notifications_${this.custId}`;
+            const notifs = JSON.parse(localStorage.getItem(key) || '[]');
+            const unreadCount = notifs.filter(n => !n.viewed).length;
+
+            const badgeEl = document.getElementById('customer-appointments-badge');
+            if (badgeEl) {
+                if (unreadCount > 0) {
+                    badgeEl.textContent = unreadCount;
+                    badgeEl.classList.remove('hidden');
+                } else {
+                    badgeEl.textContent = '0';
+                    badgeEl.classList.add('hidden');
+                }
+            }
+        } catch (e) {
+            console.error('Error updating appointment badge', e);
+        }
     }
 
     render() {
         this.loadAppointments();
+        
+        // Mark existing notifications as viewed when customer opens the Appointments tab
+        try {
+            const key = `customer_notifications_${this.custId}`;
+            const notifs = JSON.parse(localStorage.getItem(key) || '[]');
+            notifs.forEach(n => n.viewed = true);
+            localStorage.setItem(key, JSON.stringify(notifs));
+            this.updateBadgeCount();
+        } catch(e) {}
 
         return `
             <div class="space-y-4">
