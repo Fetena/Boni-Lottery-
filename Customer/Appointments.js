@@ -1,12 +1,12 @@
 // ============================================
 // CUSTOMER APPOINTMENTS (CHILD COMPONENT)
 // Parent: CustomerDashboard
-// ✅ Supports instant notifications & badge updates
+// ✅ Includes direct visual popup alert for admin approvals
 // ============================================
 
 class CustomerAppointments {
     constructor(custId) {
-        this.custId = window.currentUser?.email || custId || localStorage.getItem('currentCustId') || localStorage.getItem('currentUserEmail') || 'DEFAULT';
+        this.custId = custId || window.currentUser?.email || localStorage.getItem('currentCustId') || localStorage.getItem('currentUserEmail') || 'fete!';
         this.appointments = [];
         this.admins = [];
         this.init();
@@ -70,35 +70,70 @@ class CustomerAppointments {
         
         this._pollingInterval = setInterval(() => {
             try {
-                const key = `customer_notifications_${this.custId}`;
-                const raw = localStorage.getItem(key);
-                if (raw) {
-                    const notifs = JSON.parse(raw);
-                    const unread = notifs.filter(n => !n.viewed);
+                Object.keys(localStorage).forEach(key => {
+                    if (key.startsWith('customer_notifications_')) {
+                        const raw = localStorage.getItem(key);
+                        if (raw) {
+                            const notifs = JSON.parse(raw);
+                            const unread = notifs.filter(n => !n.viewed);
 
-                    if (unread.length > 0) {
-                        unread.forEach(n => {
-                            const type = n.status === 'Approved' ? 'success' : 'error';
-                            
-                            if (typeof notify === 'function') {
-                                notify(type, `🔔 ${n.message}`);
-                            } else if (window.notify) {
-                                window.notify(type, `🔔 ${n.message}`);
+                            if (unread.length > 0) {
+                                unread.forEach(n => {
+                                    // Trigger visual popup modal
+                                    this.showPopupModal(n.message, n.status);
+                                    
+                                    // Trigger toast notification if available
+                                    const type = n.status === 'Approved' ? 'success' : 'error';
+                                    if (typeof notify === 'function') notify(type, `🔔 ${n.message}`);
+                                    
+                                    n.viewed = true;
+                                });
+
+                                localStorage.setItem(key, JSON.stringify(notifs));
+                                this.loadAppointments();
+                                this.refreshList();
+                                this.updateBadgeCount();
                             }
-
-                            n.viewed = true;
-                        });
-
-                        localStorage.setItem(key, JSON.stringify(notifs));
-                        this.loadAppointments();
-                        this.refreshList();
-                        this.updateBadgeCount();
+                        }
                     }
-                }
+                });
             } catch (e) {
                 console.error('Polling error:', e);
             }
         }, 2000);
+    }
+
+    showPopupModal(message, status) {
+        // Remove any existing popup modal first
+        const existing = document.getElementById('apt-popup-modal');
+        if (existing) existing.remove();
+
+        const isApproved = status === 'Approved';
+        const borderColor = isApproved ? 'border-emerald-500' : 'border-red-500';
+        const textColor = isApproved ? 'text-emerald-400' : 'text-red-400';
+        const icon = isApproved ? '🎉' : '⚠️';
+
+        const modalHtml = `
+            <div id="apt-popup-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
+                <div class="glass-panel w-full max-w-md rounded-2xl border ${borderColor} p-6 space-y-4 shadow-2xl bg-black">
+                    <div class="flex items-center space-x-3">
+                        <span class="text-3xl">${icon}</span>
+                        <div>
+                            <h3 class="text-lg font-bold text-white">Appointment Update</h3>
+                            <p class="text-xs ${textColor} font-semibold">Status: ${status || 'Updated'}</p>
+                        </div>
+                    </div>
+                    <div class="p-4 bg-black/50 rounded-xl border border-yellow-400/10 text-sm text-slate-200">
+                        ${message}
+                    </div>
+                    <button onclick="document.getElementById('apt-popup-modal').remove()" 
+                        class="w-full py-2.5 bg-yellow-400 text-black font-bold rounded-xl text-xs hover:bg-yellow-500 transition-all">
+                        Got It, Thanks!
+                    </button>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
     }
 
     loadAppointments() {
@@ -136,20 +171,23 @@ class CustomerAppointments {
 
     updateBadgeCount() {
         try {
-            const key = `customer_notifications_${this.custId}`;
-            const notifs = JSON.parse(localStorage.getItem(key) || '[]');
-            const unreadCount = notifs.filter(n => !n.viewed).length;
+            Object.keys(localStorage).forEach(key => {
+                if (key.startsWith('customer_notifications_')) {
+                    const notifs = JSON.parse(localStorage.getItem(key) || '[]');
+                    const unreadCount = notifs.filter(n => !n.viewed).length;
 
-            const badgeEl = document.getElementById('customer-appointments-badge');
-            if (badgeEl) {
-                if (unreadCount > 0) {
-                    badgeEl.textContent = unreadCount;
-                    badgeEl.classList.remove('hidden');
-                } else {
-                    badgeEl.textContent = '0';
-                    badgeEl.classList.add('hidden');
+                    const badgeEl = document.getElementById('customer-appointments-badge');
+                    if (badgeEl) {
+                        if (unreadCount > 0) {
+                            badgeEl.textContent = unreadCount;
+                            badgeEl.classList.remove('hidden');
+                        } else {
+                            badgeEl.textContent = '0';
+                            badgeEl.classList.add('hidden');
+                        }
+                    }
                 }
-            }
+            });
         } catch (e) {
             console.error('Error updating appointment badge', e);
         }
@@ -157,14 +195,6 @@ class CustomerAppointments {
 
     render() {
         this.loadAppointments();
-        
-        try {
-            const key = `customer_notifications_${this.custId}`;
-            const notifs = JSON.parse(localStorage.getItem(key) || '[]');
-            notifs.forEach(n => n.viewed = true);
-            localStorage.setItem(key, JSON.stringify(notifs));
-            this.updateBadgeCount();
-        } catch(e) {}
 
         return `
             <div class="space-y-4">
