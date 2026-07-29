@@ -95,23 +95,36 @@ class AdminLotteryDraw {
         this.scheduleCheckInterval = setInterval(() => this.checkScheduleTiming(), 1000);
     }
 
-    getTargetDateTime() {
-        const dateStr = document.getElementById('draw-target-date')?.value; // Format: YYYY-MM-DD
-        const timeStr = document.getElementById('draw-target-time')?.value; // Format: HH:MM
-        const ampmStr = document.getElementById('draw-target-ampm')?.value; // AM or PM
+   getTargetDateTime() {
+        const dateStr = document.getElementById('draw-target-date')?.value;
+        const timeStr = document.getElementById('draw-target-time')?.value;
+        const ampmStr = document.getElementById('draw-target-ampm')?.value;
 
         if (!dateStr || !timeStr) return null;
 
-        // Parse YYYY-MM-DD safely
-        const [year, month, day] = dateStr.split('-').map(Number);
-        if (!year || !month || !day) return null;
+        // Split by any common separator (- or / or .)
+        const parts = dateStr.split(/[-/.]/).map(Number);
+        if (parts.length !== 3) return null;
+
+        let year, month, day;
+
+        // Automatically detect if the year is first (YYYY-MM-DD) or last (MM-DD-YYYY / DD-MM-YYYY)
+        if (parts[0] > 1000) {
+            [year, month, day] = parts;
+        } else {
+            // Assume MM/DD/YYYY or DD/MM/YYYY. Let's check which is month vs day based on values, 
+            // or default standard browser ISO order (parts[0] = month, parts[1] = day, parts[2] = year)
+            month = parts[0];
+            day = parts[1];
+            year = parts[2];
+        }
 
         // Parse 12-hour time to 24-hour format
         let [hours, minutes] = timeStr.split(':').map(Number);
         if (ampmStr === 'PM' && hours < 12) hours += 12;
         if (ampmStr === 'AM' && hours === 12) hours = 0;
 
-        // Note: JavaScript months are 0-indexed (0 = January, 7 = August)
+        // JavaScript months are 0-indexed (0 = January)
         return new Date(year, month - 1, day, hours, minutes, 0);
     }
 
