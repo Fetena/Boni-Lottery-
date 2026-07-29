@@ -31,7 +31,9 @@ class CustomerDashboard {
                                🎟️ My Tickets <span id="customer-tickets-badge" class="hidden absolute -top-1 -right-1 px-1.5 py-0.5 bg-red-500 text-white rounded-full text-[9px] font-bold">0</span>
                                 </button>
                             <button onclick="switchCustomerTab('library')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">📖 Library</button>
-                            <button onclick="switchCustomerTab('appointments')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">📅 Appointments</button>
+                            <button onclick="switchCustomerTab('appointments')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 relative">
+                              📅 Appointments <span id="customer-appointments-badge" class="hidden absolute -top-1 -right-1 px-1.5 py-0.5 bg-red-500 text-white rounded-full text-[9px] font-bold">0</span>
+                               </button>
                             <button onclick="switchCustomerTab('settings')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">⚙️ Settings</button>
                             <button onclick="switchCustomerTab('profile')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">👤 Profile & Security</button>
                         </div>
