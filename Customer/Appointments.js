@@ -1,15 +1,12 @@
 // ============================================
 // CUSTOMER APPOINTMENTS (CHILD COMPONENT)
 // Parent: CustomerDashboard
-// ✅ Includes direct visual popup alert for admin approvals
+// ✅ Matched to AdminNotifications pattern with robust polling & popups
 // ============================================
 
 class CustomerAppointments {
     constructor(custId) {
-        // Prevent fallback overwriting an already valid email session
-        const resolvedId = custId || window.currentUser?.email || currentUser?.email || localStorage.getItem('currentCustId') || localStorage.getItem('currentUserEmail');
-        this.custId = (resolvedId && resolvedId !== 'DEFAULT') ? resolvedId : 'fete@gmail.com';
-        
+        this.custId = custId || window.currentUser?.email || localStorage.getItem('currentCustId') || localStorage.getItem('currentUserEmail') || 'fete@gmail.com';
         this.appointments = [];
         this.admins = [];
         this.init();
@@ -17,10 +14,9 @@ class CustomerAppointments {
     }
 
     setCustId(newCustId) {
-        const validNewId = (newCustId && newCustId !== 'DEFAULT') ? newCustId : (window.currentUser?.email || this.custId);
-        if (validNewId && validNewId !== this.custId) {
-            this.custId = validNewId;
-            console.log("CustomerAppointments locked custId to:", this.custId);
+        if (newCustId && newCustId !== this.custId) {
+            this.custId = newCustId;
+            console.log("CustomerAppointments updated custId to:", this.custId);
             this.loadAppointments();
             this.refreshList();
             this.startCustomerNotificationPoller();
@@ -77,15 +73,14 @@ class CustomerAppointments {
             try {
                 const currentEmail = window.currentUser?.email || currentUser?.email || this.custId;
                 
-                // Construct dynamic keys to look for notifications written by the admin panel
+                // Collect keys to check for notification logs written by AdminNotifications
                 const keysToCheck = [
                     `customer_notifications_${currentEmail}`,
                     `customer_notifications_${this.custId}`,
                     'customer_notifications_DEFAULT',
-                    'customer_notifications_fete!'
+                    'customer_notifications_fete@gmail.com'
                 ];
 
-                // Also sweep all localStorage keys dynamically for any unread customer notifications
                 Object.keys(localStorage).forEach(k => {
                     if (k.startsWith('customer_notifications_') && !keysToCheck.includes(k)) {
                         keysToCheck.push(k);
@@ -103,10 +98,8 @@ class CustomerAppointments {
                         if (!n.viewed) {
                             console.log("🔔 Unread Notification Found in key [", key, "]:", n);
                             
-                            // Trigger Popup Modal
                             this.showPopupModal(n.message, n.status);
                             
-                            // Trigger Toast if helper exists
                             const type = (n.status === 'Approved' || n.status === 'Confirmed') ? 'success' : 'error';
                             if (typeof notify === 'function') {
                                 notify(type, `🔔 ${n.message}`);
@@ -131,19 +124,18 @@ class CustomerAppointments {
     }
 
     showPopupModal(message, status) {
-        // Remove any existing popup modal first
         const existing = document.getElementById('apt-popup-modal');
         if (existing) existing.remove();
 
         const isApproved = status === 'Approved' || status === 'Confirmed';
-        const borderColor = isApproved ? 'border-emerald-500' : 'border-red-500';
+        const borderColor = isApproved ? '#10b981' : '#ef4444';
         const textColor = isApproved ? 'text-emerald-400' : 'text-red-400';
         const icon = isApproved ? '🎉' : '⚠️';
 
         const modalHtml = `
             <div id="apt-popup-modal" style="position: fixed; inset: 0; z-index: 999999; display: flex; align-items: center; justify-content: center; background-color: rgba(0,0,0,0.85); backdrop-filter: blur(4px); padding: 1rem;">
-                <div class="glass-panel w-full max-w-md rounded-2xl border ${borderColor} p-6 space-y-4 shadow-2xl bg-black" style="background: #000; border: 2px solid ${isApproved ? '#10b981' : '#ef4444'};">
-                    <div class="flex items-center space-x-3" style="display: flex; align-items: center; gap: 12px;">
+                <div class="glass-panel w-full max-w-md rounded-2xl p-6 space-y-4 shadow-2xl" style="background: #000; border: 2px solid ${borderColor};">
+                    <div style="display: flex; align-items: center; gap: 12px;">
                         <span style="font-size: 28px;">${icon}</span>
                         <div>
                             <h3 style="color: #fff; font-size: 18px; font-weight: bold; margin: 0;">Appointment Update</h3>
@@ -160,8 +152,6 @@ class CustomerAppointments {
                 </div>
             </div>
         `;
-        
-        // Force append directly to body root to avoid layout/overflow clipping
         document.body.insertAdjacentHTML('beforeend', modalHtml);
     }
 
@@ -173,7 +163,6 @@ class CustomerAppointments {
                 foundAppointments = foundAppointments.concat(JSON.parse(specificData));
             }
 
-            // Fallback sweep of all appointment keys
             Object.keys(localStorage).forEach(key => {
                 if (key.startsWith('appointments_')) {
                     const items = JSON.parse(localStorage.getItem(key) || '[]');
@@ -272,7 +261,7 @@ class CustomerAppointments {
                             class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1"></textarea>
                     </div>
 
-                    <button onclick="customerAppointments.bookAppointment()" 
+                    <button onclick="window.customerAppointments.bookAppointment()" 
                         class="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">📅 Confirm & Book Appointment</button>
                 </div>
 
@@ -310,7 +299,7 @@ class CustomerAppointments {
                             <p class="text-xs ${statusColor} mt-2 font-semibold">Status: ${apt.status}</p>
                         </div>
                         <div>
-                            <button onclick="customerAppointments.cancelAppointment('${apt.id}')" 
+                            <button onclick="window.customerAppointments.cancelAppointment('${apt.id}')" 
                                 class="px-3 py-1 bg-red-950/30 text-red-400 text-xs rounded hover:bg-red-950/50">Cancel</button>
                         </div>
                     </div>
@@ -370,8 +359,8 @@ class CustomerAppointments {
     }
 }
 
-let customerAppointments;
+window.customerAppointments = null;
 document.addEventListener('DOMContentLoaded', () => {
-    const activeCustId = window.currentUser?.email || localStorage.getItem('currentCustId') || 'DEFAULT';
-    customerAppointments = new CustomerAppointments(activeCustId);
+    const activeCustId = window.currentUser?.email || localStorage.getItem('currentCustId') || localStorage.getItem('currentUserEmail') || 'fete@gmail.com';
+    window.customerAppointments = new CustomerAppointments(activeCustId);
 });
