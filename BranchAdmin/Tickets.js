@@ -1,5 +1,5 @@
 // ============================================
-// ADMIN TICKETS MODULE COMPONENT
+// ADMIN TICKETS MODULE COMPONENT (WITH DOCUMENT PREVIEW)
 // ============================================
 
 class AdminTickets {
@@ -13,11 +13,27 @@ class AdminTickets {
                 <h3 class="text-xl font-bold text-white">Recent Tickets</h3>
                 <div id="admin-tickets-list" class="space-y-3"></div>
             </div>
+
+            <!-- Receipt Modal Preview Container -->
+            <div id="receipt-modal" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center p-4">
+                <div class="glass-panel rounded-2xl max-w-2xl w-full p-6 border border-yellow-400/30 space-y-4 bg-black relative">
+                    <div class="flex justify-between items-center border-b border-yellow-400/20 pb-3">
+                        <h4 class="text-base font-bold text-yellow-400">📄 Attached Payment Document / Receipt</h4>
+                        <button onclick="window.adminTickets.closeReceiptModal()" class="text-slate-400 hover:text-white text-lg font-bold">&times;</button>
+                    </div>
+                    <div id="receipt-modal-content" class="flex justify-center items-center max-h-[70vh] overflow-auto py-2">
+                        <!-- Dynamic Receipt Content -->
+                    </div>
+                    <div class="flex justify-end pt-3 border-t border-yellow-400/20">
+                        <button onclick="window.adminTickets.closeReceiptModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold">Close Preview</button>
+                    </div>
+                </div>
+            </div>
         `;
     }
 
     async init() {
-        if (!db) return;
+        if (!db) return[cite: 9];
 
         try {
             const snapshot = await db.collection('customer_tickets')
@@ -26,10 +42,10 @@ class AdminTickets {
                 .get();
 
             const content = document.getElementById('admin-tickets-list');
-            if (!content) return;
+            if (!content) return[cite: 9];
 
             if (snapshot.empty) {
-                content.innerHTML = '<p class="text-slate-400">No tickets yet</p>';
+                content.innerHTML = '<p class="text-slate-400">No tickets yet</p>[cite: 9]';
                 this.updateTicketsTabBadge(0);
                 return;
             }
@@ -55,12 +71,36 @@ class AdminTickets {
                     `;
                 }
 
+                // Check for various potential attachment field names stored from the customer side
+                const attachmentUrl = ticket.receiptUrl || ticket.attachment || ticket.fileUrl || ticket.imageUrl || null;
+                
+                let attachmentButton = '';
+                if (attachmentUrl) {
+                    // Escape single quotes safely for inline JS click parameters
+                    const safeUrl = attachmentUrl.replace(/'/g, "\\'");
+                    attachmentButton = `
+                        <button onclick="window.adminTickets.viewReceipt('${safeUrl}')" class="px-3 py-1.5 bg-yellow-400/10 hover:bg-yellow-400/20 text-yellow-300 border border-yellow-400/30 font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all">
+                            <span>📄</span> View Attached Receipt
+                        </button>
+                    `;
+                } else {
+                    attachmentButton = `
+                        <span class="text-[11px] text-slate-500 italic">No receipt attached</span>
+                    `;
+                }
+
                 return `
                     <div class="glass-panel rounded-lg p-4 border ${isPending ? 'border-yellow-400/50 bg-yellow-500/[0.02]' : 'border-yellow-400/10'} text-xs space-y-2 relative mt-3">
                         ${notificationBadge}
                         <p class="text-white font-bold">Customer: ${ticket.customerName || 'N/A'} (${ticket.customerEmail || ''})</p>
                         <p class="text-slate-400">Numbers: ${ticket.numbers?.join(', ') || 'N/A'}</p>
                         <p class="text-slate-400">Cost: ${ticket.cost} ETB • Payment: ${ticket.paymentMethod || 'N/A'}</p>
+                        
+                        <!-- Attached Receipt Row -->
+                        <div class="py-1 flex items-center justify-between">
+                            ${attachmentButton}
+                        </div>
+
                         <div class="flex justify-between items-center pt-2 border-t border-yellow-400/10">
                             <span class="px-2 py-1 bg-yellow-400/20 text-yellow-400 rounded">${ticket.status || 'Pending'}</span>
                             <div class="flex gap-2">
@@ -79,6 +119,33 @@ class AdminTickets {
         } catch (error) {
             console.error('Error loading tickets:', error);
         }
+    }
+
+    viewReceipt(url) {
+        const modal = document.getElementById('receipt-modal');
+        const container = document.getElementById('receipt-modal-content');
+        if (!modal || !container) return;
+
+        // Check if the file is an image or a PDF/document link
+        const isImage = /\.(jpeg|jpg|gif|png|webp|avif)(?=\?|#|$)/i.test(url) || url.startsWith('data:image');
+
+        if (isImage) {
+            container.innerHTML = `<img src="${url}" alt="Payment Receipt" class="max-w-full max-h-[65vh] rounded-xl border border-yellow-400/20 object-contain shadow-lg">`;
+        } else {
+            container.innerHTML = `
+                <div class="text-center space-y-3 py-6">
+                    <p class="text-sm text-slate-300">Document ready for review.</p>
+                    <a href="${url}" target="_blank" class="px-4 py-2.5 bg-yellow-400 text-black font-bold rounded-xl inline-block text-xs">🔗 Open Document in New Tab</a>
+                </div>
+            `;
+        }
+
+        modal.classList.remove('hidden');
+    }
+
+    closeReceiptModal() {
+        const modal = document.getElementById('receipt-modal');
+        if (modal) modal.classList.add('hidden');
     }
 
     // Helper to toggle the red counter badge on the Tickets tab (syncs with ID in your nav markup)
