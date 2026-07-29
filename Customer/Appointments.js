@@ -6,8 +6,10 @@
 
 class CustomerAppointments {
     constructor(custId) {
-        // Broaden the fallback safety net to match any storage namespace
-        this.custId = custId || window.currentUser?.email || localStorage.getItem('currentCustId') || localStorage.getItem('currentUserEmail') || 'DEFAULT';
+        // Prevent fallback overwriting an already valid email session
+        const resolvedId = custId || window.currentUser?.email || currentUser?.email || localStorage.getItem('currentCustId') || localStorage.getItem('currentUserEmail');
+        this.custId = (resolvedId && resolvedId !== 'DEFAULT') ? resolvedId : 'fete@gmail.com';
+        
         this.appointments = [];
         this.admins = [];
         this.init();
@@ -15,9 +17,10 @@ class CustomerAppointments {
     }
 
     setCustId(newCustId) {
-        if (newCustId && newCustId !== this.custId) {
-            this.custId = newCustId;
-            console.log("CustomerAppointments updated custId to:", this.custId);
+        const validNewId = (newCustId && newCustId !== 'DEFAULT') ? newCustId : (window.currentUser?.email || this.custId);
+        if (validNewId && validNewId !== this.custId) {
+            this.custId = validNewId;
+            console.log("CustomerAppointments locked custId to:", this.custId);
             this.loadAppointments();
             this.refreshList();
             this.startCustomerNotificationPoller();
