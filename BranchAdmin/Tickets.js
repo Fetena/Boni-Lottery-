@@ -1,5 +1,5 @@
 // ============================================
-// ADMIN TICKETS MODULE (WITH FLOATING IN-TICKET POP-UP MODAL)
+// ADMIN TICKETS MODULE (BADGE / NOTIFICATION POP-UP ON TICKET)
 // ============================================
 
 async function loadAdminTickets() {
@@ -24,31 +24,19 @@ async function loadAdminTickets() {
             const isPending = !ticket.status || ticket.status === 'Pending';
             const ticketId = doc.id;
 
-            // Floating Pop-up Dialog Overlay directly inside the ticket card
-            let floatingPopupModal = '';
-            if (isPending && !ticket.dismissedPopup) {
-                floatingPopupModal = `
-                    <div id="popup-${ticketId}" class="absolute inset-0 bg-black/85 backdrop-blur-sm rounded-lg z-20 flex items-center justify-center p-4 animate-fade-in">
-                        <div class="glass-panel border border-yellow-400/40 rounded-xl p-4 max-w-sm w-full text-center space-y-3 shadow-2xl bg-black/95">
-                            <div class="w-10 h-10 bg-yellow-400/20 text-yellow-400 rounded-full flex items-center justify-center mx-auto text-lg animate-bounce">
-                                🔔
-                            </div>
-                            <div class="space-y-1">
-                                <h4 class="font-bold text-white text-sm">New Ticket Requested!</h4>
-                                <p class="text-slate-300 text-xs"><b>${ticket.customerName || 'A customer'}</b> submitted numbers: <span class="text-yellow-400">${ticket.numbers?.join(', ') || 'N/A'}</span></p>
-                            </div>
-                            <div class="flex gap-2 pt-2">
-                                <button onclick="window.adminDashboard.approvePayment('${ticketId}')" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs">Approve Now</button>
-                                <button onclick="dismissTicketPopup('${ticketId}')" class="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-lg text-xs">View Ticket</button>
-                            </div>
-                        </div>
+            // Notification Badge/Pop-up element positioned cleanly on top of the ticket card
+            let notificationBadge = '';
+            if (isPending) {
+                notificationBadge = `
+                    <div class="absolute -top-3 right-4 bg-yellow-500 text-black px-3 py-1 rounded-full text-[11px] font-extrabold shadow-lg flex items-center gap-1.5 animate-bounce z-10 border border-yellow-300">
+                        <span>🔔</span> New Ticket Requested!
                     </div>
                 `;
             }
 
             return `
-                <div class="glass-panel rounded-lg p-4 border border-yellow-400/10 text-xs space-y-2 relative overflow-hidden">
-                    ${floatingPopupModal}
+                <div class="glass-panel rounded-lg p-4 border ${isPending ? 'border-yellow-400/50 bg-yellow-500/[0.02]' : 'border-yellow-400/10'} text-xs space-y-2 relative mt-3">
+                    ${notificationBadge}
                     <p class="text-white font-bold">Customer: ${ticket.customerName || 'N/A'} (${ticket.customerEmail || ''})</p>
                     <p class="text-slate-400">Numbers: ${ticket.numbers?.join(', ') || 'N/A'}</p>
                     <p class="text-slate-400">Cost: ${ticket.cost} ETB • Payment: ${ticket.paymentMethod || 'N/A'}</p>
@@ -65,13 +53,5 @@ async function loadAdminTickets() {
         }).join('');
     } catch (error) {
         console.error('Error loading tickets:', error);
-    }
-}
-
-// Helper function to dismiss/hide the pop-up modal when the admin clicks "View Ticket"
-function dismissTicketPopup(ticketId) {
-    const popup = document.getElementById(`popup-${ticketId}`);
-    if (popup) {
-        popup.style.display = 'none';
     }
 }
