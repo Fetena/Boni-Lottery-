@@ -126,7 +126,7 @@ class CustomerDashboard {
                             </div>
                         </div>
 
-                        <!-- Profile & Security Tab (Positioned under Logout workflow / end of navigation) -->
+                        <!-- Profile & Security Tab -->
                         <div id="cust-profile" class="tab-content" style="display: none;">
                             <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
                                 <h3 class="text-xl font-bold text-white mb-2">👤 Profile & Information Management</h3>
@@ -168,28 +168,34 @@ class CustomerDashboard {
     }
 
     async loadData() {
-    try {
-        generateNumbersGrid();
-        await loadAdminsDropdown();
-        await loadCustomerSettings();
-        
-        // Initialize modular CustomerTickets component
-        if (!window.customerTicketsInstance) {
-            window.customerTicketsInstance = new CustomerTickets(currentUser.email);
+        try {
+            generateNumbersGrid();
+            await loadAdminsDropdown();
+            await loadCustomerSettings();
+            
+            if (!window.customerTicketsInstance) {
+                window.customerTicketsInstance = new CustomerTickets(currentUser.email);
+            }
+            await window.customerTicketsInstance.init();
+
+            // ✅ Synchronize Appointments component with logged-in user email
+            const activeCustId = window.currentUser?.email || localStorage.getItem('currentCustId') || 'DEFAULT';
+            if (!window.customerAppointments) {
+                window.customerAppointments = new CustomerAppointments(activeCustId);
+            } else {
+                window.customerAppointments.setCustId(activeCustId);
+            }
+
+            await loadCustomerStats();
+            await loadCustomerProfileData();
+
+            switchCustomerTab('drawings');
+        } catch (error) {
+            console.error('Error loading customer data:', error);
         }
-        await window.customerTicketsInstance.init();
-
-        await loadCustomerStats();
-        await loadCustomerProfileData();
-
-        switchCustomerTab('drawings');
-    } catch (error) {
-        console.error('Error loading customer data:', error);
     }
 }
-}
 
-// Store global reference
 window_customerDashboard = null;
 
 // ========== TAB SWITCHING WITH COMPONENT INTEGRATION ==========
@@ -216,7 +222,6 @@ function switchCustomerTab(tabName) {
             }
             targetEl.innerHTML = window.customerDrawings.render();
         } else if (tabName === 'mytickets') {
-            // Render modular customer tickets component here
             if (!window.customerTicketsInstance) {
                 window.customerTicketsInstance = new CustomerTickets(currentUser.email);
             }
@@ -228,8 +233,11 @@ function switchCustomerTab(tabName) {
             }
             targetEl.innerHTML = window.customerLibrary.render();
         } else if (tabName === 'appointments') {
+            const activeCustId = window.currentUser?.email || localStorage.getItem('currentCustId') || 'DEFAULT';
             if (!window.customerAppointments) {
-                window.customerAppointments = new CustomerAppointments(currentUser.email);
+                window.customerAppointments = new CustomerAppointments(activeCustId);
+            } else {
+                window.customerAppointments.setCustId(activeCustId);
             }
             targetEl.innerHTML = window.customerAppointments.render();
         } else if (tabName === 'buytickets') {
