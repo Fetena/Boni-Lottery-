@@ -141,25 +141,27 @@ class CustomerAppointments {
         const icon = isApproved ? '🎉' : '⚠️';
 
         const modalHtml = `
-            <div id="apt-popup-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
-                <div class="glass-panel w-full max-w-md rounded-2xl border ${borderColor} p-6 space-y-4 shadow-2xl bg-black">
-                    <div class="flex items-center space-x-3">
-                        <span class="text-3xl">${icon}</span>
+            <div id="apt-popup-modal" style="position: fixed; inset: 0; z-index: 999999; display: flex; align-items: center; justify-content: center; background-color: rgba(0,0,0,0.85); backdrop-filter: blur(4px); padding: 1rem;">
+                <div class="glass-panel w-full max-w-md rounded-2xl border ${borderColor} p-6 space-y-4 shadow-2xl bg-black" style="background: #000; border: 2px solid ${isApproved ? '#10b981' : '#ef4444'};">
+                    <div class="flex items-center space-x-3" style="display: flex; align-items: center; gap: 12px;">
+                        <span style="font-size: 28px;">${icon}</span>
                         <div>
-                            <h3 class="text-lg font-bold text-white">Appointment Update</h3>
-                            <p class="text-xs ${textColor} font-semibold">Status: ${status || 'Updated'}</p>
+                            <h3 style="color: #fff; font-size: 18px; font-weight: bold; margin: 0;">Appointment Update</h3>
+                            <p class="${textColor}" style="font-size: 12px; font-weight: 600; margin: 2px 0 0 0;">Status: ${status || 'Updated'}</p>
                         </div>
                     </div>
-                    <div class="p-4 bg-black/50 rounded-xl border border-yellow-400/10 text-sm text-slate-200">
+                    <div style="padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; font-size: 14px; color: #e2e8f0; line-height: 1.4;">
                         ${message}
                     </div>
                     <button onclick="document.getElementById('apt-popup-modal').remove()" 
-                        class="w-full py-2.5 bg-yellow-400 text-black font-bold rounded-xl text-xs hover:bg-yellow-500 transition-all">
+                        style="width: 100%; padding: 12px; background: #facc15; color: #000; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; font-size: 13px;">
                         Got It, Thanks!
                     </button>
                 </div>
             </div>
         `;
+        
+        // Force append directly to body root to avoid layout/overflow clipping
         document.body.insertAdjacentHTML('beforeend', modalHtml);
     }
 
