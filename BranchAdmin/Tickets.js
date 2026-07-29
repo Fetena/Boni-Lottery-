@@ -69,7 +69,8 @@ class AdminTickets {
                     `;
                 }
 
-                const attachmentUrl = ticket.receiptUrl || ticket.attachment || ticket.fileUrl || ticket.imageUrl || null;
+                // Updated to read receiptFile from customer submission
+                const attachmentUrl = ticket.receiptFile || ticket.receiptUrl || ticket.attachment || ticket.fileUrl || ticket.imageUrl || null;
                 let attachmentButton = '';
                 if (attachmentUrl) {
                     const safeUrl = attachmentUrl.replace(/'/g, "\\'");
