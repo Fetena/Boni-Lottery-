@@ -27,7 +27,9 @@ class CustomerDashboard {
                         <div class="flex gap-2 border-b border-yellow-400/10 pb-2 overflow-x-auto">
                             <button onclick="switchCustomerTab('drawings')" class="tab-button active px-4 py-2 text-xs font-bold text-yellow-400">🎰 Home</button>
                             <button onclick="switchCustomerTab('buytickets')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">🎫 Buy Tickets</button>
-                            <button onclick="switchCustomerTab('mytickets')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">🎟️ My Tickets</button>
+                            <button onclick="switchCustomerTab('mytickets')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 relative">
+                               🎟️ My Tickets <span id="customer-tickets-badge" class="hidden absolute -top-1 -right-1 px-1.5 py-0.5 bg-red-500 text-white rounded-full text-[9px] font-bold">0</span>
+                                </button>
                             <button onclick="switchCustomerTab('library')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">📖 Library</button>
                             <button onclick="switchCustomerTab('appointments')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">📅 Appointments</button>
                             <button onclick="switchCustomerTab('settings')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">⚙️ Settings</button>
