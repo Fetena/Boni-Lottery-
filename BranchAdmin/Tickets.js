@@ -1,5 +1,5 @@
 // ============================================
-// ADMIN TICKETS MODULE (BADGE / NOTIFICATION POP-UP ON TICKET)
+// ADMIN TICKETS MODULE WITH TAB BADGE SYNC
 // ============================================
 
 async function loadAdminTickets() {
@@ -16,15 +16,22 @@ async function loadAdminTickets() {
 
         if (snapshot.empty) {
             content.innerHTML = '<p class="text-slate-400">No tickets yet</p>';
+            updateTicketsTabBadge(0);
             return;
         }
+
+        let pendingCount = 0;
 
         content.innerHTML = snapshot.docs.map(doc => {
             const ticket = doc.data();
             const isPending = !ticket.status || ticket.status === 'Pending';
             const ticketId = doc.id;
 
-            // Notification Badge/Pop-up element positioned cleanly on top of the ticket card
+            if (isPending) {
+                pendingCount++;
+            }
+
+            // Ticket-level notification badge pill on top right of the pending ticket card
             let notificationBadge = '';
             if (isPending) {
                 notificationBadge = `
@@ -51,7 +58,24 @@ async function loadAdminTickets() {
                 </div>
             `;
         }).join('');
+
+        // Updates the red notification counter badge directly on the Tickets navigation tab
+        updateTicketsTabBadge(pendingCount);
+
     } catch (error) {
         console.error('Error loading tickets:', error);
+    }
+}
+
+// Helper to toggle the red counter badge on the Tickets tab
+function updateTicketsTabBadge(count) {
+    const badge = document.getElementById('admin-tickets-badge');
+    if (!badge) return;
+
+    if (count > 0) {
+        badge.innerText = count;
+        badge.classList.remove('hidden');
+    } else {
+        badge.classList.add('hidden');
     }
 }
