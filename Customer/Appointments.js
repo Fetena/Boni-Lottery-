@@ -6,7 +6,8 @@
 
 class CustomerAppointments {
     constructor(custId) {
-        this.custId = custId || window.currentUser?.email || localStorage.getItem('currentCustId') || localStorage.getItem('currentUserEmail') || 'fete!';
+        // Broaden the fallback safety net to match any storage namespace
+        this.custId = custId || window.currentUser?.email || localStorage.getItem('currentCustId') || localStorage.getItem('currentUserEmail') || 'DEFAULT';
         this.appointments = [];
         this.admins = [];
         this.init();
@@ -16,6 +17,7 @@ class CustomerAppointments {
     setCustId(newCustId) {
         if (newCustId && newCustId !== this.custId) {
             this.custId = newCustId;
+            console.log("CustomerAppointments updated custId to:", this.custId);
             this.loadAppointments();
             this.refreshList();
             this.startCustomerNotificationPoller();
@@ -65,56 +67,72 @@ class CustomerAppointments {
         }
     }
 
-    // Inside CustomerAppointments -> startCustomerNotificationPoller()
-startCustomerNotificationPoller() {
-    if (this._pollingInterval) clearInterval(this._pollingInterval);
-    
-    this._pollingInterval = setInterval(() => {
-        try {
-            const currentEmail = currentUser?.email || this.custId;
-            
-            // Check both specific user keys and generic fallback keys
-            const keysToCheck = [
-                `customer_notifications_${currentEmail}`,
-                `customer_notifications_${this.custId}`,
-                'customer_notifications_DEFAULT'
-            ];
+    startCustomerNotificationPoller() {
+        if (this._pollingInterval) clearInterval(this._pollingInterval);
+        
+        this._pollingInterval = setInterval(() => {
+            try {
+                const currentEmail = window.currentUser?.email || currentUser?.email || this.custId;
+                
+                // Construct dynamic keys to look for notifications written by the admin panel
+                const keysToCheck = [
+                    `customer_notifications_${currentEmail}`,
+                    `customer_notifications_${this.custId}`,
+                    'customer_notifications_DEFAULT',
+                    'customer_notifications_fete!'
+                ];
 
-            keysToCheck.forEach(key => {
-                const raw = localStorage.getItem(key);
-                if (raw) {
+                // Also sweep all localStorage keys dynamically for any unread customer notifications
+                Object.keys(localStorage).forEach(k => {
+                    if (k.startsWith('customer_notifications_') && !keysToCheck.includes(k)) {
+                        keysToCheck.push(k);
+                    }
+                });
+
+                keysToCheck.forEach(key => {
+                    const raw = localStorage.getItem(key);
+                    if (!raw) return;
+
                     const notifs = JSON.parse(raw);
-                    const unread = notifs.filter(n => !n.viewed);
+                    let modified = false;
 
-                    if (unread.length > 0) {
-                        unread.forEach(n => {
+                    notifs.forEach(n => {
+                        if (!n.viewed) {
+                            console.log("🔔 Unread Notification Found in key [", key, "]:", n);
+                            
+                            // Trigger Popup Modal
                             this.showPopupModal(n.message, n.status);
                             
-                            const type = n.status === 'Approved' ? 'success' : 'error';
-                            if (typeof notify === 'function') notify(type, `🔔 ${n.message}`);
+                            // Trigger Toast if helper exists
+                            const type = (n.status === 'Approved' || n.status === 'Confirmed') ? 'success' : 'error';
+                            if (typeof notify === 'function') {
+                                notify(type, `🔔 ${n.message}`);
+                            }
                             
                             n.viewed = true;
-                        });
+                            modified = true;
+                        }
+                    });
 
+                    if (modified) {
                         localStorage.setItem(key, JSON.stringify(notifs));
                         this.loadAppointments();
                         this.refreshList();
                         this.updateBadgeCount();
                     }
-                }
-            });
-        } catch (e) {
-            console.error('Polling error:', e);
-        }
-    }, 2000);
-}
+                });
+            } catch (e) {
+                console.error('Polling error:', e);
+            }
+        }, 2000);
+    }
 
     showPopupModal(message, status) {
         // Remove any existing popup modal first
         const existing = document.getElementById('apt-popup-modal');
         if (existing) existing.remove();
 
-        const isApproved = status === 'Approved';
+        const isApproved = status === 'Approved' || status === 'Confirmed';
         const borderColor = isApproved ? 'border-emerald-500' : 'border-red-500';
         const textColor = isApproved ? 'text-emerald-400' : 'text-red-400';
         const icon = isApproved ? '🎉' : '⚠️';
@@ -150,6 +168,7 @@ startCustomerNotificationPoller() {
                 foundAppointments = foundAppointments.concat(JSON.parse(specificData));
             }
 
+            // Fallback sweep of all appointment keys
             Object.keys(localStorage).forEach(key => {
                 if (key.startsWith('appointments_')) {
                     const items = JSON.parse(localStorage.getItem(key) || '[]');
@@ -177,23 +196,24 @@ startCustomerNotificationPoller() {
 
     updateBadgeCount() {
         try {
+            let totalUnread = 0;
             Object.keys(localStorage).forEach(key => {
                 if (key.startsWith('customer_notifications_')) {
                     const notifs = JSON.parse(localStorage.getItem(key) || '[]');
-                    const unreadCount = notifs.filter(n => !n.viewed).length;
-
-                    const badgeEl = document.getElementById('customer-appointments-badge');
-                    if (badgeEl) {
-                        if (unreadCount > 0) {
-                            badgeEl.textContent = unreadCount;
-                            badgeEl.classList.remove('hidden');
-                        } else {
-                            badgeEl.textContent = '0';
-                            badgeEl.classList.add('hidden');
-                        }
-                    }
+                    totalUnread += notifs.filter(n => !n.viewed).length;
                 }
             });
+
+            const badgeEl = document.getElementById('customer-appointments-badge');
+            if (badgeEl) {
+                if (totalUnread > 0) {
+                    badgeEl.textContent = totalUnread;
+                    badgeEl.classList.remove('hidden');
+                } else {
+                    badgeEl.textContent = '0';
+                    badgeEl.classList.add('hidden');
+                }
+            }
         } catch (e) {
             console.error('Error updating appointment badge', e);
         }
