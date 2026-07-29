@@ -6,11 +6,20 @@
 
 class CustomerAppointments {
     constructor(custId) {
-        this.custId = custId || localStorage.getItem('currentCustId') || currentUser?.email || 'DEFAULT';
+        this.custId = custId || window.currentUser?.email || localStorage.getItem('currentCustId') || localStorage.getItem('currentUserEmail') || 'DEFAULT';
         this.appointments = [];
         this.admins = [];
         this.init();
         this.startCustomerNotificationPoller();
+    }
+
+    setCustId(newCustId) {
+        if (newCustId && newCustId !== this.custId) {
+            this.custId = newCustId;
+            this.loadAppointments();
+            this.refreshList();
+            this.startCustomerNotificationPoller();
+        }
     }
 
     init() {
@@ -59,7 +68,6 @@ class CustomerAppointments {
     startCustomerNotificationPoller() {
         if (this._pollingInterval) clearInterval(this._pollingInterval);
         
-        // Poll storage every 2 seconds for admin approval triggers
         this._pollingInterval = setInterval(() => {
             try {
                 const key = `customer_notifications_${this.custId}`;
@@ -150,7 +158,6 @@ class CustomerAppointments {
     render() {
         this.loadAppointments();
         
-        // Mark existing notifications as viewed when customer opens the Appointments tab
         try {
             const key = `customer_notifications_${this.custId}`;
             const notifs = JSON.parse(localStorage.getItem(key) || '[]');
@@ -304,5 +311,6 @@ class CustomerAppointments {
 
 let customerAppointments;
 document.addEventListener('DOMContentLoaded', () => {
-    customerAppointments = new CustomerAppointments(localStorage.getItem('currentCustId') || currentUser?.email || 'DEFAULT');
+    const activeCustId = window.currentUser?.email || localStorage.getItem('currentCustId') || 'DEFAULT';
+    customerAppointments = new CustomerAppointments(activeCustId);
 });
