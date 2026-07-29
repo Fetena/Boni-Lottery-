@@ -6,7 +6,7 @@
 
 class CustomerAppointments {
     constructor(custId) {
-        this.custId = custId || window.currentUser?.email || localStorage.getItem('currentCustId') || localStorage.getItem('currentUserEmail') || 'DEFAULT';
+        this.custId = window.currentUser?.email || custId || localStorage.getItem('currentCustId') || localStorage.getItem('currentUserEmail') || 'DEFAULT';
         this.appointments = [];
         this.admins = [];
         this.init();
