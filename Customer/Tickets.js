@@ -78,8 +78,7 @@ class CustomerTickets {
             }
 
             const statusColor = isApproved ? 'text-emerald-400' : (isRejected ? 'text-red-400' : 'text-yellow-400 animate-pulse');
-            const statusText = isApproved ? '✅ Approved by Admin' : (isRejected ? '❌ Rejected' : '⏳ Pending Admin Approval');
-
+            const statusText = isApproved ? `✅ Approved by ${t.approvedByAdminName || t.assignedAdmin || 'Admin'}` : (isRejected ? '❌ Rejected' : '⏳ Pending Admin Approval');
             return `
                 <div class="glass-panel rounded-lg p-4 border ${isPending ? 'border-yellow-400/50 bg-yellow-500/[0.02]' : 'border-yellow-400/10'} text-xs space-y-2 relative mt-3 cursor-pointer hover:border-yellow-400/40 transition-all" onclick="window.customerTicketsInstance.openTicketDetails('${t.id}')">
                     ${notificationBadge}
