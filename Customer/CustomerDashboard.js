@@ -222,13 +222,19 @@ function switchCustomerTab(tabName) {
                 window.customerDrawings = new CustomerDrawings(currentUser.email);
             }
             targetEl.innerHTML = window.customerDrawings.render();
-        } else if (tabName === 'mytickets') {
+        } } else if (tabName === 'mytickets') {
             if (!window.customerTicketsInstance) {
                 window.customerTicketsInstance = new CustomerTickets(currentUser.email);
             }
             targetEl.innerHTML = window.customerTicketsInstance.render();
             window.customerTicketsInstance.init();
-        } else if (tabName === 'library') {
+
+            // 🔥 Clear the notification badge when viewing tickets
+            const badge = document.getElementById('customer-tickets-badge');
+            if (badge) {
+                badge.classList.add('hidden');
+                badge.textContent = '0';
+            } else if (tabName === 'library') {
             if (!window.customerLibrary) {
                 window.customerLibrary = new CustomerLibrary(currentUser.email);
             }
