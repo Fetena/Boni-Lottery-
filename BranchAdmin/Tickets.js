@@ -34,11 +34,12 @@ class AdminTickets {
         if (!db) return;
 
         try {
+            // 🔥 STRICT ISOLATION: Fetch only tickets associated with this admin
             const snapshot = await db.collection('customer_tickets')
+                .where('adminEmail', '==', this.adminId)
                 .orderBy('createdAt', 'desc')
                 .limit(50)
                 .get();
-
             const content = document.getElementById('admin-tickets-list');
             if (!content) return;
 
