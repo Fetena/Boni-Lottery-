@@ -158,11 +158,12 @@ class AdminTickets {
         }
     }
 
-    async approvePayment(docId) {
+   async approvePayment(docId) {
         if (!db) return notify('error', '❌ Database not initialized');
         try {
             await db.collection('customer_tickets').doc(docId).update({
                 status: 'Approved',
+                approvedByAdminName: this.adminId, // 👈 Saves the specific admin ID/email who approved it
                 approvedAt: firebase.firestore.FieldValue.serverTimestamp()
             });
             notify('success', '✅ Payment approved successfully!');
