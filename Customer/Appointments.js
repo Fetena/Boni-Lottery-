@@ -108,7 +108,41 @@ class CustomerAppointments {
         `;
         document.body.insertAdjacentHTML('beforeend', modalHtml);
     }
+async function loadCustomerAppointments() {
+    if (!db || !currentUser || !currentUser.email) return;
 
+    try {
+        // 🔥 STRICT ISOLATION: Fetch only appointments booked by this user
+        const snapshot = await db.collection('customer_appointments')
+            .where('customerEmail', '==', currentUser.email)
+            .orderBy('date', 'desc')
+            .get();
+
+        const content = document.getElementById('cust-appointments-list');
+        if (!content) return;
+
+        if (snapshot.empty) {
+            content.innerHTML = '<p class="text-slate-400 text-center py-6">No scheduled appointments.</p>';
+            return;
+        }
+
+        content.innerHTML = snapshot.docs.map(doc => {
+            const appt = doc.data();
+            return `
+                <div class="glass-panel rounded-lg p-4 border border-yellow-400/10 flex justify-between items-center text-xs">
+                    <div>
+                        <p class="font-bold text-white text-sm">${appt.title || 'Appointment'}</p>
+                        <p class="text-slate-400">Date: ${appt.date || 'N/A'} at ${appt.time || 'N/A'}</p>
+                        <p class="text-slate-400">Status: <span class="text-yellow-400">${appt.status || 'Pending'}</span></p>
+                    </div>
+                    <button onclick="cancelAppointment('${doc.id}')" class="px-2.5 py-1 bg-red-950/40 text-red-400 rounded border border-red-500/25">Cancel</button>
+                </div>
+            `;
+        }).join('');
+    } catch (error) {
+        console.error('Error loading appointments:', error);
+    }
+}
     loadAppointments() {
         try {
             let foundAppointments = [];
