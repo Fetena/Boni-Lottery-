@@ -40,7 +40,6 @@ class AdminTickets {
             return;
         }
 
-        // 1. Fetch using ONLY the equality filter (No composite index required!)
         const snapshot = await db.collection('customer_tickets')
             .where('adminEmail', '==', currentAdminEmail)
             .get();
@@ -48,21 +47,21 @@ class AdminTickets {
         const content = document.getElementById('admin-tickets-list');
         if (!content) return;
 
-        if (snapshot.empty) {
+        // 🔥 Strict Double Check: Filter out any documents that don't precisely match the current admin's email
+        const docs = snapshot.docs
+            .map(doc => ({ id: doc.id, ...doc.data() }))
+            .filter(ticket => ticket.adminEmail === currentAdminEmail)
+            .sort((a, b) => {
+                const timeA = a.createdAt?.toMillis?.() || (a.createdAt ? new Date(a.createdAt).getTime() : 0);
+                const timeB = b.createdAt?.toMillis?.() || (b.createdAt ? new Date(b.createdAt).getTime() : 0);
+                return timeB - timeA;
+            });
+
+        if (docs.length === 0) {
             content.innerHTML = '<p class="text-slate-400">No tickets yet</p>';
             this.updateTicketsTabBadge(0);
             return;
         }
-
-        // 2. Map and sort the documents locally in JavaScript by createdAt descending
-        const docs = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        })).sort((a, b) => {
-            const timeA = a.createdAt?.toMillis?.() || (a.createdAt ? new Date(a.createdAt).getTime() : 0);
-            const timeB = b.createdAt?.toMillis?.() || (b.createdAt ? new Date(b.createdAt).getTime() : 0);
-            return timeB - timeA;
-        });
 
         let pendingCount = 0;
 
