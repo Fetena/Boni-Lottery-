@@ -34,43 +34,37 @@ class CustomerAppointments {
         
         this._pollingInterval = setInterval(() => {
             try {
-                // Always check the exact target key for the active user session
-                const activeEmail = this.custId !== 'DEFAULT' ? this.custId : 'fete@gmail.com';
-                const keysToCheck = [
-                    `customer_notifications_${activeEmail}`,
-                    `customer_notifications_fete@gmail.com`
-                ];
+                const activeEmail = this.custId && this.custId !== 'DEFAULT' ? this.custId : 'fete@gmail.com';
+                const key = `customer_notifications_${activeEmail}`; // 🔥 Target active session exclusively
 
-                keysToCheck.forEach(key => {
-                    const raw = localStorage.getItem(key);
-                    if (!raw) return;
+                const raw = localStorage.getItem(key);
+                if (!raw) return;
 
-                    const notifs = JSON.parse(raw);
-                    let modified = false;
+                const notifs = JSON.parse(raw);
+                let modified = false;
 
-                    notifs.forEach(n => {
-                        if (!n.viewed) {
-                            console.log("🔔 Unread Notification Found in key [", key, "]:", n);
-                            
-                            this.showPopupModal(n.message, n.status);
-                            
-                            const type = (n.status === 'Approved' || n.status === 'Confirmed') ? 'success' : 'error';
-                            if (typeof notify === 'function') {
-                                notify(type, `🔔 ${n.message}`);
-                            }
-                            
-                            n.viewed = true;
-                            modified = true;
+                notifs.forEach(n => {
+                    if (!n.viewed) {
+                        console.log("🔔 Unread Notification Found in key [", key, "]:", n);
+                        
+                        this.showPopupModal(n.message, n.status);
+                        
+                        const type = (n.status === 'Approved' || n.status === 'Confirmed') ? 'success' : 'error';
+                        if (typeof notify === 'function') {
+                            notify(type, `🔔 ${n.message}`);
                         }
-                    });
-
-                    if (modified) {
-                        localStorage.setItem(key, JSON.stringify(notifs));
-                        this.loadAppointments();
-                        this.refreshList();
-                        this.updateBadgeCount();
+                        
+                        n.viewed = true;
+                        modified = true;
                     }
                 });
+
+                if (modified) {
+                    localStorage.setItem(key, JSON.stringify(notifs));
+                    this.loadAppointments();
+                    this.refreshList();
+                    this.updateBadgeCount();
+                }
             } catch (e) {
                 console.error('Polling error:', e);
             }
@@ -155,47 +149,7 @@ class CustomerAppointments {
             }
         } catch (e) {}
     }
-startCustomerNotificationPoller() {
-        if (this._pollingInterval) clearInterval(this._pollingInterval);
-        
-        this._pollingInterval = setInterval(() => {
-            try {
-                const activeEmail = this.custId && this.custId !== 'DEFAULT' ? this.custId : 'fete@gmail.com';
-                const key = `customer_notifications_${activeEmail}`; // 🔥 Target active session exclusively
 
-                const raw = localStorage.getItem(key);
-                if (!raw) return;
-
-                const notifs = JSON.parse(raw);
-                let modified = false;
-
-                notifs.forEach(n => {
-                    if (!n.viewed) {
-                        console.log("🔔 Unread Notification Found in key [", key, "]:", n);
-                        
-                        this.showPopupModal(n.message, n.status);
-                        
-                        const type = (n.status === 'Approved' || n.status === 'Confirmed') ? 'success' : 'error';
-                        if (typeof notify === 'function') {
-                            notify(type, `🔔 ${n.message}`);
-                        }
-                        
-                        n.viewed = true;
-                        modified = true;
-                    }
-                });
-
-                if (modified) {
-                    localStorage.setItem(key, JSON.stringify(notifs));
-                    this.loadAppointments();
-                    this.refreshList();
-                    this.updateBadgeCount();
-                }
-            } catch (e) {
-                console.error('Polling error:', e);
-            }
-        }, 2000);
-    }
     init() {
         this.loadAdminsSync();
         this.loadAppointments();
