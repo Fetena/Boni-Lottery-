@@ -379,7 +379,11 @@ async function loadAdminStats() {
             document.getElementById('admin-total-customers').textContent = totalCustomersCount;
         }
 
-        const ticketSnapshot = await db.collection('customer_tickets').get();
+        // 🔥 STRICT ISOLATION: Fetch only tickets for this admin
+        const ticketSnapshot = await db.collection('customer_tickets')
+            .where('adminEmail', '==', currentUser.email)
+            .get();
+            
         if (document.getElementById('admin-total-tickets')) {
             document.getElementById('admin-total-tickets').textContent = ticketSnapshot.size;
         }
