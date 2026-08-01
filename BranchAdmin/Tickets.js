@@ -42,21 +42,26 @@ class AdminTickets {
                 return;
             }
 
-            // Query Firestore broadly by adminEmail first
+            // Fetch all recent tickets without restrictive Firestore query filters
             const snapshot = await db.collection('customer_tickets')
-                .where('adminEmail', '==', currentAdminEmail)
-            .get();
+                .limit(100)
+                .get();
             
             const content = document.getElementById('admin-tickets-list');
             if (!content) return;
 
-            // 🔥 Fallback check: Match either adminEmail or assignedAdmin to prevent blank lists
+            // Filter strictly in JavaScript matching either email or name
             const docs = snapshot.docs
                 .map(doc => ({ id: doc.id, ...doc.data() }))
                 .filter(ticket => {
-                    const matchesEmail = ticket.adminEmail === currentAdminEmail || ticket.assignedAdmin === currentAdminEmail;
-                    const matchesName = currentAdminName && ticket.assignedAdmin === currentAdminName;
-                    return matchesEmail || matchesName;
+                    const ticketAdmin = (ticket.adminEmail || '').trim().toLowerCase();
+                    const ticketAssigned = (ticket.assignedAdmin || '').trim().toLowerCase();
+                    const adminEmailClean = currentAdminEmail.trim().toLowerCase();
+                    const adminNameClean = (currentAdminName || '').trim().toLowerCase();
+
+                    return ticketAdmin === adminEmailClean || 
+                           ticketAssigned === adminEmailClean || 
+                           (adminNameClean && ticketAssigned === adminNameClean);
                 })
                 .sort((a, b) => {
                     const timeA = a.createdAt?.toMillis?.() || (a.createdAt ? new Date(a.createdAt).getTime() : 0);
