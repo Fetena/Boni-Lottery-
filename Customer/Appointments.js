@@ -112,18 +112,12 @@ class CustomerAppointments {
     loadAppointments() {
         try {
             let foundAppointments = [];
-            const targetId = this.custId !== 'DEFAULT' ? this.custId : 'fete@gmail.com';
+            // 🔥 Strictly use the active user session ID without spilling into fete@gmail.com fallback
+            const targetId = this.custId && this.custId !== 'DEFAULT' ? this.custId : 'fete@gmail.com';
             
             const specificData = localStorage.getItem(`appointments_${targetId}`);
             if (specificData) {
-                foundAppointments = foundAppointments.concat(JSON.parse(specificData));
-            }
-            
-            const defaultData = localStorage.getItem(`appointments_fete@gmail.com`);
-            if (defaultData) {
-                JSON.parse(defaultData).forEach(item => {
-                    if (!foundAppointments.some(e => e.id === item.id)) foundAppointments.push(item);
-                });
+                foundAppointments = JSON.parse(specificData);
             }
 
             this.appointments = foundAppointments;
@@ -143,11 +137,11 @@ class CustomerAppointments {
     updateBadgeCount() {
         try {
             let totalUnread = 0;
-            const targetId = this.custId !== 'DEFAULT' ? this.custId : 'fete@gmail.com';
-            [targetId, 'fete@gmail.com'].forEach(id => {
-                const notifs = JSON.parse(localStorage.getItem(`customer_notifications_${id}`) || '[]');
-                totalUnread += notifs.filter(n => !n.viewed).length;
-            });
+            const targetId = this.custId && this.custId !== 'DEFAULT' ? this.custId : 'fete@gmail.com';
+            
+            // 🔥 Only check notifications belonging to this exact profile
+            const notifs = JSON.parse(localStorage.getItem(`customer_notifications_${targetId}`) || '[]');
+            totalUnread += notifs.filter(n => !n.viewed).length;
 
             const badgeEl = document.getElementById('customer-appointments-badge');
             if (badgeEl) {
@@ -161,7 +155,47 @@ class CustomerAppointments {
             }
         } catch (e) {}
     }
+startCustomerNotificationPoller() {
+        if (this._pollingInterval) clearInterval(this._pollingInterval);
+        
+        this._pollingInterval = setInterval(() => {
+            try {
+                const activeEmail = this.custId && this.custId !== 'DEFAULT' ? this.custId : 'fete@gmail.com';
+                const key = `customer_notifications_${activeEmail}`; // 🔥 Target active session exclusively
 
+                const raw = localStorage.getItem(key);
+                if (!raw) return;
+
+                const notifs = JSON.parse(raw);
+                let modified = false;
+
+                notifs.forEach(n => {
+                    if (!n.viewed) {
+                        console.log("🔔 Unread Notification Found in key [", key, "]:", n);
+                        
+                        this.showPopupModal(n.message, n.status);
+                        
+                        const type = (n.status === 'Approved' || n.status === 'Confirmed') ? 'success' : 'error';
+                        if (typeof notify === 'function') {
+                            notify(type, `🔔 ${n.message}`);
+                        }
+                        
+                        n.viewed = true;
+                        modified = true;
+                    }
+                });
+
+                if (modified) {
+                    localStorage.setItem(key, JSON.stringify(notifs));
+                    this.loadAppointments();
+                    this.refreshList();
+                    this.updateBadgeCount();
+                }
+            } catch (e) {
+                console.error('Polling error:', e);
+            }
+        }, 2000);
+    }
     init() {
         this.loadAdminsSync();
         this.loadAppointments();
