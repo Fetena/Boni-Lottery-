@@ -34,9 +34,15 @@ class AdminTickets {
     if (!db) return;
 
     try {
-        // 🔥 REMOVED .orderBy() to prevent missing index errors for new admins
+        // Resolve the correct admin email (checks this.adminId first, then falls back to global currentUser)
+        const currentAdminEmail = this.adminId || (typeof currentUser !== 'undefined' && currentUser?.email);
+        if (!currentAdminEmail) {
+            console.error('Admin email/ID not found for ticket query.');
+            return;
+        }
+
         const snapshot = await db.collection('customer_tickets')
-            .where('adminEmail', '==', this.adminId)
+            .where('adminEmail', '==', currentAdminEmail)
             .limit(50)
             .get();
             
