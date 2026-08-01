@@ -34,16 +34,15 @@ class AdminTickets {
     if (!db) return;
 
     try {
-        // Resolve the correct admin email (checks this.adminId first, then falls back to global currentUser)
         const currentAdminEmail = this.adminId || (typeof currentUser !== 'undefined' && currentUser?.email);
         if (!currentAdminEmail) {
             console.error('Admin email/ID not found for ticket query.');
             return;
         }
 
+        // 1. Fetch using ONLY the equality filter (No composite index required!)
         const snapshot = await db.collection('customer_tickets')
             .where('adminEmail', '==', currentAdminEmail)
-            .limit(50)
             .get();
             
         const content = document.getElementById('admin-tickets-list');
@@ -55,19 +54,21 @@ class AdminTickets {
             return;
         }
 
-        // Sort documents locally by createdAt descending
-        const docs = snapshot.docs.sort((a, b) => {
-            const timeA = a.data().createdAt?.toMillis?.() || 0;
-            const timeB = b.data().createdAt?.toMillis?.() || 0;
+        // 2. Map and sort the documents locally in JavaScript by createdAt descending
+        const docs = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        })).sort((a, b) => {
+            const timeA = a.createdAt?.toMillis?.() || (a.createdAt ? new Date(a.createdAt).getTime() : 0);
+            const timeB = b.createdAt?.toMillis?.() || (b.createdAt ? new Date(b.createdAt).getTime() : 0);
             return timeB - timeA;
         });
 
         let pendingCount = 0;
 
-        content.innerHTML = docs.map(doc => {
-            const ticket = doc.data();
+        content.innerHTML = docs.map(ticket => {
             const isPending = !ticket.status || ticket.status === 'Pending';
-            const ticketId = doc.id;
+            const ticketId = ticket.id;
 
             if (isPending) {
                 pendingCount++;
