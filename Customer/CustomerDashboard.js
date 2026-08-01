@@ -418,6 +418,7 @@ async function submitCustomerTicket() {
             customerEmail: currentUser.email,
             customerName: currentUser.name || 'Customer',
             assignedAdmin: assignedAdmin,
+            adminEmail: assignedAdmin, // 🔥 Add this line so admin queries matching adminEmail work correctly!
             numbers: selectedNumbers,
             cost: selectedNumbers.length * 100,
             paymentMethod: paymentMethod,
@@ -460,6 +461,7 @@ async function submitAutomaticPayment() {
                 customerEmail: currentUser.email,
                 customerName: currentUser.name || 'Customer',
                 assignedAdmin: assignedAdmin,
+                adminEmail: assignedAdmin, // 🔥 Add this line here as well!
                 numbers: selectedNumbers,
                 cost: totalCost,
                 paymentMethod: 'Automatic Online Gateway',
