@@ -5,7 +5,7 @@
 class AdminDashboard {
     constructor(adminId) {
         this.adminId = adminId;
-        // Initialize child components
+        // Initialize child components[cite: 25]
         this.tickets = new AdminTickets(adminId);
         this.customers = new AdminCustomers(adminId);
     }
@@ -86,22 +86,13 @@ class AdminDashboard {
 
     async loadData() {
         try {
-            // 1. Immediately expose child components globally so inline HTML handlers work
+            // Load all child components[cite: 25]
             window.adminTicketsComponent = this.tickets;
             window.adminCustomersComponent = this.customers;
 
-            // 2. Ensure DOM elements are painted by forcing a small delay or ensuring template injection
-            // (If loadData runs before the template is injected into document.body, containers won't exist)
-            await new Promise(resolve => setTimeout(resolve, 50));
-
-            // 3. Load component data
             await this.customers.loadData();
             await this.tickets.loadData();
             await this.updateStats();
-
-            // 4. Force a secondary render pass on components to populate their inner containers
-            this.customers.displayCustomers();
-            this.tickets.render();
 
             console.log('✅ Admin dashboard loaded');
         } catch (error) {
@@ -119,7 +110,7 @@ class AdminDashboard {
             document.getElementById('stat-tickets').textContent = ticketStats.total;
             document.getElementById('stat-revenue').textContent = custStats.totalSpent.toLocaleString() + ' ETB';
 
-            // Update ticket badge
+            // Update ticket badge[cite: 25]
             const badge = document.getElementById('badge-tickets');
             if (ticketStats.pending > 0) {
                 badge.textContent = ticketStats.pending;
@@ -133,18 +124,18 @@ class AdminDashboard {
     }
 
     switchTab(tabName, event) {
-        // Hide all tabs
+        // Hide all tabs[cite: 25]
         const allTabs = document.querySelectorAll('#admin-dashboard .tab-content');
         allTabs.forEach(tab => tab.classList.add('hidden'));
 
-        // Show selected tab
+        // Show selected tab[cite: 25]
         const tabId = `admin-tab-${tabName}`;
         const tab = document.getElementById(tabId);
         if (tab) {
             tab.classList.remove('hidden');
         }
 
-        // Update button style
+        // Update button style[cite: 25]
         const allButtons = document.querySelectorAll('#admin-dashboard .tab-button');
         allButtons.forEach(btn => {
             btn.classList.remove('active');
