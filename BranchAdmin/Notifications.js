@@ -86,12 +86,15 @@ class AdminNotifications {
 
     loadPendingApprovals() {
         try {
-            // 🔥 STRICT ISOLATION: Normalize admin ID to read only this admin's queue key
+            // Normalize the admin ID/email to match the exact key the customer writes to
             const cleanAdminId = (this.adminId || 'admin').toLowerCase().replace(/[@.]/g, '_').replace(/\s+/g, '_');
             const queueKey = `admin_appointments_${cleanAdminId}`;
             
+            // Read directly from the isolated admin queue
             const items = JSON.parse(localStorage.getItem(queueKey) || '[]');
-            this.pendingApprovals = items.filter(item => item.status === 'Pending Confirmation' || item.status === 'Pending');
+            this.pendingApprovals = items.filter(item => 
+                item.status === 'Pending Confirmation' || item.status === 'Pending'
+            );
         } catch (e) {
             console.error('Error loading pending approvals', e);
             this.pendingApprovals = [];
