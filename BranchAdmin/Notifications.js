@@ -83,23 +83,36 @@ class AdminNotifications {
         `;
     }
 
-   loadPendingApprovals() {
+  loadPendingApprovals() {
         try {
             this.pendingApprovals = [];
             const seenIds = new Set();
+            const currentAdminNorm = (this.adminId || 'admin').toLowerCase().replace(/[@.]/g, '_').replace(/\s+/g, '_');
 
-            // Scan every single key in localStorage to catch any customer booking
+            // Scan localStorage for queues or customer lists
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
+                
+                // If it's an admin-specific queue key, verify it matches this admin
+                if (key.startsWith('admin_appointments_')) {
+                    if (!key.includes(currentAdminNorm)) {
+                        continue; // Skip other admins' queues completely
+                    }
+                }
+
                 try {
                     const data = JSON.parse(localStorage.getItem(key));
-                    
-                    // Check if the data is an array of items (like appointments or queues)
                     if (Array.isArray(data)) {
                         data.forEach(item => {
                             if (item && typeof item === 'object') {
                                 const status = item.status ? item.status.toLowerCase() : '';
-                                // Catch any status containing 'pending' or matching booking types
+                                
+                                // Optional safety check if the booking item itself has an assigned admin field
+                                if (item.adminId) {
+                                    const itemAdminNorm = item.adminId.toLowerCase().replace(/[@.]/g, '_').replace(/\s+/g, '_');
+                                    if (itemAdminNorm !== currentAdminNorm) return;
+                                }
+
                                 if ((status.includes('pending') || status === 'unapproved') && !seenIds.has(item.id || JSON.stringify(item))) {
                                     seenIds.add(item.id || JSON.stringify(item));
                                     this.pendingApprovals.push({
@@ -120,7 +133,7 @@ class AdminNotifications {
                 }
             }
         } catch (e) {
-            console.error('Error loading pending approvals universally', e);
+            console.error('Error loading filtered pending approvals', e);
             this.pendingApprovals = [];
         }
     }
