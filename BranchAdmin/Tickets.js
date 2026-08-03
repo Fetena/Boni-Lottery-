@@ -30,7 +30,7 @@ class AdminTickets {
         `;
     }
 
-    async init() {
+   async init() {
         if (!db) return;
 
         try {
@@ -42,34 +42,39 @@ class AdminTickets {
                 return;
             }
 
-            // Fetch all recent tickets without restrictive Firestore query filters
+            // Fetch tickets specifically matching this admin's email or name directly from Firestore
             const snapshot = await db.collection('customer_tickets')
-                .limit(100)
+                .where('adminEmail', '==', currentAdminEmail)
                 .get();
             
+            let docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+            // If the email query returns nothing, try querying by assignedAdmin as a fallback
+            if (docs.length === 0 && currentAdminName) {
+                const nameSnapshot = await db.collection('customer_tickets')
+                    .where('assignedAdmin', '==', currentAdminName)
+                    .get();
+                docs = nameSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            }
+
             const content = document.getElementById('admin-tickets-list');
             if (!content) return;
 
-            // Filter strictly in JavaScript matching either email or name
-            const docs = snapshot.docs
-                .map(doc => ({ id: doc.id, ...doc.data() }))
-                .filter(ticket => {
-                    const ticketAdmin = (ticket.adminEmail || '').trim().toLowerCase();
-                    const ticketAssigned = (ticket.assignedAdmin || '').trim().toLowerCase();
-                    const adminEmailClean = currentAdminEmail.trim().toLowerCase();
-                    const adminNameClean = (currentAdminName || '').trim().toLowerCase();
+            // Final strict security filter so admins never cross paths
+            const filteredDocs = docs.filter(ticket => {
+                const tEmail = (ticket.adminEmail || '').trim().toLowerCase();
+                const tAdmin = (ticket.assignedAdmin || '').trim().toLowerCase();
+                const aEmail = currentAdminEmail.trim().toLowerCase();
+                const aName = (currentAdminName || '').trim().toLowerCase();
 
-                    return ticketAdmin === adminEmailClean || 
-                           ticketAssigned === adminEmailClean || 
-                           (adminNameClean && ticketAssigned === adminNameClean);
-                })
-                .sort((a, b) => {
-                    const timeA = a.createdAt?.toMillis?.() || (a.createdAt ? new Date(a.createdAt).getTime() : 0);
-                    const timeB = b.createdAt?.toMillis?.() || (b.createdAt ? new Date(b.createdAt).getTime() : 0);
-                    return timeB - timeA;
-                });
+                return tEmail === aEmail || tAdmin === aEmail || (aName && tAdmin === aName);
+            }).sort((a, b) => {
+                const timeA = a.createdAt?.toMillis?.() || (a.createdAt ? new Date(a.createdAt).getTime() : 0);
+                const timeB = b.createdAt?.toMillis?.() || (b.createdAt ? new Date(b.createdAt).getTime() : 0);
+                return timeB - timeA;
+            });
 
-            if (docs.length === 0) {
+            if (filteredDocs.length === 0) {
                 content.innerHTML = '<p class="text-slate-400">No tickets yet</p>';
                 this.updateTicketsTabBadge(0);
                 return;
@@ -77,7 +82,7 @@ class AdminTickets {
 
             let pendingCount = 0;
 
-            content.innerHTML = docs.map(ticket => {
+            content.innerHTML = filteredDocs.map(ticket => {
                 const isPending = !ticket.status || ticket.status === 'Pending';
                 const ticketId = ticket.id;
 
