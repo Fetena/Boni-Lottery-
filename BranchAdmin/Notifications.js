@@ -83,29 +83,44 @@ class AdminNotifications {
         `;
     }
 
-    loadPendingApprovals() {
+   loadPendingApprovals() {
         try {
             this.pendingApprovals = [];
-            
-            // Build the exact normalized queue key matching the customer booking logic
-            const cleanAdminId = (this.adminId || 'admin').toLowerCase().replace(/[@.]/g, '_').replace(/\s+/g, '_');
-            const queueKey = `admin_appointments_${cleanAdminId}`;
-            
-            // Fallback check options in case bookings were saved under generic keys
-            const possibleKeys = [queueKey, 'admin_appointments_admin', 'admin_appointments_admin_gmail_com'];
-            
             const seenIds = new Set();
-            possibleKeys.forEach(key => {
-                const items = JSON.parse(localStorage.getItem(key) || '[]');
-                items.forEach(item => {
-                    if (!seenIds.has(item.id) && (item.status === 'Pending Confirmation' || item.status === 'Pending')) {
-                        seenIds.add(item.id);
-                        this.pendingApprovals.push(item);
+
+            // Scan every single key in localStorage to catch any customer booking
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                try {
+                    const data = JSON.parse(localStorage.getItem(key));
+                    
+                    // Check if the data is an array of items (like appointments or queues)
+                    if (Array.isArray(data)) {
+                        data.forEach(item => {
+                            if (item && typeof item === 'object') {
+                                const status = item.status ? item.status.toLowerCase() : '';
+                                // Catch any status containing 'pending' or matching booking types
+                                if ((status.includes('pending') || status === 'unapproved') && !seenIds.has(item.id || JSON.stringify(item))) {
+                                    seenIds.add(item.id || JSON.stringify(item));
+                                    this.pendingApprovals.push({
+                                        id: item.id || Date.now() + Math.random(),
+                                        custId: item.custId || item.customerId || 'unknown_customer',
+                                        purpose: item.purpose || item.title || item.service || 'Appointment Booking',
+                                        date: item.date || item.appointmentDate || 'Today',
+                                        time: item.time || item.appointmentTime || 'N/A',
+                                        description: item.description || item.note || item.notes || 'None',
+                                        status: item.status || 'Pending'
+                                    });
+                                }
+                            }
+                        });
                     }
-                });
-            });
+                } catch (err) {
+                    // Ignore non-JSON keys
+                }
+            }
         } catch (e) {
-            console.error('Error loading pending approvals', e);
+            console.error('Error loading pending approvals universally', e);
             this.pendingApprovals = [];
         }
     }
