@@ -150,43 +150,32 @@ class CustomerAppointments {
         this.refreshList();
     }
 
-    // 🔥 Filter list so customers only see the specific admin they saved/selected in their settings
-    loadAssignedAdminSync() {
+    // Load available active admins cleanly for selection
+    async loadAssignedAdminSync() {
         try {
-            const targetId = this.custId && this.custId !== 'DEFAULT' ? this.custId : 'fete@gmail.com';
-            
-            // Look up customer settings where their preferred admin is stored
-            const settingsRaw = localStorage.getItem(`customer_settings_${targetId}`);
-            let preferredAdminEmail = '';
-            
-            // Check global customer settings or localStorage map if available
-            const allAdmins = JSON.parse(localStorage.getItem('registered_admins') || '[]');
-            
-            // Fallback: check if the customer has a selected preferred admin stored from the settings tab
-            const globalSettings = JSON.parse(localStorage.getItem('customer_settings') || '{}');
-            if (globalSettings[targetId]?.preferredAdmin) {
-                preferredAdminEmail = globalSettings[targetId].preferredAdmin;
-            }
-
-            // If a specific admin is assigned/preferred, restrict the array to only that admin
-            if (preferredAdminEmail) {
-                this.admins = allAdmins.filter(a => (a.email || '').toLowerCase() === preferredAdminEmail.toLowerCase());
-            }
-
-            // If none found via settings map, check the dropdown selection or default to their linked admin
-            if (this.admins.length === 0) {
-                const assignedTicket = JSON.parse(localStorage.getItem(`customer_tickets_${targetId}`) || '[]')[0];
-                if (assignedTicket?.assignedAdmin) {
-                    this.admins = allAdmins.filter(a => a.name === assignedTicket.assignedAdmin || a.email === assignedTicket.assignedAdmin);
+            // Assuming you are using Firebase Firestore
+            if (typeof firebase !== 'undefined' && firebase.firestore) {
+                const db = firebase.firestore();
+                const snapshot = await db.collection('admins').get();
+                
+                if (!snapshot.empty) {
+                    this.admins = snapshot.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data()
+                    }));
+                    this.refreshList();
+                    return;
                 }
             }
 
-            // Absolute fallback if still empty: allow choice or show main registered admins if no preference set yet
-            if (this.admins.length === 0) {
-                this.admins = allAdmins.length > 0 ? allAdmins : [{ id: 'admin_main', name: 'Main Admin', role: 'Super Admin' }];
-            }
+            // Fallback if Firebase isn't initialized or collection is empty
+            const allAdmins = JSON.parse(localStorage.getItem('registered_admins') || '[]');
+            this.admins = allAdmins.length > 0 ? allAdmins : [
+                { id: 'admin_1', name: 'Main Admin', email: 'admin@gmail.com' }
+            ];
         } catch (e) {
-            this.admins = [{ id: 'admin_main', name: 'Main Admin', role: 'Super Admin' }];
+            console.error('Error fetching admins from Firebase:', e);
+            this.admins = [{ id: 'admin_1', name: 'Main Admin', email: 'admin@gmail.com' }];
         }
     }
 
@@ -197,9 +186,9 @@ class CustomerAppointments {
             <div class="space-y-4">
                 <h3 class="text-2xl font-bold text-white">📅 Appointments</h3>
                 <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
-                    <h4 class="font-bold text-white mb-4">Book New Appointment with Your Selected Admin</h4>
+                    <h4 class="font-bold text-white mb-4">Book New Appointment</h4>
                     <div>
-                        <label class="text-sm text-slate-400">Assigned / Selected Admin</label>
+                        <label class="text-sm text-slate-400">Select Registered Admin</label>
                         <select id="apt-admin" class="w-full bg-black/45 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
                             ${this.admins.map(a => `<option value="${a.name || a.email || a.id}">${a.name || a.email || a.id}</option>`).join('')}
                         </select>
@@ -281,6 +270,7 @@ class CustomerAppointments {
         }
 
         const targetId = this.custId !== 'DEFAULT' ? this.custId : 'fete@gmail.com';
+        
         const appointment = {
             id: 'APT' + Date.now(),
             custId: targetId,
@@ -293,9 +283,16 @@ class CustomerAppointments {
             bookedAt: new Date().toLocaleTimeString()
         };
 
+        // 1. Save strictly to the customer's personal appointment history log
         this.loadAppointments();
         this.appointments.push(appointment);
         localStorage.setItem(`appointments_${targetId}`, JSON.stringify(this.appointments));
+
+        // 2. Save strictly to the *specific* selected admin's queue instead of broadcasting to everyone
+        const adminQueueKey = `admin_appointments_${adminName.toLowerCase().replace(/\s+/g, '_')}`;
+        const existingAdminApts = JSON.parse(localStorage.getItem(adminQueueKey) || '[]');
+        existingAdminApts.push(appointment);
+        localStorage.setItem(adminQueueKey, JSON.stringify(existingAdminApts));
 
         if (typeof notify === 'function') notify('success', `✅ Appointment successfully booked with ${adminName}!`);
         
@@ -308,9 +305,21 @@ class CustomerAppointments {
     cancelAppointment(aptId) {
         if (confirm('Cancel this appointment?')) {
             this.loadAppointments();
+            const targetApt = this.appointments.find(a => a.id === aptId);
+            
+            // Remove from customer list
             this.appointments = this.appointments.filter(a => a.id !== aptId);
             const targetId = this.custId !== 'DEFAULT' ? this.custId : 'fete@gmail.com';
             localStorage.setItem(`appointments_${targetId}`, JSON.stringify(this.appointments));
+
+            // Also remove from the specific admin's queue if it exists
+            if (targetApt && targetApt.adminName) {
+                const adminQueueKey = `admin_appointments_${targetApt.adminName.toLowerCase().replace(/\s+/g, '_')}`;
+                let adminApts = JSON.parse(localStorage.getItem(adminQueueKey) || '[]');
+                adminApts = adminApts.filter(a => a.id !== aptId);
+                localStorage.setItem(adminQueueKey, JSON.stringify(adminApts));
+            }
+
             if (typeof notify === 'function') notify('info', '❌ Appointment cancelled');
             this.refreshList();
         }
