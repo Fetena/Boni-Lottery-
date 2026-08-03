@@ -1,13 +1,14 @@
+// ============================================
+// CUSTOMER APPOINTMENTS MODULE COMPONENT
+// ============================================
+
 class CustomerAppointments {
     constructor(custId) {
-        // Force priority to 'fete@gmail.com' or real email over 'DEFAULT'
         const initialId = custId === 'DEFAULT' || !custId 
             ? (window.currentUser?.email || localStorage.getItem('currentUserEmail') || 'fete@gmail.com')
             : custId;
 
         this.custId = initialId;
-        console.log("CustomerAppointments locked to custId:", this.custId);
-        
         this.appointments = [];
         this.admins = [];
         this.init();
@@ -15,15 +16,12 @@ class CustomerAppointments {
     }
 
     setCustId(newCustId) {
-        // Prevent rogue router updates from resetting to DEFAULT if we are logged into an email
         if (!newCustId || (newCustId === 'DEFAULT' && this.custId && this.custId !== 'DEFAULT')) {
-            console.log("Ignored reset to DEFAULT. Keeping custId:", this.custId);
             return;
         }
 
         if (newCustId && newCustId !== this.custId) {
             this.custId = newCustId;
-            console.log("CustomerAppointments successfully updated custId to:", this.custId);
             this.loadAppointments();
             this.refreshList();
         }
@@ -35,7 +33,7 @@ class CustomerAppointments {
         this._pollingInterval = setInterval(() => {
             try {
                 const activeEmail = this.custId && this.custId !== 'DEFAULT' ? this.custId : 'fete@gmail.com';
-                const key = `customer_notifications_${activeEmail}`; // 🔥 Target active session exclusively
+                const key = `customer_notifications_${activeEmail}`;
 
                 const raw = localStorage.getItem(key);
                 if (!raw) return;
@@ -45,8 +43,6 @@ class CustomerAppointments {
 
                 notifs.forEach(n => {
                     if (!n.viewed) {
-                        console.log("🔔 Unread Notification Found in key [", key, "]:", n);
-                        
                         this.showPopupModal(n.message, n.status);
                         
                         const type = (n.status === 'Approved' || n.status === 'Confirmed') ? 'success' : 'error';
@@ -106,7 +102,6 @@ class CustomerAppointments {
     loadAppointments() {
         try {
             let foundAppointments = [];
-            // 🔥 Strictly use the active user session ID without spilling into fete@gmail.com fallback
             const targetId = this.custId && this.custId !== 'DEFAULT' ? this.custId : 'fete@gmail.com';
             
             const specificData = localStorage.getItem(`appointments_${targetId}`);
@@ -133,7 +128,6 @@ class CustomerAppointments {
             let totalUnread = 0;
             const targetId = this.custId && this.custId !== 'DEFAULT' ? this.custId : 'fete@gmail.com';
             
-            // 🔥 Only check notifications belonging to this exact profile
             const notifs = JSON.parse(localStorage.getItem(`customer_notifications_${targetId}`) || '[]');
             totalUnread += notifs.filter(n => !n.viewed).length;
 
@@ -151,16 +145,45 @@ class CustomerAppointments {
     }
 
     init() {
-        this.loadAdminsSync();
+        this.loadAssignedAdminSync();
         this.loadAppointments();
         this.refreshList();
     }
 
-    loadAdminsSync() {
+    // 🔥 Filter list so customers only see the specific admin they saved/selected in their settings
+    loadAssignedAdminSync() {
         try {
-            this.admins = JSON.parse(localStorage.getItem('registered_admins') || '[]');
+            const targetId = this.custId && this.custId !== 'DEFAULT' ? this.custId : 'fete@gmail.com';
+            
+            // Look up customer settings where their preferred admin is stored
+            const settingsRaw = localStorage.getItem(`customer_settings_${targetId}`);
+            let preferredAdminEmail = '';
+            
+            // Check global customer settings or localStorage map if available
+            const allAdmins = JSON.parse(localStorage.getItem('registered_admins') || '[]');
+            
+            // Fallback: check if the customer has a selected preferred admin stored from the settings tab
+            const globalSettings = JSON.parse(localStorage.getItem('customer_settings') || '{}');
+            if (globalSettings[targetId]?.preferredAdmin) {
+                preferredAdminEmail = globalSettings[targetId].preferredAdmin;
+            }
+
+            // If a specific admin is assigned/preferred, restrict the array to only that admin
+            if (preferredAdminEmail) {
+                this.admins = allAdmins.filter(a => (a.email || '').toLowerCase() === preferredAdminEmail.toLowerCase());
+            }
+
+            // If none found via settings map, check the dropdown selection or default to their linked admin
             if (this.admins.length === 0) {
-                this.admins = [{ id: 'admin_main', name: 'Main Admin', role: 'Super Admin' }];
+                const assignedTicket = JSON.parse(localStorage.getItem(`customer_tickets_${targetId}`) || '[]')[0];
+                if (assignedTicket?.assignedAdmin) {
+                    this.admins = allAdmins.filter(a => a.name === assignedTicket.assignedAdmin || a.email === assignedTicket.assignedAdmin);
+                }
+            }
+
+            // Absolute fallback if still empty: allow choice or show main registered admins if no preference set yet
+            if (this.admins.length === 0) {
+                this.admins = allAdmins.length > 0 ? allAdmins : [{ id: 'admin_main', name: 'Main Admin', role: 'Super Admin' }];
             }
         } catch (e) {
             this.admins = [{ id: 'admin_main', name: 'Main Admin', role: 'Super Admin' }];
@@ -168,16 +191,17 @@ class CustomerAppointments {
     }
 
     render() {
+        this.loadAssignedAdminSync();
         this.loadAppointments();
         return `
             <div class="space-y-4">
                 <h3 class="text-2xl font-bold text-white">📅 Appointments</h3>
                 <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
-                    <h4 class="font-bold text-white mb-4">Book New Appointment</h4>
+                    <h4 class="font-bold text-white mb-4">Book New Appointment with Your Selected Admin</h4>
                     <div>
-                        <label class="text-sm text-slate-400">Select Registered Admin</label>
-                        <select id="apt-admin" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
-                            ${this.admins.map(a => `<option value="${a.name || a.id}">${a.name || a.id}</option>`).join('')}
+                        <label class="text-sm text-slate-400">Assigned / Selected Admin</label>
+                        <select id="apt-admin" class="w-full bg-black/45 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
+                            ${this.admins.map(a => `<option value="${a.name || a.email || a.id}">${a.name || a.email || a.id}</option>`).join('')}
                         </select>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
