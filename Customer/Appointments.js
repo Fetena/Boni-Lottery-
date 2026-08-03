@@ -144,16 +144,15 @@ class CustomerAppointments {
         } catch (e) {}
     }
 
-    init() {
-        this.loadAssignedAdminSync();
+    async init() {
+        await this.loadAssignedAdminSync();
         this.loadAppointments();
         this.refreshList();
     }
 
-    // Load available active admins cleanly for selection
+    // Fetch admins directly from Firebase Firestore with fallback
     async loadAssignedAdminSync() {
         try {
-            // Assuming you are using Firebase Firestore
             if (typeof firebase !== 'undefined' && firebase.firestore) {
                 const db = firebase.firestore();
                 const snapshot = await db.collection('admins').get();
@@ -168,14 +167,13 @@ class CustomerAppointments {
                 }
             }
 
-            // Fallback if Firebase isn't initialized or collection is empty
             const allAdmins = JSON.parse(localStorage.getItem('registered_admins') || '[]');
             this.admins = allAdmins.length > 0 ? allAdmins : [
-                { id: 'admin_1', name: 'Main Admin', email: 'admin@gmail.com' }
+                { id: 'admin_1', name: 'Admin', email: 'admin@gmail.com' }
             ];
         } catch (e) {
             console.error('Error fetching admins from Firebase:', e);
-            this.admins = [{ id: 'admin_1', name: 'Main Admin', email: 'admin@gmail.com' }];
+            this.admins = [{ id: 'admin_1', name: 'Admin', email: 'admin@gmail.com' }];
         }
     }
 
@@ -288,8 +286,9 @@ class CustomerAppointments {
         this.appointments.push(appointment);
         localStorage.setItem(`appointments_${targetId}`, JSON.stringify(this.appointments));
 
-        // 2. Save strictly to the *specific* selected admin's queue instead of broadcasting to everyone
-        const adminQueueKey = `admin_appointments_${adminName.toLowerCase().replace(/\s+/g, '_')}`;
+        // 2. Save EXCLUSIVELY to the specific selected admin's queue (preventing broadcast to others)
+        const cleanAdminName = adminName.toLowerCase().replace(/[@.]/g, '_').replace(/\s+/g, '_');
+        const adminQueueKey = `admin_appointments_${cleanAdminName}`;
         const existingAdminApts = JSON.parse(localStorage.getItem(adminQueueKey) || '[]');
         existingAdminApts.push(appointment);
         localStorage.setItem(adminQueueKey, JSON.stringify(existingAdminApts));
@@ -312,9 +311,10 @@ class CustomerAppointments {
             const targetId = this.custId !== 'DEFAULT' ? this.custId : 'fete@gmail.com';
             localStorage.setItem(`appointments_${targetId}`, JSON.stringify(this.appointments));
 
-            // Also remove from the specific admin's queue if it exists
+            // Also remove from the specific admin's queue
             if (targetApt && targetApt.adminName) {
-                const adminQueueKey = `admin_appointments_${targetApt.adminName.toLowerCase().replace(/\s+/g, '_')}`;
+                const cleanAdminName = targetApt.adminName.toLowerCase().replace(/[@.]/g, '_').replace(/\s+/g, '_');
+                const adminQueueKey = `admin_appointments_${cleanAdminName}`;
                 let adminApts = JSON.parse(localStorage.getItem(adminQueueKey) || '[]');
                 adminApts = adminApts.filter(a => a.id !== aptId);
                 localStorage.setItem(adminQueueKey, JSON.stringify(adminApts));
