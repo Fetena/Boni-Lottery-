@@ -41,14 +41,12 @@ class AdminTickets {
                 return;
             }
 
-            // Fetch tickets matching this admin's email specifically
             const snapshot = await db.collection('customer_tickets')
                 .where('adminEmail', '==', currentAdminEmail)
                 .get();
             
             let docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-            // Fallback query matching preferredAdmin if adminEmail wasn't stamped on older records
             if (docs.length === 0) {
                 const fallbackSnapshot = await db.collection('customer_tickets')
                     .where('preferredAdmin', '==', currentAdminEmail)
@@ -56,7 +54,6 @@ class AdminTickets {
                 docs = fallbackSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             }
 
-            // Strict local filtering to guarantee zero leakage between accounts
             this.tickets = docs.filter(ticket => {
                 const tAdmin = (ticket.adminEmail || ticket.preferredAdmin || '').trim().toLowerCase();
                 return tAdmin === currentAdminEmail;
@@ -209,59 +206,3 @@ class AdminTickets {
 if (!window.adminTickets && typeof currentUser !== 'undefined') {
     window.adminTickets = new AdminTickets(currentUser?.email);
 }
-```[cite: 28]
-
----
-
-### 2. Update `loadAdminStats` in Parent Dashboard / Helpers
-Make sure statistics calculation (`loadAdminStats`) matches the identical `adminEmail` criteria so ticket numbers and revenue counts don't leak[cite: 29]:
-
-```javascript
-async function loadAdminStats() {
-    if (!db || !currentUser) return;
-
-    try {
-        const adminEmail = currentUser.email.trim().toLowerCase();
-
-        const manualSnapshot = await db.collection('admin_customers')
-            .where('adminEmail', '==', currentUser.email)
-            .get();
-
-        const selfRegisteredSnapshot = await db.collection('customer_settings')
-            .where('preferredAdmin', '==', currentUser.email)
-            .get();
-
-        const totalCustomersCount = manualSnapshot.size + selfRegisteredSnapshot.size;
-        if (document.getElementById('admin-total-customers')) {
-            document.getElementById('admin-total-customers').textContent = totalCustomersCount;
-        }
-
-        // 🔥 STRICT ISOLATION: Fetch only tickets belonging to this admin's email
-        const ticketSnapshot = await db.collection('customer_tickets')
-            .where('adminEmail', '==', adminEmail)
-            .get();
-            
-        let ticketsToCount = ticketSnapshot.docs;
-        if (ticketsToCount.length === 0) {
-            const fallbackSnap = await db.collection('customer_tickets')
-                .where('preferredAdmin', '==', adminEmail)
-                .get();
-            ticketsToCount = fallbackSnap.docs;
-        }
-
-        if (document.getElementById('admin-total-tickets')) {
-            document.getElementById('admin-total-tickets').textContent = ticketsToCount.length;
-        }
-
-        let revenue = 0;
-        ticketsToCount.forEach(doc => {
-            revenue += doc.data().cost || 0;
-        });
-        if (document.getElementById('admin-total-revenue')) {
-            document.getElementById('admin-total-revenue').textContent = revenue.toLocaleString() + ' ETB';
-        }
-    } catch (error) {
-        console.error('Error loading stats:', error);
-    }
-}
-```[cite: 29]
