@@ -86,19 +86,12 @@ class AdminNotifications {
 
     loadPendingApprovals() {
         try {
-            const allKeys = Object.keys(localStorage);
-            this.pendingApprovals = [];
+            // 🔥 STRICT ISOLATION: Normalize admin ID to read only this admin's queue key
+            const cleanAdminId = (this.adminId || 'admin').toLowerCase().replace(/[@.]/g, '_').replace(/\s+/g, '_');
+            const queueKey = `admin_appointments_${cleanAdminId}`;
             
-            allKeys.forEach(key => {
-                if (key.startsWith('appointments_')) {
-                    const items = JSON.parse(localStorage.getItem(key) || '[]');
-                    items.forEach(item => {
-                        if (item.status === 'Pending Confirmation' || item.status === 'Pending') {
-                            this.pendingApprovals.push(item);
-                        }
-                    });
-                }
-            });
+            const items = JSON.parse(localStorage.getItem(queueKey) || '[]');
+            this.pendingApprovals = items.filter(item => item.status === 'Pending Confirmation' || item.status === 'Pending');
         } catch (e) {
             console.error('Error loading pending approvals', e);
             this.pendingApprovals = [];
@@ -139,24 +132,34 @@ class AdminNotifications {
 
     updateBookingStatus(aptId, custId, newStatus) {
         try {
-            const storageKey = `appointments_${custId}`;
-            const items = JSON.parse(localStorage.getItem(storageKey) || '[]');
-            const updated = items.map(item => {
+            const cleanAdminId = (this.adminId || 'admin').toLowerCase().replace(/[@.]/g, '_').replace(/\s+/g, '_');
+            const queueKey = `admin_appointments_${cleanAdminId}`;
+            
+            // 1. Remove or update from this specific admin's queue so it disappears properly
+            let items = JSON.parse(localStorage.getItem(queueKey) || '[]');
+            items = items.filter(item => item.id !== aptId); // Removes it from active pending queue view
+            localStorage.setItem(queueKey, JSON.stringify(items));
+
+            // 2. Also update the customer's personal appointment history log status
+            const customerStorageKey = `appointments_${custId}`;
+            const customerItems = JSON.parse(localStorage.getItem(customerStorageKey) || '[]');
+            const updatedCustomerItems = customerItems.map(item => {
                 if (item.id === aptId) {
                     return { ...item, status: newStatus };
                 }
                 return item;
             });
-            localStorage.setItem(storageKey, JSON.stringify(updated));
+            localStorage.setItem(customerStorageKey, JSON.stringify(updatedCustomerItems));
             
-            // Push customer notification popup log
+            // 3. Push customer notification popup log for real-time customer alert
             const custNotifKey = `customer_notifications_${custId}`;
             const custNotifs = JSON.parse(localStorage.getItem(custNotifKey) || '[]');
             custNotifs.push({
                 id: Date.now(),
-                message: `Your appointment was ${newStatus.toLowerCase()}`,
+                message: `Your appointment status has been updated to ${newStatus}`,
                 status: newStatus,
-                timestamp: new Date().toLocaleTimeString()
+                timestamp: new Date().toLocaleTimeString(),
+                viewed: false
             });
             localStorage.setItem(custNotifKey, JSON.stringify(custNotifs));
 
