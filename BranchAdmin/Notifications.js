@@ -86,15 +86,29 @@ class AdminNotifications {
 
     loadPendingApprovals() {
         try {
-            // Normalize the admin ID/email to match the exact key the customer writes to
-            const cleanAdminId = (this.adminId || 'admin').toLowerCase().replace(/[@.]/g, '_').replace(/\s+/g, '_');
-            const queueKey = `admin_appointments_${cleanAdminId}`;
+            this.pendingApprovals = [];
             
-            // Read directly from the isolated admin queue
-            const items = JSON.parse(localStorage.getItem(queueKey) || '[]');
-            this.pendingApprovals = items.filter(item => 
-                item.status === 'Pending Confirmation' || item.status === 'Pending'
-            );
+            // Check possible keys where bookings could be stored for this admin
+            const possibleKeys = [];
+            if (this.adminId) {
+                possibleKeys.push(`admin_appointments_${this.adminId}`);
+                possibleKeys.push(`admin_appointments_${this.adminId.toLowerCase().replace(/[@.]/g, '_').replace(/\s+/g, '_')}`);
+            }
+            // Fallback to check generic or common admin keys if specific id fails
+            possibleKeys.push('admin_appointments_admin');
+            possibleKeys.push('admin_appointments_admin_gmail_com');
+
+            // Gather and combine items from all potential keys to ensure they show up
+            const seenIds = new Set();
+            possibleKeys.forEach(key => {
+                const items = JSON.parse(localStorage.getItem(key) || '[]');
+                items.forEach(item => {
+                    if (!seenIds.has(item.id) && (item.status === 'Pending Confirmation' || item.status === 'Pending')) {
+                        seenIds.add(item.id);
+                        this.pendingApprovals.push(item);
+                    }
+                });
+            });
         } catch (e) {
             console.error('Error loading pending approvals', e);
             this.pendingApprovals = [];
