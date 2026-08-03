@@ -55,7 +55,7 @@ class AdminCustomers {
         if (!db || !currentUser) return;
 
         try {
-            // Get ONLY THIS admin's customers
+            // Get ONLY THIS admin's customers[cite: 24]
             const snapshot = await db.collection('admin_customers')
                 .where('adminEmail', '==', currentUser.email)
                 .get();
@@ -142,6 +142,7 @@ class AdminCustomers {
             notify('success', `✅ Customer ${name} added!`);
             this.closeAddModal();
             await this.loadData();
+            if (window.adminDashboard) await window.adminDashboard.updateStats();
         } catch (error) {
             notify('error', `❌ Error: ${error.message}`);
         }
@@ -159,6 +160,7 @@ class AdminCustomers {
             await db.collection('admin_customers').doc(customerId).delete();
             notify('success', '✅ Customer deleted');
             await this.loadData();
+            if (window.adminDashboard) await window.adminDashboard.updateStats();
         } catch (error) {
             notify('error', `❌ Error: ${error.message}`);
         }
