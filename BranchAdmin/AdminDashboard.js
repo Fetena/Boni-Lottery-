@@ -86,13 +86,22 @@ class AdminDashboard {
 
     async loadData() {
         try {
-            // Load all child components
+            // 1. Immediately expose child components globally so inline HTML handlers work
             window.adminTicketsComponent = this.tickets;
             window.adminCustomersComponent = this.customers;
 
+            // 2. Ensure DOM elements are painted by forcing a small delay or ensuring template injection
+            // (If loadData runs before the template is injected into document.body, containers won't exist)
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            // 3. Load component data
             await this.customers.loadData();
             await this.tickets.loadData();
             await this.updateStats();
+
+            // 4. Force a secondary render pass on components to populate their inner containers
+            this.customers.displayCustomers();
+            this.tickets.render();
 
             console.log('✅ Admin dashboard loaded');
         } catch (error) {
