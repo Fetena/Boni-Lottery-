@@ -1,7 +1,6 @@
 // ============================================
-// ADMIN NOTIFICATIONS (CHILD COMPONENT)
+// ADMIN NOTIFICATIONS (CHILD COMPONENT) - FIXED
 // Parent: AdminDashboard
-// ✅ PERSISTS: Notifications stored with timestamps & Approvals
 // ============================================
 
 class AdminNotifications {
@@ -88,17 +87,13 @@ class AdminNotifications {
         try {
             this.pendingApprovals = [];
             
-            // Check possible keys where bookings could be stored for this admin
-            const possibleKeys = [];
-            if (this.adminId) {
-                possibleKeys.push(`admin_appointments_${this.adminId}`);
-                possibleKeys.push(`admin_appointments_${this.adminId.toLowerCase().replace(/[@.]/g, '_').replace(/\s+/g, '_')}`);
-            }
-            // Fallback to check generic or common admin keys if specific id fails
-            possibleKeys.push('admin_appointments_admin');
-            possibleKeys.push('admin_appointments_admin_gmail_com');
-
-            // Gather and combine items from all potential keys to ensure they show up
+            // Build the exact normalized queue key matching the customer booking logic
+            const cleanAdminId = (this.adminId || 'admin').toLowerCase().replace(/[@.]/g, '_').replace(/\s+/g, '_');
+            const queueKey = `admin_appointments_${cleanAdminId}`;
+            
+            // Fallback check options in case bookings were saved under generic keys
+            const possibleKeys = [queueKey, 'admin_appointments_admin', 'admin_appointments_admin_gmail_com'];
+            
             const seenIds = new Set();
             possibleKeys.forEach(key => {
                 const items = JSON.parse(localStorage.getItem(key) || '[]');
@@ -149,15 +144,18 @@ class AdminNotifications {
 
     updateBookingStatus(aptId, custId, newStatus) {
         try {
+            // 1. Remove from this specific admin's active queue so it disappears from their pending view
             const cleanAdminId = (this.adminId || 'admin').toLowerCase().replace(/[@.]/g, '_').replace(/\s+/g, '_');
             const queueKey = `admin_appointments_${cleanAdminId}`;
             
-            // 1. Remove or update from this specific admin's queue so it disappears properly
-            let items = JSON.parse(localStorage.getItem(queueKey) || '[]');
-            items = items.filter(item => item.id !== aptId); // Removes it from active pending queue view
-            localStorage.setItem(queueKey, JSON.stringify(items));
+            const possibleKeys = [queueKey, 'admin_appointments_admin', 'admin_appointments_admin_gmail_com'];
+            possibleKeys.forEach(key => {
+                let items = JSON.parse(localStorage.getItem(key) || '[]');
+                items = items.filter(item => item.id !== aptId);
+                localStorage.setItem(key, JSON.stringify(items));
+            });
 
-            // 2. Also update the customer's personal appointment history log status
+            // 2. Update the customer's personal appointment history log status
             const customerStorageKey = `appointments_${custId}`;
             const customerItems = JSON.parse(localStorage.getItem(customerStorageKey) || '[]');
             const updatedCustomerItems = customerItems.map(item => {
@@ -168,7 +166,7 @@ class AdminNotifications {
             });
             localStorage.setItem(customerStorageKey, JSON.stringify(updatedCustomerItems));
             
-            // 3. Push customer notification popup log for real-time customer alert
+            // 3. Push customer notification popup log for real-time customer alert modal
             const custNotifKey = `customer_notifications_${custId}`;
             const custNotifs = JSON.parse(localStorage.getItem(custNotifKey) || '[]');
             custNotifs.push({
@@ -197,7 +195,6 @@ class AdminNotifications {
     updateBadgeCount() {
         const pendingCount = this.pendingApprovals.length;
 
-        // Target both specific IDs and common badge selectors in navigation bars
         const possibleBadgeIds = ['badge-branch-notifications', 'notification-badge', 'notif-badge'];
         possibleBadgeIds.forEach(id => {
             const el = document.getElementById(id);
@@ -208,19 +205,6 @@ class AdminNotifications {
                 } else {
                     el.textContent = '0';
                     el.classList.add('hidden');
-                }
-            }
-        });
-
-        // Fallback: target any red badge pill inside the Notifications tab item specifically
-        document.querySelectorAll('span, sup, div').forEach(node => {
-            if (node.textContent && node.textContent.trim() === '6' && node.className.includes('bg-red')) {
-                if (pendingCount > 0) {
-                    node.textContent = pendingCount;
-                    node.classList.remove('hidden');
-                } else {
-                    node.textContent = '0';
-                    node.classList.add('hidden');
                 }
             }
         });
