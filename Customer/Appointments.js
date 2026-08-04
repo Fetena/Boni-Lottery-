@@ -28,22 +28,23 @@ class CustomerAppointments {
         }
     }
 
+    // Realtime Firebase Listener targeting ONLY this customer's notifications
     startCustomerNotificationPoller() {
-        if (this._pollingInterval) clearInterval(this._pollingInterval);
-        
-        this._pollingInterval = setInterval(() => {
-            try {
-                const activeEmail = this.custId && this.custId !== 'DEFAULT' ? this.custId : 'fete@gmail.com';
-                const key = `customer_notifications_${activeEmail}`;
+        if (typeof firebase === 'undefined' || !firebase.firestore) return;
+        const db = firebase.firestore();
+        const activeEmail = this.custId && this.custId !== 'DEFAULT' ? this.custId : 'fete@gmail.com';
 
-                const raw = localStorage.getItem(key);
-                if (!raw) return;
+        if (this._unsubscribeNotifs) this._unsubscribeNotifs();
 
-                const notifs = JSON.parse(raw);
-                let modified = false;
-
-                notifs.forEach(n => {
-                    if (!n.viewed) {
+        this._unsubscribeNotifs = db.collection('customer_notifications')
+            .where('custId', '==', activeEmail)
+            .where('viewed', '==', false)
+            .onSnapshot(snapshot => {
+                snapshot.docChanges().forEach(change => {
+                    if (change.type === 'added') {
+                        const n = change.data();
+                        
+                        // RESTORED POPUP MODAL
                         this.showPopupModal(n.message, n.status);
                         
                         const type = (n.status === 'Approved' || n.status === 'Confirmed') ? 'success' : 'error';
@@ -51,23 +52,17 @@ class CustomerAppointments {
                             notify(type, `🔔 ${n.message}`);
                         }
                         
-                        n.viewed = true;
-                        modified = true;
+                        // Mark viewed in Firestore so it doesn't pop up again
+                        db.collection('customer_notifications').doc(change.doc.id).update({ viewed: true });
                     }
                 });
-
-                if (modified) {
-                    localStorage.setItem(key, JSON.stringify(notifs));
-                    this.loadAppointments();
-                    this.refreshList();
-                    this.updateBadgeCount();
-                }
-            } catch (e) {
-                console.error('Polling error:', e);
-            }
-        }, 2000);
+                this.loadAppointments();
+                this.refreshList();
+                this.updateBadgeCount();
+            }, e => console.error('Firestore notification listener error:', e));
     }
 
+    // RESTORED ORIGINAL POPUP MODAL
     showPopupModal(message, status) {
         const existing = document.getElementById('apt-popup-modal');
         if (existing) existing.remove();
@@ -100,18 +95,19 @@ class CustomerAppointments {
         document.body.insertAdjacentHTML('beforeend', modalHtml);
     }
 
-    loadAppointments() {
+    async loadAppointments() {
+        if (typeof firebase === 'undefined' || !firebase.firestore) return;
         try {
-            let foundAppointments = [];
+            const db = firebase.firestore();
             const targetId = this.custId && this.custId !== 'DEFAULT' ? this.custId : 'fete@gmail.com';
             
-            const specificData = localStorage.getItem(`appointments_${targetId}`);
-            if (specificData) {
-                foundAppointments = JSON.parse(specificData);
-            }
+            const snapshot = await db.collection('customer_appointments')
+                .where('custId', '==', targetId)
+                .get();
 
-            this.appointments = foundAppointments;
+            this.appointments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         } catch (e) {
+            console.error('Error loading appointments from Firebase:', e);
             this.appointments = [];
         }
     }
@@ -124,18 +120,21 @@ class CustomerAppointments {
         this.updateBadgeCount();
     }
 
-    updateBadgeCount() {
+    async updateBadgeCount() {
+        if (typeof firebase === 'undefined' || !firebase.firestore) return;
         try {
-            let totalUnread = 0;
+            const db = firebase.firestore();
             const targetId = this.custId && this.custId !== 'DEFAULT' ? this.custId : 'fete@gmail.com';
             
-            const notifs = JSON.parse(localStorage.getItem(`customer_notifications_${targetId}`) || '[]');
-            totalUnread += notifs.filter(n => !n.viewed).length;
+            const snapshot = await db.collection('customer_notifications')
+                .where('custId', '==', targetId)
+                .where('viewed', '==', false)
+                .get();
 
             const badgeEl = document.getElementById('customer-appointments-badge');
             if (badgeEl) {
-                if (totalUnread > 0) {
-                    badgeEl.textContent = totalUnread;
+                if (snapshot.size > 0) {
+                    badgeEl.textContent = snapshot.size;
                     badgeEl.classList.remove('hidden');
                 } else {
                     badgeEl.textContent = '0';
@@ -147,11 +146,10 @@ class CustomerAppointments {
 
     async init() {
         await this.loadAssignedAdminSync();
-        this.loadAppointments();
+        await this.loadAppointments();
         this.refreshList();
     }
 
-    // Fetch admins directly from Firebase Firestore with fallback
     async loadAssignedAdminSync() {
         try {
             if (typeof firebase !== 'undefined' && firebase.firestore) {
@@ -168,8 +166,6 @@ class CustomerAppointments {
                             ...data
                         };
                     });
-                    
-                    console.log('✅ Loaded admins from Firebase:', this.admins);
                     this.refreshList();
                     return;
                 }
@@ -182,8 +178,6 @@ class CustomerAppointments {
                 ...admin,
                 email: admin.email || admin.id
             }));
-
-            console.log('✅ Loaded admins from localStorage:', this.admins);
         } catch (e) {
             console.error('Error fetching admins from Firebase:', e);
             this.admins = [{ id: 'admin_1', name: 'Admin', email: 'admin@gmail.com' }];
@@ -247,7 +241,6 @@ class CustomerAppointments {
     }
 
     renderAppointmentsHtml() {
-        this.loadAppointments();
         if (this.appointments.length === 0) {
             return '<p class="text-slate-400 text-center py-6">No appointments scheduled</p>';
         }
@@ -274,7 +267,7 @@ class CustomerAppointments {
         }).join('');
     }
 
-    bookAppointment() {
+    async bookAppointment() {
         const adminEmail = document.getElementById('apt-admin')?.value;
         const date = document.getElementById('apt-date')?.value;
         const time = document.getElementById('apt-time')?.value;
@@ -286,69 +279,54 @@ class CustomerAppointments {
             return;
         }
 
-        const targetId = this.custId !== 'DEFAULT' ? this.custId : 'fete@gmail.com';
-        
-        const selectedAdmin = this.admins.find(a => (a.email || a.id) === adminEmail);
-        const adminName = selectedAdmin?.name || adminEmail;
+        try {
+            const db = firebase.firestore();
+            const targetId = this.custId !== 'DEFAULT' ? this.custId : 'fete@gmail.com';
+            const selectedAdmin = this.admins.find(a => (a.email || a.id) === adminEmail);
+            const adminName = selectedAdmin?.name || adminEmail;
 
-        const appointment = {
-            id: 'APT' + Date.now(),
-            custId: targetId,
-            adminEmail: adminEmail,
-            adminName: adminName,
-            date,
-            time,
-            purpose,
-            description,
-            status: 'Pending Confirmation',
-            bookedAt: new Date().toLocaleTimeString()
-        };
+            const appointment = {
+                custId: targetId,
+                adminEmail: adminEmail.toLowerCase().trim(),
+                adminName: adminName,
+                date,
+                time,
+                purpose,
+                description,
+                status: 'Pending Confirmation',
+                bookedAt: new Date().toLocaleTimeString(),
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
 
-        this.loadAppointments();
-        this.appointments.push(appointment);
-        localStorage.setItem(`appointments_${targetId}`, JSON.stringify(this.appointments));
+            await db.collection('customer_appointments').add(appointment);
 
-        const keysToSave = [
-            `admin_appointments_${adminEmail}`,
-            `admin_appointments_${adminName.toLowerCase().replace(/[@.]/g, '_').replace(/\s+/g, '_')}`
-        ];
-
-        keysToSave.forEach(queueKey => {
-            const existingAdminApts = JSON.parse(localStorage.getItem(queueKey) || '[]');
-            if (!existingAdminApts.some(a => a.id === appointment.id)) {
-                existingAdminApts.push(appointment);
-                localStorage.setItem(queueKey, JSON.stringify(existingAdminApts));
-            }
-        });
-
-        if (typeof notify === 'function') notify('success', `✅ Appointment successfully booked with ${adminName}!`);
-        
-        document.getElementById('apt-admin').value = '';
-        document.getElementById('apt-date').value = '';
-        document.getElementById('apt-time').value = '';
-        document.getElementById('apt-desc').value = '';
-        document.getElementById('selected-admin-email').textContent = '--';
-        this.refreshList();
+            if (typeof notify === 'function') notify('success', `✅ Appointment successfully booked with ${adminName}!`);
+            
+            document.getElementById('apt-admin').value = '';
+            document.getElementById('apt-date').value = '';
+            document.getElementById('apt-time').value = '';
+            document.getElementById('apt-desc').value = '';
+            document.getElementById('selected-admin-email').textContent = '--';
+            await this.loadAppointments();
+            this.refreshList();
+        } catch (e) {
+            console.error('Error booking appointment in Firebase:', e);
+            if (typeof notify === 'function') notify('error', '❌ Failed to book appointment');
+        }
     }
 
-    cancelAppointment(aptId) {
+    async cancelAppointment(aptId) {
         if (confirm('Cancel this appointment?')) {
-            this.loadAppointments();
-            const targetApt = this.appointments.find(a => a.id === aptId);
-            
-            this.appointments = this.appointments.filter(a => a.id !== aptId);
-            const targetId = this.custId !== 'DEFAULT' ? this.custId : 'fete@gmail.com';
-            localStorage.setItem(`appointments_${targetId}`, JSON.stringify(this.appointments));
+            try {
+                const db = firebase.firestore();
+                await db.collection('customer_appointments').doc(aptId).delete();
 
-            if (targetApt && targetApt.adminEmail) {
-                const adminQueueKey = `admin_appointments_${targetApt.adminEmail}`;
-                let adminApts = JSON.parse(localStorage.getItem(adminQueueKey) || '[]');
-                adminApts = adminApts.filter(a => a.id !== aptId);
-                localStorage.setItem(adminQueueKey, JSON.stringify(adminApts));
+                if (typeof notify === 'function') notify('info', '❌ Appointment cancelled');
+                await this.loadAppointments();
+                this.refreshList();
+            } catch (e) {
+                console.error('Error deleting appointment from Firebase:', e);
             }
-
-            if (typeof notify === 'function') notify('info', '❌ Appointment cancelled');
-            this.refreshList();
         }
     }
 }
