@@ -86,20 +86,51 @@ class AdminNotifications {
  loadPendingApprovals() {
         try {
             this.pendingApprovals = [];
+            const seenIds = new Set();
             
-            // Clean the current admin's ID exactly the same way it's saved during booking
             const cleanAdminId = (this.adminId || 'admin').toLowerCase().replace(/[@.]/g, '_').replace(/\s+/g, '_');
-            const queueKey = `admin_appointments_${cleanAdminId}`;
             
-            // Load exclusively from this specific admin's queue key
-            const rawData = localStorage.getItem(queueKey);
-            if (rawData) {
-                const items = JSON.parse(rawData);
-                if (Array.isArray(items)) {
-                    this.pendingApprovals = items.filter(item => {
-                        const status = (item.status || '').toLowerCase();
-                        return status.includes('pending') || status.includes('unapproved');
-                    });
+            // 1. Check exact match key first
+            const exactKey = `admin_appointments_${cleanAdminId}`;
+            const exactData = localStorage.getItem(exactKey);
+            if (exactData) {
+                try {
+                    const items = JSON.parse(exactData);
+                    if (Array.isArray(items)) {
+                        items.forEach(item => {
+                            if (item && item.id && !seenIds.has(item.id)) {
+                                const status = (item.status || '').toLowerCase();
+                                if (status.includes('pending') || status.includes('unapproved')) {
+                                    seenIds.add(item.id);
+                                    this.pendingApprovals.push(item);
+                                }
+                            }
+                        });
+                    }
+                } catch (e) {}
+            }
+
+            // 2. Fallback check: If an appointment was booked using a general/legacy name, 
+            // match it if its targeted admin field matches this user's username or email prefix
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('admin_appointments_')) {
+                    try {
+                        const items = JSON.parse(localStorage.getItem(key) || '[]');
+                        items.forEach(item => {
+                            if (item && item.id && !seenIds.has(item.id)) {
+                                const status = (item.status || '').toLowerCase();
+                                const targetAdmin = (item.adminName || '').toLowerCase().replace(/[@.]/g, '_').replace(/\s+/g, '_');
+                                
+                                // Match if pending and either generic/unassigned or matches this specific admin's name/id
+                                if ((status.includes('pending') || status.includes('unapproved')) && 
+                                    (targetAdmin === cleanAdminId || targetAdmin.includes(cleanAdminId) || cleanAdminId.includes(targetAdmin))) {
+                                    seenIds.add(item.id);
+                                    this.pendingApprovals.push(item);
+                                }
+                            }
+                        });
+                    } catch (e) {}
                 }
             }
             
