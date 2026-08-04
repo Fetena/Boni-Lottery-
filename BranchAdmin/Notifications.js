@@ -1,5 +1,5 @@
 // ============================================
-// ADMIN NOTIFICATIONS (CHILD COMPONENT) - FIXED
+// ADMIN NOTIFICATIONS (CHILD COMPONENT) - WITH APPROVED ARCHIVE & DELETE
 // Parent: AdminDashboard
 // ============================================
 
@@ -21,6 +21,15 @@ class AdminNotifications {
                     <p class="text-xs text-slate-400">Manage customer booking and appointment approvals here.</p>
                     <div id="admin-approval-list" class="space-y-3">
                         ${this.renderApprovalItems()}
+                    </div>
+                </div>
+
+                <!-- APPROVED APPOINTMENTS ARCHIVE SECTION -->
+                <div class="glass-panel rounded-2xl p-6 border border-emerald-500/10 space-y-4">
+                    <h3 class="text-2xl font-bold text-white">📂 Approved Appointments Archive</h3>
+                    <p class="text-xs text-slate-400">Review and manage successfully approved bookings. You can delete them anytime.</p>
+                    <div id="admin-approved-list" class="space-y-3">
+                        ${this.renderApprovedBinItems()}
                     </div>
                 </div>
 
@@ -101,7 +110,7 @@ class AdminNotifications {
             
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
-                if (key.startsWith('admin_appointments_') && !key.includes('_bin')) {
+                if (key.startsWith('admin_appointments_') && !key.includes('_bin') && !key.includes('_approved')) {
                     try {
                         const items = JSON.parse(localStorage.getItem(key) || '[]');
                         items.forEach(item => {
@@ -153,6 +162,37 @@ class AdminNotifications {
         `).join('');
     }
 
+    renderApprovedBinItems() {
+        try {
+            const cleanAdminId = (this.adminId || 'admin').toLowerCase().replace(/[@.]/g, '_').replace(/\s+/g, '_');
+            const approvedKey = `admin_appointments_approved_${cleanAdminId}`;
+            const approvedItems = JSON.parse(localStorage.getItem(approvedKey) || '[]');
+
+            if (approvedItems.length === 0) {
+                return '<p class="text-slate-400 text-xs py-2">No approved appointments in archive</p>';
+            }
+
+            return approvedItems.map(apt => `
+                <div class="bg-black/40 rounded-xl p-4 border border-emerald-500/20 text-sm space-y-2 transition-all">
+                    <div class="flex justify-between items-start">
+                        <div class="space-y-1 select-text">
+                            <p class="font-bold text-white text-base">👤 Approved Booking: <span class="text-emerald-400">${apt.purpose || 'Appointment'}</span></p>
+                            <p class="text-slate-300">📧 Account: <span class="text-white">${apt.custId || 'N/A'}</span></p>
+                            <p class="text-slate-300">📅 Schedule: <span class="text-white">${apt.date || 'N/A'} at ${apt.time || 'N/A'}</span></p>
+                            <p class="text-slate-400 bg-black/30 p-2 rounded-lg border border-white/5 mt-1">📝 Note: ${apt.description || 'None'}</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 pt-2 border-t border-white/5 justify-end">
+                        <button onclick="window.adminNotifications.deleteFromApprovedArchive('${apt.id}')" 
+                            class="px-3.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-red-400 font-bold rounded-lg text-xs transition-colors">🗑️ Delete Record</button>
+                    </div>
+                </div>
+            `).join('');
+        } catch (e) {
+            return '<p class="text-slate-400 text-xs py-2">Error loading approved archive</p>';
+        }
+    }
+
     renderRejectedBinItems() {
         try {
             const cleanAdminId = (this.adminId || 'admin').toLowerCase().replace(/[@.]/g, '_').replace(/\s+/g, '_');
@@ -187,7 +227,36 @@ class AdminNotifications {
     }
 
     approveBooking(aptId, custId) {
-        this.updateBookingStatus(aptId, custId, 'Approved');
+        try {
+            const cleanAdminId = (this.adminId || 'admin').toLowerCase().replace(/[@.]/g, '_').replace(/\s+/g, '_');
+            let targetItem = null;
+            
+            // Remove from active queue
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('admin_appointments_') && !key.includes('_bin') && !key.includes('_approved')) {
+                    let items = JSON.parse(localStorage.getItem(key) || '[]');
+                    const found = items.find(item => item.id === aptId);
+                    if (found) targetItem = found;
+                    items = items.filter(item => item.id !== aptId);
+                    localStorage.setItem(key, JSON.stringify(items));
+                }
+            }
+
+            if (targetItem) {
+                targetItem.status = 'Approved';
+                const approvedKey = `admin_appointments_approved_${cleanAdminId}`;
+                const approvedItems = JSON.parse(localStorage.getItem(approvedKey) || '[]');
+                approvedItems.push(targetItem);
+                localStorage.setItem(approvedKey, JSON.stringify(approvedItems));
+            }
+
+            this.updateBookingStatusCore(aptId, custId, 'Approved');
+            if (typeof notify === 'function') notify('success', '✅ Booking approved and moved to archive!');
+            this.refreshUI();
+        } catch (e) {
+            console.error('Error approving booking', e);
+        }
     }
 
     rejectBooking(aptId, custId) {
@@ -197,7 +266,7 @@ class AdminNotifications {
             
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
-                if (key.startsWith('admin_appointments_') && !key.includes('_bin')) {
+                if (key.startsWith('admin_appointments_') && !key.includes('_bin') && !key.includes('_approved')) {
                     let items = JSON.parse(localStorage.getItem(key) || '[]');
                     const found = items.find(item => item.id === aptId);
                     if (found) targetItem = found;
@@ -291,23 +360,25 @@ class AdminNotifications {
         }
     }
 
-    updateBookingStatus(aptId, custId, newStatus) {
-        this.updateBookingStatusCore(aptId, custId, newStatus);
-        if (typeof notify === 'function') notify('success', `✅ Booking ${newStatus.toLowerCase()} successfully!`);
-        this.refreshUI();
+    deleteFromApprovedArchive(aptId) {
+        if (confirm('Permanently delete this approved appointment record?')) {
+            try {
+                const cleanAdminId = (this.adminId || 'admin').toLowerCase().replace(/[@.]/g, '_').replace(/\s+/g, '_');
+                const approvedKey = `admin_appointments_approved_${cleanAdminId}`;
+                let approvedItems = JSON.parse(localStorage.getItem(approvedKey) || '[]');
+                approvedItems = approvedItems.filter(item => item.id !== aptId);
+                localStorage.setItem(approvedKey, JSON.stringify(approvedItems));
+
+                if (typeof notify === 'function') notify('info', '🗑️ Approved appointment deleted from archive');
+                this.refreshUI();
+            } catch (e) {
+                console.error('Error deleting from approved archive', e);
+            }
+        }
     }
 
     updateBookingStatusCore(aptId, custId, newStatus) {
         try {
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (key.startsWith('admin_appointments_') && !key.includes('_bin')) {
-                    let items = JSON.parse(localStorage.getItem(key) || '[]');
-                    items = items.filter(item => item.id !== aptId);
-                    localStorage.setItem(key, JSON.stringify(items));
-                }
-            }
-
             if (custId) {
                 const customerStorageKey = `appointments_${custId}`;
                 const customerItems = JSON.parse(localStorage.getItem(customerStorageKey) || '[]');
@@ -341,6 +412,9 @@ class AdminNotifications {
         this.loadPendingApprovals();
         const approvalListEl = document.getElementById('admin-approval-list');
         if (approvalListEl) approvalListEl.innerHTML = this.renderApprovalItems();
+
+        const approvedListEl = document.getElementById('admin-approved-list');
+        if (approvedListEl) approvedListEl.innerHTML = this.renderApprovedBinItems();
 
         const rejectedListEl = document.getElementById('admin-rejected-list');
         if (rejectedListEl) rejectedListEl.innerHTML = this.renderRejectedBinItems();
