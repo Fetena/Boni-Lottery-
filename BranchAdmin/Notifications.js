@@ -86,54 +86,21 @@ class AdminNotifications {
   loadPendingApprovals() {
         try {
             this.pendingApprovals = [];
-            const seenIds = new Set();
-            const currentAdminNorm = (this.adminId || 'admin').toLowerCase().replace(/[@.]/g, '_').replace(/\s+/g, '_');
-
-            // Scan localStorage for queues or customer lists
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                
-                // If it's an admin-specific queue key, verify it matches this admin
-                if (key.startsWith('admin_appointments_')) {
-                    if (!key.includes(currentAdminNorm)) {
-                        continue; // Skip other admins' queues completely
-                    }
+            
+            // Strictly isolate: Build the exact key for this specific admin only
+            const cleanAdminId = (this.adminId || 'admin').toLowerCase().replace(/[@.]/g, '_').replace(/\s+/g, '_');
+            const queueKey = `admin_appointments_${cleanAdminId}`;
+            
+            // Read ONLY this admin's dedicated storage key. Never scan other keys.
+            const items = JSON.parse(localStorage.getItem(queueKey) || '[]');
+            
+            items.forEach(item => {
+                if (item && (item.status === 'Pending Confirmation' || item.status === 'Pending' || item.status === 'Unapproved')) {
+                    this.pendingApprovals.push(item);
                 }
-
-                try {
-                    const data = JSON.parse(localStorage.getItem(key));
-                    if (Array.isArray(data)) {
-                        data.forEach(item => {
-                            if (item && typeof item === 'object') {
-                                const status = item.status ? item.status.toLowerCase() : '';
-                                
-                                // Optional safety check if the booking item itself has an assigned admin field
-                                if (item.adminId) {
-                                    const itemAdminNorm = item.adminId.toLowerCase().replace(/[@.]/g, '_').replace(/\s+/g, '_');
-                                    if (itemAdminNorm !== currentAdminNorm) return;
-                                }
-
-                                if ((status.includes('pending') || status === 'unapproved') && !seenIds.has(item.id || JSON.stringify(item))) {
-                                    seenIds.add(item.id || JSON.stringify(item));
-                                    this.pendingApprovals.push({
-                                        id: item.id || Date.now() + Math.random(),
-                                        custId: item.custId || item.customerId || 'unknown_customer',
-                                        purpose: item.purpose || item.title || item.service || 'Appointment Booking',
-                                        date: item.date || item.appointmentDate || 'Today',
-                                        time: item.time || item.appointmentTime || 'N/A',
-                                        description: item.description || item.note || item.notes || 'None',
-                                        status: item.status || 'Pending'
-                                    });
-                                }
-                            }
-                        });
-                    }
-                } catch (err) {
-                    // Ignore non-JSON keys
-                }
-            }
+            });
         } catch (e) {
-            console.error('Error loading filtered pending approvals', e);
+            console.error('Error loading isolated pending approvals', e);
             this.pendingApprovals = [];
         }
     }
