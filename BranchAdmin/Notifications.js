@@ -107,34 +107,32 @@ class AdminNotifications {
             this.pendingApprovals = [];
             const seenIds = new Set();
             
-            const rawId = (this.adminId || '').toString().toLowerCase().trim();
-            const cleanId = rawId.replace(/[@.]/g, '_').replace(/\s+/g, '_');
+            const currentAdminRaw = (this.adminId || '').toString().toLowerCase().trim();
             
-            // Check potential key formats for this admin
-            const possibleKeys = [
-                `admin_appointments_${this.adminId}`,
-                `admin_appointments_${rawId}`,
-                `admin_appointments_${cleanId}`
-            ];
-
-            let items = [];
-            possibleKeys.forEach(key => {
-                const data = JSON.parse(localStorage.getItem(key) || '[]');
-                if (data.length > 0) {
-                    items = items.concat(data);
-                }
-            });
-
-            // Fallback scan if specific keys are empty, filtering items meant for this admin profile
-            if (items.length === 0) {
-                for (let i = 0; i < localStorage.length; i++) {
-                    const storageKey = localStorage.key(i);
-                    if (storageKey && storageKey.startsWith('admin_appointments_') && !storageKey.includes('_approved_') && !storageKey.includes('_bin_')) {
-                        const subItems = JSON.parse(localStorage.getItem(storageKey) || '[]');
-                        items = items.concat(subItems);
-                    }
-                }
+            // CRITICAL: Look ONLY at this specific admin's exact queue key (No global scanning!)
+            const exactKey = `admin_appointments_${this.adminId}`;
+            let items = JSON.parse(localStorage.getItem(exactKey) || '[]');
+            
+            // If the exact key is empty, check sanitized variant keys
+            if (items.length === 0 && currentAdminRaw) {
+                const cleanId = currentAdminRaw.replace(/[@.]/g, '_').replace(/\s+/g, '_');
+                const cleanKey = `admin_appointments_${cleanId}`;
+                items = JSON.parse(localStorage.getItem(cleanKey) || '[]');
             }
+
+            // STRICT ISOLATION FILTER: Even if items are fetched, ensure they belong to this admin
+            items = items.filter(item => {
+                if (!item) return false;
+                const itemTargetEmail = (item.adminEmail || '').toString().toLowerCase().trim();
+                const itemTargetName = (item.adminName || '').toString().toLowerCase().trim();
+                
+                // Only allow if it explicitly targets this admin's email or name
+                return (
+                    itemTargetEmail === currentAdminRaw || 
+                    itemTargetName === currentAdminRaw ||
+                    itemTargetEmail.replace(/[@.]/g, '_') === currentAdminRaw.replace(/[@.]/g, '_')
+                );
+            });
             
             items.forEach(item => {
                 if (item && item.id && !seenIds.has(item.id)) {
@@ -146,7 +144,7 @@ class AdminNotifications {
                 }
             });
 
-            console.log(`✅ Loaded ${this.pendingApprovals.length} appointments for admin identifier: ${this.adminId}`);
+            console.log(`✅ Strictly isolated appointments loaded for admin (${this.adminId}):`, this.pendingApprovals.length);
         } catch (e) {
             console.error('Error loading pending approvals', e);
             this.pendingApprovals = [];
