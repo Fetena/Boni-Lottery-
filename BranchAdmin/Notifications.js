@@ -138,7 +138,7 @@ class AdminNotifications {
             // Strict per-admin filter using the username or email prefix to block cross-admin leaks
             items = items.filter(item => {
                 if (!item) return false;
-                const itemTargetEmail = (item.adminEmail || '').toString().toLowerCase().trim();
+               const itemTargetEmail = (item.adminEmail || item.assignedAdmin || '').toString().toLowerCase().trim();
                 const itemTargetName = (item.adminName || '').toString().toLowerCase().trim();
                 
                 if (!itemTargetEmail && !itemTargetName) return false;
