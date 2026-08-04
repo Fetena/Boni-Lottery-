@@ -108,27 +108,19 @@ class AdminNotifications {
             
             const cleanAdminId = (this.adminId || 'admin').toLowerCase().replace(/[@.]/g, '_').replace(/\s+/g, '_');
             
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (key.startsWith('admin_appointments_') && !key.includes('_bin') && !key.includes('_approved')) {
-                    try {
-                        const items = JSON.parse(localStorage.getItem(key) || '[]');
-                        items.forEach(item => {
-                            if (item && item.id && !seenIds.has(item.id)) {
-                                const status = (item.status || '').toLowerCase();
-                                const targetAdmin = (item.adminName || '').toLowerCase().replace(/[@.]/g, '_').replace(/\s+/g, '_');
-                                
-                                const isForThisAdmin = targetAdmin.includes(cleanAdminId) || cleanAdminId.includes(targetAdmin) || key.includes(cleanAdminId);
-                                
-                                if ((status.includes('pending') || status.includes('unapproved')) && isForThisAdmin) {
-                                    seenIds.add(item.id);
-                                    this.pendingApprovals.push(item);
-                                }
-                            }
-                        });
-                    } catch (e) {}
+            // STRICT ISOLATION: Look ONLY at this specific admin's isolated queue key
+            const specificQueueKey = `admin_appointments_${cleanAdminId}`;
+            const items = JSON.parse(localStorage.getItem(specificQueueKey) || '[]');
+            
+            items.forEach(item => {
+                if (item && item.id && !seenIds.has(item.id)) {
+                    const status = (item.status || '').toLowerCase();
+                    if (status.includes('pending') || status.includes('unapproved')) {
+                        seenIds.add(item.id);
+                        this.pendingApprovals.push(item);
+                    }
                 }
-            }
+            });
         } catch (e) {
             console.error('Error loading pending approvals', e);
             this.pendingApprovals = [];
@@ -319,14 +311,11 @@ class AdminNotifications {
     deleteBooking(aptId, custId) {
         if (confirm('Permanently delete this appointment record?')) {
             try {
-                for (let i = 0; i < localStorage.length; i++) {
-                    const key = localStorage.key(i);
-                    if (key.startsWith('admin_appointments_')) {
-                        let items = JSON.parse(localStorage.getItem(key) || '[]');
-                        items = items.filter(item => item.id !== aptId);
-                        localStorage.setItem(key, JSON.stringify(items));
-                    }
-                }
+                const cleanAdminId = (this.adminId || 'admin').toLowerCase().replace(/[@.]/g, '_').replace(/\s+/g, '_');
+                const specificQueueKey = `admin_appointments_${cleanAdminId}`;
+                let items = JSON.parse(localStorage.getItem(specificQueueKey) || '[]');
+                items = items.filter(item => item.id !== aptId);
+                localStorage.setItem(specificQueueKey, JSON.stringify(items));
                 
                 if (custId) {
                     const customerStorageKey = `appointments_${custId}`;
