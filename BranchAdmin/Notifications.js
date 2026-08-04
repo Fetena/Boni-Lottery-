@@ -107,16 +107,38 @@ class AdminNotifications {
             this.pendingApprovals = [];
             const seenIds = new Set();
             
-            // CRITICAL FIX: Use this admin's email as key, NOT random name formatting
-            const adminKey = `admin_appointments_${this.adminId}`;
+            const rawId = (this.adminId || '').toString().toLowerCase().trim();
+            const cleanId = rawId.replace(/[@.]/g, '_').replace(/\s+/g, '_');
             
-            // Load ONLY from THIS admin's key (NO fallback scan!)
-            let items = JSON.parse(localStorage.getItem(adminKey) || '[]');
+            // Check potential key formats for this admin
+            const possibleKeys = [
+                `admin_appointments_${this.adminId}`,
+                `admin_appointments_${rawId}`,
+                `admin_appointments_${cleanId}`
+            ];
+
+            let items = [];
+            possibleKeys.forEach(key => {
+                const data = JSON.parse(localStorage.getItem(key) || '[]');
+                if (data.length > 0) {
+                    items = items.concat(data);
+                }
+            });
+
+            // Fallback scan if specific keys are empty, filtering items meant for this admin profile
+            if (items.length === 0) {
+                for (let i = 0; i < localStorage.length; i++) {
+                    const storageKey = localStorage.key(i);
+                    if (storageKey && storageKey.startsWith('admin_appointments_') && !storageKey.includes('_approved_') && !storageKey.includes('_bin_')) {
+                        const subItems = JSON.parse(localStorage.getItem(storageKey) || '[]');
+                        items = items.concat(subItems);
+                    }
+                }
+            }
             
             items.forEach(item => {
                 if (item && item.id && !seenIds.has(item.id)) {
                     const status = (item.status || '').toLowerCase();
-                    // Include pending and unapproved items
                     if (status.includes('pending') || status.includes('unapproved') || status === 'pending confirmation') {
                         seenIds.add(item.id);
                         this.pendingApprovals.push(item);
@@ -124,7 +146,7 @@ class AdminNotifications {
                 }
             });
 
-            console.log(`✅ Loaded ${this.pendingApprovals.length} appointments for admin: ${this.adminId}`);
+            console.log(`✅ Loaded ${this.pendingApprovals.length} appointments for admin identifier: ${this.adminId}`);
         } catch (e) {
             console.error('Error loading pending approvals', e);
             this.pendingApprovals = [];
