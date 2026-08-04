@@ -286,7 +286,7 @@ class CustomerAppointments {
         this.appointments.push(appointment);
         localStorage.setItem(`appointments_${targetId}`, JSON.stringify(this.appointments));
 
-        // 2. Save EXCLUSIVELY to the specific selected admin's queue (preventing broadcast to others)
+        // 2. Save EXCLUSIVELY to the specific selected admin's queue key
         const cleanAdminName = adminName.toLowerCase().replace(/[@.]/g, '_').replace(/\s+/g, '_');
         const adminQueueKey = `admin_appointments_${cleanAdminName}`;
         const existingAdminApts = JSON.parse(localStorage.getItem(adminQueueKey) || '[]');
