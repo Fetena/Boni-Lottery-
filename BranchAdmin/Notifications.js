@@ -90,28 +90,7 @@ class AdminNotifications {
             
             const cleanAdminId = (this.adminId || 'admin').toLowerCase().replace(/[@.]/g, '_').replace(/\s+/g, '_');
             
-            // 1. Check exact match key first
-            const exactKey = `admin_appointments_${cleanAdminId}`;
-            const exactData = localStorage.getItem(exactKey);
-            if (exactData) {
-                try {
-                    const items = JSON.parse(exactData);
-                    if (Array.isArray(items)) {
-                        items.forEach(item => {
-                            if (item && item.id && !seenIds.has(item.id)) {
-                                const status = (item.status || '').toLowerCase();
-                                if (status.includes('pending') || status.includes('unapproved')) {
-                                    seenIds.add(item.id);
-                                    this.pendingApprovals.push(item);
-                                }
-                            }
-                        });
-                    }
-                } catch (e) {}
-            }
-
-            // 2. Fallback check: If an appointment was booked using a general/legacy name, 
-            // match it if its targeted admin field matches this user's username or email prefix
+            // 1. Check all admin_appointments keys to properly map items regardless of strict string formatting mismatches
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
                 if (key.startsWith('admin_appointments_')) {
@@ -122,9 +101,10 @@ class AdminNotifications {
                                 const status = (item.status || '').toLowerCase();
                                 const targetAdmin = (item.adminName || '').toLowerCase().replace(/[@.]/g, '_').replace(/\s+/g, '_');
                                 
-                                // Match if pending and either generic/unassigned or matches this specific admin's name/id
-                                if ((status.includes('pending') || status.includes('unapproved')) && 
-                                    (targetAdmin === cleanAdminId || targetAdmin.includes(cleanAdminId) || cleanAdminId.includes(targetAdmin))) {
+                                // Show items that are pending, or fall back to show items if they belong to this admin or general queue
+                                const isForThisAdmin = targetAdmin.includes(cleanAdminId) || cleanAdminId.includes(targetAdmin) || key.includes(cleanAdminId);
+                                
+                                if ((status.includes('pending') || status.includes('unapproved')) && isForThisAdmin) {
                                     seenIds.add(item.id);
                                     this.pendingApprovals.push(item);
                                 }
@@ -147,17 +127,22 @@ class AdminNotifications {
         }
 
         return this.pendingApprovals.map(apt => `
-            <div class="bg-black/30 rounded-lg p-4 border border-yellow-400/10 text-xs flex justify-between items-center">
-                <div>
-                    <p class="font-bold text-white">Customer Booking: ${apt.purpose || 'Appointment'}</p>
-                    <p class="text-slate-300 mt-0.5">📅 ${apt.date || 'N/A'} at ${apt.time || 'N/A'}</p>
-                    <p class="text-slate-400 mt-0.5">Note: ${apt.description || 'None'}</p>
+            <div class="bg-black/40 rounded-xl p-4 border border-yellow-400/20 text-sm space-y-2 transition-all hover:border-yellow-400/40">
+                <div class="flex justify-between items-start">
+                    <div class="space-y-1 cursor-pointer select-text" onclick="alert('Customer: ${apt.custId || 'N/A'}\\nPurpose: ${apt.purpose}\\nDate: ${apt.date} at ${apt.time}\\nNote: ${apt.description || 'None'}')">
+                        <p class="font-bold text-white text-base">👤 Customer Booking: <span class="text-yellow-400">${apt.purpose || 'Appointment'}</span></p>
+                        <p class="text-slate-300">📧 Account: <span class="text-white">${apt.custId || 'N/A'}</span></p>
+                        <p class="text-slate-300">📅 Schedule: <span class="text-white">${apt.date || 'N/A'} at ${apt.time || 'N/A'}</span></p>
+                        <p class="text-slate-400 bg-black/30 p-2 rounded-lg border border-white/5 mt-1">📝 Note: ${apt.description || 'None'}</p>
+                    </div>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex gap-2 pt-2 border-t border-white/5 justify-end">
                     <button onclick="window.adminNotifications.approveBooking('${apt.id}', '${apt.custId}')" 
-                        class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg">✅ Approve</button>
+                        class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs transition-colors">✅ Approve</button>
                     <button onclick="window.adminNotifications.rejectBooking('${apt.id}', '${apt.custId}')" 
-                        class="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg">❌ Reject</button>
+                        class="px-3.5 py-1.5 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg text-xs transition-colors">❌ Reject (Bin)</button>
+                    <button onclick="window.adminNotifications.deleteBooking('${apt.id}', '${apt.custId}')" 
+                        class="px-3.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-red-400 font-bold rounded-lg text-xs transition-colors">🗑️ Delete</button>
                 </div>
             </div>
         `).join('');
@@ -169,60 +154,120 @@ class AdminNotifications {
     }
 
     rejectBooking(aptId, custId) {
-        this.updateBookingStatus(aptId, custId, 'Rejected');
-        notify('error', '❌ Booking request rejected');
-    }
-
-    updateBookingStatus(aptId, custId, newStatus) {
         try {
-            // 1. Remove from this specific admin's active queue so it disappears from their pending view
             const cleanAdminId = (this.adminId || 'admin').toLowerCase().replace(/[@.]/g, '_').replace(/\s+/g, '_');
             const queueKey = `admin_appointments_${cleanAdminId}`;
             
-            const possibleKeys = [queueKey, 'admin_appointments_admin', 'admin_appointments_admin_gmail_com'];
-            possibleKeys.forEach(key => {
-                let items = JSON.parse(localStorage.getItem(key) || '[]');
-                items = items.filter(item => item.id !== aptId);
-                localStorage.setItem(key, JSON.stringify(items));
-            });
-
-            // 2. Update the customer's personal appointment history log status
-            const customerStorageKey = `appointments_${custId}`;
-            const customerItems = JSON.parse(localStorage.getItem(customerStorageKey) || '[]');
-            const updatedCustomerItems = customerItems.map(item => {
-                if (item.id === aptId) {
-                    return { ...item, status: newStatus };
-                }
-                return item;
-            });
-            localStorage.setItem(customerStorageKey, JSON.stringify(updatedCustomerItems));
+            let targetItem = null;
             
-            // 3. Push customer notification popup log for real-time customer alert modal
-            const custNotifKey = `customer_notifications_${custId}`;
-            const custNotifs = JSON.parse(localStorage.getItem(custNotifKey) || '[]');
-            custNotifs.push({
-                id: Date.now(),
-                message: `Your appointment status has been updated to ${newStatus}`,
-                status: newStatus,
-                timestamp: new Date().toLocaleTimeString(),
-                viewed: false
-            });
-            localStorage.setItem(custNotifKey, JSON.stringify(custNotifs));
+            // Find and remove from active queues, saving into rejected bin
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('admin_appointments_') && !key.includes('_bin')) {
+                    let items = JSON.parse(localStorage.getItem(key) || '[]');
+                    const found = items.find(item => item.id === aptId);
+                    if (found) targetItem = found;
+                    items = items.filter(item => item.id !== aptId);
+                    localStorage.setItem(key, JSON.stringify(items));
+                }
+            }
 
-            // Reload pending list & update UI elements immediately
+            if (targetItem) {
+                targetItem.status = 'Rejected';
+                const binKey = `admin_appointments_bin_${cleanAdminId}`;
+                const binItems = JSON.parse(localStorage.getItem(binKey) || '[]');
+                binItems.push(targetItem);
+                localStorage.setItem(binKey, JSON.stringify(binItems));
+            }
+
+            this.updateBookingStatusCore(aptId, custId, 'Rejected');
+            notify('error', '❌ Booking request moved to reject bin');
             this.loadPendingApprovals();
             
             const listEl = document.getElementById('admin-approval-list');
-            if (listEl) {
-                listEl.innerHTML = this.renderApprovalItems();
+            if (listEl) listEl.innerHTML = this.renderApprovalItems();
+        } catch (e) {
+            console.error('Error rejecting booking', e);
+        }
+    }
+
+    updateBookingStatus(aptId, custId, newStatus) {
+        this.updateBookingStatusCore(aptId, custId, newStatus);
+        notify('success', `✅ Booking ${newStatus.toLowerCase()} successfully!`);
+        this.loadPendingApprovals();
+        
+        const listEl = document.getElementById('admin-approval-list');
+        if (listEl) listEl.innerHTML = this.renderApprovalItems();
+    }
+
+    updateBookingStatusCore(aptId, custId, newStatus) {
+        try {
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('admin_appointments_') && !key.includes('_bin')) {
+                    let items = JSON.parse(localStorage.getItem(key) || '[]');
+                    items = items.filter(item => item.id !== aptId);
+                    localStorage.setItem(key, JSON.stringify(items));
+                }
+            }
+
+            if (custId) {
+                const customerStorageKey = `appointments_${custId}`;
+                const customerItems = JSON.parse(localStorage.getItem(customerStorageKey) || '[]');
+                const updatedCustomerItems = customerItems.map(item => {
+                    if (item.id === aptId) {
+                        return { ...item, status: newStatus };
+                    }
+                    return item;
+                });
+                localStorage.setItem(customerStorageKey, JSON.stringify(updatedCustomerItems));
+                
+                const custNotifKey = `customer_notifications_${custId}`;
+                const custNotifs = JSON.parse(localStorage.getItem(custNotifKey) || '[]');
+                custNotifs.push({
+                    id: Date.now(),
+                    message: `Your appointment status has been updated to ${newStatus}`,
+                    status: newStatus,
+                    timestamp: new Date().toLocaleTimeString(),
+                    viewed: false
+                });
+                localStorage.setItem(custNotifKey, JSON.stringify(custNotifs));
             }
 
             this.updateBadgeCount();
         } catch (e) {
-            console.error('Error updating booking status', e);
+            console.error('Error updating booking status core', e);
         }
     }
+deleteBooking(aptId, custId) {
+        if (confirm('Permanently delete this appointment record?')) {
+            try {
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key.startsWith('admin_appointments_')) {
+                        let items = JSON.parse(localStorage.getItem(key) || '[]');
+                        items = items.filter(item => item.id !== aptId);
+                        localStorage.setItem(key, JSON.stringify(items));
+                    }
+                }
+                
+                if (custId) {
+                    const customerStorageKey = `appointments_${custId}`;
+                    let customerItems = JSON.parse(localStorage.getItem(customerStorageKey) || '[]');
+                    customerItems = customerItems.filter(item => item.id !== aptId);
+                    localStorage.setItem(customerStorageKey, JSON.stringify(customerItems));
+                }
 
+                notify('info', '🗑️ Appointment deleted successfully');
+                this.loadPendingApprovals();
+                
+                const listEl = document.getElementById('admin-approval-list');
+                if (listEl) listEl.innerHTML = this.renderApprovalItems();
+            } catch (e) {
+                console.error('Error deleting booking', e);
+            }
+        }
+    }
     updateBadgeCount() {
         const pendingCount = this.pendingApprovals.length;
 
