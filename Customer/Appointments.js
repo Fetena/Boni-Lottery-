@@ -1,41 +1,62 @@
+// ============================================
+// CUSTOMER APPOINTMENTS - FIREBASE VERSION
+// ============================================
+
 class CustomerAppointments {
     constructor(custId) {
-        this.custId = custId || window.currentUser?.email || 'fete@gmail.com';
+        const initialId = custId === 'DEFAULT' || !custId 
+            ? (window.currentUser?.email || 'fete@gmail.com')
+            : custId;
+
+        this.custId = initialId;
         this.appointments = [];
         this.admins = [];
         this.init();
-        this.listenToCustomerNotifications();
+        this.startCustomerNotificationPoller();
     }
 
     setCustId(newCustId) {
+        if (!newCustId || (newCustId === 'DEFAULT' && this.custId && this.custId !== 'DEFAULT')) {
+            return;
+        }
+
         if (newCustId && newCustId !== this.custId) {
             this.custId = newCustId;
             this.loadAppointments();
+            this.refreshList();
         }
     }
 
-    // Listen to real-time notification updates from Firestore
-    listenToCustomerNotifications() {
+    // Switched notification polling to Firebase Firestore listener
+    startCustomerNotificationPoller() {
         if (typeof firebase === 'undefined' || !firebase.firestore) return;
         const db = firebase.firestore();
+        const activeEmail = this.custId && this.custId !== 'DEFAULT' ? this.custId : 'fete@gmail.com';
 
-        db.collection('customer_notifications')
-          .where('custId', '==', this.custId)
-          .where('viewed', '==', false)
-          .onSnapshot(snapshot => {
-              snapshot.docChanges().forEach(change => {
-                  if (change.type === 'added') {
-                      const n = change.data();
-                      this.showPopupModal(n.message, n.status);
-                      if (typeof notify === 'function') {
-                          notify('success', `🔔 ${n.message}`);
-                      }
-                      // Mark as viewed
-                      db.collection('customer_notifications').doc(change.doc.id).update({ viewed: true });
-                  }
-              });
-              this.updateBadgeCount();
-          });
+        if (this._unsubscribeNotifs) this._unsubscribeNotifs();
+
+        this._unsubscribeNotifs = db.collection('customer_notifications')
+            .where('custId', '==', activeEmail)
+            .where('viewed', '==', false)
+            .onSnapshot(snapshot => {
+                snapshot.docChanges().forEach(change => {
+                    if (change.type === 'added') {
+                        const n = change.data();
+                        this.showPopupModal(n.message, n.status);
+                        
+                        const type = (n.status === 'Approved' || n.status === 'Confirmed') ? 'success' : 'error';
+                        if (typeof notify === 'function') {
+                            notify(type, `🔔 ${n.message}`);
+                        }
+                        
+                        // Mark as viewed in Firestore
+                        db.collection('customer_notifications').doc(change.doc.id).update({ viewed: true });
+                    }
+                });
+                this.loadAppointments();
+                this.refreshList();
+                this.updateBadgeCount();
+            }, e => console.error('Firestore notification listener error:', e));
     }
 
     showPopupModal(message, status) {
@@ -74,14 +95,15 @@ class CustomerAppointments {
         if (typeof firebase === 'undefined' || !firebase.firestore) return;
         try {
             const db = firebase.firestore();
+            const targetId = this.custId && this.custId !== 'DEFAULT' ? this.custId : 'fete@gmail.com';
+            
             const snapshot = await db.collection('customer_appointments')
-                .where('custId', '==', this.custId)
+                .where('custId', '==', targetId)
                 .get();
 
             this.appointments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            this.refreshList();
         } catch (e) {
-            console.error('Error fetching appointments from Firestore:', e);
+            console.error('Error loading appointments from Firebase:', e);
             this.appointments = [];
         }
     }
@@ -91,14 +113,17 @@ class CustomerAppointments {
         if (listEl) {
             listEl.innerHTML = this.renderAppointmentsHtml();
         }
+        this.updateBadgeCount();
     }
 
     async updateBadgeCount() {
         if (typeof firebase === 'undefined' || !firebase.firestore) return;
         try {
             const db = firebase.firestore();
+            const targetId = this.custId && this.custId !== 'DEFAULT' ? this.custId : 'fete@gmail.com';
+            
             const snapshot = await db.collection('customer_notifications')
-                .where('custId', '==', this.custId)
+                .where('custId', '==', targetId)
                 .where('viewed', '==', false)
                 .get();
 
@@ -118,6 +143,7 @@ class CustomerAppointments {
     async init() {
         await this.loadAssignedAdminSync();
         await this.loadAppointments();
+        this.refreshList();
     }
 
     async loadAssignedAdminSync() {
@@ -136,15 +162,19 @@ class CustomerAppointments {
                             ...data
                         };
                     });
+                    this.refreshList();
                     return;
                 }
             }
         } catch (e) {
             console.error('Error fetching admins from Firebase:', e);
+            this.admins = [{ id: 'admin_1', name: 'Admin', email: 'admin@gmail.com' }];
         }
     }
 
     render() {
+        this.loadAssignedAdminSync();
+        this.loadAppointments();
         return `
             <div class="space-y-4">
                 <h3 class="text-2xl font-bold text-white">📅 Appointments</h3>
@@ -154,8 +184,13 @@ class CustomerAppointments {
                         <label class="text-sm text-slate-400">Select Registered Admin</label>
                         <select id="apt-admin" class="w-full bg-black/45 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
                             <option value="">-- Select Admin --</option>
-                            ${this.admins.map(a => `<option value="${a.email}">${a.name || a.email}</option>`).join('')}
+                            ${this.admins.map(a => {
+                                const adminEmail = a.email || (a.id && a.id.includes('@') ? a.id : null) || `${a.name || 'admin'}@gmail.com`.toLowerCase().replace(/\s+/g, '');
+                                const adminName = a.name || a.email || a.id;
+                                return `<option value="${adminEmail}" data-email="${adminEmail}">${adminName} (${adminEmail})</option>`;
+                            }).join('')}
                         </select>
+                        <p class="text-xs text-slate-500 mt-1">⚠️ Selected admin email: <span id="selected-admin-email">--</span></p>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
@@ -173,6 +208,7 @@ class CustomerAppointments {
                             <option>Payment Verification</option>
                             <option>Ticket Support</option>
                             <option>Prize Claim</option>
+                            <option>Account Issue</option>
                             <option>Other</option>
                         </select>
                     </div>
@@ -196,21 +232,27 @@ class CustomerAppointments {
         if (this.appointments.length === 0) {
             return '<p class="text-slate-400 text-center py-6">No appointments scheduled</p>';
         }
-        return this.appointments.map(apt => `
-            <div class="bg-black/30 rounded-lg p-4 border border-yellow-400/10 space-y-1">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <p class="font-bold text-yellow-400">Admin: ${apt.adminName || apt.adminEmail}</p>
-                        <p class="text-sm text-white font-medium mt-1">📅 ${apt.date} at ${apt.time}</p>
-                        <p class="text-xs text-slate-300 mt-1">Purpose: <span class="text-white">${apt.purpose}</span></p>
-                        <p class="text-xs text-yellow-400 mt-2 font-semibold">Status: ${apt.status}</p>
-                    </div>
-                    <div>
-                        <button onclick="window.customerAppointments.cancelAppointment('${apt.id}')" class="px-3 py-1 bg-red-950/30 text-red-400 text-xs rounded">Cancel</button>
+        return this.appointments.map(apt => {
+            let statusColor = 'text-yellow-400';
+            if (apt.status === 'Approved' || apt.status === 'Confirmed') statusColor = 'text-emerald-400';
+            if (apt.status === 'Rejected' || apt.status === 'Cancelled') statusColor = 'text-red-400';
+            return `
+                <div class="bg-black/30 rounded-lg p-4 border border-yellow-400/10 space-y-1">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="font-bold text-yellow-400">Admin: ${apt.adminName || apt.adminEmail || 'Main Admin'}</p>
+                            <p class="text-sm text-white font-medium mt-1">📅 ${apt.date} at ${apt.time}</p>
+                            <p class="text-xs text-slate-300 mt-1">Purpose: <span class="text-white">${apt.purpose}</span></p>
+                            ${apt.description ? `<p class="text-xs text-slate-400 mt-1">Note: ${apt.description}</p>` : ''}
+                            <p class="text-xs ${statusColor} mt-2 font-semibold">Status: ${apt.status}</p>
+                        </div>
+                        <div>
+                            <button onclick="window.customerAppointments.cancelAppointment('${apt.id}')" class="px-3 py-1 bg-red-950/30 text-red-400 text-xs rounded hover:bg-red-950/50">Cancel</button>
+                        </div>
                     </div>
                 </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
     }
 
     async bookAppointment() {
@@ -227,26 +269,34 @@ class CustomerAppointments {
 
         try {
             const db = firebase.firestore();
+            const targetId = this.custId !== 'DEFAULT' ? this.custId : 'fete@gmail.com';
+            const selectedAdmin = this.admins.find(a => (a.email || a.id) === adminEmail);
+            const adminName = selectedAdmin?.name || adminEmail;
+
             const appointment = {
-                custId: this.custId,
+                custId: targetId,
                 adminEmail: adminEmail,
-                adminName: adminEmail,
+                adminName: adminName,
                 date,
                 time,
                 purpose,
                 description,
                 status: 'Pending Confirmation',
+                bookedAt: new Date().toLocaleTimeString(),
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             };
 
             await db.collection('customer_appointments').add(appointment);
 
-            if (typeof notify === 'function') notify('success', `✅ Appointment successfully booked with ${adminEmail}!`);
+            if (typeof notify === 'function') notify('success', `✅ Appointment successfully booked with ${adminName}!`);
             
+            document.getElementById('apt-admin').value = '';
             document.getElementById('apt-date').value = '';
             document.getElementById('apt-time').value = '';
             document.getElementById('apt-desc').value = '';
+            document.getElementById('selected-admin-email').textContent = '--';
             await this.loadAppointments();
+            this.refreshList();
         } catch (e) {
             console.error('Error booking appointment in Firebase:', e);
             if (typeof notify === 'function') notify('error', '❌ Failed to book appointment');
@@ -254,14 +304,33 @@ class CustomerAppointments {
     }
 
     async cancelAppointment(aptId) {
-        if (!confirm('Cancel this appointment?')) return;
-        try {
-            const db = firebase.firestore();
-            await db.collection('customer_appointments').doc(aptId).delete();
-            if (typeof notify === 'function') notify('info', '❌ Appointment cancelled');
-            await this.loadAppointments();
-        } catch (e) {
-            console.error('Error deleting appointment:', e);
+        if (confirm('Cancel this appointment?')) {
+            try {
+                const db = firebase.firestore();
+                await db.collection('customer_appointments').doc(aptId).delete();
+
+                if (typeof notify === 'function') notify('info', '❌ Appointment cancelled');
+                await this.loadAppointments();
+                this.refreshList();
+            } catch (e) {
+                console.error('Error deleting appointment from Firebase:', e);
+            }
         }
     }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (document.getElementById('apt-admin')) {
+        document.getElementById('apt-admin').addEventListener('change', function() {
+            const emailEl = document.getElementById('selected-admin-email');
+            if (emailEl) {
+                emailEl.textContent = this.value || '--';
+            }
+        });
+    }
+});
+
+window.customerAppointments = null;
+document.addEventListener('DOMContentLoaded', () => {
+    window.customerAppointments = new CustomerAppointments('fete@gmail.com');
+});
