@@ -256,7 +256,8 @@ class CustomerAppointments {
     }
 
     bookAppointment() {
-        const adminName = document.getElementById('apt-admin')?.value;
+        const adminSelect = document.getElementById('apt-admin');
+        const adminName = adminSelect?.value;
         const date = document.getElementById('apt-date')?.value;
         const time = document.getElementById('apt-time')?.value;
         const purpose = document.getElementById('apt-purpose')?.value;
@@ -281,24 +282,24 @@ class CustomerAppointments {
             bookedAt: new Date().toLocaleTimeString()
         };
 
-        // 1. Save strictly to the customer's personal appointment history log
+        // 1. Save strictly to the customer's personal appointment history log[cite: 9]
         this.loadAppointments();
         this.appointments.push(appointment);
         localStorage.setItem(`appointments_${targetId}`, JSON.stringify(this.appointments));
 
-        // 2. Save EXCLUSIVELY to the specific selected admin's queue key
+        // 2. Save EXCLUSIVELY to the specific selected admin's queue key using the exact same normalization[cite: 9]
         const cleanAdminName = adminName.toLowerCase().replace(/[@.]/g, '_').replace(/\s+/g, '_');
         const adminQueueKey = `admin_appointments_${cleanAdminName}`;
         const existingAdminApts = JSON.parse(localStorage.getItem(adminQueueKey) || '[]');
         existingAdminApts.push(appointment);
         localStorage.setItem(adminQueueKey, JSON.stringify(existingAdminApts));
 
-        if (typeof notify === 'function') notify('success', `✅ Appointment successfully booked with ${adminName}!`);
+        if (typeof notify === 'function') notify('success', `✅ Appointment successfully booked with ${adminName}!`);[cite: 9]
         
         document.getElementById('apt-date').value = '';
         document.getElementById('apt-time').value = '';
         document.getElementById('apt-desc').value = '';
-        this.refreshList();
+        this.refreshList();[cite: 9]
     }
 
     cancelAppointment(aptId) {
