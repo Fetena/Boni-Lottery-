@@ -288,15 +288,14 @@ class CustomerAppointments {
 
         const targetId = this.custId !== 'DEFAULT' ? this.custId : 'fete@gmail.com';
         
-        // Find admin name from list
         const selectedAdmin = this.admins.find(a => (a.email || a.id) === adminEmail);
         const adminName = selectedAdmin?.name || adminEmail;
 
         const appointment = {
             id: 'APT' + Date.now(),
             custId: targetId,
-            adminEmail: adminEmail,  // Use email as identifier
-            adminName: adminName,    // Store name for display
+            adminEmail: adminEmail,
+            adminName: adminName,
             date,
             time,
             purpose,
@@ -305,28 +304,34 @@ class CustomerAppointments {
             bookedAt: new Date().toLocaleTimeString()
         };
 
-        // 1. Save strictly to the customer's personal appointment history log
+        // 1. Save to customer's personal history log[cite: 5]
         this.loadAppointments();
         this.appointments.push(appointment);
         localStorage.setItem(`appointments_${targetId}`, JSON.stringify(this.appointments));
 
-        // 2. Save EXCLUSIVELY to the specific admin's queue key using EMAIL
-        const adminQueueKey = `admin_appointments_${adminEmail}`;
-        const existingAdminApts = JSON.parse(localStorage.getItem(adminQueueKey) || '[]');
-        existingAdminApts.push(appointment);
-        localStorage.setItem(adminQueueKey, JSON.stringify(existingAdminApts));
+        // 2. Save using MULTIPLE key formats to guarantee the admin picks it up regardless of ID/Email/Name differences
+        const keysToSave = [
+            `admin_appointments_${adminEmail}`,
+            `admin_appointments_${adminName.toLowerCase().replace(/[@.]/g, '_').replace(/\s+/g, '_')}`
+        ];
 
-        console.log(`✅ Appointment booked with ${adminName} (${adminEmail})`);
-        console.log(`   Stored at key: ${adminQueueKey}`);
+        keysToSave.forEach(queueKey => {
+            const existingAdminApts = JSON.parse(localStorage.getItem(queueKey) || '[]');
+            // Prevent duplicate pushes if keys map to the same string
+            if (!existingAdminApts.some(a => a.id === appointment.id)) {
+                existingAdminApts.push(appointment);
+                localStorage.setItem(queueKey, JSON.stringify(existingAdminApts));
+            }
+        });
 
-        if (typeof notify === 'function') notify('success', `✅ Appointment successfully booked with ${adminName}!`);
+        if (typeof notify === 'function') notify('success', `✅ Appointment successfully booked with ${adminName}!`);[cite: 5]
         
         document.getElementById('apt-admin').value = '';
         document.getElementById('apt-date').value = '';
         document.getElementById('apt-time').value = '';
         document.getElementById('apt-desc').value = '';
         document.getElementById('selected-admin-email').textContent = '--';
-        this.refreshList();
+        this.refreshList();[cite: 5]
     }
 
     cancelAppointment(aptId) {
