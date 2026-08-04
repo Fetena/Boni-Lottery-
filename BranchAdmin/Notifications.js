@@ -9,7 +9,7 @@ class AdminNotifications {
         this.pendingApprovals = [];
     }
 
-    render() {
+    render() render() {
         this.loadPendingApprovals();
         this.displayHistory();
 
@@ -21,6 +21,15 @@ class AdminNotifications {
                     <p class="text-xs text-slate-400">Manage customer booking and appointment approvals here.</p>
                     <div id="admin-approval-list" class="space-y-3">
                         ${this.renderApprovalItems()}
+                    </div>
+                </div>
+
+                <!-- REJECTED BIN SECTION -->
+                <div class="glass-panel rounded-2xl p-6 border border-red-500/10 space-y-4">
+                    <h3 class="text-2xl font-bold text-white">🗑️ Rejected Appointments Bin</h3>
+                    <p class="text-xs text-slate-400">Review, restore, or permanently remove rejected booking requests.</p>
+                    <div id="admin-rejected-list" class="space-y-3">
+                        ${this.renderRejectedBinItems()}
                     </div>
                 </div>
 
@@ -81,6 +90,91 @@ class AdminNotifications {
                 </div>
             </div>
         `;
+    }
+
+    renderRejectedBinItems() {
+        try {
+            const cleanAdminId = (this.adminId || 'admin').toLowerCase().replace(/[@.]/g, '_').replace(/\s+/g, '_');
+            const binKey = `admin_appointments_bin_${cleanAdminId}`;
+            const rejectedItems = JSON.parse(localStorage.getItem(binKey) || '[]');
+
+            if (rejectedItems.length === 0) {
+                return '<p class="text-slate-400 text-xs py-2">No items in rejected bin</p>';
+            }
+
+            return rejectedItems.map(apt => `
+                <div class="bg-black/40 rounded-xl p-4 border border-red-500/20 text-sm space-y-2 opacity-80 hover:opacity-100 transition-all">
+                    <div class="flex justify-between items-start">
+                        <div class="space-y-1 select-text">
+                            <p class="font-bold text-white text-base">👤 Rejected Booking: <span class="text-red-400">${apt.purpose || 'Appointment'}</span></p>
+                            <p class="text-slate-300">📧 Account: <span class="text-white">${apt.custId || 'N/A'}</span></p>
+                            <p class="text-slate-300">📅 Schedule: <span class="text-white">${apt.date || 'N/A'} at ${apt.time || 'N/A'}</span></p>
+                            <p class="text-slate-400 bg-black/30 p-2 rounded-lg border border-white/5 mt-1">📝 Note: ${apt.description || 'None'}</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 pt-2 border-t border-white/5 justify-end">
+                        <button onclick="window.adminNotifications.restoreBooking('${apt.id}', '${apt.custId}')" 
+                            class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-xs transition-colors">🔄 Restore to Pending</button>
+                        <button onclick="window.adminNotifications.deleteFromBin('${apt.id}')" 
+                            class="px-3.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-red-400 font-bold rounded-lg text-xs transition-colors">🗑️ Delete Permanently</button>
+                    </div>
+                </div>
+            `).join('');
+        } catch (e) {
+            return '<p class="text-slate-400 text-xs py-2">Error loading bin</p>';
+        }
+    }
+
+    restoreBooking(aptId, custId) {
+        try {
+            const cleanAdminId = (this.adminId || 'admin').toLowerCase().replace(/[@.]/g, '_').replace(/\s+/g, '_');
+            const binKey = `admin_appointments_bin_${cleanAdminId}`;
+            let binItems = JSON.parse(localStorage.getItem(binKey) || '[]');
+            
+            const target = binItems.find(item => item.id === aptId);
+            if (target) {
+                target.status = 'Pending Confirmation';
+                binItems = binItems.filter(item => item.id !== aptId);
+                localStorage.setItem(binKey, JSON.stringify(binItems));
+
+                // Put back to active queue
+                const queueKey = `admin_appointments_${cleanAdminId}`;
+                const activeItems = JSON.parse(localStorage.getItem(queueKey) || '[]');
+                activeItems.push(target);
+                localStorage.setItem(queueKey, JSON.stringify(activeItems));
+
+                notify('success', '🔄 Booking restored to pending approvals!');
+                this.refreshUI();
+            }
+        } catch (e) {
+            console.error('Error restoring booking', e);
+        }
+    }
+
+    deleteFromBin(aptId) {
+        if (confirm('Permanently delete this rejected item from the bin?')) {
+            try {
+                const cleanAdminId = (this.adminId || 'admin').toLowerCase().replace(/[@.]/g, '_').replace(/\s+/g, '_');
+                const binKey = `admin_appointments_bin_${cleanAdminId}`;
+                let binItems = JSON.parse(localStorage.getItem(binKey) || '[]');
+                binItems = binItems.filter(item => item.id !== aptId);
+                localStorage.setItem(binKey, JSON.stringify(binItems));
+
+                notify('info', '🗑️ Item permanently deleted from bin');
+                this.refreshUI();
+            } catch (e) {
+                console.error('Error deleting from bin', e);
+            }
+        }
+    }
+
+    refreshUI() {
+        this.loadPendingApprovals();
+        const approvalListEl = document.getElementById('admin-approval-list');
+        if (approvalListEl) approvalListEl.innerHTML = this.renderApprovalItems();
+
+        const rejectedListEl = document.getElementById('admin-rejected-list');
+        if (rejectedListEl) rejectedListEl.innerHTML = this.renderRejectedBinItems();
     }
 
  loadPendingApprovals() {
