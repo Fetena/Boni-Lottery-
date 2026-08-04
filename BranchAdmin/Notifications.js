@@ -86,21 +86,42 @@ class AdminNotifications {
   loadPendingApprovals() {
         try {
             this.pendingApprovals = [];
+            const seenIds = new Set();
             
-            // Strictly isolate: Build the exact key for this specific admin only
+            // 1. Check this specific admin's isolated queue first
             const cleanAdminId = (this.adminId || 'admin').toLowerCase().replace(/[@.]/g, '_').replace(/\s+/g, '_');
             const queueKey = `admin_appointments_${cleanAdminId}`;
             
-            // Read ONLY this admin's dedicated storage key. Never scan other keys.
-            const items = JSON.parse(localStorage.getItem(queueKey) || '[]');
-            
-            items.forEach(item => {
+            const specificItems = JSON.parse(localStorage.getItem(queueKey) || '[]');
+            specificItems.forEach(item => {
                 if (item && (item.status === 'Pending Confirmation' || item.status === 'Pending' || item.status === 'Unapproved')) {
-                    this.pendingApprovals.push(item);
+                    if (!seenIds.has(item.id)) {
+                        seenIds.add(item.id);
+                        this.pendingApprovals.push(item);
+                    }
                 }
             });
+
+            // 2. Fallback scan: if this admin is the primary/default admin or no specific queue was populated,
+            // check general appointment keys so bookings aren't left invisible.
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('appointments_')) {
+                    const items = JSON.parse(localStorage.getItem(key) || '[]');
+                    items.forEach(item => {
+                        if (item && (item.status === 'Pending Confirmation' || item.status === 'Pending' || item.status === 'Unapproved')) {
+                            // If item specifies an admin target, respect it; otherwise show to default/main admin
+                            const targetMatch = !item.adminId || item.adminId.toLowerCase().includes(cleanAdminId) || cleanAdminId === 'admin';
+                            if (targetMatch && !seenIds.has(item.id)) {
+                                seenIds.add(item.id);
+                                this.pendingApprovals.push(item);
+                            }
+                        }
+                    });
+                }
+            }
         } catch (e) {
-            console.error('Error loading isolated pending approvals', e);
+            console.error('Error loading pending approvals', e);
             this.pendingApprovals = [];
         }
     }
