@@ -1,5 +1,6 @@
 // ============================================
-// CUSTOMER APPOINTMENTS MODULE COMPONENT
+// CUSTOMER APPOINTMENTS MODULE COMPONENT - FIXED
+// Send to admin email (not name) for proper isolation
 // ============================================
 
 class CustomerAppointments {
@@ -188,7 +189,8 @@ class CustomerAppointments {
                     <div>
                         <label class="text-sm text-slate-400">Select Registered Admin</label>
                         <select id="apt-admin" class="w-full bg-black/45 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
-                            ${this.admins.map(a => `<option value="${a.name || a.email || a.id}">${a.name || a.email || a.id}</option>`).join('')}
+                            <option value="">-- Select Admin --</option>
+                            ${this.admins.map(a => `<option value="${a.email || a.id}">${a.name || a.email || a.id}</option>`).join('')}
                         </select>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -240,7 +242,7 @@ class CustomerAppointments {
                 <div class="bg-black/30 rounded-lg p-4 border border-yellow-400/10 space-y-1">
                     <div class="flex justify-between items-start">
                         <div>
-                            <p class="font-bold text-yellow-400">Admin: ${apt.adminName || 'Main Admin'}</p>
+                            <p class="font-bold text-yellow-400">Admin: ${apt.adminName || apt.adminEmail || 'Main Admin'}</p>
                             <p class="text-sm text-white font-medium mt-1">📅 ${apt.date} at ${apt.time}</p>
                             <p class="text-xs text-slate-300 mt-1">Purpose: <span class="text-white">${apt.purpose}</span></p>
                             ${apt.description ? `<p class="text-xs text-slate-400 mt-1">Note: ${apt.description}</p>` : ''}
@@ -256,23 +258,28 @@ class CustomerAppointments {
     }
 
     bookAppointment() {
-        const adminName = document.getElementById('apt-admin')?.value;
+        const adminEmail = document.getElementById('apt-admin')?.value;  // FIXED: Use email, not name
         const date = document.getElementById('apt-date')?.value;
         const time = document.getElementById('apt-time')?.value;
         const purpose = document.getElementById('apt-purpose')?.value;
         const description = document.getElementById('apt-desc')?.value;
 
-        if (!date || !time || !purpose || !adminName) {
+        if (!date || !time || !purpose || !adminEmail) {
             if (typeof notify === 'function') notify('error', '❌ Please fill all required fields');
             return;
         }
 
         const targetId = this.custId !== 'DEFAULT' ? this.custId : 'fete@gmail.com';
         
+        // Find admin name from list
+        const selectedAdmin = this.admins.find(a => a.email === adminEmail || a.id === adminEmail);
+        const adminName = selectedAdmin?.name || adminEmail;
+
         const appointment = {
             id: 'APT' + Date.now(),
             custId: targetId,
-            adminName,
+            adminEmail: adminEmail,  // FIXED: Store email
+            adminName: adminName,    // Store name for display
             date,
             time,
             purpose,
@@ -286,15 +293,15 @@ class CustomerAppointments {
         this.appointments.push(appointment);
         localStorage.setItem(`appointments_${targetId}`, JSON.stringify(this.appointments));
 
-        // 2. Save EXCLUSIVELY to the specific selected admin's queue key
-        const cleanAdminName = adminName.toLowerCase().replace(/[@.]/g, '_').replace(/\s+/g, '_');
-        const adminQueueKey = `admin_appointments_${cleanAdminName}`;
+        // 2. Save EXCLUSIVELY to the specific admin's queue key using EMAIL
+        const adminQueueKey = `admin_appointments_${adminEmail}`;  // FIXED: Use email directly
         const existingAdminApts = JSON.parse(localStorage.getItem(adminQueueKey) || '[]');
         existingAdminApts.push(appointment);
         localStorage.setItem(adminQueueKey, JSON.stringify(existingAdminApts));
 
         if (typeof notify === 'function') notify('success', `✅ Appointment successfully booked with ${adminName}!`);
         
+        document.getElementById('apt-admin').value = '';
         document.getElementById('apt-date').value = '';
         document.getElementById('apt-time').value = '';
         document.getElementById('apt-desc').value = '';
@@ -311,10 +318,9 @@ class CustomerAppointments {
             const targetId = this.custId !== 'DEFAULT' ? this.custId : 'fete@gmail.com';
             localStorage.setItem(`appointments_${targetId}`, JSON.stringify(this.appointments));
 
-            // Also remove from the specific admin's queue
-            if (targetApt && targetApt.adminName) {
-                const cleanAdminName = targetApt.adminName.toLowerCase().replace(/[@.]/g, '_').replace(/\s+/g, '_');
-                const adminQueueKey = `admin_appointments_${cleanAdminName}`;
+            // Also remove from the specific admin's queue using EMAIL
+            if (targetApt && targetApt.adminEmail) {
+                const adminQueueKey = `admin_appointments_${targetApt.adminEmail}`;  // FIXED: Use email
                 let adminApts = JSON.parse(localStorage.getItem(adminQueueKey) || '[]');
                 adminApts = adminApts.filter(a => a.id !== aptId);
                 localStorage.setItem(adminQueueKey, JSON.stringify(adminApts));
