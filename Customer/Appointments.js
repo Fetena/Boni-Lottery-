@@ -164,7 +164,7 @@ class CustomerAppointments {
                         return {
                             id: doc.id,
                             name: data.name || data.email || doc.id,
-                            email: data.email || doc.id,  // FIX: Use email if exists, fallback to id
+                            email: data.email || doc.id,
                             ...data
                         };
                     });
@@ -180,7 +180,7 @@ class CustomerAppointments {
                 { id: 'admin_1', name: 'Admin', email: 'admin@gmail.com' }
             ]).map(admin => ({
                 ...admin,
-                email: admin.email || admin.id  // Ensure email field exists
+                email: admin.email || admin.id
             }));
 
             console.log('✅ Loaded admins from localStorage:', this.admins);
@@ -203,9 +203,9 @@ class CustomerAppointments {
                         <select id="apt-admin" class="w-full bg-black/45 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
                             <option value="">-- Select Admin --</option>
                             ${this.admins.map(a => {
-                                const adminEmail = a.email || a.id;
-                                const adminName = a.name || adminEmail;
-                                return `<option value="${adminEmail}" data-email="${adminEmail}">${adminName}</option>`;
+                                const adminEmail = a.email || (a.id && a.id.includes('@') ? a.id : null) || `${a.name || 'admin'}@gmail.com`.toLowerCase().replace(/\s+/g, '');
+                                const adminName = a.name || a.email || a.id;
+                                return `<option value="${adminEmail}" data-email="${adminEmail}">${adminName} (${adminEmail})</option>`;
                             }).join('')}
                         </select>
                         <p class="text-xs text-slate-500 mt-1">⚠️ Selected admin email: <span id="selected-admin-email">--</span></p>
@@ -304,12 +304,10 @@ class CustomerAppointments {
             bookedAt: new Date().toLocaleTimeString()
         };
 
-        // 1. Save to customer's personal history log[cite: 5]
         this.loadAppointments();
         this.appointments.push(appointment);
         localStorage.setItem(`appointments_${targetId}`, JSON.stringify(this.appointments));
 
-        // 2. Save using MULTIPLE key formats to guarantee the admin picks it up regardless of ID/Email/Name differences
         const keysToSave = [
             `admin_appointments_${adminEmail}`,
             `admin_appointments_${adminName.toLowerCase().replace(/[@.]/g, '_').replace(/\s+/g, '_')}`
@@ -317,21 +315,20 @@ class CustomerAppointments {
 
         keysToSave.forEach(queueKey => {
             const existingAdminApts = JSON.parse(localStorage.getItem(queueKey) || '[]');
-            // Prevent duplicate pushes if keys map to the same string
             if (!existingAdminApts.some(a => a.id === appointment.id)) {
                 existingAdminApts.push(appointment);
                 localStorage.setItem(queueKey, JSON.stringify(existingAdminApts));
             }
         });
 
-        if (typeof notify === 'function') notify('success', `✅ Appointment successfully booked with ${adminName}!`);[cite: 5]
+        if (typeof notify === 'function') notify('success', `✅ Appointment successfully booked with ${adminName}!`);
         
         document.getElementById('apt-admin').value = '';
         document.getElementById('apt-date').value = '';
         document.getElementById('apt-time').value = '';
         document.getElementById('apt-desc').value = '';
         document.getElementById('selected-admin-email').textContent = '--';
-        this.refreshList();[cite: 5]
+        this.refreshList();
     }
 
     cancelAppointment(aptId) {
@@ -339,12 +336,10 @@ class CustomerAppointments {
             this.loadAppointments();
             const targetApt = this.appointments.find(a => a.id === aptId);
             
-            // Remove from customer list
             this.appointments = this.appointments.filter(a => a.id !== aptId);
             const targetId = this.custId !== 'DEFAULT' ? this.custId : 'fete@gmail.com';
             localStorage.setItem(`appointments_${targetId}`, JSON.stringify(this.appointments));
 
-            // Also remove from the specific admin's queue using EMAIL
             if (targetApt && targetApt.adminEmail) {
                 const adminQueueKey = `admin_appointments_${targetApt.adminEmail}`;
                 let adminApts = JSON.parse(localStorage.getItem(adminQueueKey) || '[]');
@@ -358,7 +353,6 @@ class CustomerAppointments {
     }
 }
 
-// Update selected admin email display when dropdown changes
 document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('apt-admin')) {
         document.getElementById('apt-admin').addEventListener('change', function() {
