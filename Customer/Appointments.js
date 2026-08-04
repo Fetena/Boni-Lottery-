@@ -1,6 +1,6 @@
 // ============================================
-// CUSTOMER APPOINTMENTS MODULE COMPONENT - FIXED
-// Send to admin email (not name) for proper isolation
+// CUSTOMER APPOINTMENTS - FIXED V2
+// Handles admins with or without email field in Firebase
 // ============================================
 
 class CustomerAppointments {
@@ -159,19 +159,31 @@ class CustomerAppointments {
                 const snapshot = await db.collection('admins').get();
                 
                 if (!snapshot.empty) {
-                    this.admins = snapshot.docs.map(doc => ({
-                        id: doc.id,
-                        ...doc.data()
-                    }));
+                    this.admins = snapshot.docs.map(doc => {
+                        const data = doc.data();
+                        return {
+                            id: doc.id,
+                            name: data.name || data.email || doc.id,
+                            email: data.email || doc.id,  // FIX: Use email if exists, fallback to id
+                            ...data
+                        };
+                    });
+                    
+                    console.log('✅ Loaded admins from Firebase:', this.admins);
                     this.refreshList();
                     return;
                 }
             }
 
             const allAdmins = JSON.parse(localStorage.getItem('registered_admins') || '[]');
-            this.admins = allAdmins.length > 0 ? allAdmins : [
+            this.admins = (allAdmins.length > 0 ? allAdmins : [
                 { id: 'admin_1', name: 'Admin', email: 'admin@gmail.com' }
-            ];
+            ]).map(admin => ({
+                ...admin,
+                email: admin.email || admin.id  // Ensure email field exists
+            }));
+
+            console.log('✅ Loaded admins from localStorage:', this.admins);
         } catch (e) {
             console.error('Error fetching admins from Firebase:', e);
             this.admins = [{ id: 'admin_1', name: 'Admin', email: 'admin@gmail.com' }];
@@ -190,8 +202,13 @@ class CustomerAppointments {
                         <label class="text-sm text-slate-400">Select Registered Admin</label>
                         <select id="apt-admin" class="w-full bg-black/45 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
                             <option value="">-- Select Admin --</option>
-                            ${this.admins.map(a => `<option value="${a.email || a.id}">${a.name || a.email || a.id}</option>`).join('')}
+                            ${this.admins.map(a => {
+                                const adminEmail = a.email || a.id;
+                                const adminName = a.name || adminEmail;
+                                return `<option value="${adminEmail}" data-email="${adminEmail}">${adminName}</option>`;
+                            }).join('')}
                         </select>
+                        <p class="text-xs text-slate-500 mt-1">⚠️ Selected admin email: <span id="selected-admin-email">--</span></p>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
@@ -258,7 +275,7 @@ class CustomerAppointments {
     }
 
     bookAppointment() {
-        const adminEmail = document.getElementById('apt-admin')?.value;  // FIXED: Use email, not name
+        const adminEmail = document.getElementById('apt-admin')?.value;
         const date = document.getElementById('apt-date')?.value;
         const time = document.getElementById('apt-time')?.value;
         const purpose = document.getElementById('apt-purpose')?.value;
@@ -272,13 +289,13 @@ class CustomerAppointments {
         const targetId = this.custId !== 'DEFAULT' ? this.custId : 'fete@gmail.com';
         
         // Find admin name from list
-        const selectedAdmin = this.admins.find(a => a.email === adminEmail || a.id === adminEmail);
+        const selectedAdmin = this.admins.find(a => (a.email || a.id) === adminEmail);
         const adminName = selectedAdmin?.name || adminEmail;
 
         const appointment = {
             id: 'APT' + Date.now(),
             custId: targetId,
-            adminEmail: adminEmail,  // FIXED: Store email
+            adminEmail: adminEmail,  // Use email as identifier
             adminName: adminName,    // Store name for display
             date,
             time,
@@ -294,10 +311,13 @@ class CustomerAppointments {
         localStorage.setItem(`appointments_${targetId}`, JSON.stringify(this.appointments));
 
         // 2. Save EXCLUSIVELY to the specific admin's queue key using EMAIL
-        const adminQueueKey = `admin_appointments_${adminEmail}`;  // FIXED: Use email directly
+        const adminQueueKey = `admin_appointments_${adminEmail}`;
         const existingAdminApts = JSON.parse(localStorage.getItem(adminQueueKey) || '[]');
         existingAdminApts.push(appointment);
         localStorage.setItem(adminQueueKey, JSON.stringify(existingAdminApts));
+
+        console.log(`✅ Appointment booked with ${adminName} (${adminEmail})`);
+        console.log(`   Stored at key: ${adminQueueKey}`);
 
         if (typeof notify === 'function') notify('success', `✅ Appointment successfully booked with ${adminName}!`);
         
@@ -305,6 +325,7 @@ class CustomerAppointments {
         document.getElementById('apt-date').value = '';
         document.getElementById('apt-time').value = '';
         document.getElementById('apt-desc').value = '';
+        document.getElementById('selected-admin-email').textContent = '--';
         this.refreshList();
     }
 
@@ -320,7 +341,7 @@ class CustomerAppointments {
 
             // Also remove from the specific admin's queue using EMAIL
             if (targetApt && targetApt.adminEmail) {
-                const adminQueueKey = `admin_appointments_${targetApt.adminEmail}`;  // FIXED: Use email
+                const adminQueueKey = `admin_appointments_${targetApt.adminEmail}`;
                 let adminApts = JSON.parse(localStorage.getItem(adminQueueKey) || '[]');
                 adminApts = adminApts.filter(a => a.id !== aptId);
                 localStorage.setItem(adminQueueKey, JSON.stringify(adminApts));
@@ -331,6 +352,18 @@ class CustomerAppointments {
         }
     }
 }
+
+// Update selected admin email display when dropdown changes
+document.addEventListener('DOMContentLoaded', () => {
+    if (document.getElementById('apt-admin')) {
+        document.getElementById('apt-admin').addEventListener('change', function() {
+            const emailEl = document.getElementById('selected-admin-email');
+            if (emailEl) {
+                emailEl.textContent = this.value || '--';
+            }
+        });
+    }
+});
 
 window.customerAppointments = null;
 document.addEventListener('DOMContentLoaded', () => {
