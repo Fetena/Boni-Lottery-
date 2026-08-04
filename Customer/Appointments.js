@@ -1,11 +1,12 @@
 // ============================================
-// CUSTOMER APPOINTMENTS - FIREBASE VERSION
+// CUSTOMER APPOINTMENTS - FIXED V2
+// Handles admins with or without email field in Firebase
 // ============================================
 
 class CustomerAppointments {
     constructor(custId) {
         const initialId = custId === 'DEFAULT' || !custId 
-            ? (window.currentUser?.email || 'fete@gmail.com')
+            ? (window.currentUser?.email || localStorage.getItem('currentUserEmail') || 'fete@gmail.com')
             : custId;
 
         this.custId = initialId;
@@ -27,7 +28,7 @@ class CustomerAppointments {
         }
     }
 
-    // Switched notification polling to Firebase Firestore listener
+    // Realtime Firebase Listener targeting ONLY this customer's notifications
     startCustomerNotificationPoller() {
         if (typeof firebase === 'undefined' || !firebase.firestore) return;
         const db = firebase.firestore();
@@ -42,6 +43,8 @@ class CustomerAppointments {
                 snapshot.docChanges().forEach(change => {
                     if (change.type === 'added') {
                         const n = change.data();
+                        
+                        // RESTORED POPUP MODAL
                         this.showPopupModal(n.message, n.status);
                         
                         const type = (n.status === 'Approved' || n.status === 'Confirmed') ? 'success' : 'error';
@@ -49,7 +52,7 @@ class CustomerAppointments {
                             notify(type, `🔔 ${n.message}`);
                         }
                         
-                        // Mark as viewed in Firestore
+                        // Mark viewed in Firestore so it doesn't pop up again
                         db.collection('customer_notifications').doc(change.doc.id).update({ viewed: true });
                     }
                 });
@@ -59,6 +62,7 @@ class CustomerAppointments {
             }, e => console.error('Firestore notification listener error:', e));
     }
 
+    // RESTORED ORIGINAL POPUP MODAL
     showPopupModal(message, status) {
         const existing = document.getElementById('apt-popup-modal');
         if (existing) existing.remove();
@@ -166,6 +170,14 @@ class CustomerAppointments {
                     return;
                 }
             }
+
+            const allAdmins = JSON.parse(localStorage.getItem('registered_admins') || '[]');
+            this.admins = (allAdmins.length > 0 ? allAdmins : [
+                { id: 'admin_1', name: 'Admin', email: 'admin@gmail.com' }
+            ]).map(admin => ({
+                ...admin,
+                email: admin.email || admin.id
+            }));
         } catch (e) {
             console.error('Error fetching admins from Firebase:', e);
             this.admins = [{ id: 'admin_1', name: 'Admin', email: 'admin@gmail.com' }];
@@ -275,7 +287,7 @@ class CustomerAppointments {
 
             const appointment = {
                 custId: targetId,
-                adminEmail: adminEmail,
+                adminEmail: adminEmail.toLowerCase().trim(),
                 adminName: adminName,
                 date,
                 time,
