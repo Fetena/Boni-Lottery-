@@ -1,5 +1,6 @@
 // ============================================
-// ADMIN NOTIFICATIONS - FIREBASE VERSION
+// ADMIN NOTIFICATIONS (CHILD COMPONENT) - STRICT ISOLATION
+// Each admin ONLY sees their own customers' appointments
 // ============================================
 
 class AdminNotifications {
@@ -11,8 +12,7 @@ class AdminNotifications {
         this.adminNotificationsList = [];
     }
 
-   render() {
-        // Trigger background load without blocking the initial render html
+    render() {
         this.loadPendingApprovals();
 
         return `
@@ -105,6 +105,7 @@ class AdminNotifications {
         `;
     }
 
+    // STRICT PER-ADMIN FILTERING
     async loadPendingApprovals() {
         if (typeof firebase === 'undefined' || !firebase.firestore) return;
         try {
@@ -133,7 +134,7 @@ class AdminNotifications {
             });
 
             const notifSnapshot = await db.collection('admin_notifications')
-                .where('adminId', '==', this.adminId)
+                .where('adminId', '==', currentAdminRaw)
                 .get();
             this.adminNotificationsList = notifSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
@@ -230,7 +231,7 @@ class AdminNotifications {
 
     async approveBooking(aptId, custId) {
         if (!confirm('Approve this booking?')) return;
-        await this.updateBookingStatusCore(aptId, custId, 'Confirmed');
+        await this.updateBookingStatusCore(aptId, custId, 'Approved');
         if (typeof notify === 'function') notify('success', '✅ Appointment approved');
         await this.loadPendingApprovals();
         this.refreshUI();
@@ -269,10 +270,10 @@ class AdminNotifications {
         if (typeof firebase === 'undefined' || !firebase.firestore) return;
         try {
             const db = firebase.firestore();
-            // Update appointment status in Firestore
+            // Update appointment document
             await db.collection('customer_appointments').doc(aptId).update({ status: newStatus });
 
-            // Push notification to customer collection in Firestore
+            // Create customer popup notification document
             if (custId) {
                 await db.collection('customer_notifications').add({
                     custId: custId,
@@ -329,8 +330,10 @@ class AdminNotifications {
             return;
         }
 
+        const currentAdminRaw = (this.adminId || '').toString().toLowerCase().trim();
+
         const notif = {
-            adminId: this.adminId,
+            adminId: currentAdminRaw,
             type: type,
             message: message,
             target: target,
