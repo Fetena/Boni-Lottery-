@@ -179,7 +179,6 @@ async loadData() {
         }
         await window.customerTicketsInstance.init();
 
-        // ✅ FIX: Force synchronized email binding for appointments
         const activeCustId = currentUser?.email || window.currentUser?.email || 'DEFAULT';
         if (!window.customerAppointments) {
             window.customerAppointments = new CustomerAppointments(activeCustId);
@@ -198,10 +197,6 @@ async loadData() {
 }
 
 window_customerDashboard = null;
-
-// ========== TAB SWITCHING WITH COMPONENT INTEGRATION ==========
-
-// ========== TAB SWITCHING WITH COMPONENT INTEGRATION ==========
 
 function switchCustomerTab(tabName) {
     const allTabs = document.querySelectorAll('#customer-dashboard .tab-content');
@@ -231,7 +226,6 @@ function switchCustomerTab(tabName) {
             targetEl.innerHTML = window.customerTicketsInstance.render();
             window.customerTicketsInstance.init();
 
-            // 🔥 Clear the notification badge when viewing tickets
             const badge = document.getElementById('customer-tickets-badge');
             if (badge) {
                 badge.classList.add('hidden');
@@ -262,8 +256,6 @@ function switchCustomerTab(tabName) {
         }
     });
 }
-
-// ========== LOAD PROFILE DATA & INFO CHANGES ==========
 
 async function loadCustomerProfileData() {
     if (!currentUser) return;
@@ -312,8 +304,6 @@ async function saveCustomerProfileChanges() {
     }
 }
 
-// ========== LOAD ADMINS FOR SELECTION ==========
-
 async function loadAdminsDropdown() {
     if (!db) return;
 
@@ -343,8 +333,6 @@ async function loadAdminsDropdown() {
         console.error('Error loading admins list:', error);
     }
 }
-
-// ========== NUMBER SELECTION ==========
 
 function generateNumbersGrid() {
     const grid = document.getElementById('numbers-grid');
@@ -379,8 +367,6 @@ function updateCost() {
     if (countEl) countEl.textContent = selectedNumbers.length;
     if (costEl) costEl.textContent = selectedNumbers.length * 100;
 }
-
-// ========== CUSTOMER TICKETS - FIRESTORE ==========
 
 async function getFileBase64(file) {
     return new Promise((resolve, reject) => {
@@ -427,7 +413,7 @@ async function submitCustomerTicket() {
             customerEmail: currentUser.email,
             customerName: currentUser.name || 'Customer',
             assignedAdmin: assignedAdmin,
-            adminEmail: assignedAdmin, // 🔥 Add this line so admin queries matching adminEmail work correctly!
+            adminEmail: assignedAdmin,
             numbers: selectedNumbers,
             cost: selectedNumbers.length * 100,
             paymentMethod: paymentMethod,
@@ -470,7 +456,7 @@ async function submitAutomaticPayment() {
                 customerEmail: currentUser.email,
                 customerName: currentUser.name || 'Customer',
                 assignedAdmin: assignedAdmin,
-                adminEmail: assignedAdmin, // 🔥 Add this line here as well!
+                adminEmail: assignedAdmin,
                 numbers: selectedNumbers,
                 cost: totalCost,
                 paymentMethod: 'Automatic Online Gateway',
@@ -559,8 +545,6 @@ async function cancelCustomerTicket(docId) {
     }
 }
 
-// ========== CUSTOMER SETTINGS - FIRESTORE ==========
-
 async function saveCustomerSettings() {
     const phoneEl = document.getElementById('cust-phone');
     const paymentEl = document.getElementById('cust-payment');
@@ -621,8 +605,6 @@ async function loadCustomerSettings() {
         console.error('Error loading settings:', error);
     }
 }
-
-// ========== CUSTOMER STATS ==========
 
 async function loadCustomerStats() {
     if (!db || !currentUser) return;
