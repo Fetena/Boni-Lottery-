@@ -11,7 +11,8 @@ class AdminNotifications {
         this.adminNotificationsList = [];
     }
 
-    render() {
+   render() {
+        // Trigger background load without blocking the initial render html
         this.loadPendingApprovals();
 
         return `
@@ -21,7 +22,7 @@ class AdminNotifications {
                     <h3 class="text-2xl font-bold text-white">✅ Pending Approvals</h3>
                     <p class="text-xs text-slate-400">Manage customer booking and appointment approvals here.</p>
                     <div id="admin-approval-list" class="space-y-3">
-                        ${this.renderApprovalItems()}
+                        <p class="text-slate-400 text-xs py-2">Loading approvals from Firebase...</p>
                     </div>
                 </div>
 
@@ -109,7 +110,6 @@ class AdminNotifications {
         try {
             const db = firebase.firestore();
             const currentAdminRaw = (this.adminId || '').toString().toLowerCase().trim();
-            const adminUserPart = currentAdminRaw.split('@')[0];
 
             const snapshot = await db.collection('customer_appointments')
                 .where('adminEmail', '==', currentAdminRaw)
@@ -132,15 +132,18 @@ class AdminNotifications {
                 }
             });
 
-            // Also load admin notifications history
             const notifSnapshot = await db.collection('admin_notifications')
                 .where('adminId', '==', this.adminId)
                 .get();
             this.adminNotificationsList = notifSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-            this.updateBadgeCount();
+            this.refreshUI();
         } catch (e) {
             console.error('Error loading approvals from Firebase', e);
+            const approvalListEl = document.getElementById('admin-approval-list');
+            if (approvalListEl) {
+                approvalListEl.innerHTML = '<p class="text-red-400 text-xs py-2">Error loading data from Firebase</p>';
+            }
         }
     }
 
