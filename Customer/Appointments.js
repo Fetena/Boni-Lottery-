@@ -1,71 +1,41 @@
-// ============================================
-// CUSTOMER APPOINTMENTS - FIXED V2
-// Handles admins with or without email field in Firebase
-// ============================================
-
 class CustomerAppointments {
     constructor(custId) {
-        const initialId = custId === 'DEFAULT' || !custId 
-            ? (window.currentUser?.email || localStorage.getItem('currentUserEmail') || 'fete@gmail.com')
-            : custId;
-
-        this.custId = initialId;
+        this.custId = custId || window.currentUser?.email || 'fete@gmail.com';
         this.appointments = [];
         this.admins = [];
         this.init();
-        this.startCustomerNotificationPoller();
+        this.listenToCustomerNotifications();
     }
 
     setCustId(newCustId) {
-        if (!newCustId || (newCustId === 'DEFAULT' && this.custId && this.custId !== 'DEFAULT')) {
-            return;
-        }
-
         if (newCustId && newCustId !== this.custId) {
             this.custId = newCustId;
             this.loadAppointments();
-            this.refreshList();
         }
     }
 
-    startCustomerNotificationPoller() {
-        if (this._pollingInterval) clearInterval(this._pollingInterval);
-        
-        this._pollingInterval = setInterval(() => {
-            try {
-                const activeEmail = this.custId && this.custId !== 'DEFAULT' ? this.custId : 'fete@gmail.com';
-                const key = `customer_notifications_${activeEmail}`;
+    // Listen to real-time notification updates from Firestore
+    listenToCustomerNotifications() {
+        if (typeof firebase === 'undefined' || !firebase.firestore) return;
+        const db = firebase.firestore();
 
-                const raw = localStorage.getItem(key);
-                if (!raw) return;
-
-                const notifs = JSON.parse(raw);
-                let modified = false;
-
-                notifs.forEach(n => {
-                    if (!n.viewed) {
-                        this.showPopupModal(n.message, n.status);
-                        
-                        const type = (n.status === 'Approved' || n.status === 'Confirmed') ? 'success' : 'error';
-                        if (typeof notify === 'function') {
-                            notify(type, `🔔 ${n.message}`);
-                        }
-                        
-                        n.viewed = true;
-                        modified = true;
-                    }
-                });
-
-                if (modified) {
-                    localStorage.setItem(key, JSON.stringify(notifs));
-                    this.loadAppointments();
-                    this.refreshList();
-                    this.updateBadgeCount();
-                }
-            } catch (e) {
-                console.error('Polling error:', e);
-            }
-        }, 2000);
+        db.collection('customer_notifications')
+          .where('custId', '==', this.custId)
+          .where('viewed', '==', false)
+          .onSnapshot(snapshot => {
+              snapshot.docChanges().forEach(change => {
+                  if (change.type === 'added') {
+                      const n = change.data();
+                      this.showPopupModal(n.message, n.status);
+                      if (typeof notify === 'function') {
+                          notify('success', `🔔 ${n.message}`);
+                      }
+                      // Mark as viewed
+                      db.collection('customer_notifications').doc(change.doc.id).update({ viewed: true });
+                  }
+              });
+              this.updateBadgeCount();
+          });
     }
 
     showPopupModal(message, status) {
@@ -100,18 +70,18 @@ class CustomerAppointments {
         document.body.insertAdjacentHTML('beforeend', modalHtml);
     }
 
-    loadAppointments() {
+    async loadAppointments() {
+        if (typeof firebase === 'undefined' || !firebase.firestore) return;
         try {
-            let foundAppointments = [];
-            const targetId = this.custId && this.custId !== 'DEFAULT' ? this.custId : 'fete@gmail.com';
-            
-            const specificData = localStorage.getItem(`appointments_${targetId}`);
-            if (specificData) {
-                foundAppointments = JSON.parse(specificData);
-            }
+            const db = firebase.firestore();
+            const snapshot = await db.collection('customer_appointments')
+                .where('custId', '==', this.custId)
+                .get();
 
-            this.appointments = foundAppointments;
+            this.appointments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            this.refreshList();
         } catch (e) {
+            console.error('Error fetching appointments from Firestore:', e);
             this.appointments = [];
         }
     }
@@ -121,21 +91,21 @@ class CustomerAppointments {
         if (listEl) {
             listEl.innerHTML = this.renderAppointmentsHtml();
         }
-        this.updateBadgeCount();
     }
 
-    updateBadgeCount() {
+    async updateBadgeCount() {
+        if (typeof firebase === 'undefined' || !firebase.firestore) return;
         try {
-            let totalUnread = 0;
-            const targetId = this.custId && this.custId !== 'DEFAULT' ? this.custId : 'fete@gmail.com';
-            
-            const notifs = JSON.parse(localStorage.getItem(`customer_notifications_${targetId}`) || '[]');
-            totalUnread += notifs.filter(n => !n.viewed).length;
+            const db = firebase.firestore();
+            const snapshot = await db.collection('customer_notifications')
+                .where('custId', '==', this.custId)
+                .where('viewed', '==', false)
+                .get();
 
             const badgeEl = document.getElementById('customer-appointments-badge');
             if (badgeEl) {
-                if (totalUnread > 0) {
-                    badgeEl.textContent = totalUnread;
+                if (snapshot.size > 0) {
+                    badgeEl.textContent = snapshot.size;
                     badgeEl.classList.remove('hidden');
                 } else {
                     badgeEl.textContent = '0';
@@ -147,11 +117,9 @@ class CustomerAppointments {
 
     async init() {
         await this.loadAssignedAdminSync();
-        this.loadAppointments();
-        this.refreshList();
+        await this.loadAppointments();
     }
 
-    // Fetch admins directly from Firebase Firestore with fallback
     async loadAssignedAdminSync() {
         try {
             if (typeof firebase !== 'undefined' && firebase.firestore) {
@@ -168,31 +136,15 @@ class CustomerAppointments {
                             ...data
                         };
                     });
-                    
-                    console.log('✅ Loaded admins from Firebase:', this.admins);
-                    this.refreshList();
                     return;
                 }
             }
-
-            const allAdmins = JSON.parse(localStorage.getItem('registered_admins') || '[]');
-            this.admins = (allAdmins.length > 0 ? allAdmins : [
-                { id: 'admin_1', name: 'Admin', email: 'admin@gmail.com' }
-            ]).map(admin => ({
-                ...admin,
-                email: admin.email || admin.id
-            }));
-
-            console.log('✅ Loaded admins from localStorage:', this.admins);
         } catch (e) {
             console.error('Error fetching admins from Firebase:', e);
-            this.admins = [{ id: 'admin_1', name: 'Admin', email: 'admin@gmail.com' }];
         }
     }
 
     render() {
-        this.loadAssignedAdminSync();
-        this.loadAppointments();
         return `
             <div class="space-y-4">
                 <h3 class="text-2xl font-bold text-white">📅 Appointments</h3>
@@ -202,13 +154,8 @@ class CustomerAppointments {
                         <label class="text-sm text-slate-400">Select Registered Admin</label>
                         <select id="apt-admin" class="w-full bg-black/45 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none mt-1">
                             <option value="">-- Select Admin --</option>
-                            ${this.admins.map(a => {
-                                const adminEmail = a.email || (a.id && a.id.includes('@') ? a.id : null) || `${a.name || 'admin'}@gmail.com`.toLowerCase().replace(/\s+/g, '');
-                                const adminName = a.name || a.email || a.id;
-                                return `<option value="${adminEmail}" data-email="${adminEmail}">${adminName} (${adminEmail})</option>`;
-                            }).join('')}
+                            ${this.admins.map(a => `<option value="${a.email}">${a.name || a.email}</option>`).join('')}
                         </select>
-                        <p class="text-xs text-slate-500 mt-1">⚠️ Selected admin email: <span id="selected-admin-email">--</span></p>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
@@ -226,7 +173,6 @@ class CustomerAppointments {
                             <option>Payment Verification</option>
                             <option>Ticket Support</option>
                             <option>Prize Claim</option>
-                            <option>Account Issue</option>
                             <option>Other</option>
                         </select>
                     </div>
@@ -247,34 +193,27 @@ class CustomerAppointments {
     }
 
     renderAppointmentsHtml() {
-        this.loadAppointments();
         if (this.appointments.length === 0) {
             return '<p class="text-slate-400 text-center py-6">No appointments scheduled</p>';
         }
-        return this.appointments.map(apt => {
-            let statusColor = 'text-yellow-400';
-            if (apt.status === 'Approved' || apt.status === 'Confirmed') statusColor = 'text-emerald-400';
-            if (apt.status === 'Rejected' || apt.status === 'Cancelled') statusColor = 'text-red-400';
-            return `
-                <div class="bg-black/30 rounded-lg p-4 border border-yellow-400/10 space-y-1">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="font-bold text-yellow-400">Admin: ${apt.adminName || apt.adminEmail || 'Main Admin'}</p>
-                            <p class="text-sm text-white font-medium mt-1">📅 ${apt.date} at ${apt.time}</p>
-                            <p class="text-xs text-slate-300 mt-1">Purpose: <span class="text-white">${apt.purpose}</span></p>
-                            ${apt.description ? `<p class="text-xs text-slate-400 mt-1">Note: ${apt.description}</p>` : ''}
-                            <p class="text-xs ${statusColor} mt-2 font-semibold">Status: ${apt.status}</p>
-                        </div>
-                        <div>
-                            <button onclick="window.customerAppointments.cancelAppointment('${apt.id}')" class="px-3 py-1 bg-red-950/30 text-red-400 text-xs rounded hover:bg-red-950/50">Cancel</button>
-                        </div>
+        return this.appointments.map(apt => `
+            <div class="bg-black/30 rounded-lg p-4 border border-yellow-400/10 space-y-1">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="font-bold text-yellow-400">Admin: ${apt.adminName || apt.adminEmail}</p>
+                        <p class="text-sm text-white font-medium mt-1">📅 ${apt.date} at ${apt.time}</p>
+                        <p class="text-xs text-slate-300 mt-1">Purpose: <span class="text-white">${apt.purpose}</span></p>
+                        <p class="text-xs text-yellow-400 mt-2 font-semibold">Status: ${apt.status}</p>
+                    </div>
+                    <div>
+                        <button onclick="window.customerAppointments.cancelAppointment('${apt.id}')" class="px-3 py-1 bg-red-950/30 text-red-400 text-xs rounded">Cancel</button>
                     </div>
                 </div>
-            `;
-        }).join('');
+            </div>
+        `).join('');
     }
 
-    bookAppointment() {
+    async bookAppointment() {
         const adminEmail = document.getElementById('apt-admin')?.value;
         const date = document.getElementById('apt-date')?.value;
         const time = document.getElementById('apt-time')?.value;
@@ -286,85 +225,43 @@ class CustomerAppointments {
             return;
         }
 
-        const targetId = this.custId !== 'DEFAULT' ? this.custId : 'fete@gmail.com';
-        
-        const selectedAdmin = this.admins.find(a => (a.email || a.id) === adminEmail);
-        const adminName = selectedAdmin?.name || adminEmail;
+        try {
+            const db = firebase.firestore();
+            const appointment = {
+                custId: this.custId,
+                adminEmail: adminEmail,
+                adminName: adminEmail,
+                date,
+                time,
+                purpose,
+                description,
+                status: 'Pending Confirmation',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
 
-        const appointment = {
-            id: 'APT' + Date.now(),
-            custId: targetId,
-            adminEmail: adminEmail,
-            adminName: adminName,
-            date,
-            time,
-            purpose,
-            description,
-            status: 'Pending Confirmation',
-            bookedAt: new Date().toLocaleTimeString()
-        };
+            await db.collection('customer_appointments').add(appointment);
 
-        this.loadAppointments();
-        this.appointments.push(appointment);
-        localStorage.setItem(`appointments_${targetId}`, JSON.stringify(this.appointments));
-
-        const keysToSave = [
-            `admin_appointments_${adminEmail}`,
-            `admin_appointments_${adminName.toLowerCase().replace(/[@.]/g, '_').replace(/\s+/g, '_')}`
-        ];
-
-        keysToSave.forEach(queueKey => {
-            const existingAdminApts = JSON.parse(localStorage.getItem(queueKey) || '[]');
-            if (!existingAdminApts.some(a => a.id === appointment.id)) {
-                existingAdminApts.push(appointment);
-                localStorage.setItem(queueKey, JSON.stringify(existingAdminApts));
-            }
-        });
-
-        if (typeof notify === 'function') notify('success', `✅ Appointment successfully booked with ${adminName}!`);
-        
-        document.getElementById('apt-admin').value = '';
-        document.getElementById('apt-date').value = '';
-        document.getElementById('apt-time').value = '';
-        document.getElementById('apt-desc').value = '';
-        document.getElementById('selected-admin-email').textContent = '--';
-        this.refreshList();
+            if (typeof notify === 'function') notify('success', `✅ Appointment successfully booked with ${adminEmail}!`);
+            
+            document.getElementById('apt-date').value = '';
+            document.getElementById('apt-time').value = '';
+            document.getElementById('apt-desc').value = '';
+            await this.loadAppointments();
+        } catch (e) {
+            console.error('Error booking appointment in Firebase:', e);
+            if (typeof notify === 'function') notify('error', '❌ Failed to book appointment');
+        }
     }
 
-    cancelAppointment(aptId) {
-        if (confirm('Cancel this appointment?')) {
-            this.loadAppointments();
-            const targetApt = this.appointments.find(a => a.id === aptId);
-            
-            this.appointments = this.appointments.filter(a => a.id !== aptId);
-            const targetId = this.custId !== 'DEFAULT' ? this.custId : 'fete@gmail.com';
-            localStorage.setItem(`appointments_${targetId}`, JSON.stringify(this.appointments));
-
-            if (targetApt && targetApt.adminEmail) {
-                const adminQueueKey = `admin_appointments_${targetApt.adminEmail}`;
-                let adminApts = JSON.parse(localStorage.getItem(adminQueueKey) || '[]');
-                adminApts = adminApts.filter(a => a.id !== aptId);
-                localStorage.setItem(adminQueueKey, JSON.stringify(adminApts));
-            }
-
+    async cancelAppointment(aptId) {
+        if (!confirm('Cancel this appointment?')) return;
+        try {
+            const db = firebase.firestore();
+            await db.collection('customer_appointments').doc(aptId).delete();
             if (typeof notify === 'function') notify('info', '❌ Appointment cancelled');
-            this.refreshList();
+            await this.loadAppointments();
+        } catch (e) {
+            console.error('Error deleting appointment:', e);
         }
     }
 }
-
-document.addEventListener('DOMContentLoaded', () => {
-    if (document.getElementById('apt-admin')) {
-        document.getElementById('apt-admin').addEventListener('change', function() {
-            const emailEl = document.getElementById('selected-admin-email');
-            if (emailEl) {
-                emailEl.textContent = this.value || '--';
-            }
-        });
-    }
-});
-
-window.customerAppointments = null;
-document.addEventListener('DOMContentLoaded', () => {
-    window.customerAppointments = new CustomerAppointments('fete@gmail.com');
-});
