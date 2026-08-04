@@ -108,30 +108,19 @@ class AdminNotifications {
             const seenIds = new Set();
             
             const currentAdminRaw = (this.adminId || '').toString().toLowerCase().trim();
+            const cleanId = currentAdminRaw.replace(/[@.]/g, '_').replace(/\s+/g, '_');
             
-            // CRITICAL: Look ONLY at this specific admin's exact queue key (No global scanning!)
-            const exactKey = `admin_appointments_${this.adminId}`;
-            let items = JSON.parse(localStorage.getItem(exactKey) || '[]');
-            
-            // If the exact key is empty, check sanitized variant keys
-            if (items.length === 0 && currentAdminRaw) {
-                const cleanId = currentAdminRaw.replace(/[@.]/g, '_').replace(/\s+/g, '_');
-                const cleanKey = `admin_appointments_${cleanId}`;
-                items = JSON.parse(localStorage.getItem(cleanKey) || '[]');
-            }
+            // Collect items from all possible valid key variations for this specific admin
+            const keysToCheck = [
+                `admin_appointments_${this.adminId}`,
+                `admin_appointments_${currentAdminRaw}`,
+                `admin_appointments_${cleanId}`
+            ];
 
-            // STRICT ISOLATION FILTER: Even if items are fetched, ensure they belong to this admin
-            items = items.filter(item => {
-                if (!item) return false;
-                const itemTargetEmail = (item.adminEmail || '').toString().toLowerCase().trim();
-                const itemTargetName = (item.adminName || '').toString().toLowerCase().trim();
-                
-                // Only allow if it explicitly targets this admin's email or name
-                return (
-                    itemTargetEmail === currentAdminRaw || 
-                    itemTargetName === currentAdminRaw ||
-                    itemTargetEmail.replace(/[@.]/g, '_') === currentAdminRaw.replace(/[@.]/g, '_')
-                );
+            let items = [];
+            keysToCheck.forEach(key => {
+                const data = JSON.parse(localStorage.getItem(key) || '[]');
+                if (data.length > 0) items = items.concat(data);
             });
             
             items.forEach(item => {
@@ -144,7 +133,7 @@ class AdminNotifications {
                 }
             });
 
-            console.log(`✅ Strictly isolated appointments loaded for admin (${this.adminId}):`, this.pendingApprovals.length);
+            console.log(`✅ Loaded ${this.pendingApprovals.length} appointments for admin identifier: ${this.adminId}`);
         } catch (e) {
             console.error('Error loading pending approvals', e);
             this.pendingApprovals = [];
