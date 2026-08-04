@@ -381,8 +381,8 @@ async function loadAdminStats() {
 
         // 🔥 STRICT ISOLATION: Fetch only tickets for this admin
         const ticketSnapshot = await db.collection('customer_tickets')
-            .where('adminEmail', '==', currentUser.email)
-            .get();
+    .where('adminEmail', '==', currentUser.email)
+    .get();
             
         if (document.getElementById('admin-total-tickets')) {
             document.getElementById('admin-total-tickets').textContent = ticketSnapshot.size;
