@@ -101,16 +101,26 @@ class AdminNotifications {
         `;
     }
 
-    loadPendingApprovals() {
+   loadPendingApprovals() {
         try {
             this.pendingApprovals = [];
             const seenIds = new Set();
             
             const cleanAdminId = (this.adminId || 'admin').toLowerCase().replace(/[@.]/g, '_').replace(/\s+/g, '_');
             
-            // STRICT ISOLATION: Look ONLY at this specific admin's isolated queue key
-            const specificQueueKey = `admin_appointments_${cleanAdminId}`;
-            const items = JSON.parse(localStorage.getItem(specificQueueKey) || '[]');
+            // 1. Check the specific isolated key first
+            let items = JSON.parse(localStorage.getItem(`admin_appointments_${cleanAdminId}`) || '[]');
+            
+            // 2. Fallback: If empty, scan all storage keys to catch appointments regardless of name formatting differences
+            if (items.length === 0) {
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key && key.startsWith('admin_appointments_')) {
+                        const subItems = JSON.parse(localStorage.getItem(key) || '[]');
+                        items = items.concat(subItems);
+                    }
+                }
+            }
             
             items.forEach(item => {
                 if (item && item.id && !seenIds.has(item.id)) {
