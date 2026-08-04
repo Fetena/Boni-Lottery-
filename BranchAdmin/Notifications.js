@@ -83,44 +83,27 @@ class AdminNotifications {
         `;
     }
 
-  loadPendingApprovals() {
+ loadPendingApprovals() {
         try {
             this.pendingApprovals = [];
-            const seenIds = new Set();
             
-            console.log("Debugging LocalStorage Keys...");
-
-            // 1. Scan everything in localStorage to catch any appointment items
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                
-                if (key.includes('appointment') || key.includes('booking') || key.includes('admin')) {
-                    const rawData = localStorage.getItem(key);
-                    console.log(`Checking key: ${key}`, rawData);
-                    
-                    try {
-                        const parsed = JSON.parse(rawData);
-                        const items = Array.isArray(parsed) ? parsed : [parsed];
-                        
-                        items.forEach(item => {
-                            if (item && typeof item === 'object') {
-                                const status = (item.status || '').toLowerCase();
-                                // Catch anything pending
-                                if (status.includes('pending') || status.includes('unapproved') || !item.status) {
-                                    if (item.id && !seenIds.has(item.id)) {
-                                        seenIds.add(item.id);
-                                        this.pendingApprovals.push(item);
-                                    }
-                                }
-                            }
-                        });
-                    } catch (err) {
-                        // Not JSON, skip
-                    }
+            // Clean the current admin's ID exactly the same way it's saved during booking
+            const cleanAdminId = (this.adminId || 'admin').toLowerCase().replace(/[@.]/g, '_').replace(/\s+/g, '_');
+            const queueKey = `admin_appointments_${cleanAdminId}`;
+            
+            // Load exclusively from this specific admin's queue key
+            const rawData = localStorage.getItem(queueKey);
+            if (rawData) {
+                const items = JSON.parse(rawData);
+                if (Array.isArray(items)) {
+                    this.pendingApprovals = items.filter(item => {
+                        const status = (item.status || '').toLowerCase();
+                        return status.includes('pending') || status.includes('unapproved');
+                    });
                 }
             }
             
-            console.log("Final loaded pendingApprovals:", this.pendingApprovals);
+            console.log(`Loaded pending approvals for admin [${cleanAdminId}]:`, this.pendingApprovals);
         } catch (e) {
             console.error('Error loading pending approvals', e);
             this.pendingApprovals = [];
