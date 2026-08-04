@@ -101,7 +101,7 @@ class AdminNotifications {
         `;
     }
 
-    // ========== FIXED: LOAD ONLY THIS ADMIN'S APPOINTMENTS ==========
+    // ========== FIXED: STRICTLY ISOLATED ADMIN APPOINTMENTS ==========
     loadPendingApprovals() {
         try {
             this.pendingApprovals = [];
@@ -110,22 +110,12 @@ class AdminNotifications {
             const currentAdminRaw = (this.adminId || '').toString().toLowerCase().trim();
             const cleanId = currentAdminRaw.replace(/[@.]/g, '_').replace(/\s+/g, '_');
             
-            // Collect items from all possible valid key variations
+            // Exactly target this specific admin's key variations without scanning global keys
             const keysToCheck = [
                 `admin_appointments_${this.adminId}`,
                 `admin_appointments_${currentAdminRaw}`,
                 `admin_appointments_${cleanId}`
             ];
-
-            // Also check all localStorage keys to see if any admin_appointments key matches this admin name/email part
-            for (let i = 0; i < localStorage.length; i++) {
-                const storageKey = localStorage.key(i);
-                if (storageKey && storageKey.startsWith('admin_appointments_') && !storageKey.includes('_approved_') && !storageKey.includes('_bin_')) {
-                    if (!keysToCheck.includes(storageKey)) {
-                        keysToCheck.push(storageKey);
-                    }
-                }
-            }
 
             let items = [];
             keysToCheck.forEach(key => {
@@ -133,19 +123,19 @@ class AdminNotifications {
                 if (data.length > 0) items = items.concat(data);
             });
             
-            // Filter strictly to ensure items belong to this admin or match general queue if unassigned
+            // Filter strictly to ensure items match this admin's email or identifier
             items = items.filter(item => {
                 if (!item) return false;
                 const itemTargetEmail = (item.adminEmail || '').toString().toLowerCase().trim();
                 const itemTargetName = (item.adminName || '').toString().toLowerCase().trim();
                 
-                if (!itemTargetEmail && !itemTargetName) return true; // fallback if empty
+                if (!itemTargetEmail && !itemTargetName) return false;
                 
                 return (
                     itemTargetEmail === currentAdminRaw || 
                     itemTargetName === currentAdminRaw ||
-                    itemTargetEmail.includes(currentAdminRaw) ||
-                    currentAdminRaw.includes(itemTargetEmail)
+                    itemTargetEmail === cleanId ||
+                    itemTargetName === cleanId
                 );
             });
 
