@@ -87,38 +87,40 @@ class AdminNotifications {
         try {
             this.pendingApprovals = [];
             const seenIds = new Set();
-            const cleanAdminId = (this.adminId || 'admin').toLowerCase().replace(/[@.]/g, '_').replace(/\s+/g, '_');
             
-            // 1. Load exclusively from this admin's dedicated queue
-            const queueKey = `admin_appointments_${cleanAdminId}`;
-            const specificItems = JSON.parse(localStorage.getItem(queueKey) || '[]');
-            specificItems.forEach(item => {
-                if (item && (item.status === 'Pending Confirmation' || item.status === 'Pending' || item.status === 'Unapproved')) {
-                    if (!seenIds.has(item.id)) {
-                        seenIds.add(item.id);
-                        this.pendingApprovals.push(item);
-                    }
-                }
-            });
+            console.log("Debugging LocalStorage Keys...");
 
-            // 2. Strict global check: Only pull from general appointment logs if the item explicitly targets this admin ID
+            // 1. Scan everything in localStorage to catch any appointment items
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
-                if (key.startsWith('appointments_')) {
-                    const items = JSON.parse(localStorage.getItem(key) || '[]');
-                    items.forEach(item => {
-                        if (item && (item.status === 'Pending Confirmation' || item.status === 'Pending' || item.status === 'Unapproved')) {
-                            const itemAdmin = (item.adminId || item.adminEmail || '').toLowerCase().replace(/[@.]/g, '_').replace(/\s+/g, '_');
-                            
-                            // Must explicitly match this admin; do not leak unassigned items to secondary admins
-                            if (itemAdmin === cleanAdminId && !seenIds.has(item.id)) {
-                                seenIds.add(item.id);
-                                this.pendingApprovals.push(item);
+                
+                if (key.includes('appointment') || key.includes('booking') || key.includes('admin')) {
+                    const rawData = localStorage.getItem(key);
+                    console.log(`Checking key: ${key}`, rawData);
+                    
+                    try {
+                        const parsed = JSON.parse(rawData);
+                        const items = Array.isArray(parsed) ? parsed : [parsed];
+                        
+                        items.forEach(item => {
+                            if (item && typeof item === 'object') {
+                                const status = (item.status || '').toLowerCase();
+                                // Catch anything pending
+                                if (status.includes('pending') || status.includes('unapproved') || !item.status) {
+                                    if (item.id && !seenIds.has(item.id)) {
+                                        seenIds.add(item.id);
+                                        this.pendingApprovals.push(item);
+                                    }
+                                }
                             }
-                        }
-                    });
+                        });
+                    } catch (err) {
+                        // Not JSON, skip
+                    }
                 }
             }
+            
+            console.log("Final loaded pendingApprovals:", this.pendingApprovals);
         } catch (e) {
             console.error('Error loading pending approvals', e);
             this.pendingApprovals = [];
