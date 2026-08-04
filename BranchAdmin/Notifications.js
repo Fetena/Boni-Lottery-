@@ -109,21 +109,33 @@ class AdminNotifications {
             
             const currentAdminRaw = (this.adminId || '').toString().toLowerCase().trim();
             const cleanId = currentAdminRaw.replace(/[@.]/g, '_').replace(/\s+/g, '_');
+            const adminUserPart = currentAdminRaw.split('@')[0];
             
-            // Exactly target this specific admin's key variations without scanning global keys
+            // Check all admin storage keys to find the exact key written during booking
+            let items = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const storageKey = localStorage.key(i);
+                if (storageKey && storageKey.startsWith('admin_appointments_') && !storageKey.includes('_approved_') && !storageKey.includes('_bin_')) {
+                    // Check if this storage key corresponds to this admin
+                    if (storageKey.includes(currentAdminRaw) || storageKey.includes(cleanId) || storageKey.includes(adminUserPart)) {
+                        const data = JSON.parse(localStorage.getItem(storageKey) || '[]');
+                        if (data.length > 0) items = items.concat(data);
+                    }
+                }
+            }
+
+            // Also explicitly check direct keys
             const keysToCheck = [
                 `admin_appointments_${this.adminId}`,
                 `admin_appointments_${currentAdminRaw}`,
                 `admin_appointments_${cleanId}`
             ];
-
-            let items = [];
             keysToCheck.forEach(key => {
                 const data = JSON.parse(localStorage.getItem(key) || '[]');
                 if (data.length > 0) items = items.concat(data);
             });
             
-            // Filter strictly to ensure items match this admin's email or identifier
+            // Strict per-admin filter using the username or email prefix to block cross-admin leaks
             items = items.filter(item => {
                 if (!item) return false;
                 const itemTargetEmail = (item.adminEmail || '').toString().toLowerCase().trim();
@@ -131,11 +143,14 @@ class AdminNotifications {
                 
                 if (!itemTargetEmail && !itemTargetName) return false;
                 
+                const itemUserPart = itemTargetEmail.split('@')[0];
+
                 return (
                     itemTargetEmail === currentAdminRaw || 
                     itemTargetName === currentAdminRaw ||
-                    itemTargetEmail === cleanId ||
-                    itemTargetName === cleanId
+                    itemUserPart === adminUserPart ||
+                    currentAdminRaw.includes(itemTargetEmail) ||
+                    itemTargetEmail.includes(currentAdminRaw)
                 );
             });
 
