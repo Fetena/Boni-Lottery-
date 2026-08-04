@@ -110,7 +110,6 @@ class AdminNotifications {
             const currentAdminRaw = (this.adminId || '').toString().toLowerCase().trim();
             const cleanId = currentAdminRaw.replace(/[@.]/g, '_').replace(/\s+/g, '_');
             
-            // Collect items from all possible valid key variations for this specific admin
             const keysToCheck = [
                 `admin_appointments_${this.adminId}`,
                 `admin_appointments_${currentAdminRaw}`,
