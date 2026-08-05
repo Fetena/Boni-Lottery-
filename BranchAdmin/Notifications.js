@@ -112,13 +112,13 @@ class AdminNotifications {
         try {
             const db = firebase.firestore();
             
-            // Gather all possible identifiers for the currently logged-in admin to prevent mismatch
-            const currentEmail = (this.adminId || localStorage.getItem('currentUserEmail') || '').toString().toLowerCase().trim();
+            // Gather all possible identifiers for the currently logged-in admin
+            const currentAdminRaw = (this.adminId || '').toString().toLowerCase().trim();
+            const currentEmail = (localStorage.getItem('currentUserEmail') || '').toString().toLowerCase().trim();
             const currentName = (localStorage.getItem('currentAdminName') || '').toString().toLowerCase().trim();
 
-            console.log('Strict isolation filter - Current Admin Email:', currentEmail, 'Name:', currentName);
+            console.log('Loading approvals for admin identifiers -> Raw ID:', currentAdminRaw, '| Email:', currentEmail, '| Name:', currentName);
 
-            // Fetch all appointments and filter securely on the client side to guarantee absolute isolation
             const snapshot = await db.collection('customer_appointments').get();
             const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
@@ -130,9 +130,11 @@ class AdminNotifications {
                 const itemAdminEmail = (item.adminEmail || '').toString().toLowerCase().trim();
                 const itemAdminName = (item.adminName || '').toString().toLowerCase().trim();
 
-                // Strict check: Does this appointment belong to this specific admin?
-                const isMatch = (currentEmail && (itemAdminEmail === currentEmail || itemAdminName === currentEmail)) ||
-                                (currentName && (itemAdminEmail === currentName || itemAdminName === currentName));
+                // Flexible match checking across all possible admin identifier variations
+                const isMatch = 
+                    (currentAdminRaw && (itemAdminEmail.includes(currentAdminRaw) || itemAdminName.includes(currentAdminRaw) || currentAdminRaw.includes(itemAdminEmail))) ||
+                    (currentEmail && (itemAdminEmail === currentEmail || itemAdminName === currentEmail)) ||
+                    (currentName && (itemAdminEmail === currentName || itemAdminName === currentName));
 
                 if (isMatch) {
                     const status = (item.status || '').toLowerCase();
@@ -146,13 +148,12 @@ class AdminNotifications {
                 }
             });
 
-            // Fetch notifications specific to this admin only
             const notifSnapshot = await db.collection('admin_notifications').get();
             this.adminNotificationsList = notifSnapshot.docs
                 .map(doc => ({ id: doc.id, ...doc.data() }))
                 .filter(n => {
                     const nAdmin = (n.adminId || '').toString().toLowerCase().trim();
-                    return nAdmin === currentEmail || nAdmin === currentName;
+                    return !currentAdminRaw || nAdmin.includes(currentAdminRaw) || (currentEmail && nAdmin === currentEmail);
                 });
 
             this.refreshUI();
