@@ -1,5 +1,5 @@
 // ============================================
-// CUSTOMER APPOINTMENTS - FIXED V4 (BADGE COUNT FIX)
+// CUSTOMER APPOINTMENTS - FIXED V5 (POPUP PERSISTENCE FIX)
 // ============================================
 
 class CustomerAppointments {
@@ -40,19 +40,16 @@ class CustomerAppointments {
             .onSnapshot(snapshot => {
                 snapshot.docChanges().forEach(change => {
                     if (change.type === 'added') {
-                        const n = change.data();
+                        const n = change.doc.data();
                         
                         // Only show popup and notify if it hasn't been viewed yet
                         if (!n.viewed) {
-                            this.showPopupModal(n.message, n.status);
+                            this.showPopupModal(n.message, n.status, change.doc.id);
                             
                             const type = (n.status === 'Approved' || n.status === 'Confirmed') ? 'success' : 'error';
                             if (typeof notify === 'function') {
                                 notify(type, `🔔 ${n.message}`);
                             }
-                            
-                            // Mark viewed in Firestore immediately so badge clears and popup doesn't re-trigger
-                            db.collection('customer_notifications').doc(change.doc.id).update({ viewed: true });
                         }
                     }
                 });
@@ -62,7 +59,7 @@ class CustomerAppointments {
             }, e => console.error('Firestore notification listener error:', e));
     }
 
-    showPopupModal(message, status) {
+    showPopupModal(message, status, notifId) {
         const existing = document.getElementById('apt-popup-modal');
         if (existing) existing.remove();
 
@@ -84,7 +81,7 @@ class CustomerAppointments {
                     <div style="padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; font-size: 14px; color: #e2e8f0; line-height: 1.4;">
                         ${message}
                     </div>
-                    <button onclick="document.getElementById('apt-popup-modal').remove()" 
+                    <button onclick="window.customerAppointments.dismissPopup('${notifId}')" 
                         style="width: 100%; padding: 12px; background: #facc15; color: #000; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; font-size: 13px;">
                         Got It, Thanks!
                     </button>
@@ -92,6 +89,21 @@ class CustomerAppointments {
             </div>
         `;
         document.body.insertAdjacentHTML('beforeend', modalHtml);
+    }
+
+    async dismissPopup(notifId) {
+        const modal = document.getElementById('apt-popup-modal');
+        if (modal) modal.remove();
+
+        if (notifId && typeof firebase !== 'undefined' && firebase.firestore) {
+            try {
+                const db = firebase.firestore();
+                await db.collection('customer_notifications').doc(notifId).update({ viewed: true });
+                this.updateBadgeCount();
+            } catch (e) {
+                console.error('Error marking notification as viewed:', e);
+            }
+        }
     }
 
     async loadAppointments() {
