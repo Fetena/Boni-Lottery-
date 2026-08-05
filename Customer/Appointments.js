@@ -1,5 +1,5 @@
 // ============================================
-// CUSTOMER APPOINTMENTS - FIXED V6 (BADGE & QUERY SYNC FIX)
+// CUSTOMER APPOINTMENTS - FIXED V7 (CLICKABLE NOTIFICATIONS TRAY & MODAL)
 // ============================================
 
 class CustomerAppointments {
@@ -11,6 +11,7 @@ class CustomerAppointments {
         this.custId = initialId;
         this.appointments = [];
         this.admins = [];
+        this.notifications = [];
         this.init();
         this.startCustomerNotificationPoller();
     }
@@ -24,8 +25,8 @@ class CustomerAppointments {
         if (cleanNewId && cleanNewId !== this.custId.toString().toLowerCase().trim()) {
             this.custId = cleanNewId;
             this.loadAppointments();
+            this.loadNotifications();
             this.refreshList();
-            this.updateBadgeCount();
         }
     }
 
@@ -59,8 +60,8 @@ class CustomerAppointments {
 
                 if (hasChanges) {
                     this.loadAppointments();
+                    this.loadNotifications();
                     this.refreshList();
-                    this.updateBadgeCount();
                 }
             }, e => console.error('Firestore notification listener error:', e));
     }
@@ -105,7 +106,8 @@ class CustomerAppointments {
             try {
                 const db = firebase.firestore();
                 await db.collection('customer_notifications').doc(notifId).update({ viewed: true });
-                this.updateBadgeCount();
+                await this.loadNotifications();
+                this.refreshList();
             } catch (e) {
                 console.error('Error marking notification as viewed:', e);
             }
@@ -131,6 +133,28 @@ class CustomerAppointments {
         }
     }
 
+    async loadNotifications() {
+        if (typeof firebase === 'undefined' || !firebase.firestore) return;
+        try {
+            const db = firebase.firestore();
+            const targetId = (this.custId && this.custId !== 'DEFAULT' ? this.custId : (localStorage.getItem('currentUserEmail') || 'tt@gmail.com')).toString().toLowerCase().trim();
+            
+            const snapshot = await db.collection('customer_notifications').get();
+            this.notifications = snapshot.docs
+                .map(doc => ({ id: doc.id, ...doc.data() }))
+                .filter(n => {
+                    const nCust = (n.custId || '').toString().toLowerCase().trim();
+                    return nCust === targetId;
+                })
+                .sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
+            
+            this.updateBadgeCount();
+        } catch (e) {
+            console.error('Error loading notifications:', e);
+            this.notifications = [];
+        }
+    }
+
     refreshList() {
         const listEl = document.getElementById('appointments-list');
         if (listEl) {
@@ -140,40 +164,27 @@ class CustomerAppointments {
     }
 
     async updateBadgeCount() {
-        if (typeof firebase === 'undefined' || !firebase.firestore) return;
-        try {
-            const db = firebase.firestore();
-            const targetId = (this.custId && this.custId !== 'DEFAULT' ? this.custId : (localStorage.getItem('currentUserEmail') || 'tt@gmail.com')).toString().toLowerCase().trim();
-            
-            const snapshot = await db.collection('customer_notifications').get();
-            const unviewedCount = snapshot.docs.filter(doc => {
-                const data = doc.data();
-                const nCust = (data.custId || '').toString().toLowerCase().trim();
-                return nCust === targetId && data.viewed === false;
-            }).length;
-
-            const badgeEl = document.getElementById('customer-appointments-badge');
-            if (badgeEl) {
-                if (unviewedCount > 0) {
-                    badgeEl.textContent = unviewedCount;
-                    badgeEl.classList.remove('hidden');
-                    badgeEl.style.display = 'inline-flex';
-                } else {
-                    badgeEl.textContent = '0';
-                    badgeEl.classList.add('hidden');
-                    badgeEl.style.display = 'none';
-                }
+        const unviewedCount = this.notifications.filter(n => n.viewed === false).length;
+        const badgeEl = document.getElementById('customer-appointments-badge');
+        
+        if (badgeEl) {
+            if (unviewedCount > 0) {
+                badgeEl.textContent = unviewedCount;
+                badgeEl.classList.remove('hidden');
+                badgeEl.style.display = 'inline-flex';
+            } else {
+                badgeEl.textContent = '0';
+                badgeEl.classList.add('hidden');
+                badgeEl.style.display = 'none';
             }
-        } catch (e) {
-            console.error('Error updating badge count:', e);
         }
     }
 
     async init() {
         await this.loadAssignedAdminSync();
         await this.loadAppointments();
+        await this.loadNotifications();
         this.refreshList();
-        await this.updateBadgeCount();
     }
 
     async loadAssignedAdminSync() {
@@ -213,9 +224,23 @@ class CustomerAppointments {
     render() {
         this.loadAssignedAdminSync();
         this.loadAppointments();
+        this.loadNotifications();
         return `
-            <div class="space-y-4">
+            <div class="space-y-6">
                 <h3 class="text-2xl font-bold text-white">📅 Appointments</h3>
+                
+                <!-- Notifications Tray Section -->
+                <div class="glass-panel rounded-2xl p-6 border border-yellow-400/20 space-y-4" style="background: rgba(0,0,0,0.6);">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-bold text-white flex items-center gap-2">🔔 Notification Updates</h4>
+                        <span class="text-xs text-slate-400">Click any notification to mark as read</span>
+                    </div>
+                    <div id="notifications-tray" class="space-y-2 max-h-60 overflow-y-auto pr-1">
+                        ${this.renderNotificationsHtml()}
+                    </div>
+                </div>
+
+                <!-- Book Appointment Form -->
                 <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
                     <h4 class="font-bold text-white mb-4">Book New Appointment</h4>
                     <div>
@@ -256,6 +281,8 @@ class CustomerAppointments {
                     </div>
                     <button onclick="window.customerAppointments.bookAppointment()" class="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">📅 Confirm & Book Appointment</button>
                 </div>
+
+                <!-- Your Appointments List -->
                 <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
                     <h4 class="font-bold text-white mb-4">Your Appointments</h4>
                     <div id="appointments-list" class="space-y-2">
@@ -264,6 +291,50 @@ class CustomerAppointments {
                 </div>
             </div>
         `;
+    }
+
+    renderNotificationsHtml() {
+        if (this.notifications.length === 0) {
+            return '<p class="text-slate-500 text-sm text-center py-4">No notifications yet</p>';
+        }
+        return this.notifications.map(n => {
+            const isUnviewed = n.viewed === false;
+            const bgStyle = isUnviewed ? 'background: rgba(250, 204, 21, 0.1); border-color: rgba(250, 204, 21, 0.4);' : 'background: rgba(0,0,0,0.3); border-color: rgba(255,255,255,0.05); opacity: 0.7;'
+            const badgeText = isUnviewed ? '<span class="px-2 py-0.5 bg-yellow-400 text-black text-[10px] font-bold rounded">NEW</span>' : '<span class="text-slate-500 text-[10px]">Read</span>';
+            const statusColor = (n.status === 'Approved' || n.status === 'Confirmed') ? 'text-emerald-400' : 'text-red-400';
+
+            return `
+                <div onclick="window.customerAppointments.handleNotificationClick('${n.id}', '${escape(n.message || '')}', '${n.status || 'Updated'}')" 
+                     class="p-3 rounded-xl border cursor-pointer transition hover:border-yellow-400 flex items-start justify-between gap-3" style="${bgStyle}">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-semibold ${statusColor}">Status: ${n.status || 'Update'}</span>
+                            ${badgeText}
+                        </div>
+                        <p class="text-sm text-white leading-snug">${n.message}</p>
+                    </div>
+                    <span class="text-xs text-slate-400 whitespace-nowrap">🔍 Read</span>
+                </div>
+            `;
+        }).join('');
+    }
+
+    async handleNotificationClick(notifId, escapedMsg, status) {
+        const message = unescape(escapedMsg);
+        this.showPopupModal(message, status, notifId);
+        if (notifId && typeof firebase !== 'undefined' && firebase.firestore) {
+            try {
+                const db = firebase.firestore();
+                await db.collection('customer_notifications').doc(notifId).update({ viewed: true });
+                await this.loadNotifications();
+                
+                // Refresh both list view and notification tray element if present
+                const trayEl = document.getElementById('notifications-tray');
+                if (trayEl) trayEl.innerHTML = this.renderNotificationsHtml();
+            } catch (e) {
+                console.error('Error updating notification status:', e);
+            }
+        }
     }
 
     renderAppointmentsHtml() {
