@@ -13,29 +13,29 @@ class CustomerDashboard {
     render() {
         return `
             <div id="customer-dashboard" class="min-h-screen bg-black flex flex-col">
-                <header class="sticky top-0 z-40 w-full glass-panel border-b border-yellow-400/10 px-6 py-4">
+                <header class="sticky top-0 z-40 w-full glass-panel border-b border-yellow-400/10 px-4 sm:px-6 py-4">
                     <div class="max-w-7xl mx-auto flex items-center justify-between">
-                        <h1 class="font-bold text-xl text-gradient">👤 CUSTOMER DASHBOARD</h1>
-                        <button onclick="logout()" class="px-4 py-2 bg-red-950/30 text-red-400 text-xs font-bold rounded-xl">Logout</button>
+                        <h1 class="font-bold text-base sm:text-xl text-gradient">👤 CUSTOMER DASHBOARD</h1>
+                        <button onclick="logout()" class="px-3 sm:px-4 py-2 bg-red-950/30 text-red-400 text-xs font-bold rounded-xl">Logout</button>
                     </div>
                 </header>
                 
-                <main class="flex-grow p-6 overflow-y-auto">
+                <main class="flex-grow p-4 sm:p-6 overflow-y-auto">
                     <div class="max-w-7xl mx-auto space-y-6">
-                        <h2 class="text-3xl font-bold text-white">Welcome, <span id="cust-name">Customer</span>! 👋</h2>
+                        <h2 class="text-2xl sm:text-3xl font-bold text-white">Welcome, <span id="cust-name">Customer</span>! 👋</h2>
                         
-                        <div class="flex gap-2 border-b border-yellow-400/10 pb-2 overflow-x-auto">
-                            <button onclick="switchCustomerTab('drawings')" class="tab-button active px-4 py-2 text-xs font-bold text-yellow-400">🎰 Home</button>
-                            <button onclick="switchCustomerTab('buytickets')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">🎫 Buy Tickets</button>
-                            <button onclick="switchCustomerTab('mytickets')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 relative">
+                        <div class="flex gap-2 border-b border-yellow-400/10 pb-2 overflow-x-auto whitespace-nowrap scrollbar-none">
+                            <button onclick="switchCustomerTab('drawings')" class="tab-button active px-3 sm:px-4 py-2 text-xs font-bold text-yellow-400">🎰 Home</button>
+                            <button onclick="switchCustomerTab('buytickets')" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400">🎫 Buy Tickets</button>
+                            <button onclick="switchCustomerTab('mytickets')" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 relative">
                                🎟️ My Tickets <span id="customer-tickets-badge" class="hidden absolute -top-1 -right-1 px-1.5 py-0.5 bg-red-500 text-white rounded-full text-[9px] font-bold">0</span>
                                 </button>
-                            <button onclick="switchCustomerTab('library')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">📖 Library</button>
-                            <button onclick="switchCustomerTab('appointments')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 relative">
+                            <button onclick="switchCustomerTab('library')" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400">📖 Library</button>
+                            <button onclick="switchCustomerTab('appointments')" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 relative">
                               📅 Appointments <span id="customer-appointments-badge" class="hidden absolute -top-1 -right-1 px-1.5 py-0.5 bg-red-500 text-white rounded-full text-[9px] font-bold">0</span>
                                </button>
-                            <button onclick="switchCustomerTab('settings')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">⚙️ Settings</button>
-                            <button onclick="switchCustomerTab('profile')" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">👤 Profile & Security</button>
+                            <button onclick="switchCustomerTab('settings')" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400">⚙️ Settings</button>
+                            <button onclick="switchCustomerTab('profile')" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400">👤 Profile & Security</button>
                         </div>
 
                         <!-- Drawings Tab (Default View) -->
@@ -45,7 +45,8 @@ class CustomerDashboard {
                         <div id="cust-buytickets" class="tab-content" style="display: none;">
                             <div class="space-y-4">
                                 <h3 class="text-xl font-bold text-white">Select Numbers (1-300)</h3>
-                                <div id="numbers-grid" class="grid grid-cols-10 gap-2"></div>
+                                <!-- Responsive 6-col grid on mobile, 10-col on desktop -->
+                                <div id="numbers-grid" class="grid grid-cols-6 sm:grid-cols-10 gap-1.5 sm:gap-2"></div>
                                 <div class="glass-panel rounded-lg p-4 border border-yellow-400/10 space-y-3">
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">Select Preferred Admin / Branch</label>
@@ -74,7 +75,7 @@ class CustomerDashboard {
                                     </div>
 
                                     <div class="p-3 bg-yellow-400/5 border border-yellow-400/20 rounded-xl space-y-2">
-                                        <div class="flex items-center justify-between">
+                                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1">
                                             <span class="text-xs font-bold text-yellow-400">⚡ Automatic Online Payment (Chapa / Telebirr API)</span>
                                             <span class="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded">Active Gateway</span>
                                         </div>
@@ -132,7 +133,7 @@ class CustomerDashboard {
                                 <h3 class="text-xl font-bold text-white mb-2">👤 Profile & Information Management</h3>
                                 <p class="text-xs text-slate-400 mb-4">Update your personal account credentials and security password below.</p>
                                 
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <label class="block text-xs text-slate-400 mb-1">Full Name</label>
                                         <input type="text" id="profile-edit-name" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs">
@@ -167,41 +168,35 @@ class CustomerDashboard {
         `;
     }
 
-   
-async loadData() {
-    try {
-        generateNumbersGrid();
-        await loadAdminsDropdown();
-        await loadCustomerSettings();
-        
-        if (!window.customerTicketsInstance) {
-            window.customerTicketsInstance = new CustomerTickets(currentUser.email);
+    async loadData() {
+        try {
+            generateNumbersGrid();
+            await loadAdminsDropdown();
+            await loadCustomerSettings();
+            
+            if (!window.customerTicketsInstance) {
+                window.customerTicketsInstance = new CustomerTickets(currentUser.email);
+            }
+            await window.customerTicketsInstance.init();
+
+            const activeCustId = currentUser?.email || window.currentUser?.email || 'DEFAULT';
+            if (!window.customerAppointments) {
+                window.customerAppointments = new CustomerAppointments(activeCustId);
+            } else {
+                window.customerAppointments.setCustId(activeCustId);
+            }
+
+            await loadCustomerStats();
+            await loadCustomerProfileData();
+
+            switchCustomerTab('drawings');
+        } catch (error) {
+            console.error('Error loading customer data:', error);
         }
-        await window.customerTicketsInstance.init();
-
-        // ✅ FIX: Force synchronized email binding for appointments
-        const activeCustId = currentUser?.email || window.currentUser?.email || 'DEFAULT';
-        if (!window.customerAppointments) {
-            window.customerAppointments = new CustomerAppointments(activeCustId);
-        } else {
-            window.customerAppointments.setCustId(activeCustId);
-        }
-
-        await loadCustomerStats();
-        await loadCustomerProfileData();
-
-        switchCustomerTab('drawings');
-    } catch (error) {
-        console.error('Error loading customer data:', error);
     }
-}
 }
 
 window_customerDashboard = null;
-
-// ========== TAB SWITCHING WITH COMPONENT INTEGRATION ==========
-
-// ========== TAB SWITCHING WITH COMPONENT INTEGRATION ==========
 
 function switchCustomerTab(tabName) {
     const allTabs = document.querySelectorAll('#customer-dashboard .tab-content');
@@ -231,7 +226,6 @@ function switchCustomerTab(tabName) {
             targetEl.innerHTML = window.customerTicketsInstance.render();
             window.customerTicketsInstance.init();
 
-            // 🔥 Clear the notification badge when viewing tickets
             const badge = document.getElementById('customer-tickets-badge');
             if (badge) {
                 badge.classList.add('hidden');
@@ -262,8 +256,6 @@ function switchCustomerTab(tabName) {
         }
     });
 }
-
-// ========== LOAD PROFILE DATA & INFO CHANGES ==========
 
 async function loadCustomerProfileData() {
     if (!currentUser) return;
@@ -312,8 +304,6 @@ async function saveCustomerProfileChanges() {
     }
 }
 
-// ========== LOAD ADMINS FOR SELECTION ==========
-
 async function loadAdminsDropdown() {
     if (!db) return;
 
@@ -343,8 +333,6 @@ async function loadAdminsDropdown() {
         console.error('Error loading admins list:', error);
     }
 }
-
-// ========== NUMBER SELECTION ==========
 
 function generateNumbersGrid() {
     const grid = document.getElementById('numbers-grid');
@@ -379,8 +367,6 @@ function updateCost() {
     if (countEl) countEl.textContent = selectedNumbers.length;
     if (costEl) costEl.textContent = selectedNumbers.length * 100;
 }
-
-// ========== CUSTOMER TICKETS - FIRESTORE ==========
 
 async function getFileBase64(file) {
     return new Promise((resolve, reject) => {
@@ -427,7 +413,7 @@ async function submitCustomerTicket() {
             customerEmail: currentUser.email,
             customerName: currentUser.name || 'Customer',
             assignedAdmin: assignedAdmin,
-            adminEmail: assignedAdmin, // 🔥 Add this line so admin queries matching adminEmail work correctly!
+            adminEmail: assignedAdmin,
             numbers: selectedNumbers,
             cost: selectedNumbers.length * 100,
             paymentMethod: paymentMethod,
@@ -470,7 +456,7 @@ async function submitAutomaticPayment() {
                 customerEmail: currentUser.email,
                 customerName: currentUser.name || 'Customer',
                 assignedAdmin: assignedAdmin,
-                adminEmail: assignedAdmin, // 🔥 Add this line here as well!
+                adminEmail: assignedAdmin,
                 numbers: selectedNumbers,
                 cost: totalCost,
                 paymentMethod: 'Automatic Online Gateway',
@@ -515,7 +501,7 @@ async function loadCustomerTickets() {
             const createdDate = ticket.createdAt?.toDate?.() || new Date();
             return `
                 <div class="glass-panel rounded-lg p-4 border border-yellow-400/10 text-xs space-y-1">
-                    <div class="flex justify-between items-start">
+                    <div class="flex flex-col sm:flex-row justify-between items-start gap-3">
                         <div class="space-y-1">
                             <p class="font-bold text-white text-base">Ticket #${i + 1}</p>
                             <p class="text-slate-300">Admin: <span class="text-yellow-400">${ticket.assignedAdmin || 'N/A'}</span></p>
@@ -524,11 +510,11 @@ async function loadCustomerTickets() {
                             <p class="text-slate-400">Payment: ${ticket.paymentMethod || 'N/A'}</p>
                             <p class="text-slate-400">Date: ${createdDate.toLocaleDateString()}</p>
                         </div>
-                        <div class="text-right space-y-3">
+                        <div class="w-full sm:w-auto text-left sm:text-right space-y-3">
                             <span class="inline-block px-2 py-1 bg-yellow-400/20 text-yellow-400 rounded">${ticket.status || 'N/A'}</span>
                             <div>
                                 <button onclick="cancelCustomerTicket('${docId}')" 
-                                    class="px-3 py-1 bg-red-950/40 hover:bg-red-900/60 text-red-400 text-xs font-semibold rounded-lg border border-red-500/25 transition-all">
+                                    class="w-full sm:w-auto px-3 py-1 bg-red-950/40 hover:bg-red-900/60 text-red-400 text-xs font-semibold rounded-lg border border-red-500/25 transition-all">
                                     🗑️ Cancel / Delete
                                 </button>
                             </div>
@@ -558,8 +544,6 @@ async function cancelCustomerTicket(docId) {
         notify('error', `❌ Error deleting ticket: ${error.message}`);
     }
 }
-
-// ========== CUSTOMER SETTINGS - FIRESTORE ==========
 
 async function saveCustomerSettings() {
     const phoneEl = document.getElementById('cust-phone');
@@ -621,8 +605,6 @@ async function loadCustomerSettings() {
         console.error('Error loading settings:', error);
     }
 }
-
-// ========== CUSTOMER STATS ==========
 
 async function loadCustomerStats() {
     if (!db || !currentUser) return;
