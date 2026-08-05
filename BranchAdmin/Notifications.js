@@ -1,5 +1,5 @@
 // ============================================
-// ADMIN NOTIFICATIONS - FIXED V5 (POPUP & NOTIFICATION FIX)
+// ADMIN NOTIFICATIONS - FIXED V6 (FORCE POPUP ON LOAD & SNAPSHOT)
 // ============================================
 
 class AdminNotifications {
@@ -25,8 +25,10 @@ class AdminNotifications {
 
         this._unsubscribeAdminNotifs = db.collection('customer_appointments')
             .onSnapshot(snapshot => {
+                let hasNewUnnotified = false;
+                let latestApt = null;
+
                 snapshot.docChanges().forEach(change => {
-                    // Trigger popup and action on both 'added' and 'modified' if an unnotified appointment appears
                     if (change.type === 'added' || change.type === 'modified') {
                         const docData = typeof change.doc.data === 'function' ? change.doc.data() : (change.doc.data || change.doc);
                         const apt = { id: change.doc.id, ...docData };
@@ -36,22 +38,24 @@ class AdminNotifications {
                         const status = (apt.status || '').toLowerCase();
                         const isPending = status.includes('pending') || status.includes('unapproved') || status === 'pending confirmation' || !apt.status;
 
-                        // Check if it's new/pending and meant for this admin
                         if (isMatch && isPending && !apt.adminNotified) {
-                            const message = `New booking from ${apt.custId || 'Customer'} for ${apt.purpose || 'Appointment'} on ${apt.date || 'TBD'} at ${apt.time || 'TBD'}`;
-                            
-                            // Trigger Admin Pop-up Modal immediately
-                            this.showAdminPopupModal(message, apt.purpose || 'New Appointment Request');
-                            
-                            if (typeof notify === 'function') {
-                                notify('success', `🔔 ${message}`);
-                            }
+                            hasNewUnnotified = true;
+                            latestApt = apt;
 
-                            // Mark as notified in firestore so it doesn't pop up again repeatedly
+                            // Mark as notified immediately in firestore
                             db.collection('customer_appointments').doc(change.doc.id).update({ adminNotified: true }).catch(() => {});
                         }
                     }
                 });
+
+                if (hasNewUnnotified && latestApt) {
+                    const message = `New booking from ${latestApt.custId || 'Customer'} for ${latestApt.purpose || 'Appointment'} on ${latestApt.date || 'TBD'} at ${latestApt.time || 'TBD'}`;
+                    this.showAdminPopupModal(message, latestApt.purpose || 'New Appointment Request');
+                    if (typeof notify === 'function') {
+                        notify('success', `🔔 ${message}`);
+                    }
+                }
+
                 this.loadPendingApprovals();
             }, e => console.error('Admin real-time listener error:', e));
     }
@@ -86,6 +90,21 @@ class AdminNotifications {
     render() {
         return `
             <div class="space-y-6">
+                <!-- POPUP TRIGGER BANNER / BUTTON -->
+                <div class="flex justify-between items-center bg-black/40 border border-yellow-400/20 p-4 rounded-2xl">
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl">🔔</span>
+                        <div>
+                            <h4 class="font-bold text-white text-sm">Notifications Control Center</h4>
+                            <p class="text-xs text-slate-400">Click here to manually check or preview new notifications popup</p>
+                        </div>
+                    </div>
+                    <button onclick="window.adminNotifications.triggerManualPopup()" 
+                        class="px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-black font-bold rounded-xl text-xs">
+                        Show Latest Popup
+                    </button>
+                </div>
+
                 <!-- APPROVALS SECTION -->
                 <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
                     <h3 class="text-2xl font-bold text-white">✅ Pending Approvals</h3>
@@ -172,6 +191,16 @@ class AdminNotifications {
                 </div>
             </div>
         `;
+    }
+
+    triggerManualPopup() {
+        if (this.pendingApprovals.length > 0) {
+            const latest = this.pendingApprovals[0];
+            const message = `Booking from ${latest.custId || 'Customer'} for ${latest.purpose || 'Appointment'} on ${latest.date || 'TBD'} at ${latest.time || 'TBD'}`;
+            this.showAdminPopupModal(message, latest.purpose || 'Appointment Request');
+        } else {
+            this.showAdminPopupModal('No pending bookings found to show right now.', 'System Notification');
+        }
     }
 
     async loadPendingApprovals() {
