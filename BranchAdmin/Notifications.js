@@ -1,5 +1,5 @@
 // ============================================
-// ADMIN NOTIFICATIONS - FIXED V6 (FORCE POPUP ON LOAD & SNAPSHOT)
+// ADMIN NOTIFICATIONS - FIXED V7 (BADGE COUNT & POPUP FIX)
 // ============================================
 
 class AdminNotifications {
@@ -88,29 +88,40 @@ class AdminNotifications {
     }
 
     render() {
+        const pendingCount = this.pendingApprovals.length;
+
         return `
             <div class="space-y-6">
-                <!-- POPUP TRIGGER BANNER / BUTTON -->
+                <!-- TOP NOTIFICATION BANNER WITH BADGE COUNT -->
                 <div class="flex justify-between items-center bg-black/40 border border-yellow-400/20 p-4 rounded-2xl">
                     <div class="flex items-center gap-3">
-                        <span class="text-2xl">🔔</span>
+                        <div style="position: relative; display: inline-block;">
+                            <span class="text-2xl">🔔</span>
+                            ${pendingCount > 0 ? `<span style="position: absolute; top: -6px; right: -8px; background: #ef4444; color: #fff; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 9999px; border: 2px solid #000;">${pendingCount}</span>` : ''}
+                        </div>
                         <div>
                             <h4 class="font-bold text-white text-sm">Notifications Control Center</h4>
-                            <p class="text-xs text-slate-400">Click here to manually check or preview new notifications popup</p>
+                            <p class="text-xs text-slate-400">You have <span class="text-yellow-400 font-bold">${pendingCount}</span> pending appointment request(s)</p>
                         </div>
                     </div>
                     <button onclick="window.adminNotifications.triggerManualPopup()" 
-                        class="px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-black font-bold rounded-xl text-xs">
-                        Show Latest Popup
+                        class="px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-black font-bold rounded-xl text-xs flex items-center gap-2">
+                        <span>Show Popup</span>
+                        ${pendingCount > 0 ? `<span class="bg-black text-yellow-400 px-1.5 py-0.5 rounded-full text-[10px]">${pendingCount}</span>` : ''}
                     </button>
                 </div>
 
                 <!-- APPROVALS SECTION -->
                 <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
-                    <h3 class="text-2xl font-bold text-white">✅ Pending Approvals</h3>
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-2xl font-bold text-white flex items-center gap-3">
+                            ✅ Pending Approvals 
+                            ${pendingCount > 0 ? `<span class="bg-yellow-400 text-black text-xs px-2.5 py-0.5 rounded-full font-bold">${pendingCount}</span>` : ''}
+                        </h3>
+                    </div>
                     <p class="text-xs text-slate-400">Manage customer booking and appointment approvals here.</p>
                     <div id="admin-approval-list" class="space-y-3">
-                        ${this.pendingApprovals.length === 0 ? '<p class="text-slate-400 text-xs py-2">Loading approvals from Firebase...</p>' : this.renderApprovalItems()}
+                        ${pendingCount === 0 ? '<p class="text-slate-400 text-xs py-2">Loading approvals from Firebase...</p>' : this.renderApprovalItems()}
                     </div>
                 </div>
 
@@ -195,9 +206,10 @@ class AdminNotifications {
 
     triggerManualPopup() {
         if (this.pendingApprovals.length > 0) {
+            const count = this.pendingApprovals.length;
             const latest = this.pendingApprovals[0];
-            const message = `Booking from ${latest.custId || 'Customer'} for ${latest.purpose || 'Appointment'} on ${latest.date || 'TBD'} at ${latest.time || 'TBD'}`;
-            this.showAdminPopupModal(message, latest.purpose || 'Appointment Request');
+            const message = `You have ${count} pending booking request(s). Latest: ${latest.custId || 'Customer'} - ${latest.purpose || 'Appointment'} on ${latest.date || 'TBD'} at ${latest.time || 'TBD'}`;
+            this.showAdminPopupModal(message, `Pending Requests (${count})`);
         } else {
             this.showAdminPopupModal('No pending bookings found to show right now.', 'System Notification');
         }
