@@ -1,5 +1,5 @@
 // ============================================
-// ADMIN NOTIFICATIONS - FIXED V12 (INTERACTIVE CLICKABLE TOP BADGE)
+// ADMIN NOTIFICATIONS - FIXED V13 (DIRECT DOM ID INJECTION)
 // ============================================
 
 class AdminNotifications {
@@ -14,11 +14,9 @@ class AdminNotifications {
         this.loadPendingApprovals();
         this.startAdminRealtimeListener();
 
-        // Check and inject interactive top badge
         setTimeout(() => this.updateTabBadge(), 300);
     }
 
-    // Realtime listener for incoming customer bookings/appointments
     startAdminRealtimeListener() {
         if (typeof firebase === 'undefined' || !firebase.firestore) return;
         const db = firebase.firestore();
@@ -44,8 +42,6 @@ class AdminNotifications {
                         if (isMatch && isPending && !apt.adminNotified) {
                             hasNewUnnotified = true;
                             latestApt = apt;
-
-                            // Mark as notified immediately in firestore
                             db.collection('customer_appointments').doc(change.doc.id).update({ adminNotified: true }).catch(() => {});
                         }
                     }
@@ -53,7 +49,6 @@ class AdminNotifications {
 
                 if (hasNewUnnotified && latestApt) {
                     localStorage.removeItem('admin_notifications_viewed_' + this.adminId);
-                    
                     const message = `New booking from ${latestApt.custId || 'Customer'} for ${latestApt.purpose || 'Appointment'} on ${latestApt.date || 'TBD'} at ${latestApt.time || 'TBD'}`;
                     this.showAdminPopupModal(message, latestApt.purpose || 'New Appointment Request');
                     if (typeof notify === 'function') {
@@ -97,29 +92,21 @@ class AdminNotifications {
         const isViewed = localStorage.getItem('admin_notifications_viewed_' + this.adminId) === 'true';
         const showBadge = pendingCount > 0 && !isViewed;
 
-        // Precisely find the top navigation element containing "Notifications" and ensure it is fully touchable/clickable
+        // Find the specific Notifications navigation tab element
         document.querySelectorAll('a, button, span, li').forEach(el => {
             const text = el.textContent ? el.textContent.trim() : '';
             if (text === 'Notifications' || (text.includes('Notifications') && el.children.length <= 2)) {
-                let badge = el.querySelector('#nav-head-badge');
+                if (getComputedStyle(el).position === 'static') {
+                    el.style.position = 'relative';
+                }
                 
+                let badge = el.querySelector('#nav-head-badge');
                 if (showBadge) {
-                    if (getComputedStyle(el).position === 'static') {
-                        el.style.position = 'relative';
-                    }
                     if (!badge) {
                         badge = document.createElement('span');
                         badge.id = 'nav-head-badge';
-                        // pointer-events set to auto so it remains fully touchable/clickable without blocking menu navigation
-                        badge.style.cssText = 'position: absolute; top: -14px; right: -14px; background: #ef4444; color: #fff; font-size: 11px; font-weight: bold; min-width: 22px; height: 22px; padding: 0 4px; display: flex; align-items: center; justify-content: center; border-radius: 12px 12px 12px 4px; border: 2px solid #000; z-index: 50; pointer-events: auto; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.6);';
-                        
-                        // Clicking the badge also triggers view action
-                        badge.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            localStorage.setItem('admin_notifications_viewed_' + this.adminId, 'true');
-                            badge.remove();
-                        });
-
+                        // pointer-events: none on badge so the parent tab remains 100% clickable/touchable
+                        badge.style.cssText = 'position: absolute; top: -14px; right: -14px; background: #ef4444; color: #fff; font-size: 11px; font-weight: bold; min-width: 22px; height: 22px; padding: 0 4px; display: flex; align-items: center; justify-content: center; border-radius: 12px 12px 12px 4px; border: 2px solid #000; z-index: 50; pointer-events: none; box-shadow: 0 2px 5px rgba(0,0,0,0.6);';
                         el.appendChild(badge);
                     }
                     badge.textContent = pendingCount;
@@ -134,7 +121,6 @@ class AdminNotifications {
     render() {
         const pendingCount = this.pendingApprovals.length;
 
-        // Automatically clear badge when opening/viewing the Notifications panel
         localStorage.setItem('admin_notifications_viewed_' + this.adminId, 'true');
         setTimeout(() => this.updateTabBadge(), 100);
 
@@ -155,7 +141,7 @@ class AdminNotifications {
                     </button>
                 </div>
 
-                <!-- APPROVALS SECTION -->
+                <!-- APPROVAL्स SECTION -->
                 <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
                     <div class="flex justify-between items-center">
                         <h3 class="text-2xl font-bold text-white flex items-center gap-3">
