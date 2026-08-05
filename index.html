@@ -91,24 +91,12 @@
         console.log('✅ Firebase initialized');
         console.log('✅ Firestore ready');
 
-        // Session Management: Auto-logout on page refresh using sessionStorage
-        window.addEventListener('load', () => {
-            const isRefreshed = sessionStorage.getItem('session_active');
-            if (isRefreshed) {
-                // Clear session if page was refreshed
-                firebase.auth().signOut().catch(() => {});
-                sessionStorage.removeItem('session_active');
-            }
+        // Set Firebase Auth persistence to SESSION so that page refreshes or closing tabs automatically clear login state
+        firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION).catch((error) => {
+            console.error('Auth persistence error:', error);
         });
 
-        // Set flag in sessionStorage before unload to detect refresh
-        window.addEventListener('beforeunload', () => {
-            if (currentUser) {
-                sessionStorage.setItem('session_active', 'true');
-            }
-        });
-
-        // Start session timeout timer (e.g., 5 minutes = 300,000 ms)
+        // Start session timeout timer (5 minutes = 300,000 ms)
         function startSessionTimer() {
             if (sessionTimeoutTimer) clearTimeout(sessionTimeoutTimer);
             const SESSION_DURATION = 5 * 60 * 1000; // 5 Minutes
@@ -142,7 +130,6 @@
         function logout() {
             currentUser = null;
             if (sessionTimeoutTimer) clearTimeout(sessionTimeoutTimer);
-            sessionStorage.removeItem('session_active');
             firebase.auth().signOut().catch(() => {});
             
             document.getElementById('main-admin-container').innerHTML = '';
@@ -178,9 +165,11 @@
                 <div id="login-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50">
                     <div class="glass-panel rounded-2xl p-8 w-full max-w-md border border-yellow-400/10 space-y-4">
                         <h3 class="text-2xl font-bold text-white mb-2">Login</h3>
-                        <input type="email" id="login-email" placeholder="Email" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-3 px-4 text-white text-xs placeholder-slate-500 login-input">
-                        <input type="password" id="login-password" placeholder="Password" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-3 px-4 text-white text-xs placeholder-slate-500 login-input">
-                        <button onclick="handleLogin()" class="w-full py-3 bg-yellow-400 text-black font-bold rounded-xl text-xs hover:bg-yellow-500">Login</button>
+                        <form id="login-form" onsubmit="event.preventDefault(); handleLogin();" class="space-y-4">
+                            <input type="email" id="login-email" name="email" autocomplete="email" placeholder="Email" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-3 px-4 text-white text-xs placeholder-slate-500">
+                            <input type="password" id="login-password" name="password" autocomplete="current-password" placeholder="Password" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-3 px-4 text-white text-xs placeholder-slate-500">
+                            <button type="submit" class="w-full py-3 bg-yellow-400 text-black font-bold rounded-xl text-xs hover:bg-yellow-500">Login</button>
+                        </form>
                         <button onclick="closeLoginModal()" class="w-full py-2 bg-slate-800 text-slate-300 rounded-xl text-xs">Cancel</button>
                     </div>
                 </div>
@@ -231,26 +220,16 @@
 
         function openLoginModal() {
             const modal = document.getElementById('login-modal');
-            if (modal) {
-                modal.classList.remove('hidden');
-                // Attach Enter key listener to login inputs
-                setTimeout(() => {
-                    document.querySelectorAll('.login-input').forEach(input => {
-                        input.onkeydown = (e) => {
-                            if (e.key === 'Enter') {
-                                handleLogin();
-                            }
-                        };
-                    });
-                }, 100);
-            }
+            if (modal) modal.classList.remove('hidden');
         }
 
         function closeLoginModal() {
             const modal = document.getElementById('login-modal');
             if (modal) modal.classList.add('hidden');
-            document.getElementById('login-email').value = '';
-            document.getElementById('login-password').value = '';
+            const emailInput = document.getElementById('login-email');
+            const passwordInput = document.getElementById('login-password');
+            if (emailInput) emailInput.value = '';
+            if (passwordInput) passwordInput.value = '';
         }
 
         async function loadAdminsForSignup() {
@@ -288,7 +267,7 @@
             }
 
             try {
-                const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
+                await firebase.auth().createUserWithEmailAndPassword(email, password);
                 
                 await db.collection('customer_settings').doc(email).set({
                     customerEmail: email,
