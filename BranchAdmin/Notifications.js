@@ -1,5 +1,5 @@
 // ============================================
-// ADMIN NOTIFICATIONS - FIXED V2 (REAL-TIME POPUP & NOTIFICATIONS)
+// ADMIN NOTIFICATIONS - FIXED V3 (FIRESTORE SNAPSHOT FIX)
 // ============================================
 
 class AdminNotifications {
@@ -27,7 +27,8 @@ class AdminNotifications {
             .onSnapshot(snapshot => {
                 snapshot.docChanges().forEach(change => {
                     if (change.type === 'added') {
-                        const apt = change.data();
+                        // FIX: In older or standard Firestore SDKs, doc.data() is a function call -> change.doc.data()
+                        const apt = typeof change.doc.data === 'function' ? change.doc.data() : change.doc;
                         const aptAdminEmail = (apt.adminEmail || '').toString().toLowerCase().trim();
                         const isMatch = currentAdminRaw ? (aptAdminEmail === currentAdminRaw || !aptAdminEmail) : true;
 
