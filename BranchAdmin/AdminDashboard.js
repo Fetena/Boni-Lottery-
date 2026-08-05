@@ -4,10 +4,8 @@
 
 class AdminDashboard {
     constructor(adminId) {
-        // CRITICAL FIX: Use the ACTUAL admin email from currentUser or param, not hardcoded
         this.adminId = adminId || window.currentUser?.email || localStorage.getItem('currentUserEmail') || '';
         
-        // IMPORTANT: Save to localStorage so AdminNotifications can access it
         if (this.adminId) {
             localStorage.setItem('currentAdminEmail', this.adminId);
             console.log(`✅ AdminDashboard - Admin Email: ${this.adminId}`);
@@ -19,48 +17,48 @@ class AdminDashboard {
     render() {
         return `
             <div id="admin-dashboard" class="min-h-screen bg-black flex flex-col">
-                <header class="sticky top-0 z-40 w-full glass-panel border-b border-yellow-400/10 px-6 py-4">
+                <header class="sticky top-0 z-40 w-full glass-panel border-b border-yellow-400/10 px-4 sm:px-6 py-4">
                     <div class="max-w-7xl mx-auto flex items-center justify-between">
-                        <h1 class="font-bold text-xl text-gradient">🛡️ ADMIN DASHBOARD</h1>
-                        <button onclick="logout()" class="px-4 py-2 bg-red-950/30 text-red-400 text-xs font-bold rounded-xl">Logout</button>
+                        <h1 class="font-bold text-base sm:text-xl text-gradient">🛡️ ADMIN DASHBOARD</h1>
+                        <button onclick="logout()" class="px-3 sm:px-4 py-2 bg-red-950/30 text-red-400 text-xs font-bold rounded-xl">Logout</button>
                     </div>
                 </header>
                 
-                <main class="flex-grow p-6 overflow-y-auto">
+                <main class="flex-grow p-4 sm:p-6 overflow-y-auto">
                     <div class="max-w-7xl mx-auto space-y-6">
-                        <h2 class="text-3xl font-bold text-white">Admin Control Center</h2>
+                        <h2 class="text-2xl sm:text-3xl font-bold text-white">Admin Control Center</h2>
                         
-                        <div class="flex gap-2 border-b border-yellow-400/10 pb-2 overflow-x-auto">
-                            <button onclick="window.adminDashboard.switchTab('dashboard', event)" class="tab-button active px-4 py-2 text-xs font-bold text-yellow-400">📊 Dashboard</button>
-                            <button onclick="window.adminDashboard.switchTab('customers', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">👥 Customers</button>
-                            <button onclick="window.adminDashboard.switchTab('tickets', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 relative">
+                        <div class="flex gap-2 border-b border-yellow-400/10 pb-2 overflow-x-auto whitespace-nowrap scrollbar-none">
+                            <button onclick="window.adminDashboard.switchTab('dashboard', event)" class="tab-button active px-3 sm:px-4 py-2 text-xs font-bold text-yellow-400">📊 Dashboard</button>
+                            <button onclick="window.adminDashboard.switchTab('customers', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400">👥 Customers</button>
+                            <button onclick="window.adminDashboard.switchTab('tickets', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 relative">
                                🎫 Tickets <span id="badge-branch-tickets" class="hidden absolute -top-1 -right-1 px-1.5 py-0.5 bg-red-500 text-white rounded-full text-[9px] font-bold">0</span>
                             </button>
-                            <button onclick="window.adminDashboard.switchTab('payments', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">💳 Payments</button>
-                            <button onclick="window.adminDashboard.switchTab('notifications', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 relative">
+                            <button onclick="window.adminDashboard.switchTab('payments', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400">💳 Payments</button>
+                            <button onclick="window.adminDashboard.switchTab('notifications', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 relative">
                                 🔔 Notifications <span id="badge-branch-notifications" class="hidden absolute -top-1 -right-1 px-1.5 py-0.5 bg-red-500 text-white rounded-full text-[9px] font-bold">0</span>
                             </button>
-                            <button onclick="window.adminDashboard.switchTab('bookAppointment', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 relative">
+                            <button onclick="window.adminDashboard.switchTab('bookAppointment', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 relative">
                                 📅 BookAppointment <span id="badge-branch-bookings" class="hidden absolute -top-1 -right-1 px-1.5 py-0.5 bg-red-500 text-white rounded-full text-[9px] font-bold">0</span>
                             </button>
-                            <button onclick="window.adminDashboard.switchTab('settings', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400">⚙️ Settings</button>
+                            <button onclick="window.adminDashboard.switchTab('settings', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400">⚙️ Settings</button>
                         </div>
 
                         <!-- Dashboard Tab -->
                         <div id="admin-dashboard-tab" class="tab-content active space-y-4">
                             <!-- Compact Stat Cards -->
-                            <div class="grid grid-cols-3 gap-3">
-                                <div class="glass-panel rounded-xl p-3 border border-yellow-400/10">
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div class="glass-panel rounded-xl p-4 border border-yellow-400/10">
                                     <p class="text-[10px] text-slate-400">Total Customers</p>
-                                    <h3 id="admin-total-customers" class="text-xl font-bold text-blue-400 mt-0.5">0</h3>
+                                    <h3 id="admin-total-customers" class="text-xl sm:text-2xl font-bold text-blue-400 mt-0.5">0</h3>
                                 </div>
-                                <div class="glass-panel rounded-xl p-3 border border-yellow-400/10">
+                                <div class="glass-panel rounded-xl p-4 border border-yellow-400/10">
                                     <p class="text-[10px] text-slate-400">Total Tickets</p>
-                                    <h3 id="admin-total-tickets" class="text-xl font-bold text-emerald-400 mt-0.5">0</h3>
+                                    <h3 id="admin-total-tickets" class="text-xl sm:text-2xl font-bold text-emerald-400 mt-0.5">0</h3>
                                 </div>
-                                <div class="glass-panel rounded-xl p-3 border border-yellow-400/10">
+                                <div class="glass-panel rounded-xl p-4 border border-yellow-400/10">
                                     <p class="text-[10px] text-slate-400">Total Revenue</p>
-                                    <h3 id="admin-total-revenue" class="text-xl font-bold text-purple-400 mt-0.5">0 ETB</h3>
+                                    <h3 id="admin-total-revenue" class="text-xl sm:text-2xl font-bold text-purple-400 mt-0.5">0 ETB</h3>
                                 </div>
                             </div>
 
@@ -71,7 +69,7 @@ class AdminDashboard {
                         <!-- Customers Tab -->
                         <div id="admin-customers" class="tab-content" style="display: none;">
                             <div class="space-y-4">
-                                <button onclick="openAddCustomerModal()" class="px-6 py-2 bg-yellow-400 text-black font-bold rounded-xl">+ Add Customer</button>
+                                <button onclick="openAddCustomerModal()" class="w-full sm:w-auto px-6 py-2.5 bg-yellow-400 text-black font-bold rounded-xl text-xs">+ Add Customer</button>
                                 <div id="admin-customers-list" class="space-y-3"></div>
                             </div>
                         </div>
@@ -100,8 +98,8 @@ class AdminDashboard {
             </div>
 
             <!-- Add Customer Modal -->
-            <div id="customer-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50">
-                <div class="glass-panel rounded-2xl p-8 w-full max-w-md border border-yellow-400/10 space-y-4">
+            <div id="customer-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50 p-4">
+                <div class="glass-panel rounded-2xl p-6 sm:p-8 w-full max-w-md border border-yellow-400/10 space-y-4">
                     <h3 class="text-2xl font-bold text-white mb-2">Add Customer</h3>
                     <div class="space-y-3">
                         <div>
@@ -168,7 +166,6 @@ class AdminDashboard {
     async loadData() {
         try {
             await loadAdminCustomers();
-            //await loadAdminTickets();
             await loadAdminPayments();
             await loadAdminStats();
             
@@ -177,18 +174,17 @@ class AdminDashboard {
             }
             if (!window.adminTickets) window.adminTickets = new AdminTickets(this.adminId);
             if (!window.adminPayments) window.adminPayments = new AdminPayments(this.adminId);
-            // FIXED: Always pass the CURRENT admin's email, not cached instance
             if (!window.adminNotifications || window.adminNotifications.adminId !== this.adminId) {
                 window.adminNotifications = new AdminNotifications(this.adminId);
-                console.log(`✅ Created AdminNotifications for: ${this.adminId}`);
             }
             if (!window.adminBookAppointment) window.adminBookAppointment = new AdminBookAppointment(this.adminId);
             if (!window.adminSettings) window.adminSettings = new AdminSettings(this.adminId);
+            
             const ticketsTab = document.getElementById('admin-tickets');
-if (ticketsTab) {
-    ticketsTab.innerHTML = window.adminTickets.render();
-    await window.adminTickets.init();
-}
+            if (ticketsTab) {
+                ticketsTab.innerHTML = window.adminTickets.render();
+                await window.adminTickets.init();
+            }
             const paymentsTab = document.getElementById('admin-payments');
             if (paymentsTab) paymentsTab.innerHTML = await window.adminPayments.render();
 
@@ -253,8 +249,6 @@ if (ticketsTab) {
         }
     }
 }
-
-// ========== ADMIN CUSTOMERS HELPERS ==========
 
 async function openAddCustomerModal() {
     document.getElementById('customer-modal').style.display = 'flex';
@@ -328,7 +322,7 @@ async function loadAdminCustomers() {
         }
 
         content.innerHTML = allCustomers.map(cust => `
-            <div class="glass-panel rounded-lg p-4 border border-yellow-400/10 flex justify-between items-center text-xs">
+            <div class="glass-panel rounded-lg p-4 border border-yellow-400/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs">
                 <div>
                     <p class="font-bold text-white text-sm">${cust.name} ${cust.type === 'self' ? '<span class="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded ml-2">Self-Registered</span>' : ''}</p>
                     <p class="text-slate-400 mt-0.5">${cust.email} • ${cust.phone}</p>
@@ -355,8 +349,6 @@ async function deleteAdminCustomer(docId) {
     }
 }
 
-// ========== ADMIN PAYMENTS HELPERS ==========
-
 async function loadAdminPayments() {
     if (!db || !currentUser) return;
 
@@ -371,8 +363,6 @@ async function loadAdminPayments() {
         console.error('Error loading payments:', error);
     }
 }
-
-// ========== ADMIN STATS HELPERS ==========
 
 async function loadAdminStats() {
     if (!db || !currentUser) return;
@@ -391,7 +381,6 @@ async function loadAdminStats() {
             document.getElementById('admin-total-customers').textContent = totalCustomersCount;
         }
 
-        // 🔥 STRICT ISOLATION: Fetch only tickets for this admin
         const ticketSnapshot = await db.collection('customer_tickets')
             .where('adminEmail', '==', currentUser.email)
             .get();
