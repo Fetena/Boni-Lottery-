@@ -1,5 +1,5 @@
 // ============================================
-// ADMIN NOTIFICATIONS (CHILD COMPONENT) - FIXED INSTANCE GUARD
+// ADMIN NOTIFICATIONS - COMPLETE CLEAN CLASS
 // ============================================
 
 class AdminNotifications {
@@ -11,7 +11,6 @@ class AdminNotifications {
         this.adminNotificationsList = [];
         this._isLoading = false;
         
-        // Automatically trigger initial load once on instantiation
         this.loadPendingApprovals();
     }
 
@@ -111,13 +110,8 @@ class AdminNotifications {
         this._isLoading = true;
         try {
             const db = firebase.firestore();
-            
-            // Gather all possible identifiers for the currently logged-in admin
             const currentAdminRaw = (this.adminId || '').toString().toLowerCase().trim();
             const currentEmail = (localStorage.getItem('currentUserEmail') || '').toString().toLowerCase().trim();
-            const currentName = (localStorage.getItem('currentAdminName') || '').toString().toLowerCase().trim();
-
-            console.log('Loading approvals for admin identifiers -> Raw ID:', currentAdminRaw, '| Email:', currentEmail, '| Name:', currentName);
 
             const snapshot = await db.collection('customer_appointments').get();
             const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -130,11 +124,10 @@ class AdminNotifications {
                 const itemAdminEmail = (item.adminEmail || '').toString().toLowerCase().trim();
                 const itemAdminName = (item.adminName || '').toString().toLowerCase().trim();
 
-                // Flexible match checking across all possible admin identifier variations
-                const isMatch = 
-                    (currentAdminRaw && (itemAdminEmail.includes(currentAdminRaw) || itemAdminName.includes(currentAdminRaw) || currentAdminRaw.includes(itemAdminEmail))) ||
-                    (currentEmail && (itemAdminEmail === currentEmail || itemAdminName === currentEmail)) ||
-                    (currentName && (itemAdminEmail === currentName || itemAdminName === currentName));
+                const isMatch = !currentAdminRaw || 
+                    itemAdminEmail.includes(currentAdminRaw) || 
+                    itemAdminName.includes(currentAdminRaw) || 
+                    (currentEmail && itemAdminEmail === currentEmail);
 
                 if (isMatch) {
                     const status = (item.status || '').toLowerCase();
@@ -232,8 +225,14 @@ class AdminNotifications {
 
     renderNotificationHistoryHtml() {
         const recent = this.adminNotificationsList.slice(-5).reverse();
-        if (recent.length === 0) return '<p class="text-slate-400">No notifications yet</p>';
-        return recent.map(n => `<p><strong>${n.type}:</strong> ${n.message ? n.message.substring(0, 50) : ''}... <span class="text-xs text-slate-500">(${n.timestamp})</span></p>`).join('');
+        if (recent.length === 0) return '<p class="text-slate-400 text-xs">No notifications sent yet</p>';
+        return recent.map(n => `
+            <div class="bg-black/30 p-3 rounded-lg border border-yellow-400/10 space-y-1">
+                <p class="font-bold text-yellow-400 text-xs">${n.type || 'Notification'}</p>
+                <p class="text-white text-sm">${n.message}</p>
+                <p class="text-[10px] text-slate-500">${n.timestamp || ''}</p>
+            </div>
+        `).join('');
     }
 
     async approveBooking(aptId, custId) {
@@ -314,15 +313,13 @@ class AdminNotifications {
             return;
         }
 
-        const currentAdminRaw = (this.adminId || '').toString().toLowerCase().trim();
-        const currentEmail = (localStorage.getItem('currentUserEmail') || '').toString().toLowerCase().trim();
-        const activeAdminId = currentAdminRaw || currentEmail || 'admin';
+        const currentAdminRaw = (this.adminId || localStorage.getItem('currentUserEmail') || 'admin').toString().toLowerCase().trim();
 
         const notif = {
-            adminId: activeAdminId,
-            type: type,
-            message: message,
-            target: target,
+            adminId: currentAdminRaw,
+            type,
+            message,
+            target,
             timestamp: new Date().toLocaleTimeString(),
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         };
@@ -333,14 +330,12 @@ class AdminNotifications {
             
             if (typeof notify === 'function') notify('success', `✅ Notification sent to ${target}!`);
             
-            // Clear the textarea input field
             const msgInput = document.getElementById('admin-notif-msg');
             if (msgInput) msgInput.value = '';
 
-            // Instantly reload and refresh the UI history list
             await this.loadPendingApprovals();
         } catch (e) {
-            console.error('Error saving notification to Firebase', e);
+            console.error('Error sending notification', e);
             if (typeof notify === 'function') notify('error', '❌ Failed to send notification');
         }
     }
