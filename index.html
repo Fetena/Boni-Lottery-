@@ -91,7 +91,7 @@
         console.log('✅ Firebase initialized');
         console.log('✅ Firestore ready');
 
-        // Force NONE persistence so refreshing or reloading instantly wipes the Firebase session
+        // Set Firebase persistence to NONE so sessions clear when closed/refreshed
         firebase.auth().setPersistence(firebase.auth.Auth.Persistence.NONE).catch((error) => {
             console.error('Auth persistence error:', error);
         });
@@ -165,11 +165,11 @@
                 <div id="login-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50">
                     <div class="glass-panel rounded-2xl p-8 w-full max-w-md border border-yellow-400/10 space-y-4">
                         <h3 class="text-2xl font-bold text-white mb-2">Login</h3>
-                        <!-- Form enables browser 'Save Password' prompt and Enter key submission -->
-                        <form id="login-form" onsubmit="event.preventDefault(); handleLogin();" class="space-y-4">
+                        <!-- Form with preventDefault handles Enter key submission and triggers browser password saving -->
+                        <form onsubmit="handleLogin(event)" class="space-y-4">
                             <div>
                                 <label class="block text-xs text-slate-400 mb-1">Email</label>
-                                <input type="email" id="login-email" name="email" autocomplete="email" placeholder="Email" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-3 px-4 text-white text-xs placeholder-slate-500">
+                                <input type="text" id="login-email" name="email" autocomplete="email" placeholder="Email" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-3 px-4 text-white text-xs placeholder-slate-500">
                             </div>
                             <div>
                                 <label class="block text-xs text-slate-400 mb-1">Password</label>
@@ -304,7 +304,9 @@
             }
         }
 
-        async function handleLogin() {
+        async function handleLogin(event) {
+            if (event) event.preventDefault();
+            
             const email = document.getElementById('login-email')?.value.trim() || '';
             const password = document.getElementById('login-password')?.value || '';
 
