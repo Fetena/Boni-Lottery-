@@ -1,5 +1,5 @@
 // ============================================
-// ADMIN NOTIFICATIONS - FIXED V8 (TAB BADGE & AUTO-CLEAR ON VIEW)
+// ADMIN NOTIFICATIONS - FIXED V9 (TAB BADGE FIX)
 // ============================================
 
 class AdminNotifications {
@@ -14,28 +14,8 @@ class AdminNotifications {
         this.loadPendingApprovals();
         this.startAdminRealtimeListener();
 
-        // Listen for tab switching to clear badge count when "Notifications" tab is active
-        setTimeout(() => this.setupTabObserver(), 500);
-    }
-
-    // Automatically detect when the admin clicks/views the Notifications tab to clear the badge count
-    setupTabObserver() {
-        const checkTab = () => {
-            const activeTabHeader = document.querySelector('a[href*="Notifications"], button[onclick*="Notifications"], .text-yellow-400');
-            // If the user is currently viewing the notifications tab, clear unviewed state
-            if (activeTabHeader && (activeTabHeader.innerText.includes('Notifications') || activeTabHeader.classList.contains('border-yellow-400'))) {
-                localStorage.setItem('admin_notifications_viewed_' + this.adminId, 'true');
-                const badgeEl = document.getElementById('nav-notifications-badge');
-                if (badgeEl) badgeEl.remove();
-            }
-        };
-
-        // Attach listeners to navigation elements
-        document.querySelectorAll('nav button, nav a, .admin-tab').forEach(el => {
-            el.addEventListener('click', () => {
-                setTimeout(checkTab, 100);
-            });
-        });
+        // Check and inject tab badge when the component mounts
+        setTimeout(() => this.updateTabBadge(), 300);
     }
 
     // Realtime listener for incoming customer bookings/appointments
@@ -103,7 +83,7 @@ class AdminNotifications {
                     <div style="padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; font-size: 14px; color: #e2e8f0; line-height: 1.4;">
                         ${message}
                     </div>
-                    <button onclick="document.getElementById('admin-popup-modal').remove(); window.adminNotifications?.markAsViewedAndRefresh();" 
+                    <button onclick="document.getElementById('admin-popup-modal').remove(); window.adminNotifications?.loadPendingApprovals();" 
                         style="width: 100%; padding: 12px; background: #facc15; color: #000; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; font-size: 13px;">
                         View in Control Center
                     </button>
@@ -113,36 +93,43 @@ class AdminNotifications {
         document.body.insertAdjacentHTML('beforeend', modalHtml);
     }
 
-    markAsViewedAndRefresh() {
-        localStorage.setItem('admin_notifications_viewed_' + this.adminId, 'true');
-        const badgeEl = document.getElementById('nav-notifications-badge');
-        if (badgeEl) badgeEl.remove();
-        this.loadPendingApprovals();
-    }
-
-    render() {
+    updateTabBadge() {
         const pendingCount = this.pendingApprovals.length;
         const isViewed = localStorage.getItem('admin_notifications_viewed_' + this.adminId) === 'true';
         const showBadge = pendingCount > 0 && !isViewed;
 
-        // Inject badge directly into the main top navigation "Notifications" tab element if present in DOM
-        setTimeout(() => {
-            document.querySelectorAll('a, button, span').forEach(el => {
-                if (el.textContent && el.textContent.trim() === 'Notifications' && !el.querySelector('#nav-notifications-badge')) {
-                    if (showBadge) {
+        // Find the Notifications tab in the top navigation bar
+        document.querySelectorAll('a, button, span').forEach(el => {
+            const text = el.textContent ? el.textContent.trim() : '';
+            // Target elements matching the Notifications tab header shown in your navigation
+            if (text.includes('Notifications') && !el.closest('#admin-approval-list') && !el.closest('.glass-panel')) {
+                let badge = el.querySelector('#nav-notifications-badge');
+                
+                if (showBadge) {
+                    if (getComputedStyle(el).position === 'static') {
                         el.style.position = 'relative';
-                        const badge = document.createElement('span');
+                    }
+                    if (!badge) {
+                        badge = document.createElement('span');
                         badge.id = 'nav-notifications-badge';
-                        badge.style.cssText = 'position: absolute; top: -8px; right: -12px; background: #ef4444; color: #fff; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 9999px; border: 2px solid #000; z-index: 50;';
-                        badge.textContent = pendingCount;
+                        badge.style.cssText = 'position: absolute; top: -6px; right: -10px; background: #ef4444; color: #fff; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 9999px; border: 2px solid #000; z-index: 50; pointer-events: none;';
                         el.appendChild(badge);
                     }
+                    badge.textContent = pendingCount;
+                    badge.style.display = 'inline-block';
+                } else if (badge) {
+                    badge.remove();
                 }
-            });
-        }, 100);
+            }
+        });
+    }
 
-        // Automatically mark as viewed since the admin has opened the Notifications panel component
+    render() {
+        const pendingCount = this.pendingApprovals.length;
+
+        // Automatically clear badge when opening/rendering the Notifications screen component
         localStorage.setItem('admin_notifications_viewed_' + this.adminId, 'true');
+        setTimeout(() => this.updateTabBadge(), 100);
 
         return `
             <div class="space-y-6">
@@ -304,6 +291,7 @@ class AdminNotifications {
                 });
 
             this.refreshUI();
+            this.updateTabBadge();
         } catch (e) {
             console.error('Error loading approvals from Firebase', e);
         } finally {
