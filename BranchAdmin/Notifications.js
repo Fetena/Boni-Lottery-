@@ -1,5 +1,5 @@
 // ============================================
-// ADMIN NOTIFICATIONS - FIXED V16 (FILE REVIEW LOCK & EXTERNAL POPUP)
+// ADMIN NOTIFICATIONS - FIXED V17 (SYNTAX & REFERENCE FIX)
 // ============================================
 
 class AdminNotifications {
@@ -244,6 +244,10 @@ class AdminNotifications {
         }
     }
 
+    async loadData() {
+        await this.loadPendingApprovals();
+    }
+
     async loadPendingApprovals() {
         if (typeof firebase === 'undefined' || !firebase.firestore || this._isLoading) return;
         this._isLoading = true;
@@ -452,7 +456,7 @@ class AdminNotifications {
         await this.loadPendingApprovals();
     }
 
-    async deleteBooking(aptId, custId) {
+    async deleteBooking(aptId, custId, custId) {
         if (!confirm('Delete this appointment permanently?')) return;
         try {
             const db = firebase.firestore();
@@ -553,4 +557,3 @@ class AdminNotifications {
         }
     }
 }
-```[cite: 2]
