@@ -1,5 +1,5 @@
 // ============================================
-// ADMIN NOTIFICATIONS - FIXED V9 (TAB BADGE FIX)
+// ADMIN NOTIFICATIONS - FIXED V10 (ACCURATE TOP NAVIGATION BADGE PLACEMENT)
 // ============================================
 
 class AdminNotifications {
@@ -14,7 +14,7 @@ class AdminNotifications {
         this.loadPendingApprovals();
         this.startAdminRealtimeListener();
 
-        // Check and inject tab badge when the component mounts
+        // Check and inject badge precisely over the "Notifications" top menu head
         setTimeout(() => this.updateTabBadge(), 300);
     }
 
@@ -52,7 +52,7 @@ class AdminNotifications {
                 });
 
                 if (hasNewUnnotified && latestApt) {
-                    // New item arrived, reset viewed flag so badge shows up on the top tab header
+                    // New item arrived, reset viewed flag so badge shows up on the top navigation header
                     localStorage.removeItem('admin_notifications_viewed_' + this.adminId);
                     
                     const message = `New booking from ${latestApt.custId || 'Customer'} for ${latestApt.purpose || 'Appointment'} on ${latestApt.date || 'TBD'} at ${latestApt.time || 'TBD'}`;
@@ -98,12 +98,12 @@ class AdminNotifications {
         const isViewed = localStorage.getItem('admin_notifications_viewed_' + this.adminId) === 'true';
         const showBadge = pendingCount > 0 && !isViewed;
 
-        // Find the Notifications tab in the top navigation bar
-        document.querySelectorAll('a, button, span').forEach(el => {
+        // Precisely find the top navigation element containing "Notifications" (as shown in your red line image arrow pointing to the top menu)
+        document.querySelectorAll('a, button, span, li').forEach(el => {
             const text = el.textContent ? el.textContent.trim() : '';
-            // Target elements matching the Notifications tab header shown in your navigation
-            if (text.includes('Notifications') && !el.closest('#admin-approval-list') && !el.closest('.glass-panel')) {
-                let badge = el.querySelector('#nav-notifications-badge');
+            // Ensure we match the top header nav item specifically and avoid container elements
+            if (text === 'Notifications' || (text.includes('Notifications') && el.children.length <= 2)) {
+                let badge = el.querySelector('#nav-head-badge');
                 
                 if (showBadge) {
                     if (getComputedStyle(el).position === 'static') {
@@ -111,12 +111,13 @@ class AdminNotifications {
                     }
                     if (!badge) {
                         badge = document.createElement('span');
-                        badge.id = 'nav-notifications-badge';
-                        badge.style.cssText = 'position: absolute; top: -6px; right: -10px; background: #ef4444; color: #fff; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 9999px; border: 2px solid #000; z-index: 50; pointer-events: none;';
+                        badge.id = 'nav-head-badge';
+                        // Styled exactly like your red-circled badge on the top menu head
+                        badge.style.cssText = 'position: absolute; top: -12px; right: -16px; background: #dc2626; color: #fff; font-size: 11px; font-weight: bold; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: 2px solid #000; z-index: 50; pointer-events: none; box-shadow: 0 2px 4px rgba(0,0,0,0.5);';
                         el.appendChild(badge);
                     }
                     badge.textContent = pendingCount;
-                    badge.style.display = 'inline-block';
+                    badge.style.display = 'flex';
                 } else if (badge) {
                     badge.remove();
                 }
@@ -127,7 +128,7 @@ class AdminNotifications {
     render() {
         const pendingCount = this.pendingApprovals.length;
 
-        // Automatically clear badge when opening/rendering the Notifications screen component
+        // When the admin opens/views this Notifications panel, clear the badge count as requested ("when admin check it then it can disappear")
         localStorage.setItem('admin_notifications_viewed_' + this.adminId, 'true');
         setTimeout(() => this.updateTabBadge(), 100);
 
