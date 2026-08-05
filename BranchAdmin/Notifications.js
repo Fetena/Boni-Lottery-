@@ -1,5 +1,5 @@
 // ============================================
-// ADMIN NOTIFICATIONS - FIXED V10 (ACCURATE TOP NAVIGATION BADGE PLACEMENT)
+// ADMIN NOTIFICATIONS - FIXED V11 (TAB BADGE POP-UP CORNER STYLE)
 // ============================================
 
 class AdminNotifications {
@@ -14,7 +14,7 @@ class AdminNotifications {
         this.loadPendingApprovals();
         this.startAdminRealtimeListener();
 
-        // Check and inject badge precisely over the "Notifications" top menu head
+        // Check and inject badge precisely matching the reference screenshot style
         setTimeout(() => this.updateTabBadge(), 300);
     }
 
@@ -98,10 +98,9 @@ class AdminNotifications {
         const isViewed = localStorage.getItem('admin_notifications_viewed_' + this.adminId) === 'true';
         const showBadge = pendingCount > 0 && !isViewed;
 
-        // Precisely find the top navigation element containing "Notifications" (as shown in your red line image arrow pointing to the top menu)
+        // Precisely find the top navigation element containing "Notifications"
         document.querySelectorAll('a, button, span, li').forEach(el => {
             const text = el.textContent ? el.textContent.trim() : '';
-            // Ensure we match the top header nav item specifically and avoid container elements
             if (text === 'Notifications' || (text.includes('Notifications') && el.children.length <= 2)) {
                 let badge = el.querySelector('#nav-head-badge');
                 
@@ -112,8 +111,8 @@ class AdminNotifications {
                     if (!badge) {
                         badge = document.createElement('span');
                         badge.id = 'nav-head-badge';
-                        // Styled exactly like your red-circled badge on the top menu head
-                        badge.style.cssText = 'position: absolute; top: -12px; right: -16px; background: #dc2626; color: #fff; font-size: 11px; font-weight: bold; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: 2px solid #000; z-index: 50; pointer-events: none; box-shadow: 0 2px 4px rgba(0,0,0,0.5);';
+                        // Styled exactly like the red tab-corner badge in your screenshot reference
+                        badge.style.cssText = 'position: absolute; top: -14px; right: -14px; background: #ef4444; color: #fff; font-size: 11px; font-weight: bold; min-width: 22px; height: 22px; padding: 0 4px; display: flex; align-items: center; justify-content: center; border-radius: 12px 12px 12px 4px; border: 2px solid #000; z-index: 50; pointer-events: none; box-shadow: 0 2px 5px rgba(0,0,0,0.6);';
                         el.appendChild(badge);
                     }
                     badge.textContent = pendingCount;
@@ -128,7 +127,7 @@ class AdminNotifications {
     render() {
         const pendingCount = this.pendingApprovals.length;
 
-        // When the admin opens/views this Notifications panel, clear the badge count as requested ("when admin check it then it can disappear")
+        // Automatically clear badge when opening/viewing the Notifications screen ("when admin check it then it can disappear")
         localStorage.setItem('admin_notifications_viewed_' + this.adminId, 'true');
         setTimeout(() => this.updateTabBadge(), 100);
 
