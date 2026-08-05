@@ -1,6 +1,5 @@
 // ============================================
-// CUSTOMER APPOINTMENTS - FIXED V2
-// Handles admins with or without email field in Firebase
+// CUSTOMER APPOINTMENTS - FIXED V3 (DATE & POPUP FIX)
 // ============================================
 
 class CustomerAppointments {
@@ -52,7 +51,7 @@ class CustomerAppointments {
                             notify(type, `🔔 ${n.message}`);
                         }
                         
-                        // Mark viewed in Firestore so it doesn't pop up again
+                        // Mark viewed in Firestore so it doesn't pop up repeatedly on reload
                         db.collection('customer_notifications').doc(change.doc.id).update({ viewed: true });
                     }
                 });
@@ -269,14 +268,22 @@ class CustomerAppointments {
 
     async bookAppointment() {
         const adminEmail = document.getElementById('apt-admin')?.value;
-        const date = document.getElementById('apt-date')?.value;
+        const rawDate = document.getElementById('apt-date')?.value;
         const time = document.getElementById('apt-time')?.value;
         const purpose = document.getElementById('apt-purpose')?.value;
         const description = document.getElementById('apt-desc')?.value;
 
-        if (!date || !time || !purpose || !adminEmail) {
+        if (!rawDate || !time || !purpose || !adminEmail) {
             if (typeof notify === 'function') notify('error', '❌ Please fill all required fields');
             return;
+        }
+
+        // FORCE CORRECT LOCAL DATE PARSING (PREVENTS UTC TIMEZONE SHIFT/OFF-BY-ONE-DAY BUG)
+        const dateParts = rawDate.split('-');
+        let formattedDate = rawDate;
+        if (dateParts.length === 3) {
+            const localDateObj = new Date(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2]));
+            formattedDate = localDateObj.toISOString().split('T')[0];
         }
 
         try {
@@ -285,14 +292,13 @@ class CustomerAppointments {
             const selectedAdmin = this.admins.find(a => (a.email || a.id) === adminEmail);
             const adminName = selectedAdmin?.name || adminEmail;
 
-            // ENSURE EXACT LOWERCASE MATCHING FOR ISOLATION
             const cleanAdminEmail = adminEmail.toLowerCase().trim();
 
             const appointment = {
                 custId: targetId,
                 adminEmail: cleanAdminEmail,
                 adminName: adminName,
-                date,
+                date: formattedDate,
                 time,
                 purpose,
                 description,
