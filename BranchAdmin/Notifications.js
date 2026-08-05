@@ -110,8 +110,9 @@ class AdminNotifications {
         this._isLoading = true;
         try {
             const db = firebase.firestore();
-            const currentAdminRaw = (this.adminId || '').toString().toLowerCase().trim();
-            const currentEmail = (localStorage.getItem('currentUserEmail') || '').toString().toLowerCase().trim();
+            
+            // Get the strict identifier of the currently logged-in admin
+            const currentAdminRaw = (this.adminId || localStorage.getItem('currentUserEmail') || '').toString().toLowerCase().trim();
 
             const snapshot = await db.collection('customer_appointments').get();
             const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -122,14 +123,9 @@ class AdminNotifications {
 
             items.forEach(item => {
                 const itemAdminEmail = (item.adminEmail || '').toString().toLowerCase().trim();
-                const itemAdminName = (item.adminName || '').toString().toLowerCase().trim();
 
-                const isMatch = !currentAdminRaw || 
-                    itemAdminEmail.includes(currentAdminRaw) || 
-                    itemAdminName.includes(currentAdminRaw) || 
-                    (currentEmail && itemAdminEmail === currentEmail);
-
-                if (isMatch) {
+                // STRICT EQUALITY CHECK: Only include if the appointment belongs to this specific admin email
+                if (currentAdminRaw && itemAdminEmail === currentAdminRaw) {
                     const status = (item.status || '').toLowerCase();
                     if (status.includes('pending') || status.includes('unapproved') || status === 'pending confirmation') {
                         this.pendingApprovals.push(item);
@@ -146,7 +142,7 @@ class AdminNotifications {
                 .map(doc => ({ id: doc.id, ...doc.data() }))
                 .filter(n => {
                     const nAdmin = (n.adminId || '').toString().toLowerCase().trim();
-                    return !currentAdminRaw || nAdmin.includes(currentAdminRaw) || (currentEmail && nAdmin === currentEmail);
+                    return currentAdminRaw && nAdmin === currentAdminRaw;
                 });
 
             this.refreshUI();
