@@ -118,7 +118,6 @@ class AdminNotifications {
             // DEBUG: Log which admin is loading
             console.log(`🔍 Admin Loading Appointments - Email: ${currentAdminRaw || '(empty)'}`);
 
-            // Fetch all appointments safely and filter in-memory to prevent empty lists due to missing Firestore index/fields
             const snapshot = await db.collection('customer_appointments').get();
             const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
@@ -129,8 +128,8 @@ class AdminNotifications {
             items.forEach(item => {
                 const itemAdminEmail = (item.adminEmail || '').toString().toLowerCase().trim();
 
-                // If adminEmail is not set on older records, allow it or match strictly if present
-                const isMatch = !currentAdminRaw || !itemAdminEmail || itemAdminEmail === currentAdminRaw;
+                // STRICT ISOLATION: Must match admin email if present, fallback only if completely unassigned
+                const isMatch = currentAdminRaw ? (itemAdminEmail === currentAdminRaw || !itemAdminEmail) : true;
 
                 if (isMatch) {
                     const status = (item.status || '').toLowerCase();
@@ -144,14 +143,12 @@ class AdminNotifications {
                 }
             });
 
-            // Fetch all notifications safely and filter in-memory so nothing disappears
             const notifSnapshot = await db.collection('admin_notifications').get();
             this.adminNotificationsList = notifSnapshot.docs
                 .map(doc => ({ id: doc.id, ...doc.data() }))
                 .filter(n => {
                     const nAdmin = (n.adminId || n.adminEmail || '').toString().toLowerCase().trim();
-                    // If no admin tag exists, show it so notifications don't vanish, otherwise match current admin
-                    return !currentAdminRaw || !nAdmin || nAdmin === currentAdminRaw;
+                    return currentAdminRaw ? (nAdmin === currentAdminRaw || !nAdmin) : true;
                 });
 
             this.refreshUI();
@@ -243,21 +240,33 @@ class AdminNotifications {
     async approveBooking(aptId, custId) {
         if (!confirm('Approve this booking?')) return;
         await this.updateBookingStatusCore(aptId, custId, 'Approved');
-        if (typeof notify === 'function') notify('success', '✅ Appointment approved');
+        if (typeof notify === 'function') {
+            notify('success', '✅ Appointment approved');
+        } else {
+            alert('✅ Appointment approved');
+        }
         await this.loadPendingApprovals();
     }
 
     async rejectBooking(aptId, custId) {
         if (!confirm('Reject this booking?')) return;
         await this.updateBookingStatusCore(aptId, custId, 'Rejected');
-        if (typeof notify === 'function') notify('info', '❌ Appointment rejected and moved to bin');
+        if (typeof notify === 'function') {
+            notify('info', '❌ Appointment rejected and moved to bin');
+        } else {
+            alert('❌ Appointment rejected and moved to bin');
+        }
         await this.loadPendingApprovals();
     }
 
     async restoreFromBin(aptId, custId) {
         if (!confirm('Restore this booking to pending?')) return;
         await this.updateBookingStatusCore(aptId, custId, 'Pending Confirmation');
-        if (typeof notify === 'function') notify('success', '↩️ Appointment restored to pending');
+        if (typeof notify === 'function') {
+            notify('success', '↩️ Appointment restored to pending');
+        } else {
+            alert('↩️ Appointment restored to pending');
+        }
         await this.loadPendingApprovals();
     }
 
@@ -266,7 +275,11 @@ class AdminNotifications {
         try {
             const db = firebase.firestore();
             await db.collection('customer_appointments').doc(aptId).delete();
-            if (typeof notify === 'function') notify('info', '🗑️ Appointment deleted successfully');
+            if (typeof notify === 'function') {
+                notify('info', '🗑️ Appointment deleted successfully');
+            } else {
+                alert('🗑️ Appointment deleted successfully');
+            }
             await this.loadPendingApprovals();
         } catch (e) {
             console.error('Error deleting booking', e);
@@ -314,7 +327,11 @@ class AdminNotifications {
         const target = document.getElementById('admin-notif-target')?.value;
 
         if (!message) {
-            if (typeof notify === 'function') notify('error', '❌ Please enter a notification message');
+            if (typeof notify === 'function') {
+                notify('error', '❌ Please enter a notification message');
+            } else {
+                alert('❌ Please enter a notification message');
+            }
             return;
         }
 
@@ -334,7 +351,11 @@ class AdminNotifications {
             const db = firebase.firestore();
             await db.collection('admin_notifications').add(notif);
             
-            if (typeof notify === 'function') notify('success', `✅ Notification sent to ${target}!`);
+            if (typeof notify === 'function') {
+                notify('success', `✅ Notification sent to ${target}!`);
+            } else {
+                alert(`✅ Notification sent to ${target}!`);
+            }
             
             const msgInput = document.getElementById('admin-notif-msg');
             if (msgInput) msgInput.value = '';
@@ -342,7 +363,11 @@ class AdminNotifications {
             await this.loadPendingApprovals();
         } catch (e) {
             console.error('Error sending notification', e);
-            if (typeof notify === 'function') notify('error', '❌ Failed to send notification');
+            if (typeof notify === 'function') {
+                notify('error', '❌ Failed to send notification');
+            } else {
+                alert('❌ Failed to send notification');
+            }
         }
     }
 }
