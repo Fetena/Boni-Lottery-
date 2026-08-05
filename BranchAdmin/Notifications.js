@@ -114,6 +114,9 @@ class AdminNotifications {
             
             // Get clean lowercase identifier
             const currentAdminRaw = (this.adminId || localStorage.getItem('currentUserEmail') || localStorage.getItem('currentAdminEmail') || '').toString().toLowerCase().trim();
+            
+            // DEBUG: Log which admin is loading
+            console.log(`🔍 Admin Loading Appointments - Email: ${currentAdminRaw || '(empty)'}`);
 
             const snapshot = await db.collection('customer_appointments').get();
             const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -126,12 +129,14 @@ class AdminNotifications {
                 const itemAdminEmail = (item.adminEmail || '').toString().toLowerCase().trim();
                 const itemAdminName = (item.adminName || '').toString().toLowerCase().trim();
 
-                // Flexible validation fallback: matches exact email or falls back if field is unassigned
-                const isMatch = currentAdminRaw && (
-                    itemAdminEmail === currentAdminRaw || 
-                    itemAdminName === currentAdminRaw || 
-                    !itemAdminEmail // Fallback so unassigned legacy appointments still appear for review
-                );
+                // FIXED: STRICT ISOLATION - Only match if adminEmail exactly matches THIS admin's email
+                // REMOVED fallback (!itemAdminEmail) that was causing all admins to see all appointments
+                const isMatch = currentAdminRaw && itemAdminEmail === currentAdminRaw;
+                
+                // DEBUG: Log matching details
+                if (itemAdminEmail) {
+                    console.log(`  Appointment Admin: ${itemAdminEmail} | Match: ${isMatch}`);
+                }
 
                 if (isMatch) {
                     const status = (item.status || '').toLowerCase();
@@ -150,7 +155,11 @@ class AdminNotifications {
                 .map(doc => ({ id: doc.id, ...doc.data() }))
                 .filter(n => {
                     const nAdmin = (n.adminId || '').toString().toLowerCase().trim();
-                    return !currentAdminRaw || nAdmin === currentAdminRaw || !nAdmin;
+                    // FIXED: STRICT ISOLATION - Only include notifications from THIS admin
+                    // REMOVED || !nAdmin fallback that was showing all admins' notifications
+                    const matches = currentAdminRaw && nAdmin === currentAdminRaw;
+                    if (nAdmin) console.log(`  Notification from: ${nAdmin} | Match: ${matches}`);
+                    return matches;
                 });
 
             this.refreshUI();
