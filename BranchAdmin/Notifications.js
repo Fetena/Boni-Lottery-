@@ -1,5 +1,5 @@
 // ============================================
-// ADMIN NOTIFICATIONS - FIXED V7 (BADGE COUNT & POPUP FIX)
+// ADMIN NOTIFICATIONS - FIXED V8 (TAB BADGE & AUTO-CLEAR ON VIEW)
 // ============================================
 
 class AdminNotifications {
@@ -13,6 +13,29 @@ class AdminNotifications {
         
         this.loadPendingApprovals();
         this.startAdminRealtimeListener();
+
+        // Listen for tab switching to clear badge count when "Notifications" tab is active
+        setTimeout(() => this.setupTabObserver(), 500);
+    }
+
+    // Automatically detect when the admin clicks/views the Notifications tab to clear the badge count
+    setupTabObserver() {
+        const checkTab = () => {
+            const activeTabHeader = document.querySelector('a[href*="Notifications"], button[onclick*="Notifications"], .text-yellow-400');
+            // If the user is currently viewing the notifications tab, clear unviewed state
+            if (activeTabHeader && (activeTabHeader.innerText.includes('Notifications') || activeTabHeader.classList.contains('border-yellow-400'))) {
+                localStorage.setItem('admin_notifications_viewed_' + this.adminId, 'true');
+                const badgeEl = document.getElementById('nav-notifications-badge');
+                if (badgeEl) badgeEl.remove();
+            }
+        };
+
+        // Attach listeners to navigation elements
+        document.querySelectorAll('nav button, nav a, .admin-tab').forEach(el => {
+            el.addEventListener('click', () => {
+                setTimeout(checkTab, 100);
+            });
+        });
     }
 
     // Realtime listener for incoming customer bookings/appointments
@@ -49,6 +72,9 @@ class AdminNotifications {
                 });
 
                 if (hasNewUnnotified && latestApt) {
+                    // New item arrived, reset viewed flag so badge shows up on the top tab header
+                    localStorage.removeItem('admin_notifications_viewed_' + this.adminId);
+                    
                     const message = `New booking from ${latestApt.custId || 'Customer'} for ${latestApt.purpose || 'Appointment'} on ${latestApt.date || 'TBD'} at ${latestApt.time || 'TBD'}`;
                     this.showAdminPopupModal(message, latestApt.purpose || 'New Appointment Request');
                     if (typeof notify === 'function') {
@@ -77,7 +103,7 @@ class AdminNotifications {
                     <div style="padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; font-size: 14px; color: #e2e8f0; line-height: 1.4;">
                         ${message}
                     </div>
-                    <button onclick="document.getElementById('admin-popup-modal').remove(); window.adminNotifications?.loadPendingApprovals();" 
+                    <button onclick="document.getElementById('admin-popup-modal').remove(); window.adminNotifications?.markAsViewedAndRefresh();" 
                         style="width: 100%; padding: 12px; background: #facc15; color: #000; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; font-size: 13px;">
                         View in Control Center
                     </button>
@@ -87,27 +113,51 @@ class AdminNotifications {
         document.body.insertAdjacentHTML('beforeend', modalHtml);
     }
 
+    markAsViewedAndRefresh() {
+        localStorage.setItem('admin_notifications_viewed_' + this.adminId, 'true');
+        const badgeEl = document.getElementById('nav-notifications-badge');
+        if (badgeEl) badgeEl.remove();
+        this.loadPendingApprovals();
+    }
+
     render() {
         const pendingCount = this.pendingApprovals.length;
+        const isViewed = localStorage.getItem('admin_notifications_viewed_' + this.adminId) === 'true';
+        const showBadge = pendingCount > 0 && !isViewed;
+
+        // Inject badge directly into the main top navigation "Notifications" tab element if present in DOM
+        setTimeout(() => {
+            document.querySelectorAll('a, button, span').forEach(el => {
+                if (el.textContent && el.textContent.trim() === 'Notifications' && !el.querySelector('#nav-notifications-badge')) {
+                    if (showBadge) {
+                        el.style.position = 'relative';
+                        const badge = document.createElement('span');
+                        badge.id = 'nav-notifications-badge';
+                        badge.style.cssText = 'position: absolute; top: -8px; right: -12px; background: #ef4444; color: #fff; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 9999px; border: 2px solid #000; z-index: 50;';
+                        badge.textContent = pendingCount;
+                        el.appendChild(badge);
+                    }
+                }
+            });
+        }, 100);
+
+        // Automatically mark as viewed since the admin has opened the Notifications panel component
+        localStorage.setItem('admin_notifications_viewed_' + this.adminId, 'true');
 
         return `
             <div class="space-y-6">
-                <!-- TOP NOTIFICATION BANNER WITH BADGE COUNT -->
+                <!-- TOP NOTIFICATION BANNER -->
                 <div class="flex justify-between items-center bg-black/40 border border-yellow-400/20 p-4 rounded-2xl">
                     <div class="flex items-center gap-3">
-                        <div style="position: relative; display: inline-block;">
-                            <span class="text-2xl">🔔</span>
-                            ${pendingCount > 0 ? `<span style="position: absolute; top: -6px; right: -8px; background: #ef4444; color: #fff; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 9999px; border: 2px solid #000;">${pendingCount}</span>` : ''}
-                        </div>
+                        <span class="text-2xl">🔔</span>
                         <div>
                             <h4 class="font-bold text-white text-sm">Notifications Control Center</h4>
-                            <p class="text-xs text-slate-400">You have <span class="text-yellow-400 font-bold">${pendingCount}</span> pending appointment request(s)</p>
+                            <p class="text-xs text-slate-400">Manage pending approvals and system updates here</p>
                         </div>
                     </div>
                     <button onclick="window.adminNotifications.triggerManualPopup()" 
                         class="px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-black font-bold rounded-xl text-xs flex items-center gap-2">
                         <span>Show Popup</span>
-                        ${pendingCount > 0 ? `<span class="bg-black text-yellow-400 px-1.5 py-0.5 rounded-full text-[10px]">${pendingCount}</span>` : ''}
                     </button>
                 </div>
 
@@ -121,7 +171,7 @@ class AdminNotifications {
                     </div>
                     <p class="text-xs text-slate-400">Manage customer booking and appointment approvals here.</p>
                     <div id="admin-approval-list" class="space-y-3">
-                        ${pendingCount === 0 ? '<p class="text-slate-400 text-xs py-2">Loading approvals from Firebase...</p>' : this.renderApprovalItems()}
+                        ${pendingCount === 0 ? '<p class="text-slate-400 text-xs py-2">No pending booking approvals found</p>' : this.renderApprovalItems()}
                     </div>
                 </div>
 
