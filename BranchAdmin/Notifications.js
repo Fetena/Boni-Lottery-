@@ -118,7 +118,7 @@ class AdminNotifications {
             // DEBUG: Log which admin is loading
             console.log(`🔍 Admin Loading Appointments - Email: ${currentAdminRaw || '(empty)'}`);
 
-            // 🔥 FIX: Query only appointments assigned to this specific admin
+            // Query only appointments assigned to this specific admin
             const snapshot = currentAdminRaw 
                 ? await db.collection('customer_appointments').where('adminEmail', '==', currentAdminRaw).get()
                 : await db.collection('customer_appointments').get();
@@ -132,7 +132,6 @@ class AdminNotifications {
             items.forEach(item => {
                 const itemAdminEmail = (item.adminEmail || '').toString().toLowerCase().trim();
 
-                // STRICT ISOLATION MATCH
                 const isMatch = !currentAdminRaw || itemAdminEmail === currentAdminRaw;
                 
                 if (itemAdminEmail) {
@@ -151,16 +150,15 @@ class AdminNotifications {
                 }
             });
 
-            // 🔥 FIX: Query only notifications assigned to this specific admin ID
-            const notifSnapshot = currentAdminRaw
-                ? await db.collection('admin_notifications').where('adminId', '==', currentAdminRaw).get()
-                : await db.collection('admin_notifications').get();
-                
+            // 🔥 FIX: Securely fetch and filter admin notifications to prevent cross-admin leaks
+            const notifSnapshot = await db.collection('admin_notifications').get();
             this.adminNotificationsList = notifSnapshot.docs
                 .map(doc => ({ id: doc.id, ...doc.data() }))
                 .filter(n => {
-                    const nAdmin = (n.adminId || '').toString().toLowerCase().trim();
-                    const matches = !currentAdminRaw || nAdmin === currentAdminRaw;
+                    const nAdmin = (n.adminId || n.adminEmail || '').toString().toLowerCase().trim();
+                    // If a notification has no admin assignment, exclude it completely
+                    if (!nAdmin) return false;
+                    const matches = currentAdminRaw && nAdmin === currentAdminRaw;
                     if (nAdmin) console.log(`  Notification from: ${nAdmin} | Match: ${matches}`);
                     return matches;
                 });
@@ -333,6 +331,7 @@ class AdminNotifications {
 
         const notif = {
             adminId: currentAdminRaw,
+            adminEmail: currentAdminRaw,
             type,
             message,
             target,
