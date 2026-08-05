@@ -1,5 +1,5 @@
 // ============================================
-// ADMIN NOTIFICATIONS - FIXED V14 (ABSOLUTE TAB BADGE OVERRIDE)
+// ADMIN NOTIFICATIONS - FIXED V15 (CLICK-THROUGH & INTERACTION FIX)
 // ============================================
 
 class AdminNotifications {
@@ -92,12 +92,9 @@ class AdminNotifications {
         const isViewed = localStorage.getItem('admin_notifications_viewed_' + this.adminId) === 'true';
         const showBadge = pendingCount > 0 && !isViewed;
 
-        // Forcefully locate the exact Notifications navigation element by text content
         document.querySelectorAll('a, button, span, li, div').forEach(el => {
             const text = el.textContent ? el.textContent.trim() : '';
-            // Match tab exactly or containing Notifications without sub-elements cluttering
             if (text === 'Notifications' || text.startsWith('Notifications')) {
-                // Ensure parent container has relative positioning so absolute badge anchors correctly
                 const container = el.closest('a, button, li') || el;
                 if (getComputedStyle(container).position === 'static') {
                     container.style.position = 'relative';
@@ -110,7 +107,6 @@ class AdminNotifications {
                         badge.id = 'nav-head-badge';
                         container.appendChild(badge);
                     }
-                    // Apply exact inline styles overriding any CSS inheritance
                     badge.style.cssText = 'position: absolute !important; top: -8px !important; right: -12px !important; background: #ef4444 !important; color: #ffffff !important; font-size: 11px !important; font-weight: 900 !important; min-width: 20px !important; height: 20px !important; padding: 0 5px !important; display: flex !important; align-items: center !important; justify-content: center !important; border-radius: 10px !important; border: 2px solid #000000 !important; z-index: 99999 !important; pointer-events: none !important; box-shadow: 0 2px 6px rgba(0,0,0,0.8) !important;';
                     badge.textContent = pendingCount;
                 } else if (badge) {
@@ -300,22 +296,22 @@ class AdminNotifications {
         }
 
         return this.pendingApprovals.map(apt => `
-            <div class="bg-black/40 rounded-xl p-4 border border-yellow-400/20 text-sm space-y-2">
+            <div class="bg-black/40 rounded-xl p-4 border border-yellow-400/20 text-sm space-y-3 relative z-10">
                 <div class="flex justify-between items-start">
-                    <div class="space-y-1">
+                    <div class="space-y-1.5 w-full">
                         <p class="font-bold text-white text-base">👤 Customer Booking: <span class="text-yellow-400">${apt.purpose || 'Appointment'}</span></p>
                         <p class="text-slate-300">📧 Account: <span class="text-white">${apt.custId || 'N/A'}</span></p>
                         <p class="text-slate-300">📅 Schedule: <span class="text-white">${apt.date || 'N/A'} at ${apt.time || 'N/A'}</span></p>
-                        <p class="text-slate-400 bg-black/30 p-2 rounded-lg border border-white/5 mt-1">📝 Note: ${apt.description || 'None'}</p>
+                        <p class="text-slate-200 bg-black/60 p-3 rounded-lg border border-yellow-400/20 mt-2 font-medium">📝 Note: ${apt.description || 'None'}</p>
                     </div>
                 </div>
-                <div class="flex gap-2 pt-2 border-t border-white/5 justify-end">
-                    <button onclick="window.adminNotifications.approveBooking('${apt.id}', '${apt.custId}')" 
-                        class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs">✅ Approve</button>
-                    <button onclick="window.adminNotifications.rejectBooking('${apt.id}', '${apt.custId}')" 
-                        class="px-3.5 py-1.5 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg text-xs">❌ Reject</button>
-                    <button onclick="window.adminNotifications.deleteBooking('${apt.id}', '${apt.custId}')" 
-                        class="px-3.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-red-400 font-bold rounded-lg text-xs">🗑️ Delete</button>
+                <div class="flex gap-2 pt-3 border-t border-white/10 justify-end relative z-20">
+                    <button type="button" onclick="window.adminNotifications.approveBooking('${apt.id}', '${apt.custId}')" 
+                        class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs cursor-pointer shadow-lg">✅ Approve</button>
+                    <button type="button" onclick="window.adminNotifications.rejectBooking('${apt.id}', '${apt.custId}')" 
+                        class="px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg text-xs cursor-pointer shadow-lg">❌ Reject</button>
+                    <button type="button" onclick="window.adminNotifications.deleteBooking('${apt.id}', '${apt.custId}')" 
+                        class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-red-400 font-bold rounded-lg text-xs cursor-pointer shadow-lg">🗑️ Delete</button>
                 </div>
             </div>
         `).join('');
@@ -326,14 +322,15 @@ class AdminNotifications {
             return '<p class="text-slate-400 text-xs py-2">No approved appointments in archive</p>';
         }
         return this.approvedItems.map(apt => `
-            <div class="bg-black/40 rounded-xl p-4 border border-emerald-400/30 text-sm space-y-2">
+            <div class="bg-black/40 rounded-xl p-4 border border-emerald-400/30 text-sm space-y-2 relative z-10">
                 <div class="flex justify-between items-start">
-                    <div>
-                        <p class="font-bold text-emerald-400">✅ ${apt.purpose || 'Appointment'}</p>
-                        <p class="text-slate-400">📧 ${apt.custId}</p>
-                        <p class="text-slate-400">📅 ${apt.date} at ${apt.time}</p>
+                    <div class="space-y-1">
+                        <p class="font-bold text-emerald-400 text-base">✅ ${apt.purpose || 'Appointment'}</p>
+                        <p class="text-slate-300">📧 Account: <span class="text-white">${apt.custId}</span></p>
+                        <p class="text-slate-300">📅 Schedule: <span class="text-white">${apt.date} at ${apt.time}</span></p>
+                        <p class="text-slate-200 bg-black/60 p-2.5 rounded-lg border border-emerald-400/20 mt-1 font-medium">📝 Note: ${apt.description || 'None'}</p>
                     </div>
-                    <button onclick="window.adminNotifications.deleteBooking('${apt.id}', '${apt.custId}')" class="px-3 py-1 bg-red-600 text-white text-xs font-bold rounded">🗑️ Delete</button>
+                    <button type="button" onclick="window.adminNotifications.deleteBooking('${apt.id}', '${apt.custId}')" class="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white text-xs font-bold rounded cursor-pointer relative z-20">🗑️ Delete</button>
                 </div>
             </div>
         `).join('');
@@ -344,16 +341,17 @@ class AdminNotifications {
             return '<p class="text-slate-400 text-xs py-2">No rejected appointments in bin</p>';
         }
         return this.rejectedItems.map(apt => `
-            <div class="bg-black/40 rounded-xl p-4 border border-red-400/30 text-sm space-y-2">
+            <div class="bg-black/40 rounded-xl p-4 border border-red-400/30 text-sm space-y-2 relative z-10">
                 <div class="flex justify-between items-start">
-                    <div>
-                        <p class="font-bold text-red-400">❌ ${apt.purpose || 'Appointment'}</p>
-                        <p class="text-slate-400">📧 ${apt.custId}</p>
-                        <p class="text-slate-400">📅 ${apt.date} at ${apt.time}</p>
+                    <div class="space-y-1">
+                        <p class="font-bold text-red-400 text-base">❌ ${apt.purpose || 'Appointment'}</p>
+                        <p class="text-slate-300">📧 Account: <span class="text-white">${apt.custId}</span></p>
+                        <p class="text-slate-300">📅 Schedule: <span class="text-white">${apt.date} at ${apt.time}</span></p>
+                        <p class="text-slate-200 bg-black/60 p-2.5 rounded-lg border border-red-400/20 mt-1 font-medium">📝 Note: ${apt.description || 'None'}</p>
                     </div>
-                    <div class="flex gap-2">
-                        <button onclick="window.adminNotifications.restoreFromBin('${apt.id}', '${apt.custId}')" class="px-3 py-1 bg-blue-600 text-white text-xs font-bold rounded">↩️ Restore</button>
-                        <button onclick="window.adminNotifications.deleteBooking('${apt.id}', '${apt.custId}')" class="px-3 py-1 bg-red-600 text-white text-xs font-bold rounded">🗑️ Delete</button>
+                    <div class="flex gap-2 relative z-20">
+                        <button type="button" onclick="window.adminNotifications.restoreFromBin('${apt.id}', '${apt.custId}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded cursor-pointer">↩️ Restore</button>
+                        <button type="button" onclick="window.adminNotifications.deleteBooking('${apt.id}', '${apt.custId}')" class="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white text-xs font-bold rounded cursor-pointer">🗑️ Delete</button>
                     </div>
                 </div>
             </div>
