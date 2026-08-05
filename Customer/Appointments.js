@@ -1,5 +1,5 @@
 // ============================================
-// CUSTOMER APPOINTMENTS - FIXED V3 (DATE & POPUP FIX)
+// CUSTOMER APPOINTMENTS - FIXED V4 (BADGE COUNT FIX)
 // ============================================
 
 class CustomerAppointments {
@@ -37,22 +37,23 @@ class CustomerAppointments {
 
         this._unsubscribeNotifs = db.collection('customer_notifications')
             .where('custId', '==', activeEmail)
-            .where('viewed', '==', false)
             .onSnapshot(snapshot => {
                 snapshot.docChanges().forEach(change => {
                     if (change.type === 'added') {
                         const n = change.data();
                         
-                        // RESTORED POPUP MODAL
-                        this.showPopupModal(n.message, n.status);
-                        
-                        const type = (n.status === 'Approved' || n.status === 'Confirmed') ? 'success' : 'error';
-                        if (typeof notify === 'function') {
-                            notify(type, `🔔 ${n.message}`);
+                        // Only show popup and notify if it hasn't been viewed yet
+                        if (!n.viewed) {
+                            this.showPopupModal(n.message, n.status);
+                            
+                            const type = (n.status === 'Approved' || n.status === 'Confirmed') ? 'success' : 'error';
+                            if (typeof notify === 'function') {
+                                notify(type, `🔔 ${n.message}`);
+                            }
+                            
+                            // Mark viewed in Firestore immediately so badge clears and popup doesn't re-trigger
+                            db.collection('customer_notifications').doc(change.doc.id).update({ viewed: true });
                         }
-                        
-                        // Mark viewed in Firestore so it doesn't pop up repeatedly on reload
-                        db.collection('customer_notifications').doc(change.doc.id).update({ viewed: true });
                     }
                 });
                 this.loadAppointments();
@@ -61,7 +62,6 @@ class CustomerAppointments {
             }, e => console.error('Firestore notification listener error:', e));
     }
 
-    // RESTORED ORIGINAL POPUP MODAL
     showPopupModal(message, status) {
         const existing = document.getElementById('apt-popup-modal');
         if (existing) existing.remove();
@@ -135,9 +135,11 @@ class CustomerAppointments {
                 if (snapshot.size > 0) {
                     badgeEl.textContent = snapshot.size;
                     badgeEl.classList.remove('hidden');
+                    badgeEl.style.display = 'inline-flex';
                 } else {
                     badgeEl.textContent = '0';
                     badgeEl.classList.add('hidden');
+                    badgeEl.style.display = 'none';
                 }
             }
         } catch (e) {}
@@ -147,6 +149,7 @@ class CustomerAppointments {
         await this.loadAssignedAdminSync();
         await this.loadAppointments();
         this.refreshList();
+        await this.updateBadgeCount();
     }
 
     async loadAssignedAdminSync() {
@@ -278,7 +281,6 @@ class CustomerAppointments {
             return;
         }
 
-        // FORCE CORRECT LOCAL DATE PARSING (PREVENTS UTC TIMEZONE SHIFT/OFF-BY-ONE-DAY BUG)
         const dateParts = rawDate.split('-');
         let formattedDate = rawDate;
         if (dateParts.length === 3) {
