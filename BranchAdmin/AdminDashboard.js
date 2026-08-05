@@ -4,8 +4,16 @@
 
 class AdminDashboard {
     constructor(adminId) {
-        this.adminId = adminId;
-        window.adminLottery = new AdminLotteryDraw(adminId);
+        // CRITICAL FIX: Use the ACTUAL admin email from currentUser or param, not hardcoded
+        this.adminId = adminId || window.currentUser?.email || localStorage.getItem('currentUserEmail') || '';
+        
+        // IMPORTANT: Save to localStorage so AdminNotifications can access it
+        if (this.adminId) {
+            localStorage.setItem('currentAdminEmail', this.adminId);
+            console.log(`✅ AdminDashboard - Admin Email: ${this.adminId}`);
+        }
+        
+        window.adminLottery = new AdminLotteryDraw(this.adminId);
     }
 
     render() {
@@ -169,7 +177,11 @@ class AdminDashboard {
             }
             if (!window.adminTickets) window.adminTickets = new AdminTickets(this.adminId);
             if (!window.adminPayments) window.adminPayments = new AdminPayments(this.adminId);
-            if (!window.adminNotifications) window.adminNotifications = new AdminNotifications(this.adminId);
+            // FIXED: Always pass the CURRENT admin's email, not cached instance
+            if (!window.adminNotifications || window.adminNotifications.adminId !== this.adminId) {
+                window.adminNotifications = new AdminNotifications(this.adminId);
+                console.log(`✅ Created AdminNotifications for: ${this.adminId}`);
+            }
             if (!window.adminBookAppointment) window.adminBookAppointment = new AdminBookAppointment(this.adminId);
             if (!window.adminSettings) window.adminSettings = new AdminSettings(this.adminId);
             const ticketsTab = document.getElementById('admin-tickets');
@@ -381,8 +393,8 @@ async function loadAdminStats() {
 
         // 🔥 STRICT ISOLATION: Fetch only tickets for this admin
         const ticketSnapshot = await db.collection('customer_tickets')
-    .where('adminEmail', '==', currentUser.email)
-    .get();
+            .where('adminEmail', '==', currentUser.email)
+            .get();
             
         if (document.getElementById('admin-total-tickets')) {
             document.getElementById('admin-total-tickets').textContent = ticketSnapshot.size;
