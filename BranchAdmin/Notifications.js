@@ -111,13 +111,15 @@ class AdminNotifications {
         this._isLoading = true;
         try {
             const db = firebase.firestore();
-            const currentAdminRaw = (this.adminId || '').toString().toLowerCase().trim();
-            console.log('Loading appointments for admin identifier:', currentAdminRaw);
+            
+            // Gather all possible identifiers for the currently logged-in admin to prevent mismatch
+            const currentEmail = (this.adminId || localStorage.getItem('currentUserEmail') || '').toString().toLowerCase().trim();
+            const currentName = (localStorage.getItem('currentAdminName') || '').toString().toLowerCase().trim();
 
-            const snapshot = await db.collection('customer_appointments')
-                .where('adminEmail', '==', currentAdminRaw)
-                .get();
+            console.log('Strict isolation filter - Current Admin Email:', currentEmail, 'Name:', currentName);
 
+            // Fetch all appointments and filter securely on the client side to guarantee absolute isolation
+            const snapshot = await db.collection('customer_appointments').get();
             const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
             this.pendingApprovals = [];
@@ -125,20 +127,33 @@ class AdminNotifications {
             this.rejectedItems = [];
 
             items.forEach(item => {
-                const status = (item.status || '').toLowerCase();
-                if (status.includes('pending') || status.includes('unapproved') || status === 'pending confirmation') {
-                    this.pendingApprovals.push(item);
-                } else if (status === 'confirmed' || status === 'approved') {
-                    this.approvedItems.push(item);
-                } else if (status === 'rejected') {
-                    this.rejectedItems.push(item);
+                const itemAdminEmail = (item.adminEmail || '').toString().toLowerCase().trim();
+                const itemAdminName = (item.adminName || '').toString().toLowerCase().trim();
+
+                // Strict check: Does this appointment belong to this specific admin?
+                const isMatch = (currentEmail && (itemAdminEmail === currentEmail || itemAdminName === currentEmail)) ||
+                                (currentName && (itemAdminEmail === currentName || itemAdminName === currentName));
+
+                if (isMatch) {
+                    const status = (item.status || '').toLowerCase();
+                    if (status.includes('pending') || status.includes('unapproved') || status === 'pending confirmation') {
+                        this.pendingApprovals.push(item);
+                    } else if (status === 'confirmed' || status === 'approved') {
+                        this.approvedItems.push(item);
+                    } else if (status === 'rejected') {
+                        this.rejectedItems.push(item);
+                    }
                 }
             });
 
-            const notifSnapshot = await db.collection('admin_notifications')
-                .where('adminId', '==', currentAdminRaw)
-                .get();
-            this.adminNotificationsList = notifSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            // Fetch notifications specific to this admin only
+            const notifSnapshot = await db.collection('admin_notifications').get();
+            this.adminNotificationsList = notifSnapshot.docs
+                .map(doc => ({ id: doc.id, ...doc.data() }))
+                .filter(n => {
+                    const nAdmin = (n.adminId || '').toString().toLowerCase().trim();
+                    return nAdmin === currentEmail || nAdmin === currentName;
+                });
 
             this.refreshUI();
         } catch (e) {
