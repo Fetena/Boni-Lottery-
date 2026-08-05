@@ -71,7 +71,7 @@
     <!-- ============================================
          FIREBASE & GLOBAL SETUP
          ============================================ -->
-  <script>
+ <script>
         // Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyBW0egtlG4JXjkoWB2Lfu5GcYhZz_oEjbI",
@@ -140,74 +140,75 @@
             notify('success', '✅ Logged out');
         }
 
-        // Render Public Page
+        // Render Public Page with Responsive Layouts
         function renderPublicPage() {
             return `
                 <div class="min-h-screen bg-black flex flex-col">
-                    <header class="sticky top-0 z-40 w-full glass-panel border-b border-yellow-400/10 px-6 py-4">
+                    <header class="sticky top-0 z-40 w-full glass-panel border-b border-yellow-400/10 px-4 sm:px-6 py-4">
                         <div class="max-w-7xl mx-auto flex items-center justify-between">
-                            <h1 class="font-bold text-2xl text-gradient">🎰 LOTTERY TICKET</h1>
+                            <h1 class="font-bold text-xl sm:text-2xl text-gradient">🎰 LOTTERY TICKET</h1>
                             <div class="space-x-2">
-                                <button onclick="openLoginModal()" class="px-4 py-2 bg-transparent border border-yellow-400 text-yellow-400 font-bold rounded-xl text-xs">Login</button>
-                                <button onclick="openSignupModal()" class="px-4 py-2 bg-yellow-400 text-black font-bold rounded-xl text-xs">Sign Up</button>
+                                <button onclick="openLoginModal()" class="px-3 sm:px-4 py-2 bg-transparent border border-yellow-400 text-yellow-400 font-bold rounded-xl text-xs">Login</button>
+                                <button onclick="openSignupModal()" class="px-3 sm:px-4 py-2 bg-yellow-400 text-black font-bold rounded-xl text-xs">Sign Up</button>
                             </div>
                         </div>
                     </header>
-                    <main class="flex-grow flex items-center justify-center p-6">
-                        <div class="text-center">
-                            <h2 class="text-5xl font-bold text-white mb-4">Welcome to Lottery Ticket</h2>
-                            <p class="text-slate-400 mb-8 text-xl">Complete lottery management platform</p>
-                            <button onclick="openSignupModal()" class="px-8 py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl">Get Started →</button>
+                    <main class="flex-grow flex items-center justify-center p-4 sm:p-6">
+                        <div class="text-center max-w-2xl mx-auto px-4">
+                            <h2 class="text-3xl sm:text-5xl font-bold text-white mb-4">Welcome to Lottery Ticket</h2>
+                            <p class="text-slate-400 mb-8 text-base sm:text-xl">Complete lottery management platform optimized for desktop and mobile devices.</p>
+                            <button onclick="openSignupModal()" class="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl text-sm sm:text-base">Get Started →</button>
                         </div>
                     </main>
                 </div>
 
                 <!-- Login Modal -->
-                <div id="login-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50">
-                    <div class="glass-panel rounded-2xl p-8 w-full max-w-md border border-yellow-400/10 space-y-4">
+                <div id="login-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50 p-4 overflow-y-auto">
+                    <div class="glass-panel rounded-2xl p-6 sm:p-8 w-full max-w-md border border-yellow-400/10 space-y-4 my-auto">
                         <h3 class="text-2xl font-bold text-white mb-2">Login</h3>
+                        <!-- Form with explicit attributes to trigger browser password save prompts -->
                         <form onsubmit="handleLogin(event)" class="space-y-4">
                             <div>
                                 <label class="block text-xs text-slate-400 mb-1">Email</label>
-                                <input type="text" id="login-email" name="email" autocomplete="email" placeholder="Email" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-3 px-4 text-white text-xs placeholder-slate-500">
+                                <input type="email" id="login-email" name="email" autocomplete="email" required placeholder="name@example.com" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-3 px-4 text-white text-xs sm:text-sm placeholder-slate-500 focus:outline-none focus:border-yellow-400">
                             </div>
                             <div>
                                 <label class="block text-xs text-slate-400 mb-1">Password</label>
-                                <input type="password" id="login-password" name="password" autocomplete="current-password" placeholder="Password" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-3 px-4 text-white text-xs placeholder-slate-500">
+                                <input type="password" id="login-password" name="password" autocomplete="current-password" required placeholder="••••••••" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-3 px-4 text-white text-xs sm:text-sm placeholder-slate-500 focus:outline-none focus:border-yellow-400">
                             </div>
-                            <button type="submit" class="w-full py-3 bg-yellow-400 text-black font-bold rounded-xl text-xs hover:bg-yellow-500">Login</button>
+                            <button type="submit" class="w-full py-3 bg-yellow-400 text-black font-bold rounded-xl text-xs sm:text-sm hover:bg-yellow-500 transition-colors">Login</button>
                         </form>
                         <button onclick="closeLoginModal()" class="w-full py-2 bg-slate-800 text-slate-300 rounded-xl text-xs">Cancel</button>
                     </div>
                 </div>
 
                 <!-- Sign Up Modal -->
-                <div id="signup-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50 overflow-y-auto py-10">
-                    <div class="glass-panel rounded-2xl p-8 w-full max-w-md border border-yellow-400/10 space-y-3">
+                <div id="signup-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50 p-4 overflow-y-auto">
+                    <div class="glass-panel rounded-2xl p-6 sm:p-8 w-full max-w-md border border-yellow-400/10 space-y-3 my-auto">
                         <h3 class="text-2xl font-bold text-white mb-2">Customer Sign Up</h3>
                         <div>
                             <label class="block text-xs text-slate-400 mb-1">Full Name</label>
-                            <input type="text" id="signup-name" placeholder="John Doe" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs">
+                            <input type="text" id="signup-name" name="name" autocomplete="name" placeholder="John Doe" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs sm:text-sm">
                         </div>
                         <div>
                             <label class="block text-xs text-slate-400 mb-1">Email</label>
-                            <input type="email" id="signup-email" placeholder="customer@email.com" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs">
+                            <input type="email" id="signup-email" name="email" autocomplete="email" placeholder="customer@email.com" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs sm:text-sm">
                         </div>
                         <div>
                             <label class="block text-xs text-slate-400 mb-1">Password</label>
-                            <input type="password" id="signup-password" placeholder="••••••••" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs">
+                            <input type="password" id="signup-password" name="new-password" autocomplete="new-password" placeholder="••••••••" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs sm:text-sm">
                         </div>
                         <div>
                             <label class="block text-xs text-slate-400 mb-1">Phone Number</label>
-                            <input type="tel" id="signup-phone" placeholder="0912345678" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs">
+                            <input type="tel" id="signup-phone" name="tel" autocomplete="tel" placeholder="0912345678" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs sm:text-sm">
                         </div>
                         <div>
                             <label class="block text-xs text-slate-400 mb-1">Choose Preferred Admin / Branch</label>
-                            <select id="signup-admin-select" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs">
+                            <select id="signup-admin-select" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs sm:text-sm">
                                 <option value="">-- Loading Admins --</option>
                             </select>
                         </div>
-                        <button onclick="registerNewCustomer()" class="w-full py-3 bg-yellow-400 text-black font-bold rounded-xl text-xs hover:bg-yellow-500 mt-2">Register Account</button>
+                        <button onclick="registerNewCustomer()" class="w-full py-3 bg-yellow-400 text-black font-bold rounded-xl text-xs sm:text-sm hover:bg-yellow-500 mt-2 transition-colors">Register Account</button>
                         <button onclick="closeSignupModal()" class="w-full py-2 bg-slate-800 text-slate-300 rounded-xl text-xs">Cancel</button>
                     </div>
                 </div>
@@ -382,7 +383,7 @@
             notify('error', '❌ Invalid email or password. User does not exist.');
         }
 
-        // Initialize app: Check Auth first before showing public page to prevent flash/logout race conditions
+        // Initialize app: Check Auth first before showing public page
         document.addEventListener('DOMContentLoaded', () => {
             let authChecked = false;
 
