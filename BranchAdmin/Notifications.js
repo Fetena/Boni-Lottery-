@@ -1,5 +1,5 @@
 // ============================================
-// ADMIN NOTIFICATIONS - FIXED V17 (SYNTAX & REFERENCE FIX)
+// ADMIN NOTIFICATIONS - FIXED V18 (SYNTAX & EXPORT FIX)
 // ============================================
 
 class AdminNotifications {
@@ -456,7 +456,7 @@ class AdminNotifications {
         await this.loadPendingApprovals();
     }
 
-    async deleteBooking(aptId, custId, custId) {
+    async deleteBooking(aptId, custId) {
         if (!confirm('Delete this appointment permanently?')) return;
         try {
             const db = firebase.firestore();
@@ -556,4 +556,9 @@ class AdminNotifications {
             }
         }
     }
+}
+
+// Ensure global availability so AdminDashboard can instantiate it properly
+if (typeof window !== 'undefined') {
+    window.AdminNotifications = AdminNotifications;
 }
