@@ -285,9 +285,12 @@ class CustomerAppointments {
             const selectedAdmin = this.admins.find(a => (a.email || a.id) === adminEmail);
             const adminName = selectedAdmin?.name || adminEmail;
 
+            // ENSURE EXACT LOWERCASE MATCHING FOR ISOLATION
+            const cleanAdminEmail = adminEmail.toLowerCase().trim();
+
             const appointment = {
                 custId: targetId,
-                adminEmail: adminEmail.toLowerCase().trim(),
+                adminEmail: cleanAdminEmail,
                 adminName: adminName,
                 date,
                 time,
