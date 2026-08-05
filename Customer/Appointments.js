@@ -1,5 +1,5 @@
 // ============================================
-// CUSTOMER APPOINTMENTS - FIXED V10 (CLEANED NOTIFICATION UI)
+// CUSTOMER APPOINTMENTS - FIXED V11 (AUTO-DELETE ON VIEW)
 // ============================================
 
 class CustomerAppointments {
@@ -102,14 +102,15 @@ class CustomerAppointments {
         const modal = document.getElementById('apt-popup-modal');
         if (modal) modal.remove();
 
+        // Immediately delete the notification from Firestore so it doesn't take up storage
         if (notifId && typeof firebase !== 'undefined' && firebase.firestore) {
             try {
                 const db = firebase.firestore();
-                await db.collection('customer_notifications').doc(notifId).update({ viewed: true });
+                await db.collection('customer_notifications').doc(notifId).delete();
                 await this.loadNotifications();
                 this.refreshList();
             } catch (e) {
-                console.error('Error marking notification as viewed:', e);
+                console.error('Error deleting viewed notification:', e);
             }
         }
     }
@@ -229,7 +230,7 @@ class CustomerAppointments {
                 <div class="glass-panel rounded-2xl p-6 border border-yellow-400/20 space-y-4" style="background: rgba(0,0,0,0.6);">
                     <div class="flex justify-between items-center">
                         <h4 class="font-bold text-white flex items-center gap-2">🔔 Notification Updates</h4>
-                        <span class="text-xs text-slate-400">Click any notification to open popup</span>
+                        <span class="text-xs text-slate-400">Click any notification to open and auto-clear</span>
                     </div>
                     <div id="notifications-tray" class="space-y-2 max-h-60 overflow-y-auto pr-1">
                         ${this.renderNotificationsHtml()}
@@ -294,8 +295,6 @@ class CustomerAppointments {
             return '<p class="text-slate-500 text-sm text-center py-4">No notifications yet</p>';
         }
         return this.notifications.map(n => {
-            const isUnviewed = n.viewed === false;
-            // Clean neutral styling without unnecessary highlight lines
             const bgStyle = 'background: rgba(0,0,0,0.3); border-color: rgba(255,255,255,0.08);';
             const statusColor = (n.status === 'Approved' || n.status === 'Confirmed') ? 'text-emerald-400' : 'text-red-400';
 
@@ -318,14 +317,15 @@ class CustomerAppointments {
 
     async handleNotificationClick(notifId, message, status) {
         this.showPopupModal(message, status, notifId);
+        // Automatically delete when clicked/viewed so it doesn't waste database storage
         if (notifId && typeof firebase !== 'undefined' && firebase.firestore) {
             try {
                 const db = firebase.firestore();
-                await db.collection('customer_notifications').doc(notifId).update({ viewed: true });
+                await db.collection('customer_notifications').doc(notifId).delete();
                 await this.loadNotifications();
                 this.refreshList();
             } catch (e) {
-                console.error('Error updating notification status:', e);
+                console.error('Error deleting notification on click:', e);
             }
         }
     }
