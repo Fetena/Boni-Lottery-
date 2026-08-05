@@ -1,5 +1,5 @@
 // ============================================
-// ADMIN NOTIFICATIONS - FIXED V4 (ROBUST DOCUMENT DATA EXTRACTION)
+// ADMIN NOTIFICATIONS - FIXED V5 (POPUP & NOTIFICATION FIX)
 // ============================================
 
 class AdminNotifications {
@@ -26,26 +26,28 @@ class AdminNotifications {
         this._unsubscribeAdminNotifs = db.collection('customer_appointments')
             .onSnapshot(snapshot => {
                 snapshot.docChanges().forEach(change => {
-                    if (change.type === 'added') {
-                        // FIX: Safely extract document data regardless of SDK wrapper version
+                    // Trigger popup and action on both 'added' and 'modified' if an unnotified appointment appears
+                    if (change.type === 'added' || change.type === 'modified') {
                         const docData = typeof change.doc.data === 'function' ? change.doc.data() : (change.doc.data || change.doc);
                         const apt = { id: change.doc.id, ...docData };
                         
                         const aptAdminEmail = (apt.adminEmail || '').toString().toLowerCase().trim();
                         const isMatch = currentAdminRaw ? (aptAdminEmail === currentAdminRaw || !aptAdminEmail) : true;
+                        const status = (apt.status || '').toLowerCase();
+                        const isPending = status.includes('pending') || status.includes('unapproved') || status === 'pending confirmation' || !apt.status;
 
-                        // Check if it's new and meant for this admin
-                        if (isMatch && !apt.adminNotified) {
-                            const message = `New booking from ${apt.custId || 'Customer'} for ${apt.purpose || 'Appointment'} on ${apt.date} at ${apt.time}`;
+                        // Check if it's new/pending and meant for this admin
+                        if (isMatch && isPending && !apt.adminNotified) {
+                            const message = `New booking from ${apt.custId || 'Customer'} for ${apt.purpose || 'Appointment'} on ${apt.date || 'TBD'} at ${apt.time || 'TBD'}`;
                             
-                            // Trigger Admin Pop-up Modal
-                            this.showAdminPopupModal(message, apt.purpose || 'New Appointment');
+                            // Trigger Admin Pop-up Modal immediately
+                            this.showAdminPopupModal(message, apt.purpose || 'New Appointment Request');
                             
                             if (typeof notify === 'function') {
                                 notify('success', `🔔 ${message}`);
                             }
 
-                            // Mark as notified in firestore so it doesn't pop up again
+                            // Mark as notified in firestore so it doesn't pop up again repeatedly
                             db.collection('customer_appointments').doc(change.doc.id).update({ adminNotified: true }).catch(() => {});
                         }
                     }
@@ -65,13 +67,13 @@ class AdminNotifications {
                         <span style="font-size: 28px;">🔔</span>
                         <div>
                             <h3 style="color: #fff; font-size: 18px; font-weight: bold; margin: 0;">${title}</h3>
-                            <p style="color: #facc15; font-size: 12px; font-weight: 600; margin: 2px 0 0 0;">Action Required</p>
+                            <p style="color: #facc15; font-size: 12px; font-weight: 600; margin: 2px 0 0 0;">New Request Received</p>
                         </div>
                     </div>
                     <div style="padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; font-size: 14px; color: #e2e8f0; line-height: 1.4;">
                         ${message}
                     </div>
-                    <button onclick="document.getElementById('admin-popup-modal').remove()" 
+                    <button onclick="document.getElementById('admin-popup-modal').remove(); window.adminNotifications?.loadPendingApprovals();" 
                         style="width: 100%; padding: 12px; background: #facc15; color: #000; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; font-size: 13px;">
                         View in Control Center
                     </button>
@@ -192,7 +194,7 @@ class AdminNotifications {
 
                 if (isMatch) {
                     const status = (item.status || '').toLowerCase();
-                    if (status.includes('pending') || status.includes('unapproved') || status === 'pending confirmation') {
+                    if (status.includes('pending') || status.includes('unapproved') || status === 'pending confirmation' || !item.status) {
                         this.pendingApprovals.push(item);
                     } else if (status === 'confirmed' || status === 'approved') {
                         this.approvedItems.push(item);
