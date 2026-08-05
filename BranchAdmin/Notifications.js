@@ -1,5 +1,5 @@
 // ============================================
-// ADMIN NOTIFICATIONS - FIXED V3 (FIRESTORE SNAPSHOT FIX)
+// ADMIN NOTIFICATIONS - FIXED V4 (ROBUST DOCUMENT DATA EXTRACTION)
 // ============================================
 
 class AdminNotifications {
@@ -27,8 +27,10 @@ class AdminNotifications {
             .onSnapshot(snapshot => {
                 snapshot.docChanges().forEach(change => {
                     if (change.type === 'added') {
-                        // FIX: In older or standard Firestore SDKs, doc.data() is a function call -> change.doc.data()
-                        const apt = typeof change.doc.data === 'function' ? change.doc.data() : change.doc;
+                        // FIX: Safely extract document data regardless of SDK wrapper version
+                        const docData = typeof change.doc.data === 'function' ? change.doc.data() : (change.doc.data || change.doc);
+                        const apt = { id: change.doc.id, ...docData };
+                        
                         const aptAdminEmail = (apt.adminEmail || '').toString().toLowerCase().trim();
                         const isMatch = currentAdminRaw ? (aptAdminEmail === currentAdminRaw || !aptAdminEmail) : true;
 
