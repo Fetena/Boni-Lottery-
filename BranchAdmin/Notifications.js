@@ -1,10 +1,9 @@
 // ============================================
-// ADMIN NOTIFICATIONS - COMPLETE CLEAN CLASS
+// ADMIN NOTIFICATIONS - FIXED V2 (REAL-TIME POPUP & NOTIFICATIONS)
 // ============================================
 
 class AdminNotifications {
     constructor(adminId) {
-        // Fallback robustly to localStorage if adminId parameter wasn't passed directly
         this.adminId = adminId || localStorage.getItem('currentUserEmail') || localStorage.getItem('currentAdminEmail') || '';
         this.pendingApprovals = [];
         this.approvedItems = [];
@@ -13,6 +12,70 @@ class AdminNotifications {
         this._isLoading = false;
         
         this.loadPendingApprovals();
+        this.startAdminRealtimeListener();
+    }
+
+    // Realtime listener for incoming customer bookings/appointments
+    startAdminRealtimeListener() {
+        if (typeof firebase === 'undefined' || !firebase.firestore) return;
+        const db = firebase.firestore();
+        const currentAdminRaw = (this.adminId || localStorage.getItem('currentUserEmail') || localStorage.getItem('currentAdminEmail') || '').toString().toLowerCase().trim();
+
+        if (this._unsubscribeAdminNotifs) this._unsubscribeAdminNotifs();
+
+        this._unsubscribeAdminNotifs = db.collection('customer_appointments')
+            .onSnapshot(snapshot => {
+                snapshot.docChanges().forEach(change => {
+                    if (change.type === 'added') {
+                        const apt = change.data();
+                        const aptAdminEmail = (apt.adminEmail || '').toString().toLowerCase().trim();
+                        const isMatch = currentAdminRaw ? (aptAdminEmail === currentAdminRaw || !aptAdminEmail) : true;
+
+                        // Check if it's new and meant for this admin
+                        if (isMatch && !apt.adminNotified) {
+                            const message = `New booking from ${apt.custId || 'Customer'} for ${apt.purpose || 'Appointment'} on ${apt.date} at ${apt.time}`;
+                            
+                            // Trigger Admin Pop-up Modal
+                            this.showAdminPopupModal(message, apt.purpose || 'New Appointment');
+                            
+                            if (typeof notify === 'function') {
+                                notify('success', `🔔 ${message}`);
+                            }
+
+                            // Mark as notified in firestore so it doesn't pop up again
+                            db.collection('customer_appointments').doc(change.doc.id).update({ adminNotified: true }).catch(() => {});
+                        }
+                    }
+                });
+                this.loadPendingApprovals();
+            }, e => console.error('Admin real-time listener error:', e));
+    }
+
+    showAdminPopupModal(message, title) {
+        const existing = document.getElementById('admin-popup-modal');
+        if (existing) existing.remove();
+
+        const modalHtml = `
+            <div id="admin-popup-modal" style="position: fixed; inset: 0; z-index: 999999; display: flex; align-items: center; justify-content: center; background-color: rgba(0,0,0,0.85); backdrop-filter: blur(4px); padding: 1rem;">
+                <div class="glass-panel w-full max-w-md rounded-2xl p-6 space-y-4 shadow-2xl" style="background: #000; border: 2px solid #facc15;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span style="font-size: 28px;">🔔</span>
+                        <div>
+                            <h3 style="color: #fff; font-size: 18px; font-weight: bold; margin: 0;">${title}</h3>
+                            <p style="color: #facc15; font-size: 12px; font-weight: 600; margin: 2px 0 0 0;">Action Required</p>
+                        </div>
+                    </div>
+                    <div style="padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; font-size: 14px; color: #e2e8f0; line-height: 1.4;">
+                        ${message}
+                    </div>
+                    <button onclick="document.getElementById('admin-popup-modal').remove()" 
+                        style="width: 100%; padding: 12px; background: #facc15; color: #000; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; font-size: 13px;">
+                        View in Control Center
+                    </button>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
     }
 
     render() {
@@ -111,12 +174,7 @@ class AdminNotifications {
         this._isLoading = true;
         try {
             const db = firebase.firestore();
-            
-            // Get clean lowercase identifier
             const currentAdminRaw = (this.adminId || localStorage.getItem('currentUserEmail') || localStorage.getItem('currentAdminEmail') || '').toString().toLowerCase().trim();
-            
-            // DEBUG: Log which admin is loading
-            console.log(`🔍 Admin Loading Appointments - Email: ${currentAdminRaw || '(empty)'}`);
 
             const snapshot = await db.collection('customer_appointments').get();
             const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -127,8 +185,6 @@ class AdminNotifications {
 
             items.forEach(item => {
                 const itemAdminEmail = (item.adminEmail || '').toString().toLowerCase().trim();
-
-                // STRICT ISOLATION: Must match admin email if present, fallback only if completely unassigned
                 const isMatch = currentAdminRaw ? (itemAdminEmail === currentAdminRaw || !itemAdminEmail) : true;
 
                 if (isMatch) {
