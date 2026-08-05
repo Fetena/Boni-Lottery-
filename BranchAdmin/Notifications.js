@@ -1,5 +1,5 @@
 // ============================================
-// ADMIN NOTIFICATIONS - FIXED V18 (SYNTAX & EXPORT FIX)
+// ADMIN NOTIFICATIONS - FIXED V19 (BADGE & COUNT FIX)
 // ============================================
 
 class AdminNotifications {
@@ -145,7 +145,7 @@ class AdminNotifications {
                     <div class="flex justify-between items-center">
                         <h3 class="text-2xl font-bold text-white flex items-center gap-3">
                             ✅ Pending Approvals 
-                            ${pendingCount > 0 ? `<span class="bg-yellow-400 text-black text-xs px-2.5 py-0.5 rounded-full font-bold">${pendingCount}</span>` : ''}
+                            <span id="pending-count-badge" class="bg-yellow-400 text-black text-xs px-2.5 py-0.5 rounded-full font-bold" style="display: ${pendingCount > 0 ? 'inline-block' : 'none'};">${pendingCount}</span>
                         </h3>
                     </div>
                     <p class="text-xs text-slate-400">Manage customer booking and appointment approvals here. You must read attached files before approving.</p>
@@ -267,12 +267,16 @@ class AdminNotifications {
                 const isMatch = currentAdminRaw ? (itemAdminEmail === currentAdminRaw || !itemAdminEmail) : true;
 
                 if (isMatch) {
-                    const status = (item.status || '').toLowerCase();
-                    if (status.includes('pending') || status.includes('unapproved') || status === 'pending confirmation' || !item.status) {
+                    const status = (item.status || '').toLowerCase().trim();
+                    const isPending = status.includes('pending') || status.includes('unapproved') || status === 'pending confirmation' || !item.status;
+                    const isApproved = status.includes('confirmed') || status.includes('approved');
+                    const isRejected = status.includes('rejected');
+
+                    if (isPending) {
                         this.pendingApprovals.push(item);
-                    } else if (status === 'confirmed' || status === 'approved') {
+                    } else if (isApproved) {
                         this.approvedItems.push(item);
-                    } else if (status === 'rejected') {
+                    } else if (isRejected) {
                         this.rejectedItems.push(item);
                     }
                 }
@@ -505,6 +509,13 @@ class AdminNotifications {
 
         const historyDiv = document.getElementById('admin-notif-history');
         if (historyDiv) historyDiv.innerHTML = this.renderNotificationHistoryHtml();
+
+        const pendingCount = this.pendingApprovals.length;
+        const countBadge = document.getElementById('pending-count-badge');
+        if (countBadge) {
+            countBadge.textContent = pendingCount;
+            countBadge.style.display = pendingCount > 0 ? 'inline-block' : 'none';
+        }
     }
 
     async sendNotification() {
@@ -558,7 +569,6 @@ class AdminNotifications {
     }
 }
 
-// Ensure global availability so AdminDashboard can instantiate it properly
 if (typeof window !== 'undefined') {
     window.AdminNotifications = AdminNotifications;
 }
