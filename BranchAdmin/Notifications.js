@@ -118,11 +118,8 @@ class AdminNotifications {
             // DEBUG: Log which admin is loading
             console.log(`🔍 Admin Loading Appointments - Email: ${currentAdminRaw || '(empty)'}`);
 
-            // Query only appointments assigned to this specific admin
-            const snapshot = currentAdminRaw 
-                ? await db.collection('customer_appointments').where('adminEmail', '==', currentAdminRaw).get()
-                : await db.collection('customer_appointments').get();
-                
+            // Fetch all appointments safely and filter in-memory to prevent empty lists due to missing Firestore index/fields
+            const snapshot = await db.collection('customer_appointments').get();
             const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
             this.pendingApprovals = [];
@@ -132,11 +129,8 @@ class AdminNotifications {
             items.forEach(item => {
                 const itemAdminEmail = (item.adminEmail || '').toString().toLowerCase().trim();
 
-                const isMatch = !currentAdminRaw || itemAdminEmail === currentAdminRaw;
-                
-                if (itemAdminEmail) {
-                    console.log(`  Appointment Admin: ${itemAdminEmail} | Match: ${isMatch}`);
-                }
+                // If adminEmail is not set on older records, allow it or match strictly if present
+                const isMatch = !currentAdminRaw || !itemAdminEmail || itemAdminEmail === currentAdminRaw;
 
                 if (isMatch) {
                     const status = (item.status || '').toLowerCase();
@@ -150,17 +144,14 @@ class AdminNotifications {
                 }
             });
 
-            // 🔥 FIX: Securely fetch and filter admin notifications to prevent cross-admin leaks
+            // Fetch all notifications safely and filter in-memory so nothing disappears
             const notifSnapshot = await db.collection('admin_notifications').get();
             this.adminNotificationsList = notifSnapshot.docs
                 .map(doc => ({ id: doc.id, ...doc.data() }))
                 .filter(n => {
                     const nAdmin = (n.adminId || n.adminEmail || '').toString().toLowerCase().trim();
-                    // If a notification has no admin assignment, exclude it completely
-                    if (!nAdmin) return false;
-                    const matches = currentAdminRaw && nAdmin === currentAdminRaw;
-                    if (nAdmin) console.log(`  Notification from: ${nAdmin} | Match: ${matches}`);
-                    return matches;
+                    // If no admin tag exists, show it so notifications don't vanish, otherwise match current admin
+                    return !currentAdminRaw || !nAdmin || nAdmin === currentAdminRaw;
                 });
 
             this.refreshUI();
