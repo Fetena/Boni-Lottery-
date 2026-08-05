@@ -1,5 +1,5 @@
 // ============================================
-// ADMIN NOTIFICATIONS - FIXED V15 (CLICK-THROUGH & INTERACTION FIX)
+// ADMIN NOTIFICATIONS - FIXED V16 (FILE REVIEW LOCK & EXTERNAL POPUP)
 // ============================================
 
 class AdminNotifications {
@@ -50,7 +50,7 @@ class AdminNotifications {
                 if (hasNewUnnotified && latestApt) {
                     localStorage.removeItem('admin_notifications_viewed_' + this.adminId);
                     const message = `New booking from ${latestApt.custId || 'Customer'} for ${latestApt.purpose || 'Appointment'} on ${latestApt.date || 'TBD'} at ${latestApt.time || 'TBD'}`;
-                    this.showAdminPopupModal(message, latestApt.purpose || 'New Appointment Request');
+                    this.showExternalPopup(message, latestApt.purpose || 'New Appointment Request');
                     if (typeof notify === 'function') {
                         notify('success', `🔔 ${message}`);
                     }
@@ -60,31 +60,32 @@ class AdminNotifications {
             }, e => console.error('Admin real-time listener error:', e));
     }
 
-    showAdminPopupModal(message, title) {
-        const existing = document.getElementById('admin-popup-modal');
+    showExternalPopup(message, title) {
+        const existing = document.getElementById('admin-external-popup');
         if (existing) existing.remove();
 
         const modalHtml = `
-            <div id="admin-popup-modal" style="position: fixed; inset: 0; z-index: 999999; display: flex; align-items: center; justify-content: center; background-color: rgba(0,0,0,0.85); backdrop-filter: blur(4px); padding: 1rem;">
-                <div class="glass-panel w-full max-w-md rounded-2xl p-6 space-y-4 shadow-2xl" style="background: #000; border: 2px solid #facc15;">
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <span style="font-size: 28px;">🔔</span>
-                        <div>
-                            <h3 style="color: #fff; font-size: 18px; font-weight: bold; margin: 0;">${title}</h3>
-                            <p style="color: #facc15; font-size: 12px; font-weight: 600; margin: 2px 0 0 0;">New Request Received</p>
-                        </div>
+            <div id="admin-external-popup" style="position: fixed; top: 20px; right: 20px; z-index: 999999; max-width: 380px; width: 100%; background: #000; border: 2px solid #facc15; border-radius: 12px; padding: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.8); animation: slideInRight 0.3s ease;">
+                <div style="display: flex; align-items: flex-start; gap: 12px;">
+                    <span style="font-size: 24px;">🔔</span>
+                    <div style="flex: 1;">
+                        <h4 style="color: #fff; font-size: 15px; font-weight: bold; margin: 0 0 4px 0;">${title}</h4>
+                        <p style="color: #cbd5e1; font-size: 13px; margin: 0 0 12px 0; line-height: 1.4;">${message}</p>
+                        <button onclick="window.adminNotifications.dismissExternalPopup()" 
+                            style="width: 100%; padding: 8px; background: #facc15; color: #000; font-weight: bold; border-radius: 6px; border: none; cursor: pointer; font-size: 12px;">
+                            Got It & View in Center
+                        </button>
                     </div>
-                    <div style="padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; font-size: 14px; color: #e2e8f0; line-height: 1.4;">
-                        ${message}
-                    </div>
-                    <button onclick="document.getElementById('admin-popup-modal').remove(); window.adminNotifications?.loadPendingApprovals();" 
-                        style="width: 100%; padding: 12px; background: #facc15; color: #000; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; font-size: 13px;">
-                        View in Control Center
-                    </button>
                 </div>
             </div>
         `;
         document.body.insertAdjacentHTML('beforeend', modalHtml);
+    }
+
+    dismissExternalPopup() {
+        const popup = document.getElementById('admin-external-popup');
+        if (popup) popup.remove();
+        this.loadPendingApprovals();
     }
 
     updateTabBadge() {
@@ -130,7 +131,7 @@ class AdminNotifications {
                         <span class="text-2xl">🔔</span>
                         <div>
                             <h4 class="font-bold text-white text-sm">Notifications Control Center</h4>
-                            <p class="text-xs text-slate-400">Manage pending approvals and system updates here</p>
+                            <p class="text-xs text-slate-400">Manage pending approvals and review customer files here</p>
                         </div>
                     </div>
                     <button onclick="window.adminNotifications.triggerManualPopup()" 
@@ -147,7 +148,7 @@ class AdminNotifications {
                             ${pendingCount > 0 ? `<span class="bg-yellow-400 text-black text-xs px-2.5 py-0.5 rounded-full font-bold">${pendingCount}</span>` : ''}
                         </h3>
                     </div>
-                    <p class="text-xs text-slate-400">Manage customer booking and appointment approvals here.</p>
+                    <p class="text-xs text-slate-400">Manage customer booking and appointment approvals here. You must read attached files before approving.</p>
                     <div id="admin-approval-list" class="space-y-3">
                         ${pendingCount === 0 ? '<p class="text-slate-400 text-xs py-2">No pending booking approvals found</p>' : this.renderApprovalItems()}
                     </div>
@@ -237,9 +238,9 @@ class AdminNotifications {
             const count = this.pendingApprovals.length;
             const latest = this.pendingApprovals[0];
             const message = `You have ${count} pending booking request(s). Latest: ${latest.custId || 'Customer'} - ${latest.purpose || 'Appointment'} on ${latest.date || 'TBD'} at ${latest.time || 'TBD'}`;
-            this.showAdminPopupModal(message, `Pending Requests (${count})`);
+            this.showExternalPopup(message, `Pending Requests (${count})`);
         } else {
-            this.showAdminPopupModal('No pending bookings found to show right now.', 'System Notification');
+            this.showExternalPopup('No pending bookings found to show right now.', 'System Notification');
         }
     }
 
@@ -295,26 +296,63 @@ class AdminNotifications {
             return '<p class="text-slate-400 text-xs py-2">No pending booking approvals found</p>';
         }
 
-        return this.pendingApprovals.map(apt => `
-            <div class="bg-black/40 rounded-xl p-4 border border-yellow-400/20 text-sm space-y-3 relative z-10">
-                <div class="flex justify-between items-start">
-                    <div class="space-y-1.5 w-full">
-                        <p class="font-bold text-white text-base">👤 Customer Booking: <span class="text-yellow-400">${apt.purpose || 'Appointment'}</span></p>
-                        <p class="text-slate-300">📧 Account: <span class="text-white">${apt.custId || 'N/A'}</span></p>
-                        <p class="text-slate-300">📅 Schedule: <span class="text-white">${apt.date || 'N/A'} at ${apt.time || 'N/A'}</span></p>
-                        <p class="text-slate-200 bg-black/60 p-3 rounded-lg border border-yellow-400/20 mt-2 font-medium">📝 Note: ${apt.description || 'None'}</p>
+        return this.pendingApprovals.map(apt => {
+            const hasFiles = apt.fileUrl || apt.attachment || apt.fileData;
+            const isFilesRead = apt.filesRead === true;
+
+            return `
+                <div class="bg-black/40 rounded-xl p-4 border border-yellow-400/20 text-sm space-y-3 relative z-10">
+                    <div class="flex justify-between items-start">
+                        <div class="space-y-1.5 w-full">
+                            <p class="font-bold text-white text-base">👤 Customer Booking: <span class="text-yellow-400">${apt.purpose || 'Appointment'}</span></p>
+                            <p class="text-slate-300">📧 Account: <span class="text-white">${apt.custId || 'N/A'}</span></p>
+                            <p class="text-slate-300">📅 Schedule: <span class="text-white">${apt.date || 'N/A'} at ${apt.time || 'N/A'}</span></p>
+                            <p class="text-slate-200 bg-black/60 p-3 rounded-lg border border-yellow-400/20 mt-2 font-medium">📝 Note: ${apt.description || 'None'}</p>
+                        </div>
+                    </div>
+
+                    <!-- File Review & Lock Component -->
+                    <div class="flex flex-col md:flex-row justify-between items-center gap-3 pt-2 border-t border-white/10">
+                        <div class="w-full">
+                            ${hasFiles ? `
+                                <div class="p-3 bg-black/80 rounded-xl border ${isFilesRead ? 'border-emerald-500/40' : 'border-red-500/60'} space-y-2">
+                                    <p class="text-xs font-bold ${isFilesRead ? 'text-emerald-400' : 'text-red-400'} flex items-center gap-1.5">
+                                        ${isFilesRead ? '📂 Files Read & Verified' : '⚠️ Action Required: Read Attached Files First'}
+                                    </p>
+                                    <a href="${apt.fileUrl || apt.attachment || apt.fileData || '#'}" target="_blank" onclick="window.adminNotifications.markFilesRead('${apt.id}')" class="inline-block px-3 py-1.5 bg-blue-600 text-white font-bold text-xs rounded-lg hover:bg-blue-700 transition">Open & Read Customer Files</a>
+                                </div>
+                            ` : `
+                                <span class="text-xs text-slate-400 italic">No attached files required for this booking.</span>
+                            `}
+                        </div>
+
+                        <div class="flex gap-2 justify-end relative z-20 w-full md:w-auto shrink-0">
+                            <button type="button" onclick="window.adminNotifications.approveBooking('${apt.id}', '${apt.custId}')" 
+                                class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs cursor-pointer shadow-lg ${hasFiles && !isFilesRead ? 'opacity-40 cursor-not-allowed' : ''}"
+                                ${hasFiles && !isFilesRead ? 'title="Please open and read customer files before approving"' : ''}>
+                                ✅ Approve
+                            </button>
+                            <button type="button" onclick="window.adminNotifications.rejectBooking('${apt.id}', '${apt.custId}')" 
+                                class="px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg text-xs cursor-pointer shadow-lg">❌ Reject</button>
+                            <button type="button" onclick="window.adminNotifications.deleteBooking('${apt.id}', '${apt.custId}')" 
+                                class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-red-400 font-bold rounded-lg text-xs cursor-pointer shadow-lg">🗑️ Delete</button>
+                        </div>
                     </div>
                 </div>
-                <div class="flex gap-2 pt-3 border-t border-white/10 justify-end relative z-20">
-                    <button type="button" onclick="window.adminNotifications.approveBooking('${apt.id}', '${apt.custId}')" 
-                        class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs cursor-pointer shadow-lg">✅ Approve</button>
-                    <button type="button" onclick="window.adminNotifications.rejectBooking('${apt.id}', '${apt.custId}')" 
-                        class="px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg text-xs cursor-pointer shadow-lg">❌ Reject</button>
-                    <button type="button" onclick="window.adminNotifications.deleteBooking('${apt.id}', '${apt.custId}')" 
-                        class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-red-400 font-bold rounded-lg text-xs cursor-pointer shadow-lg">🗑️ Delete</button>
-                </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
+    }
+
+    async markFilesRead(aptId) {
+        if (typeof firebase === 'undefined' || !firebase.firestore) return;
+        try {
+            const db = firebase.firestore();
+            await db.collection('customer_appointments').doc(aptId).update({ filesRead: true });
+            await this.loadPendingApprovals();
+            if (typeof notify === 'function') notify('success', '📂 Files marked as read. Approval unlocked!');
+        } catch (e) {
+            console.error('Error updating filesRead status:', e);
+        }
     }
 
     renderApprovedBinItems() {
@@ -371,6 +409,17 @@ class AdminNotifications {
     }
 
     async approveBooking(aptId, custId) {
+        const apt = this.pendingApprovals.find(a => a.id === aptId);
+        const hasFiles = apt && (apt.fileUrl || apt.attachment || apt.fileData);
+        if (hasFiles && apt.filesRead !== true) {
+            if (typeof notify === 'function') {
+                notify('error', '❌ Please read customer files before approving!');
+            } else {
+                alert('❌ Please read customer files before approving!');
+            }
+            return;
+        }
+
         if (!confirm('Approve this booking?')) return;
         await this.updateBookingStatusCore(aptId, custId, 'Approved');
         if (typeof notify === 'function') {
@@ -504,3 +553,4 @@ class AdminNotifications {
         }
     }
 }
+```[cite: 2]
