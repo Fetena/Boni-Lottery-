@@ -23,56 +23,56 @@ class MainAdminDashboard {
     render() {
         return `
             <div id="main-admin-dashboard" class="min-h-screen bg-black flex flex-col">
-                <header class="sticky top-0 z-40 w-full glass-panel border-b border-yellow-400/10 px-6 py-4">
+                <header class="sticky top-0 z-40 w-full glass-panel border-b border-yellow-400/10 px-4 sm:px-6 py-4">
                     <div class="max-w-7xl mx-auto flex items-center justify-between">
-                        <h1 class="font-bold text-xl text-gradient">👑 MAIN ADMIN DASHBOARD</h1>
-                        <button onclick="logout()" class="px-4 py-2 bg-red-950/30 text-red-400 text-xs font-bold rounded-xl">Logout</button>
+                        <h1 class="font-bold text-base sm:text-xl text-gradient">👑 MAIN ADMIN DASHBOARD</h1>
+                        <button onclick="logout()" class="px-3 sm:px-4 py-2 bg-red-950/30 text-red-400 text-xs font-bold rounded-xl">Logout</button>
                     </div>
                 </header>
                 
-                <main class="flex-grow p-6 overflow-y-auto">
+                <main class="flex-grow p-4 sm:p-6 overflow-y-auto">
                     <div class="max-w-7xl mx-auto space-y-6">
-                        <h2 class="text-3xl font-bold text-white">System Control Center</h2>
+                        <h2 class="text-2xl sm:text-3xl font-bold text-white">System Control Center</h2>
                         
                         <!-- TABS -->
-                        <div class="flex gap-2 border-b border-yellow-400/10 pb-2 overflow-x-auto">
-                            <button onclick="window.mainAdminDashboard.switchTab('dashboard', event)" class="tab-button active px-4 py-2 text-xs font-bold text-yellow-400">📊 Dashboard</button>
-                            <button onclick="window.mainAdminDashboard.switchTab('admins', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🛡️ Admins</button>
-                            <button onclick="window.mainAdminDashboard.switchTab('customers', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">👥 Customers</button>
-                            <button onclick="window.mainAdminDashboard.switchTab('ranges', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📊 Ranges</button>
-                            <button onclick="window.mainAdminDashboard.switchTab('payments', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">💳 Payments</button>
-                            <button onclick="window.mainAdminDashboard.switchTab('analytics', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📈 Analytics</button>
-                            <button onclick="window.mainAdminDashboard.switchTab('transactions', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📋 Transactions</button>
-                            <button onclick="window.mainAdminDashboard.switchTab('auditlog', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🔒 Audit</button>                         
-                            <button onclick="window.mainAdminDashboard.switchTab('bookings', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white relative">
+                        <div class="flex gap-2 border-b border-yellow-400/10 pb-2 overflow-x-auto whitespace-nowrap scrollbar-none">
+                            <button onclick="window.mainAdminDashboard.switchTab('dashboard', event)" class="tab-button active px-3 sm:px-4 py-2 text-xs font-bold text-yellow-400">📊 Dashboard</button>
+                            <button onclick="window.mainAdminDashboard.switchTab('admins', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🛡️ Admins</button>
+                            <button onclick="window.mainAdminDashboard.switchTab('customers', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">👥 Customers</button>
+                            <button onclick="window.mainAdminDashboard.switchTab('ranges', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📊 Ranges</button>
+                            <button onclick="window.mainAdminDashboard.switchTab('payments', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">💳 Payments</button>
+                            <button onclick="window.mainAdminDashboard.switchTab('analytics', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📈 Analytics</button>
+                            <button onclick="window.mainAdminDashboard.switchTab('transactions', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📋 Transactions</button>
+                            <button onclick="window.mainAdminDashboard.switchTab('auditlog', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🔒 Audit</button>                         
+                            <button onclick="window.mainAdminDashboard.switchTab('bookings', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white relative">
                                 📅 Bookings <span id="badge-main-bookings" class="hidden absolute -top-1 -right-1 px-1.5 py-0.5 bg-red-500 text-white rounded-full text-[9px] font-bold">0</span>
                             </button>
-                            <button onclick="window.mainAdminDashboard.switchTab('notifications', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white relative">
+                            <button onclick="window.mainAdminDashboard.switchTab('notifications', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white relative">
                                 📢 Notify <span id="badge-main-notifications" class="hidden absolute -top-1 -right-1 px-1.5 py-0.5 bg-red-500 text-white rounded-full text-[9px] font-bold">0</span>
                             </button>
-                            <button onclick="window.mainAdminDashboard.switchTab('settings', event)" class="tab-button px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">⚙️ Settings</button>
+                            <button onclick="window.mainAdminDashboard.switchTab('settings', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">⚙️ Settings</button>
                         </div>
                        
                         <!-- TAB CONTENTS -->
                         <!-- Dashboard Tab -->
                         <div id="main-dashboard" class="tab-content active space-y-6">
                             <!-- Compact Stat Cards -->
-                            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                                <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <div class="glass-panel rounded-2xl p-5 sm:p-6 border border-yellow-400/10">
                                     <p class="text-xs text-slate-400">Total Admins</p>
-                                    <p class="text-3xl font-bold text-yellow-400 mt-2" id="total-admins">0</p>
+                                    <p class="text-2xl sm:text-3xl font-bold text-yellow-400 mt-2" id="total-admins">0</p>
                                 </div>
-                                <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                                <div class="glass-panel rounded-2xl p-5 sm:p-6 border border-yellow-400/10">
                                     <p class="text-xs text-slate-400">Total Customers</p>
-                                    <p class="text-3xl font-bold text-blue-400 mt-2" id="total-customers">0</p>
+                                    <p class="text-2xl sm:text-3xl font-bold text-blue-400 mt-2" id="total-customers">0</p>
                                 </div>
-                                <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                                <div class="glass-panel rounded-2xl p-5 sm:p-6 border border-yellow-400/10">
                                     <p class="text-xs text-slate-400">Total Tickets</p>
-                                    <p class="text-3xl font-bold text-emerald-400 mt-2" id="total-tickets">0</p>
+                                    <p class="text-2xl sm:text-3xl font-bold text-emerald-400 mt-2" id="total-tickets">0</p>
                                 </div>
-                                <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
+                                <div class="glass-panel rounded-2xl p-5 sm:p-6 border border-yellow-400/10">
                                     <p class="text-xs text-slate-400">Platform Revenue</p>
-                                    <p class="text-3xl font-bold text-purple-400 mt-2" id="total-revenue">0 ETB</p>
+                                    <p class="text-2xl sm:text-3xl font-bold text-purple-400 mt-2" id="total-revenue">0 ETB</p>
                                 </div>
                             </div>
 
