@@ -119,6 +119,7 @@
         // Notification System
         function notify(type, message) {
             const container = document.getElementById('notification-container');
+            if (!container) return;
             const toast = document.createElement('div');
             toast.className = `notification-toast ${type}`;
             toast.textContent = message;
@@ -381,12 +382,12 @@
             notify('error', '❌ Invalid email or password. User does not exist.');
         }
 
-        // Initialize app and handle persistence on page refresh/reload
+        // Initialize app: Check Auth first before showing public page to prevent flash/logout race conditions
         document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('public-page').innerHTML = renderPublicPage();
+            let authChecked = false;
 
-            // Automatically restore session if user refreshes while logged into Firebase Auth
             firebase.auth().onAuthStateChanged(async (user) => {
+                authChecked = true;
                 if (user) {
                     const email = user.email;
                     
@@ -432,7 +433,17 @@
                         return;
                     }
                 }
+
+                // If no user is logged in after checking, show the public page
+                document.getElementById('public-page').innerHTML = renderPublicPage();
             });
+
+            // Fallback safety in case auth takes too long
+            setTimeout(() => {
+                if (!authChecked && !currentUser) {
+                    document.getElementById('public-page').innerHTML = renderPublicPage();
+                }
+            }, 1000);
         });
     </script>
 
