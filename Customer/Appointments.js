@@ -1,5 +1,5 @@
 // ============================================
-// CUSTOMER APPOINTMENTS - FIXED V7 (CLICKABLE NOTIFICATIONS TRAY & MODAL)
+// CUSTOMER APPOINTMENTS - FIXED V8 (CLICKABLE APPOINTMENTS & POPUP DISMISSAL)
 // ============================================
 
 class CustomerAppointments {
@@ -160,6 +160,10 @@ class CustomerAppointments {
         if (listEl) {
             listEl.innerHTML = this.renderAppointmentsHtml();
         }
+        const trayEl = document.getElementById('notifications-tray');
+        if (trayEl) {
+            trayEl.innerHTML = this.renderNotificationsHtml();
+        }
         this.updateBadgeCount();
     }
 
@@ -233,7 +237,7 @@ class CustomerAppointments {
                 <div class="glass-panel rounded-2xl p-6 border border-yellow-400/20 space-y-4" style="background: rgba(0,0,0,0.6);">
                     <div class="flex justify-between items-center">
                         <h4 class="font-bold text-white flex items-center gap-2">🔔 Notification Updates</h4>
-                        <span class="text-xs text-slate-400">Click any notification to mark as read</span>
+                        <span class="text-xs text-slate-400">Click any notification to read and clear popup</span>
                     </div>
                     <div id="notifications-tray" class="space-y-2 max-h-60 overflow-y-auto pr-1">
                         ${this.renderNotificationsHtml()}
@@ -284,7 +288,7 @@ class CustomerAppointments {
 
                 <!-- Your Appointments List -->
                 <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                    <h4 class="font-bold text-white mb-4">Your Appointments</h4>
+                    <h4 class="font-bold text-white mb-4">Your Sent Requests & Appointments</h4>
                     <div id="appointments-list" class="space-y-2">
                         ${this.renderAppointmentsHtml()}
                     </div>
@@ -299,12 +303,14 @@ class CustomerAppointments {
         }
         return this.notifications.map(n => {
             const isUnviewed = n.viewed === false;
-            const bgStyle = isUnviewed ? 'background: rgba(250, 204, 21, 0.1); border-color: rgba(250, 204, 21, 0.4);' : 'background: rgba(0,0,0,0.3); border-color: rgba(255,255,255,0.05); opacity: 0.7;'
+            const bgStyle = isUnviewed ? 'background: rgba(250, 204, 21, 0.1); border-color: rgba(250, 204, 21, 0.4);' : 'background: rgba(0,0,0,0.3); border-color: rgba(255,255,255,0.05); opacity: 0.7;';
             const badgeText = isUnviewed ? '<span class="px-2 py-0.5 bg-yellow-400 text-black text-[10px] font-bold rounded">NEW</span>' : '<span class="text-slate-500 text-[10px]">Read</span>';
             const statusColor = (n.status === 'Approved' || n.status === 'Confirmed') ? 'text-emerald-400' : 'text-red-400';
 
+            const safeMsg = (n.message || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
             return `
-                <div onclick="window.customerAppointments.handleNotificationClick('${n.id}', '${escape(n.message || '')}', '${n.status || 'Updated'}')" 
+                <div onclick="window.customerAppointments.handleNotificationClick('${n.id}', '${safeMsg}', '${n.status || 'Updated'}')" 
                      class="p-3 rounded-xl border cursor-pointer transition hover:border-yellow-400 flex items-start justify-between gap-3" style="${bgStyle}">
                     <div class="space-y-1">
                         <div class="flex items-center gap-2">
@@ -319,18 +325,14 @@ class CustomerAppointments {
         }).join('');
     }
 
-    async handleNotificationClick(notifId, escapedMsg, status) {
-        const message = unescape(escapedMsg);
+    async handleNotificationClick(notifId, message, status) {
         this.showPopupModal(message, status, notifId);
         if (notifId && typeof firebase !== 'undefined' && firebase.firestore) {
             try {
                 const db = firebase.firestore();
                 await db.collection('customer_notifications').doc(notifId).update({ viewed: true });
                 await this.loadNotifications();
-                
-                // Refresh both list view and notification tray element if present
-                const trayEl = document.getElementById('notifications-tray');
-                if (trayEl) trayEl.innerHTML = this.renderNotificationsHtml();
+                this.refreshList();
             } catch (e) {
                 console.error('Error updating notification status:', e);
             }
@@ -346,17 +348,25 @@ class CustomerAppointments {
             if (apt.status === 'Approved' || apt.status === 'Confirmed') statusColor = 'text-emerald-400';
             if (apt.status === 'Rejected' || apt.status === 'Cancelled') statusColor = 'text-red-400';
             return `
-                <div class="bg-black/30 rounded-lg p-4 border border-yellow-400/10 space-y-1">
+                <div class="bg-black/40 rounded-xl p-4 border border-yellow-400/20 space-y-2 hover:border-yellow-400/40 transition">
                     <div class="flex justify-between items-start">
-                        <div>
-                            <p class="font-bold text-yellow-400">Admin: ${apt.adminName || apt.adminEmail || 'Main Admin'}</p>
-                            <p class="text-sm text-white font-medium mt-1">📅 ${apt.date} at ${apt.time}</p>
-                            <p class="text-xs text-slate-300 mt-1">Purpose: <span class="text-white">${apt.purpose}</span></p>
-                            ${apt.description ? `<p class="text-xs text-slate-400 mt-1">Note: ${apt.description}</p>` : ''}
-                            <p class="text-xs ${statusColor} mt-2 font-semibold">Status: ${apt.status}</p>
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-2">
+                                <span class="px-2 py-0.5 bg-yellow-400/10 text-yellow-400 text-xs font-bold rounded border border-yellow-400/20">${apt.purpose || 'Appointment'}</span>
+                                <span class="text-xs ${statusColor} font-semibold">● ${apt.status}</span>
+                            </div>
+                            <p class="font-bold text-white text-base">To Admin: ${apt.adminName || apt.adminEmail || 'Main Admin'}</p>
+                            <p class="text-sm text-slate-200">📅 Date: <span class="text-white font-medium">${apt.date}</span> at <span class="text-white font-medium">${apt.time}</span></p>
+                            ${apt.description ? `
+                                <div class="mt-2 p-3 bg-black/60 rounded-lg border border-white/5 text-xs text-slate-300 leading-relaxed">
+                                    <strong class="text-yellow-400 block mb-1">Your Request Note:</strong>
+                                    ${apt.description}
+                                </div>
+                            ` : ''}
+                            <p class="text-[11px] text-slate-500 pt-1">Booked at: ${apt.bookedAt || 'N/A'}</p>
                         </div>
                         <div>
-                            <button onclick="window.customerAppointments.cancelAppointment('${apt.id}')" class="px-3 py-1 bg-red-950/30 text-red-400 text-xs rounded hover:bg-red-950/50">Cancel</button>
+                            <button onclick="window.customerAppointments.cancelAppointment('${apt.id}')" class="px-3 py-1.5 bg-red-950/40 text-red-400 text-xs font-semibold rounded-lg hover:bg-red-950/80 border border-red-500/20 transition">Cancel</button>
                         </div>
                     </div>
                 </div>
