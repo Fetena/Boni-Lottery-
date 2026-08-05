@@ -71,7 +71,7 @@
     <!-- ============================================
          FIREBASE & GLOBAL SETUP
          ============================================ -->
-    <script>
+   <script>
         // Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyBW0egtlG4JXjkoWB2Lfu5GcYhZz_oEjbI",
@@ -86,9 +86,47 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         let currentUser = null;
+        let sessionTimeoutTimer = null;
 
         console.log('✅ Firebase initialized');
         console.log('✅ Firestore ready');
+
+        // Session Management: Auto-logout on page refresh using sessionStorage
+        window.addEventListener('load', () => {
+            const isRefreshed = sessionStorage.getItem('session_active');
+            if (isRefreshed) {
+                // Clear session if page was refreshed
+                firebase.auth().signOut().catch(() => {});
+                sessionStorage.removeItem('session_active');
+            }
+        });
+
+        // Set flag in sessionStorage before unload to detect refresh
+        window.addEventListener('beforeunload', () => {
+            if (currentUser) {
+                sessionStorage.setItem('session_active', 'true');
+            }
+        });
+
+        // Start session timeout timer (e.g., 5 minutes = 300,000 ms)
+        function startSessionTimer() {
+            if (sessionTimeoutTimer) clearTimeout(sessionTimeoutTimer);
+            const SESSION_DURATION = 5 * 60 * 1000; // 5 Minutes
+            
+            sessionTimeoutTimer = setTimeout(() => {
+                logout();
+                notify('info', '⌛ Session expired due to inactivity. Please log in again.');
+            }, SESSION_DURATION);
+        }
+
+        // Reset timer on user activity
+        ['click', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(event => {
+            document.addEventListener(event, () => {
+                if (currentUser) {
+                    startSessionTimer();
+                }
+            });
+        });
 
         // Notification System
         function notify(type, message) {
@@ -103,6 +141,10 @@
         // Logout Function
         function logout() {
             currentUser = null;
+            if (sessionTimeoutTimer) clearTimeout(sessionTimeoutTimer);
+            sessionStorage.removeItem('session_active');
+            firebase.auth().signOut().catch(() => {});
+            
             document.getElementById('main-admin-container').innerHTML = '';
             document.getElementById('admin-container').innerHTML = '';
             document.getElementById('customer-container').innerHTML = '';
@@ -136,8 +178,8 @@
                 <div id="login-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50">
                     <div class="glass-panel rounded-2xl p-8 w-full max-w-md border border-yellow-400/10 space-y-4">
                         <h3 class="text-2xl font-bold text-white mb-2">Login</h3>
-                        <input type="email" id="login-email" placeholder="Email" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-3 px-4 text-white text-xs placeholder-slate-500">
-                        <input type="password" id="login-password" placeholder="Password" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-3 px-4 text-white text-xs placeholder-slate-500">
+                        <input type="email" id="login-email" placeholder="Email" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-3 px-4 text-white text-xs placeholder-slate-500 login-input">
+                        <input type="password" id="login-password" placeholder="Password" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-3 px-4 text-white text-xs placeholder-slate-500 login-input">
                         <button onclick="handleLogin()" class="w-full py-3 bg-yellow-400 text-black font-bold rounded-xl text-xs hover:bg-yellow-500">Login</button>
                         <button onclick="closeLoginModal()" class="w-full py-2 bg-slate-800 text-slate-300 rounded-xl text-xs">Cancel</button>
                     </div>
@@ -189,7 +231,19 @@
 
         function openLoginModal() {
             const modal = document.getElementById('login-modal');
-            if (modal) modal.classList.remove('hidden');
+            if (modal) {
+                modal.classList.remove('hidden');
+                // Attach Enter key listener to login inputs
+                setTimeout(() => {
+                    document.querySelectorAll('.login-input').forEach(input => {
+                        input.onkeydown = (e) => {
+                            if (e.key === 'Enter') {
+                                handleLogin();
+                            }
+                        };
+                    });
+                }, 100);
+            }
         }
 
         function closeLoginModal() {
@@ -198,7 +252,8 @@
             document.getElementById('login-email').value = '';
             document.getElementById('login-password').value = '';
         }
-async function loadAdminsForSignup() {
+
+        async function loadAdminsForSignup() {
             if (!db) return;
             try {
                 const snapshot = await db.collection('admins').get();
@@ -233,10 +288,8 @@ async function loadAdminsForSignup() {
             }
 
             try {
-                // 1. Create account using Firebase Auth
                 const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
                 
-                // 2. Save customer details and chosen preferred admin to Firestore
                 await db.collection('customer_settings').doc(email).set({
                     customerEmail: email,
                     customerName: name,
@@ -250,8 +303,8 @@ async function loadAdminsForSignup() {
                 notify('success', '🎉 Registration successful! Welcome.');
                 closeSignupModal();
 
-                // 3. Log user in and open customer dashboard automatically
                 currentUser = { type: 'customer', email, name };
+                startSessionTimer();
                 document.getElementById('public-page').innerHTML = '';
                 
                 if (!window.customerDashboard) {
@@ -264,83 +317,82 @@ async function loadAdminsForSignup() {
                 notify('error', `❌ Registration Error: ${error.message}`);
             }
         }
-   async function handleLogin() {
-    const email = document.getElementById('login-email')?.value.trim() || '';
-    const password = document.getElementById('login-password')?.value || '';
 
-    if (!email || !password) {
-        notify('error', '❌ Fill all fields');
-        return;
-    }
+        async function handleLogin() {
+            const email = document.getElementById('login-email')?.value.trim() || '';
+            const password = document.getElementById('login-password')?.value || '';
 
-    // 1. Main Admin Check
-    if (email === 'fita.regassa@gmail.com' && password === 'fita123') {
-        currentUser = { type: 'main_admin', email };
-        closeLoginModal();
-        document.getElementById('public-page').innerHTML = '';
-        
-        if (!window.mainAdminDashboard) {
-            window.mainAdminDashboard = new MainAdminDashboard();
-        }
-        document.getElementById('main-admin-container').innerHTML = window.mainAdminDashboard.render();
-        await window.mainAdminDashboard.loadData();
-        notify('success', '✅ Main Admin Login Successful');
-        return;
-    }
-
-    // 2. Branch Admin Check (Dynamic Firestore & Auth Check)
-    try {
-        // First, sign in with Firebase Auth to verify email & password
-        await firebase.auth().signInWithEmailAndPassword(email, password);
-
-        // Next, check if this email exists as an admin in Firestore
-        const adminDoc = await db.collection('admins').doc(email).get();
-        
-        if (adminDoc.exists) {
-            currentUser = { type: 'admin', email };
-            closeLoginModal();
-            document.getElementById('public-page').innerHTML = '';
-            
-            if (!window.adminDashboard) {
-                window.adminDashboard = new AdminDashboard(email);
+            if (!email || !password) {
+                notify('error', '❌ Fill all fields');
+                return;
             }
-            document.getElementById('admin-container').innerHTML = window.adminDashboard.render();
-            await window.adminDashboard.loadData();
-            notify('success', '✅ Admin Login Successful');
-            return;
-        }
-    } catch (error) {
-        console.log('Not a branch admin or auth failed:', error.message);
-    }
 
-    // 3. Dynamic Customer Check via Firebase Auth & Firestore
-    try {
-        await firebase.auth().signInWithEmailAndPassword(email, password);
-
-        const customerDoc = await db.collection('customer_settings').doc(email).get();
-        
-        if (customerDoc.exists) {
-            const customerData = customerDoc.data();
-            currentUser = { type: 'customer', email, name: customerData.customerName || email.split('@')[0] };
-            
-            closeLoginModal();
-            document.getElementById('public-page').innerHTML = '';
-            
-            if (!window.customerDashboard) {
-                window.customerDashboard = new CustomerDashboard(email);
+            // 1. Main Admin Check
+            if (email === 'fita.regassa@gmail.com' && password === 'fita123') {
+                currentUser = { type: 'main_admin', email };
+                startSessionTimer();
+                closeLoginModal();
+                document.getElementById('public-page').innerHTML = '';
+                
+                if (!window.mainAdminDashboard) {
+                    window.mainAdminDashboard = new MainAdminDashboard();
+                }
+                document.getElementById('main-admin-container').innerHTML = window.mainAdminDashboard.render();
+                await window.mainAdminDashboard.loadData();
+                notify('success', '✅ Main Admin Login Successful');
+                return;
             }
-            document.getElementById('customer-container').innerHTML = window.customerDashboard.render();
-            await window.customerDashboard.loadData();
-            notify('success', '✅ Login Successful');
-            return;
-        }
-    } catch (error) {
-        console.log('Not a customer or auth failed:', error.message);
-    }
 
-    // 4. Block everything else if no match is found
-    notify('error', '❌ Invalid email or password. User does not exist.');
-}
+            // 2. Branch Admin Check
+            try {
+                await firebase.auth().signInWithEmailAndPassword(email, password);
+                const adminDoc = await db.collection('admins').doc(email).get();
+                
+                if (adminDoc.exists) {
+                    currentUser = { type: 'admin', email };
+                    startSessionTimer();
+                    closeLoginModal();
+                    document.getElementById('public-page').innerHTML = '';
+                    
+                    if (!window.adminDashboard) {
+                        window.adminDashboard = new AdminDashboard(email);
+                    }
+                    document.getElementById('admin-container').innerHTML = window.adminDashboard.render();
+                    await window.adminDashboard.loadData();
+                    notify('success', '✅ Admin Login Successful');
+                    return;
+                }
+            } catch (error) {
+                console.log('Not a branch admin or auth failed:', error.message);
+            }
+
+            // 3. Dynamic Customer Check
+            try {
+                await firebase.auth().signInWithEmailAndPassword(email, password);
+                const customerDoc = await db.collection('customer_settings').doc(email).get();
+                
+                if (customerDoc.exists) {
+                    const customerData = customerDoc.data();
+                    currentUser = { type: 'customer', email, name: customerData.customerName || email.split('@')[0] };
+                    startSessionTimer();
+                    
+                    closeLoginModal();
+                    document.getElementById('public-page').innerHTML = '';
+                    
+                    if (!window.customerDashboard) {
+                        window.customerDashboard = new CustomerDashboard(email);
+                    }
+                    document.getElementById('customer-container').innerHTML = window.customerDashboard.render();
+                    await window.customerDashboard.loadData();
+                    notify('success', '✅ Login Successful');
+                    return;
+                }
+            } catch (error) {
+                console.log('Not a customer or auth failed:', error.message);
+            }
+
+            notify('error', '❌ Invalid email or password. User does not exist.');
+        }
 
         // Initialize app
         document.addEventListener('DOMContentLoaded', () => {
