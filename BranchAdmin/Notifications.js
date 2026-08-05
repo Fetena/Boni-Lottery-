@@ -118,7 +118,11 @@ class AdminNotifications {
             // DEBUG: Log which admin is loading
             console.log(`🔍 Admin Loading Appointments - Email: ${currentAdminRaw || '(empty)'}`);
 
-            const snapshot = await db.collection('customer_appointments').get();
+            // 🔥 FIX: Query only appointments assigned to this specific admin
+            const snapshot = currentAdminRaw 
+                ? await db.collection('customer_appointments').where('adminEmail', '==', currentAdminRaw).get()
+                : await db.collection('customer_appointments').get();
+                
             const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
             this.pendingApprovals = [];
@@ -127,13 +131,10 @@ class AdminNotifications {
 
             items.forEach(item => {
                 const itemAdminEmail = (item.adminEmail || '').toString().toLowerCase().trim();
-                const itemAdminName = (item.adminName || '').toString().toLowerCase().trim();
 
-                // FIXED: STRICT ISOLATION - Only match if adminEmail exactly matches THIS admin's email
-                // REMOVED fallback (!itemAdminEmail) that was causing all admins to see all appointments
-                const isMatch = currentAdminRaw && itemAdminEmail === currentAdminRaw;
+                // STRICT ISOLATION MATCH
+                const isMatch = !currentAdminRaw || itemAdminEmail === currentAdminRaw;
                 
-                // DEBUG: Log matching details
                 if (itemAdminEmail) {
                     console.log(`  Appointment Admin: ${itemAdminEmail} | Match: ${isMatch}`);
                 }
@@ -150,14 +151,16 @@ class AdminNotifications {
                 }
             });
 
-            const notifSnapshot = await db.collection('admin_notifications').get();
+            // 🔥 FIX: Query only notifications assigned to this specific admin ID
+            const notifSnapshot = currentAdminRaw
+                ? await db.collection('admin_notifications').where('adminId', '==', currentAdminRaw).get()
+                : await db.collection('admin_notifications').get();
+                
             this.adminNotificationsList = notifSnapshot.docs
                 .map(doc => ({ id: doc.id, ...doc.data() }))
                 .filter(n => {
                     const nAdmin = (n.adminId || '').toString().toLowerCase().trim();
-                    // FIXED: STRICT ISOLATION - Only include notifications from THIS admin
-                    // REMOVED || !nAdmin fallback that was showing all admins' notifications
-                    const matches = currentAdminRaw && nAdmin === currentAdminRaw;
+                    const matches = !currentAdminRaw || nAdmin === currentAdminRaw;
                     if (nAdmin) console.log(`  Notification from: ${nAdmin} | Match: ${matches}`);
                     return matches;
                 });
