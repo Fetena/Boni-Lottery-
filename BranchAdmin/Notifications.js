@@ -310,16 +310,19 @@ class AdminNotifications {
         const target = document.getElementById('admin-notif-target')?.value;
 
         if (!message) {
-            if (typeof notify === 'function') notify('error', '❌ Enter message');
+            if (typeof notify === 'function') notify('error', '❌ Please enter a notification message');
             return;
         }
 
         const currentAdminRaw = (this.adminId || '').toString().toLowerCase().trim();
+        const currentEmail = (localStorage.getItem('currentUserEmail') || '').toString().toLowerCase().trim();
+        const activeAdminId = currentAdminRaw || currentEmail || 'admin';
+
         const notif = {
-            adminId: currentAdminRaw,
-            type,
-            message,
-            target,
+            adminId: activeAdminId,
+            type: type,
+            message: message,
+            target: target,
             timestamp: new Date().toLocaleTimeString(),
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         };
@@ -327,11 +330,18 @@ class AdminNotifications {
         try {
             const db = firebase.firestore();
             await db.collection('admin_notifications').add(notif);
+            
             if (typeof notify === 'function') notify('success', `✅ Notification sent to ${target}!`);
-            document.getElementById('admin-notif-msg').value = '';
+            
+            // Clear the textarea input field
+            const msgInput = document.getElementById('admin-notif-msg');
+            if (msgInput) msgInput.value = '';
+
+            // Instantly reload and refresh the UI history list
             await this.loadPendingApprovals();
         } catch (e) {
-            console.error('Error sending notification', e);
+            console.error('Error saving notification to Firebase', e);
+            if (typeof notify === 'function') notify('error', '❌ Failed to send notification');
         }
     }
 }
