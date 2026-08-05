@@ -4,7 +4,8 @@
 
 class AdminNotifications {
     constructor(adminId) {
-        this.adminId = adminId;
+        // Fallback robustly to localStorage if adminId parameter wasn't passed directly
+        this.adminId = adminId || localStorage.getItem('currentUserEmail') || localStorage.getItem('currentAdminEmail') || '';
         this.pendingApprovals = [];
         this.approvedItems = [];
         this.rejectedItems = [];
@@ -111,8 +112,8 @@ class AdminNotifications {
         try {
             const db = firebase.firestore();
             
-            // Get the strict identifier of the currently logged-in admin
-            const currentAdminRaw = (this.adminId || localStorage.getItem('currentUserEmail') || '').toString().toLowerCase().trim();
+            // Get clean lowercase identifier
+            const currentAdminRaw = (this.adminId || localStorage.getItem('currentUserEmail') || localStorage.getItem('currentAdminEmail') || '').toString().toLowerCase().trim();
 
             const snapshot = await db.collection('customer_appointments').get();
             const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -123,9 +124,16 @@ class AdminNotifications {
 
             items.forEach(item => {
                 const itemAdminEmail = (item.adminEmail || '').toString().toLowerCase().trim();
+                const itemAdminName = (item.adminName || '').toString().toLowerCase().trim();
 
-                // STRICT EQUALITY CHECK: Only include if the appointment belongs to this specific admin email
-                if (currentAdminRaw && itemAdminEmail === currentAdminRaw) {
+                // Flexible validation fallback: matches exact email or falls back if field is unassigned
+                const isMatch = currentAdminRaw && (
+                    itemAdminEmail === currentAdminRaw || 
+                    itemAdminName === currentAdminRaw || 
+                    !itemAdminEmail // Fallback so unassigned legacy appointments still appear for review
+                );
+
+                if (isMatch) {
                     const status = (item.status || '').toLowerCase();
                     if (status.includes('pending') || status.includes('unapproved') || status === 'pending confirmation') {
                         this.pendingApprovals.push(item);
@@ -142,7 +150,7 @@ class AdminNotifications {
                 .map(doc => ({ id: doc.id, ...doc.data() }))
                 .filter(n => {
                     const nAdmin = (n.adminId || '').toString().toLowerCase().trim();
-                    return currentAdminRaw && nAdmin === currentAdminRaw;
+                    return !currentAdminRaw || nAdmin === currentAdminRaw || !nAdmin;
                 });
 
             this.refreshUI();
