@@ -1,5 +1,5 @@
 // ============================================
-// CUSTOMER APPOINTMENTS - FIXED V8 (CLICKABLE APPOINTMENTS & POPUP DISMISSAL)
+// CUSTOMER APPOINTMENTS - FIXED V10 (CLEANED NOTIFICATION UI)
 // ============================================
 
 class CustomerAppointments {
@@ -168,19 +168,11 @@ class CustomerAppointments {
     }
 
     async updateBadgeCount() {
-        const unviewedCount = this.notifications.filter(n => n.viewed === false).length;
         const badgeEl = document.getElementById('customer-appointments-badge');
-        
         if (badgeEl) {
-            if (unviewedCount > 0) {
-                badgeEl.textContent = unviewedCount;
-                badgeEl.classList.remove('hidden');
-                badgeEl.style.display = 'inline-flex';
-            } else {
-                badgeEl.textContent = '0';
-                badgeEl.classList.add('hidden');
-                badgeEl.style.display = 'none';
-            }
+            badgeEl.textContent = '0';
+            badgeEl.classList.add('hidden');
+            badgeEl.style.display = 'none';
         }
     }
 
@@ -237,7 +229,7 @@ class CustomerAppointments {
                 <div class="glass-panel rounded-2xl p-6 border border-yellow-400/20 space-y-4" style="background: rgba(0,0,0,0.6);">
                     <div class="flex justify-between items-center">
                         <h4 class="font-bold text-white flex items-center gap-2">🔔 Notification Updates</h4>
-                        <span class="text-xs text-slate-400">Click any notification to read and clear popup</span>
+                        <span class="text-xs text-slate-400">Click any notification to open popup</span>
                     </div>
                     <div id="notifications-tray" class="space-y-2 max-h-60 overflow-y-auto pr-1">
                         ${this.renderNotificationsHtml()}
@@ -303,23 +295,22 @@ class CustomerAppointments {
         }
         return this.notifications.map(n => {
             const isUnviewed = n.viewed === false;
-            const bgStyle = isUnviewed ? 'background: rgba(250, 204, 21, 0.1); border-color: rgba(250, 204, 21, 0.4);' : 'background: rgba(0,0,0,0.3); border-color: rgba(255,255,255,0.05); opacity: 0.7;';
-            const badgeText = isUnviewed ? '<span class="px-2 py-0.5 bg-yellow-400 text-black text-[10px] font-bold rounded">NEW</span>' : '<span class="text-slate-500 text-[10px]">Read</span>';
+            // Clean neutral styling without unnecessary highlight lines
+            const bgStyle = 'background: rgba(0,0,0,0.3); border-color: rgba(255,255,255,0.08);';
             const statusColor = (n.status === 'Approved' || n.status === 'Confirmed') ? 'text-emerald-400' : 'text-red-400';
 
             const safeMsg = (n.message || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
             return `
                 <div onclick="window.customerAppointments.handleNotificationClick('${n.id}', '${safeMsg}', '${n.status || 'Updated'}')" 
-                     class="p-3 rounded-xl border cursor-pointer transition hover:border-yellow-400 flex items-start justify-between gap-3" style="${bgStyle}">
+                     class="p-4 rounded-xl border cursor-pointer transition hover:border-yellow-400 flex items-start justify-between gap-3" style="${bgStyle}">
                     <div class="space-y-1">
                         <div class="flex items-center gap-2">
                             <span class="text-xs font-semibold ${statusColor}">Status: ${n.status || 'Update'}</span>
-                            ${badgeText}
                         </div>
-                        <p class="text-sm text-white leading-snug">${n.message}</p>
+                        <p class="text-sm text-white leading-relaxed">${n.message}</p>
                     </div>
-                    <span class="text-xs text-slate-400 whitespace-nowrap">🔍 Read</span>
+                    <span class="text-xs text-yellow-400 whitespace-nowrap font-medium">🔍 View</span>
                 </div>
             `;
         }).join('');
