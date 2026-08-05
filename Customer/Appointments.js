@@ -1,11 +1,11 @@
 // ============================================
-// CUSTOMER APPOINTMENTS - FIXED V5 (POPUP PERSISTENCE FIX)
+// CUSTOMER APPOINTMENTS - FIXED V6 (BADGE & QUERY SYNC FIX)
 // ============================================
 
 class CustomerAppointments {
     constructor(custId) {
         const initialId = custId === 'DEFAULT' || !custId 
-            ? (window.currentUser?.email || localStorage.getItem('currentUserEmail') || 'fete@gmail.com')
+            ? (window.currentUser?.email || localStorage.getItem('currentUserEmail') || 'tt@gmail.com')
             : custId;
 
         this.custId = initialId;
@@ -20,10 +20,12 @@ class CustomerAppointments {
             return;
         }
 
-        if (newCustId && newCustId !== this.custId) {
-            this.custId = newCustId;
+        const cleanNewId = newCustId.toString().toLowerCase().trim();
+        if (cleanNewId && cleanNewId !== this.custId.toString().toLowerCase().trim()) {
+            this.custId = cleanNewId;
             this.loadAppointments();
             this.refreshList();
+            this.updateBadgeCount();
         }
     }
 
@@ -31,19 +33,20 @@ class CustomerAppointments {
     startCustomerNotificationPoller() {
         if (typeof firebase === 'undefined' || !firebase.firestore) return;
         const db = firebase.firestore();
-        const activeEmail = this.custId && this.custId !== 'DEFAULT' ? this.custId : 'fete@gmail.com';
+        const activeEmail = (this.custId && this.custId !== 'DEFAULT' ? this.custId : (localStorage.getItem('currentUserEmail') || 'tt@gmail.com')).toString().toLowerCase().trim();
 
         if (this._unsubscribeNotifs) this._unsubscribeNotifs();
 
         this._unsubscribeNotifs = db.collection('customer_notifications')
-            .where('custId', '==', activeEmail)
             .onSnapshot(snapshot => {
+                let hasChanges = false;
                 snapshot.docChanges().forEach(change => {
-                    if (change.type === 'added') {
-                        const n = change.doc.data();
-                        
-                        // Only show popup and notify if it hasn't been viewed yet
-                        if (!n.viewed) {
+                    const n = change.doc.data();
+                    const nCustId = (n.custId || '').toString().toLowerCase().trim();
+                    
+                    if (nCustId === activeEmail) {
+                        hasChanges = true;
+                        if (change.type === 'added' && !n.viewed) {
                             this.showPopupModal(n.message, n.status, change.doc.id);
                             
                             const type = (n.status === 'Approved' || n.status === 'Confirmed') ? 'success' : 'error';
@@ -53,9 +56,12 @@ class CustomerAppointments {
                         }
                     }
                 });
-                this.loadAppointments();
-                this.refreshList();
-                this.updateBadgeCount();
+
+                if (hasChanges) {
+                    this.loadAppointments();
+                    this.refreshList();
+                    this.updateBadgeCount();
+                }
             }, e => console.error('Firestore notification listener error:', e));
     }
 
@@ -110,13 +116,15 @@ class CustomerAppointments {
         if (typeof firebase === 'undefined' || !firebase.firestore) return;
         try {
             const db = firebase.firestore();
-            const targetId = this.custId && this.custId !== 'DEFAULT' ? this.custId : 'fete@gmail.com';
+            const targetId = (this.custId && this.custId !== 'DEFAULT' ? this.custId : (localStorage.getItem('currentUserEmail') || 'tt@gmail.com')).toString().toLowerCase().trim();
             
-            const snapshot = await db.collection('customer_appointments')
-                .where('custId', '==', targetId)
-                .get();
-
-            this.appointments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const snapshot = await db.collection('customer_appointments').get();
+            this.appointments = snapshot.docs
+                .map(doc => ({ id: doc.id, ...doc.data() }))
+                .filter(apt => {
+                    const aptCust = (apt.custId || '').toString().toLowerCase().trim();
+                    return aptCust === targetId;
+                });
         } catch (e) {
             console.error('Error loading appointments from Firebase:', e);
             this.appointments = [];
@@ -135,17 +143,19 @@ class CustomerAppointments {
         if (typeof firebase === 'undefined' || !firebase.firestore) return;
         try {
             const db = firebase.firestore();
-            const targetId = this.custId && this.custId !== 'DEFAULT' ? this.custId : 'fete@gmail.com';
+            const targetId = (this.custId && this.custId !== 'DEFAULT' ? this.custId : (localStorage.getItem('currentUserEmail') || 'tt@gmail.com')).toString().toLowerCase().trim();
             
-            const snapshot = await db.collection('customer_notifications')
-                .where('custId', '==', targetId)
-                .where('viewed', '==', false)
-                .get();
+            const snapshot = await db.collection('customer_notifications').get();
+            const unviewedCount = snapshot.docs.filter(doc => {
+                const data = doc.data();
+                const nCust = (data.custId || '').toString().toLowerCase().trim();
+                return nCust === targetId && data.viewed === false;
+            }).length;
 
             const badgeEl = document.getElementById('customer-appointments-badge');
             if (badgeEl) {
-                if (snapshot.size > 0) {
-                    badgeEl.textContent = snapshot.size;
+                if (unviewedCount > 0) {
+                    badgeEl.textContent = unviewedCount;
                     badgeEl.classList.remove('hidden');
                     badgeEl.style.display = 'inline-flex';
                 } else {
@@ -154,7 +164,9 @@ class CustomerAppointments {
                     badgeEl.style.display = 'none';
                 }
             }
-        } catch (e) {}
+        } catch (e) {
+            console.error('Error updating badge count:', e);
+        }
     }
 
     async init() {
@@ -302,7 +314,7 @@ class CustomerAppointments {
 
         try {
             const db = firebase.firestore();
-            const targetId = this.custId !== 'DEFAULT' ? this.custId : 'fete@gmail.com';
+            const targetId = (this.custId !== 'DEFAULT' ? this.custId : (localStorage.getItem('currentUserEmail') || 'tt@gmail.com')).toString().toLowerCase().trim();
             const selectedAdmin = this.admins.find(a => (a.email || a.id) === adminEmail);
             const adminName = selectedAdmin?.name || adminEmail;
 
@@ -367,5 +379,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 window.customerAppointments = null;
 document.addEventListener('DOMContentLoaded', () => {
-    window.customerAppointments = new CustomerAppointments('fete@gmail.com');
+    const activeEmail = localStorage.getItem('currentUserEmail') || 'tt@gmail.com';
+    window.customerAppointments = new CustomerAppointments(activeEmail);
 });
