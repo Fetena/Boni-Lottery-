@@ -1,5 +1,5 @@
 // ============================================
-// ADMIN NOTIFICATIONS - FIXED V13 (DIRECT DOM ID INJECTION)
+// ADMIN NOTIFICATIONS - FIXED V14 (ABSOLUTE TAB BADGE OVERRIDE)
 // ============================================
 
 class AdminNotifications {
@@ -92,25 +92,27 @@ class AdminNotifications {
         const isViewed = localStorage.getItem('admin_notifications_viewed_' + this.adminId) === 'true';
         const showBadge = pendingCount > 0 && !isViewed;
 
-        // Find the specific Notifications navigation tab element
-        document.querySelectorAll('a, button, span, li').forEach(el => {
+        // Forcefully locate the exact Notifications navigation element by text content
+        document.querySelectorAll('a, button, span, li, div').forEach(el => {
             const text = el.textContent ? el.textContent.trim() : '';
-            if (text === 'Notifications' || (text.includes('Notifications') && el.children.length <= 2)) {
-                if (getComputedStyle(el).position === 'static') {
-                    el.style.position = 'relative';
+            // Match tab exactly or containing Notifications without sub-elements cluttering
+            if (text === 'Notifications' || text.startsWith('Notifications')) {
+                // Ensure parent container has relative positioning so absolute badge anchors correctly
+                const container = el.closest('a, button, li') || el;
+                if (getComputedStyle(container).position === 'static') {
+                    container.style.position = 'relative';
                 }
                 
-                let badge = el.querySelector('#nav-head-badge');
+                let badge = container.querySelector('#nav-head-badge');
                 if (showBadge) {
                     if (!badge) {
                         badge = document.createElement('span');
                         badge.id = 'nav-head-badge';
-                        // pointer-events: none on badge so the parent tab remains 100% clickable/touchable
-                        badge.style.cssText = 'position: absolute; top: -14px; right: -14px; background: #ef4444; color: #fff; font-size: 11px; font-weight: bold; min-width: 22px; height: 22px; padding: 0 4px; display: flex; align-items: center; justify-content: center; border-radius: 12px 12px 12px 4px; border: 2px solid #000; z-index: 50; pointer-events: none; box-shadow: 0 2px 5px rgba(0,0,0,0.6);';
-                        el.appendChild(badge);
+                        container.appendChild(badge);
                     }
+                    // Apply exact inline styles overriding any CSS inheritance
+                    badge.style.cssText = 'position: absolute !important; top: -8px !important; right: -12px !important; background: #ef4444 !important; color: #ffffff !important; font-size: 11px !important; font-weight: 900 !important; min-width: 20px !important; height: 20px !important; padding: 0 5px !important; display: flex !important; align-items: center !important; justify-content: center !important; border-radius: 10px !important; border: 2px solid #000000 !important; z-index: 99999 !important; pointer-events: none !important; box-shadow: 0 2px 6px rgba(0,0,0,0.8) !important;';
                     badge.textContent = pendingCount;
-                    badge.style.display = 'flex';
                 } else if (badge) {
                     badge.remove();
                 }
@@ -141,7 +143,7 @@ class AdminNotifications {
                     </button>
                 </div>
 
-                <!-- APPROVAL्स SECTION -->
+                <!-- APPROVALS SECTION -->
                 <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
                     <div class="flex justify-between items-center">
                         <h3 class="text-2xl font-bold text-white flex items-center gap-3">
