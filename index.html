@@ -2,53 +2,113 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lottery Ticket System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lottery Ticket - Management Platform</title>
     <script src="https://cdn.tailwindcss.com"></script>
-<!-- Firebase v9 Compat (Add auth script here) -->
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <style>
-    .glass-panel {
-        background: rgba(15, 23, 42, 0.8);
-        backdrop-filter: blur(10px);
-    }
-    .text-gradient {
-        background: linear-gradient(135deg, #FCD34D 0%, #F59E0B 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
-    .tab-button.active {
-        border-bottom: 2px solid #FCD34D;
-        color: #FCD34D;
-    }
-    .notification-toast {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 16px;
-        border-radius: 8px;
-        z-index: 10000;
-        animation: slideIn 0.3s ease;
-    }
-    .notification-toast.success { background: #10b981; color: white; }
-    .notification-toast.error { background: #ef4444; color: white; }
-    .notification-toast.info { background: #3b82f6; color: white; }
-    @keyframes slideIn {
-        from { transform: translateX(400px); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
-    }
+        * {
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        input, textarea, select {
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+        }
 
-    /* === ADD THIS FIX HERE === */
-    input[type="date"]::-webkit-calendar-picker-indicator,
-    input[type="time"]::-webkit-calendar-picker-indicator {
-        filter: invert(1) brightness(2);
-        cursor: pointer;
-        opacity: 1;
-    }
-</style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #000;
+            overflow-x: hidden;
+        }
+
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
+        }
+
+        .text-gradient {
+            background: linear-gradient(135deg, #FCD34D 0%, #F59E0B 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .tab-button.active {
+            border-bottom: 3px solid #FCD34D;
+            color: #FCD34D;
+        }
+
+        .notification-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            z-index: 10000;
+            animation: slideIn 0.3s ease;
+            font-size: 13px;
+            max-width: 90vw;
+        }
+
+        .notification-toast.success { background: #10b981; color: white; }
+        .notification-toast.error { background: #ef4444; color: white; }
+        .notification-toast.info { background: #3b82f6; color: white; }
+
+        @keyframes slideIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Mobile-friendly input */
+        input[type="email"],
+        input[type="password"],
+        input[type="text"],
+        textarea,
+        select {
+            font-size: 16px !important; /* Prevents zoom on iOS */
+            padding: 12px !important;
+        }
+
+        input[type="date"]::-webkit-calendar-picker-indicator,
+        input[type="time"]::-webkit-calendar-picker-indicator {
+            filter: invert(1) brightness(2);
+            cursor: pointer;
+            opacity: 1;
+        }
+
+        .btn-primary {
+            transition: all 0.2s ease;
+            active:scale(0.95);
+        }
+
+        .btn-primary:active {
+            transform: scale(0.95);
+        }
+
+        @media (max-width: 640px) {
+            .hide-on-mobile { display: none !important; }
+            .glass-panel { border-radius: 12px; }
+            .notification-toast { 
+                top: 10px;
+                right: 10px;
+                left: 10px;
+                max-width: none;
+                margin: 0 10px;
+            }
+        }
+
+        .scrollbar-none::-webkit-scrollbar { display: none; }
+        .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
 </head>
 
 <body class="bg-black text-white">
@@ -71,7 +131,7 @@
     <!-- ============================================
          FIREBASE & GLOBAL SETUP
          ============================================ -->
- <script>
+    <script>
         // Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyBW0egtlG4JXjkoWB2Lfu5GcYhZz_oEjbI",
@@ -82,7 +142,6 @@
             appId: "1:479140405683:web:20a2205ece9fdcdf076bc6",
         };
 
-        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         let currentUser = null;
@@ -91,23 +150,22 @@
         console.log('✅ Firebase initialized');
         console.log('✅ Firestore ready');
 
-        // Allow sessions to persist across page refreshes
         firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch((error) => {
             console.error('Auth persistence error:', error);
         });
 
-        // Start session timeout timer (5 minutes = 300,000 ms)
+        // Session timeout (5 minutes)
         function startSessionTimer() {
             if (sessionTimeoutTimer) clearTimeout(sessionTimeoutTimer);
-            const SESSION_DURATION = 5 * 60 * 1000; // 5 Minutes
+            const SESSION_DURATION = 5 * 60 * 1000;
             
             sessionTimeoutTimer = setTimeout(() => {
                 logout();
-                notify('info', '⌛ Session expired due to inactivity. Please log in again.');
+                notify('info', '⌛ Session expired. Please log in again.');
             }, SESSION_DURATION);
         }
 
-        // Reset timer on user activity
+        // Reset timer on activity
         ['click', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(event => {
             document.addEventListener(event, () => {
                 if (currentUser) {
@@ -140,183 +198,112 @@
             notify('success', '✅ Logged out');
         }
 
-        // Render Public Page with Responsive Layouts
+        // ===== MOBILE-OPTIMIZED PUBLIC PAGE =====
         function renderPublicPage() {
             return `
                 <div class="min-h-screen bg-black flex flex-col">
-                    <header class="sticky top-0 z-40 w-full glass-panel border-b border-yellow-400/10 px-4 sm:px-6 py-4">
+                    <!-- Header -->
+                    <header class="sticky top-0 z-40 w-full glass-panel border-b border-yellow-400/10 px-3 sm:px-6 py-3 sm:py-4">
                         <div class="max-w-7xl mx-auto flex items-center justify-between">
-                            <h1 class="font-bold text-xl sm:text-2xl text-gradient">🎰 LOTTERY TICKET</h1>
-                            <div class="space-x-2">
-                                <button onclick="openLoginModal()" class="px-3 sm:px-4 py-2 bg-transparent border border-yellow-400 text-yellow-400 font-bold rounded-xl text-xs">Login</button>
-                                <button onclick="openSignupModal()" class="px-3 sm:px-4 py-2 bg-yellow-400 text-black font-bold rounded-xl text-xs">Sign Up</button>
+                            <h1 class="font-bold text-lg sm:text-2xl text-gradient">🎰 BONI LOTTERY</h1>
+                            <div class="flex gap-2">
+                                <button onclick="openLoginModal()" class="px-3 py-2 bg-transparent border border-yellow-400 text-yellow-400 font-bold rounded-lg text-xs sm:text-sm hover:bg-yellow-400/10">Login</button>
+                                <button onclick="openSignupModal()" class="px-3 py-2 bg-yellow-400 text-black font-bold rounded-lg text-xs sm:text-sm hover:bg-yellow-500">Sign Up</button>
                             </div>
                         </div>
                     </header>
+
+                    <!-- Hero Section -->
                     <main class="flex-grow flex items-center justify-center p-4 sm:p-6">
-                        <div class="text-center max-w-2xl mx-auto px-4">
-                            <h2 class="text-3xl sm:text-5xl font-bold text-white mb-4">Welcome to Lottery Ticket</h2>
-                            <p class="text-slate-400 mb-8 text-base sm:text-xl">Complete lottery management platform optimized for desktop and mobile devices.</p>
-                            <button onclick="openSignupModal()" class="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl text-sm sm:text-base">Get Started →</button>
+                        <div class="text-center max-w-2xl mx-auto">
+                            <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-3 sm:mb-4">Welcome to BONI Lottery</h2>
+                            <p class="text-sm sm:text-base text-slate-400 mb-6 sm:mb-8">Complete lottery management platform for desktop and mobile devices</p>
+                            <button onclick="openSignupModal()" class="w-full sm:w-auto px-6 sm:px-8 py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-lg text-sm sm:text-base hover:shadow-lg hover:shadow-yellow-500/50 transition-all">Get Started →</button>
                         </div>
                     </main>
                 </div>
 
-                <!-- Login Modal -->
-                <div id="login-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50 p-4 overflow-y-auto">
-                    <div class="glass-panel rounded-2xl p-6 sm:p-8 w-full max-w-md border border-yellow-400/10 space-y-4 my-auto">
-                        <h3 class="text-2xl font-bold text-white mb-2">Login</h3>
-                        <!-- Form with explicit attributes to trigger browser password save prompts -->
-                        <form onsubmit="handleLogin(event)" class="space-y-4">
+                <!-- ===== LOGIN MODAL (MOBILE OPTIMIZED) ===== -->
+                <div id="login-modal" class="fixed inset-0 bg-black/90 hidden flex items-center justify-center z-50 p-4 overflow-y-auto">
+                    <div class="glass-panel rounded-2xl p-6 sm:p-8 w-full max-w-sm border border-yellow-400/10 space-y-4 my-auto">
+                        <h3 class="text-2xl font-bold text-white mb-4">Login</h3>
+                        <form id="login-form" class="space-y-4">
                             <div>
-                                <label class="block text-xs text-slate-400 mb-1">Email</label>
-                                <input type="email" id="login-email" name="email" autocomplete="email" required placeholder="name@example.com" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-3 px-4 text-white text-xs sm:text-sm placeholder-slate-500 focus:outline-none focus:border-yellow-400">
+                                <label class="block text-xs text-slate-400 mb-2">Email (Case Sensitive)</label>
+                                <input type="email" id="login-email" autocomplete="email" required placeholder="name@example.com" class="w-full bg-black/40 border border-yellow-400/20 rounded-lg py-3 px-4 text-white text-sm placeholder-slate-600 focus:outline-none focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400">
                             </div>
                             <div>
-                                <label class="block text-xs text-slate-400 mb-1">Password</label>
-                                <input type="password" id="login-password" name="password" autocomplete="current-password" required placeholder="••••••••" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-3 px-4 text-white text-xs sm:text-sm placeholder-slate-500 focus:outline-none focus:border-yellow-400">
+                                <label class="block text-xs text-slate-400 mb-2">Password (Case Sensitive)</label>
+                                <input type="password" id="login-password" autocomplete="current-password" required placeholder="••••••••" class="w-full bg-black/40 border border-yellow-400/20 rounded-lg py-3 px-4 text-white text-sm placeholder-slate-600 focus:outline-none focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400">
                             </div>
-                            <button type="submit" class="w-full py-3 bg-yellow-400 text-black font-bold rounded-xl text-xs sm:text-sm hover:bg-yellow-500 transition-colors">Login</button>
+                            <button type="submit" class="w-full py-3 bg-yellow-400 text-black font-bold rounded-lg text-sm hover:bg-yellow-500 transition-colors btn-primary">Login</button>
                         </form>
-                        <button onclick="closeLoginModal()" class="w-full py-2 bg-slate-800 text-slate-300 rounded-xl text-xs">Cancel</button>
+                        <button onclick="closeLoginModal()" class="w-full py-2 bg-slate-800 text-slate-300 rounded-lg text-xs hover:bg-slate-700">Cancel</button>
+                        <p class="text-xs text-slate-500 text-center mt-3">💡 Hint: Press Enter to login</p>
                     </div>
                 </div>
 
-                <!-- Sign Up Modal -->
-                <div id="signup-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50 p-4 overflow-y-auto">
-                    <div class="glass-panel rounded-2xl p-6 sm:p-8 w-full max-w-md border border-yellow-400/10 space-y-3 my-auto">
-                        <h3 class="text-2xl font-bold text-white mb-2">Customer Sign Up</h3>
+                <!-- ===== SIGNUP MODAL (MOBILE OPTIMIZED) ===== -->
+                <div id="signup-modal" class="fixed inset-0 bg-black/90 hidden flex items-center justify-center z-50 p-4 overflow-y-auto">
+                    <div class="glass-panel rounded-2xl p-6 sm:p-8 w-full max-w-sm border border-yellow-400/10 space-y-3 my-auto">
+                        <h3 class="text-2xl font-bold text-white mb-4">Sign Up</h3>
                         <div>
-                            <label class="block text-xs text-slate-400 mb-1">Full Name</label>
-                            <input type="text" id="signup-name" name="name" autocomplete="name" placeholder="John Doe" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs sm:text-sm">
+                            <label class="block text-xs text-slate-400 mb-2">Full Name</label>
+                            <input type="text" id="signup-name" autocomplete="name" placeholder="John Doe" class="w-full bg-black/40 border border-yellow-400/20 rounded-lg py-3 px-4 text-white text-sm">
                         </div>
                         <div>
-                            <label class="block text-xs text-slate-400 mb-1">Email</label>
-                            <input type="email" id="signup-email" name="email" autocomplete="email" placeholder="customer@email.com" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs sm:text-sm">
+                            <label class="block text-xs text-slate-400 mb-2">Email (Case Sensitive)</label>
+                            <input type="email" id="signup-email" autocomplete="email" placeholder="customer@email.com" class="w-full bg-black/40 border border-yellow-400/20 rounded-lg py-3 px-4 text-white text-sm">
                         </div>
                         <div>
-                            <label class="block text-xs text-slate-400 mb-1">Password</label>
-                            <input type="password" id="signup-password" name="new-password" autocomplete="new-password" placeholder="••••••••" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs sm:text-sm">
+                            <label class="block text-xs text-slate-400 mb-2">Password (Case Sensitive)</label>
+                            <input type="password" id="signup-password" autocomplete="new-password" placeholder="••••••••" class="w-full bg-black/40 border border-yellow-400/20 rounded-lg py-3 px-4 text-white text-sm">
                         </div>
                         <div>
-                            <label class="block text-xs text-slate-400 mb-1">Phone Number</label>
-                            <input type="tel" id="signup-phone" name="tel" autocomplete="tel" placeholder="0912345678" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs sm:text-sm">
+                            <label class="block text-xs text-slate-400 mb-2">Phone</label>
+                            <input type="tel" id="signup-phone" placeholder="+251..." class="w-full bg-black/40 border border-yellow-400/20 rounded-lg py-3 px-4 text-white text-sm">
                         </div>
-                        <div>
-                            <label class="block text-xs text-slate-400 mb-1">Choose Preferred Admin / Branch</label>
-                            <select id="signup-admin-select" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs sm:text-sm">
-                                <option value="">-- Loading Admins --</option>
-                            </select>
-                        </div>
-                        <button onclick="registerNewCustomer()" class="w-full py-3 bg-yellow-400 text-black font-bold rounded-xl text-xs sm:text-sm hover:bg-yellow-500 mt-2 transition-colors">Register Account</button>
-                        <button onclick="closeSignupModal()" class="w-full py-2 bg-slate-800 text-slate-300 rounded-xl text-xs">Cancel</button>
+                        <button onclick="handleSignup()" class="w-full py-3 bg-yellow-400 text-black font-bold rounded-lg text-sm hover:bg-yellow-500 transition-colors btn-primary">Create Account</button>
+                        <button onclick="closeSignupModal()" class="w-full py-2 bg-slate-800 text-slate-300 rounded-lg text-xs hover:bg-slate-700">Cancel</button>
                     </div>
                 </div>
             `;
         }
 
-        function openSignupModal() {
-            const modal = document.getElementById('signup-modal');
-            if (modal) modal.classList.remove('hidden');
-            loadAdminsForSignup();
-        }
-
-        function closeSignupModal() {
-            const modal = document.getElementById('signup-modal');
-            if (modal) modal.classList.add('hidden');
-        }
-
+        // ===== LOGIN/SIGNUP MODAL HANDLERS =====
         function openLoginModal() {
-            const modal = document.getElementById('login-modal');
-            if (modal) modal.classList.remove('hidden');
+            document.getElementById('login-modal').classList.remove('hidden');
+            document.getElementById('login-email').focus();
         }
 
         function closeLoginModal() {
-            const modal = document.getElementById('login-modal');
-            if (modal) modal.classList.add('hidden');
-            const emailInput = document.getElementById('login-email');
-            const passwordInput = document.getElementById('login-password');
-            if (emailInput) emailInput.value = '';
-            if (passwordInput) passwordInput.value = '';
+            document.getElementById('login-modal').classList.add('hidden');
+            document.getElementById('login-form').reset();
         }
 
-        async function loadAdminsForSignup() {
-            if (!db) return;
-            try {
-                const snapshot = await db.collection('admins').get();
-                const admins = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-                const signupSelect = document.getElementById('signup-admin-select');
-                if (signupSelect) {
-                    signupSelect.innerHTML = '<option value="">-- Choose Admin --</option>' + 
-                        admins.map(admin => `<option value="${admin.email}">${admin.name || admin.email}</option>`).join('');
-                }
-            } catch (error) {
-                console.error('Error loading admins for signup:', error);
-            }
+        function openSignupModal() {
+            document.getElementById('signup-modal').classList.remove('hidden');
+            document.getElementById('signup-name').focus();
         }
 
-        async function registerNewCustomer() {
-            const nameEl = document.getElementById('signup-name');
-            const emailEl = document.getElementById('signup-email');
-            const passwordEl = document.getElementById('signup-password');
-            const phoneEl = document.getElementById('signup-phone');
-            const adminSelectEl = document.getElementById('signup-admin-select');
-
-            const name = nameEl?.value.trim();
-            const email = emailEl?.value.trim();
-            const password = passwordEl?.value;
-            const phone = phoneEl?.value.trim();
-            const preferredAdmin = adminSelectEl?.value;
-
-            if (!name || !email || !password || !phone || !preferredAdmin) {
-                notify('error', '❌ Please fill in all fields and select an admin');
-                return;
-            }
-
-            try {
-                await firebase.auth().createUserWithEmailAndPassword(email, password);
-                
-                await db.collection('customer_settings').doc(email).set({
-                    customerEmail: email,
-                    customerName: name,
-                    phone: phone,
-                    preferredAdmin: preferredAdmin,
-                    preferredPayment: 'Telebirr',
-                    role: 'customer',
-                    createdAt: new Date()
-                });
-
-                notify('success', '🎉 Registration successful! Welcome.');
-                closeSignupModal();
-
-                currentUser = { type: 'customer', email, name };
-                startSessionTimer();
-                document.getElementById('public-page').innerHTML = '';
-                
-                if (!window.customerDashboard) {
-                    window.customerDashboard = new CustomerDashboard(email);
-                }
-                document.getElementById('customer-container').innerHTML = window.customerDashboard.render();
-                await window.customerDashboard.loadData();
-
-            } catch (error) {
-                notify('error', `❌ Registration Error: ${error.message}`);
-            }
+        function closeSignupModal() {
+            document.getElementById('signup-modal').classList.add('hidden');
         }
 
+        // ===== ENHANCED LOGIN (CASE SENSITIVE + ENTER KEY) =====
         async function handleLogin(event) {
             if (event) event.preventDefault();
             
-            const email = document.getElementById('login-email')?.value.trim() || '';
+            // Get values WITHOUT trimming email (case sensitive)
+            const email = document.getElementById('login-email')?.value || '';
             const password = document.getElementById('login-password')?.value || '';
 
             if (!email || !password) {
-                notify('error', '❌ Fill all fields');
+                notify('error', '❌ Please fill all fields');
                 return;
             }
 
-            // 1. Main Admin Check
+            // Main Admin Check (CASE SENSITIVE)
             if (email === 'fita.regassa@gmail.com' && password === 'fita123') {
                 currentUser = { type: 'main_admin', email };
                 startSessionTimer();
@@ -328,11 +315,12 @@
                 }
                 document.getElementById('main-admin-container').innerHTML = window.mainAdminDashboard.render();
                 await window.mainAdminDashboard.loadData();
+                localStorage.setItem('currentAdminEmail', email);
                 notify('success', '✅ Main Admin Login Successful');
                 return;
             }
 
-            // 2. Branch Admin Check
+            // Branch Admin Check
             try {
                 await firebase.auth().signInWithEmailAndPassword(email, password);
                 const adminDoc = await db.collection('admins').doc(email).get();
@@ -348,14 +336,15 @@
                     }
                     document.getElementById('admin-container').innerHTML = window.adminDashboard.render();
                     await window.adminDashboard.loadData();
+                    localStorage.setItem('currentAdminEmail', email);
                     notify('success', '✅ Admin Login Successful');
                     return;
                 }
             } catch (error) {
-                console.log('Not a branch admin or auth failed:', error.message);
+                console.log('Not a branch admin:', error.message);
             }
 
-            // 3. Dynamic Customer Check
+            // Customer Check
             try {
                 await firebase.auth().signInWithEmailAndPassword(email, password);
                 const customerDoc = await db.collection('customer_settings').doc(email).get();
@@ -364,7 +353,6 @@
                     const customerData = customerDoc.data();
                     currentUser = { type: 'customer', email, name: customerData.customerName || email.split('@')[0] };
                     startSessionTimer();
-                    
                     closeLoginModal();
                     document.getElementById('public-page').innerHTML = '';
                     
@@ -377,13 +365,53 @@
                     return;
                 }
             } catch (error) {
-                console.log('Not a customer or auth failed:', error.message);
+                console.log('Not a customer:', error.message);
             }
 
-            notify('error', '❌ Invalid email or password. User does not exist.');
+            notify('error', '❌ Invalid email or password');
         }
 
-        // Initialize app: Check Auth first before showing public page
+        // ===== SIGNUP HANDLER =====
+        async function handleSignup() {
+            const name = document.getElementById('signup-name')?.value.trim() || '';
+            const email = document.getElementById('signup-email')?.value || '';
+            const password = document.getElementById('signup-password')?.value || '';
+            const phone = document.getElementById('signup-phone')?.value.trim() || '';
+
+            if (!name || !email || !password) {
+                notify('error', '❌ Please fill all required fields');
+                return;
+            }
+
+            if (password.length < 6) {
+                notify('error', '❌ Password must be at least 6 characters');
+                return;
+            }
+
+            try {
+                await firebase.auth().createUserWithEmailAndPassword(email, password);
+                await db.collection('customer_settings').doc(email).set({
+                    customerName: name,
+                    email: email,
+                    phone: phone,
+                    createdAt: new Date(),
+                    cbeAccount: '',
+                    accountStatus: 'active'
+                });
+
+                notify('success', '✅ Account created! Please login.');
+                closeSignupModal();
+                openLoginModal();
+            } catch (error) {
+                if (error.code === 'auth/email-already-in-use') {
+                    notify('error', '❌ Email already registered');
+                } else {
+                    notify('error', `❌ ${error.message}`);
+                }
+            }
+        }
+
+        // ===== INITIALIZE APP =====
         document.addEventListener('DOMContentLoaded', () => {
             let authChecked = false;
 
@@ -392,7 +420,6 @@
                 if (user) {
                     const email = user.email;
                     
-                    // Check if Main Admin
                     if (email === 'fita.regassa@gmail.com') {
                         currentUser = { type: 'main_admin', email };
                         startSessionTimer();
@@ -402,91 +429,52 @@
                         }
                         document.getElementById('main-admin-container').innerHTML = window.mainAdminDashboard.render();
                         await window.mainAdminDashboard.loadData();
-                        return;
-                    }
-
-                    // Check if Branch Admin
-                    const adminDoc = await db.collection('admins').doc(email).get();
-                    if (adminDoc.exists) {
-                        currentUser = { type: 'admin', email };
-                        startSessionTimer();
-                        document.getElementById('public-page').innerHTML = '';
-                        if (!window.adminDashboard) {
-                            window.adminDashboard = new AdminDashboard(email);
+                    } else {
+                        const adminDoc = await db.collection('admins').doc(email).get();
+                        if (adminDoc.exists) {
+                            currentUser = { type: 'admin', email };
+                            startSessionTimer();
+                            document.getElementById('public-page').innerHTML = '';
+                            if (!window.adminDashboard) {
+                                window.adminDashboard = new AdminDashboard(email);
+                            }
+                            document.getElementById('admin-container').innerHTML = window.adminDashboard.render();
+                            await window.adminDashboard.loadData();
+                            return;
                         }
-                        document.getElementById('admin-container').innerHTML = window.adminDashboard.render();
-                        await window.adminDashboard.loadData();
-                        return;
-                    }
 
-                    // Check if Customer
-                    const customerDoc = await db.collection('customer_settings').doc(email).get();
-                    if (customerDoc.exists) {
-                        const customerData = customerDoc.data();
-                        currentUser = { type: 'customer', email, name: customerData.customerName || email.split('@')[0] };
-                        startSessionTimer();
-                        document.getElementById('public-page').innerHTML = '';
-                        if (!window.customerDashboard) {
-                            window.customerDashboard = new CustomerDashboard(email);
+                        const customerDoc = await db.collection('customer_settings').doc(email).get();
+                        if (customerDoc.exists) {
+                            const customerData = customerDoc.data();
+                            currentUser = { type: 'customer', email, name: customerData.customerName || email.split('@')[0] };
+                            startSessionTimer();
+                            document.getElementById('public-page').innerHTML = '';
+                            if (!window.customerDashboard) {
+                                window.customerDashboard = new CustomerDashboard(email);
+                            }
+                            document.getElementById('customer-container').innerHTML = window.customerDashboard.render();
+                            await window.customerDashboard.loadData();
+                            return;
                         }
-                        document.getElementById('customer-container').innerHTML = window.customerDashboard.render();
-                        await window.customerDashboard.loadData();
-                        return;
                     }
-                }
-
-                // If no user is logged in after checking, show the public page
-                document.getElementById('public-page').innerHTML = renderPublicPage();
-            });
-
-            // Fallback safety in case auth takes too long
-            setTimeout(() => {
-                if (!authChecked && !currentUser) {
+                } else {
+                    if (!authChecked) return;
                     document.getElementById('public-page').innerHTML = renderPublicPage();
                 }
-            }, 1000);
+            });
+
+            // ===== ENTER KEY SUPPORT FOR LOGIN =====
+            document.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    const loginModal = document.getElementById('login-modal');
+                    if (loginModal && !loginModal.classList.contains('hidden')) {
+                        e.preventDefault();
+                        handleLogin(e);
+                    }
+                }
+            });
         });
     </script>
-
-    <!-- ============================================
-         LOAD COMPONENTS (WITH CORRECT PATHS FROM public/ FOLDER)
-         ============================================ -->
-    
-    <!-- MAIN ADMIN COMPONENTS (Go up one level: ../) -->
-    <script src="/MainAdmin/Admins.js"></script>
-    <script src="/MainAdmin/Customers.js"></script>
-    <script src="/MainAdmin/Ranges.js"></script>
-    <script src="/MainAdmin/Payments.js"></script>
-    <script src="/MainAdmin/Analytics.js"></script>
-    <script src="/MainAdmin/Transactions.js"></script>
-    <script src="/MainAdmin/AuditLog.js"></script>
-    <script src="/MainAdmin/Notifications.js"></script>
-    <script src="/MainAdmin/Settings.js"></script>
-    <script src="/MainAdmin/MainAdminBookings.js"></script>
-    <script src="/MainAdmin/LotteryDraw.js"></script>
-    <!-- BRANCH ADMIN COMPONENTS -->
-<script src="/BranchAdmin/Notifications.js"></script>
-<script src="/BranchAdmin/BookAppointment.js"></script>
-<script src="/BranchAdmin/Payments.js"></script>
-<script src="/BranchAdmin/Settings.js"></script>
-<script src="/BranchAdmin/LotteryDraw.js"></script>
-<script src="/BranchAdmin/Tickets.js"></script>
-<script src="/BranchAdmin/Customers.js"></script>
-<!-- Load Branch Admin Main Dashboard -->
-    <script src="/BranchAdmin/AdminDashboard.js"></script>
-
-    <!-- CUSTOMER COMPONENTS -->
- <script src="/Customer/Profile.js"></script>
-<script src="/Customer/NumberGrid.js"></script>
-<script src="/Customer/Library.js"></script>
-<script src="/Customer/Drawings.js"></script>
-<script src="/Customer/Appointments.js"></script>
-<script src="/Customer/Tickets.js"></script>
-<!-- Load Branch Customer Dashboard -->
-    <script src="/Customer/CustomerDashboard.js"></script>
-    
-    <!-- MAIN ADMIN DASHBOARD (LAST) -->
-    <script src="/MainAdmin/MainAdminDashboard.js"></script>
-
 </body>
+
 </html>
