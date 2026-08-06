@@ -1,13 +1,11 @@
 // ============================================
-// ADMIN DASHBOARD - MOBILE OPTIMIZED
+// ADMIN DASHBOARD - PARENT COMPONENT
 // ============================================
 
 class AdminDashboard {
     constructor(adminId) {
-        // CRITICAL FIX: Use the ACTUAL admin email from currentUser or param
-        this.adminId = adminId || window.currentUser?.email || localStorage.getItem('currentUserEmail') || localStorage.getItem('currentAdminEmail') || '';
+        this.adminId = adminId || window.currentUser?.email || localStorage.getItem('currentUserEmail') || '';
         
-        // IMPORTANT: Save to localStorage so AdminNotifications can access it
         if (this.adminId) {
             localStorage.setItem('currentAdminEmail', this.adminId);
             console.log(`✅ AdminDashboard - Admin Email: ${this.adminId}`);
@@ -19,250 +17,386 @@ class AdminDashboard {
     render() {
         return `
             <div id="admin-dashboard" class="min-h-screen bg-black flex flex-col">
-                <!-- Mobile-friendly Header -->
-                <header class="sticky top-0 z-40 w-full glass-panel border-b border-yellow-400/10 px-3 sm:px-6 py-3 sm:py-4">
-                    <div class="flex items-center justify-between gap-2">
-                        <h1 class="font-bold text-base sm:text-xl text-gradient truncate">🛡️ ADMIN PANEL</h1>
-                        <button onclick="logout()" class="px-2 sm:px-4 py-2 bg-red-950/30 text-red-400 text-xs font-bold rounded-lg hover:bg-red-950/50">Logout</button>
+                <header class="sticky top-0 z-40 w-full glass-panel border-b border-yellow-400/10 px-4 sm:px-6 py-4">
+                    <div class="max-w-7xl mx-auto flex items-center justify-between">
+                        <h1 class="font-bold text-base sm:text-xl text-gradient">🛡️ ADMIN DASHBOARD</h1>
+                        <button onclick="logout()" class="px-3 sm:px-4 py-2 bg-red-950/30 text-red-400 text-xs font-bold rounded-xl">Logout</button>
                     </div>
                 </header>
+                
+                <main class="flex-grow p-4 sm:p-6 overflow-y-auto">
+                    <div class="max-w-7xl mx-auto space-y-6">
+                        <h2 class="text-2xl sm:text-3xl font-bold text-white">Admin Control Center</h2>
+                        
+                        <div class="flex gap-2 border-b border-yellow-400/10 pb-2 overflow-x-auto whitespace-nowrap scrollbar-none">
+                            <button onclick="window.adminDashboard.switchTab('dashboard', event)" class="tab-button active px-3 sm:px-4 py-2 text-xs font-bold text-yellow-400">📊 Dashboard</button>
+                            <button onclick="window.adminDashboard.switchTab('customers', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400">👥 Customers</button>
+                            <button onclick="window.adminDashboard.switchTab('tickets', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 relative">
+                               🎫 Tickets <span id="badge-branch-tickets" class="hidden absolute -top-1 -right-1 px-1.5 py-0.5 bg-red-500 text-white rounded-full text-[9px] font-bold">0</span>
+                            </button>
+                            <button onclick="window.adminDashboard.switchTab('payments', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400">💳 Payments</button>
+                            <button onclick="window.adminDashboard.switchTab('notifications', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 relative">
+                                🔔 Notifications <span id="badge-branch-notifications" class="hidden absolute -top-1 -right-1 px-1.5 py-0.5 bg-red-500 text-white rounded-full text-[9px] font-bold">0</span>
+                            </button>
+                            <button onclick="window.adminDashboard.switchTab('bookAppointment', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 relative">
+                                📅 BookAppointment <span id="badge-branch-bookings" class="hidden absolute -top-1 -right-1 px-1.5 py-0.5 bg-red-500 text-white rounded-full text-[9px] font-bold">0</span>
+                            </button>
+                            <button onclick="window.adminDashboard.switchTab('settings', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400">⚙️ Settings</button>
+                        </div>
 
-                <!-- Responsive Tabs (Horizontal Scroll on Mobile) -->
-                <div class="sticky top-12 sm:top-16 z-30 w-full glass-panel border-b border-yellow-400/10 px-0 py-0 overflow-x-auto scrollbar-none">
-                    <div class="flex gap-1 sm:gap-2 px-3 sm:px-6 py-2 whitespace-nowrap min-w-min">
-                        <button onclick="window.adminDashboard.switchTab('dashboard', event)" class="tab-button active px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-yellow-400">📊 Dashboard</button>
-                        <button onclick="window.adminDashboard.switchTab('tickets', event)" class="tab-button px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-slate-400 hover:text-white">🎫 Tickets</button>
-                        <button onclick="window.adminDashboard.switchTab('appointments', event)" class="tab-button px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-slate-400 hover:text-white">📅 Appointments</button>
-                        <button onclick="window.adminDashboard.switchTab('notifications', event)" class="tab-button px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-slate-400 hover:text-white relative">
-                            🔔 Notify <span id="badge-admin-notifications" class="hidden absolute -top-1 -right-0 px-1.5 py-0.5 bg-red-500 text-white rounded-full text-[10px] font-bold">0</span>
-                        </button>
-                        <button onclick="window.adminDashboard.switchTab('payments', event)" class="tab-button px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-slate-400 hover:text-white">💳 Payments</button>
-                        <button onclick="window.adminDashboard.switchTab('settings', event)" class="tab-button px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-slate-400 hover:text-white">⚙️ Settings</button>
-                    </div>
-                </div>
-
-                <!-- Main Content Area (Scrollable) -->
-                <main class="flex-grow overflow-y-auto p-3 sm:p-6">
-                    <div class="max-w-6xl mx-auto space-y-4 sm:space-y-6">
                         <!-- Dashboard Tab -->
-                        <div id="admin-dashboard" class="tab-content active space-y-4 sm:space-y-6">
-                            <!-- Quick Stats (Mobile: 1 col, Tablet: 2 col, Desktop: 4 col) -->
-                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                                <div class="glass-panel rounded-lg sm:rounded-xl p-4 sm:p-5 border border-yellow-400/10">
-                                    <p class="text-xs sm:text-sm text-slate-400">Pending Approvals</p>
-                                    <p class="text-2xl sm:text-3xl font-bold text-yellow-400 mt-2" id="pending-count">0</p>
+                        <div id="admin-dashboard-tab" class="tab-content active space-y-4">
+                            <!-- Compact Stat Cards -->
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div class="glass-panel rounded-xl p-4 border border-yellow-400/10">
+                                    <p class="text-[10px] text-slate-400">Total Customers</p>
+                                    <h3 id="admin-total-customers" class="text-xl sm:text-2xl font-bold text-blue-400 mt-0.5">0</h3>
                                 </div>
-                                <div class="glass-panel rounded-lg sm:rounded-xl p-4 sm:p-5 border border-yellow-400/10">
-                                    <p class="text-xs sm:text-sm text-slate-400">Approved Tickets</p>
-                                    <p class="text-2xl sm:text-3xl font-bold text-emerald-400 mt-2" id="approved-count">0</p>
+                                <div class="glass-panel rounded-xl p-4 border border-yellow-400/10">
+                                    <p class="text-[10px] text-slate-400">Total Tickets</p>
+                                    <h3 id="admin-total-tickets" class="text-xl sm:text-2xl font-bold text-emerald-400 mt-0.5">0</h3>
                                 </div>
-                                <div class="glass-panel rounded-lg sm:rounded-xl p-4 sm:p-5 border border-yellow-400/10">
-                                    <p class="text-xs sm:text-sm text-slate-400">Total Revenue</p>
-                                    <p class="text-2xl sm:text-3xl font-bold text-purple-400 mt-2" id="revenue-count">0 ETB</p>
-                                </div>
-                                <div class="glass-panel rounded-lg sm:rounded-xl p-4 sm:p-5 border border-yellow-400/10">
-                                    <p class="text-xs sm:text-sm text-slate-400">My Customers</p>
-                                    <p class="text-2xl sm:text-3xl font-bold text-blue-400 mt-2" id="customer-count">0</p>
+                                <div class="glass-panel rounded-xl p-4 border border-yellow-400/10">
+                                    <p class="text-[10px] text-slate-400">Total Revenue</p>
+                                    <h3 id="admin-total-revenue" class="text-xl sm:text-2xl font-bold text-purple-400 mt-0.5">0 ETB</h3>
                                 </div>
                             </div>
 
-                            <!-- Chart Section -->
-                            ${window.adminLottery ? window.adminLottery.render() : '<p class="text-slate-400">Loading...</p>'}
+                            <!-- Embedded Independent Lottery Component -->
+                            ${window.adminLottery ? window.adminLottery.render() : ''}
                         </div>
 
-                        <!-- Tab Contents (Hidden Initially) -->
-                        <div id="admin-tickets" class="tab-content" style="display: none;"></div>
-                        <div id="admin-appointments" class="tab-content" style="display: none;"></div>
-                        <div id="admin-notifications" class="tab-content" style="display: none;"></div>
+                        <!-- Customers Tab -->
+                        <div id="admin-customers" class="tab-content" style="display: none;">
+                            <div class="space-y-4">
+                                <button onclick="openAddCustomerModal()" class="w-full sm:w-auto px-6 py-2.5 bg-yellow-400 text-black font-bold rounded-xl text-xs">+ Add Customer</button>
+                                <div id="admin-customers-list" class="space-y-3"></div>
+                            </div>
+                        </div>
+
+                        <!-- Tickets Tab -->
+                        <div id="admin-tickets" class="tab-content" style="display: none;">
+                            <div class="space-y-4">
+                                <h3 class="text-xl font-bold text-white">Recent Tickets</h3>
+                                <div id="admin-tickets-list" class="space-y-3"></div>
+                            </div>
+                        </div>
+
+                        <!-- Payments Tab -->
                         <div id="admin-payments" class="tab-content" style="display: none;"></div>
+
+                        <!-- Notifications Tab Content -->
+                        <div id="admin-notifications" class="tab-content" style="display: none;"></div>
+
+                        <!-- Book Appointment Tab Content -->
+                        <div id="admin-bookAppointment" class="tab-content" style="display: none;"></div>
+
+                        <!-- Settings Tab -->
                         <div id="admin-settings" class="tab-content" style="display: none;"></div>
                     </div>
                 </main>
             </div>
+
+            <!-- Add Customer Modal -->
+            <div id="customer-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50 p-4">
+                <div class="glass-panel rounded-2xl p-6 sm:p-8 w-full max-w-md border border-yellow-400/10 space-y-4">
+                    <h3 class="text-2xl font-bold text-white mb-2">Add Customer</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Customer Name</label>
+                            <input type="text" id="cust-name-input" placeholder="John Doe" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-3 px-4 text-white text-xs placeholder-slate-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Email</label>
+                            <input type="email" id="cust-email-input" placeholder="customer@email.com" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-3 px-4 text-white text-xs placeholder-slate-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Phone Number</label>
+                            <input type="tel" id="cust-phone-input" placeholder="0912345678" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-3 px-4 text-white text-xs placeholder-slate-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Default Password</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="cust-password-input" value="Welcome123!" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-3 px-4 text-white text-xs">
+                                <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('cust-password-input').value); notify('success', 'Password copied!');" class="px-3 bg-slate-800 hover:bg-slate-700 text-yellow-400 rounded-xl text-xs border border-yellow-400/20">Copy</button>
+                            </div>
+                        </div>
+                        <button onclick="addAdminCustomer()" class="w-full py-3 bg-yellow-400 text-black font-bold rounded-xl text-xs hover:bg-yellow-500 mt-2">Add Customer</button>
+                        <button onclick="closeAddCustomerModal()" class="w-full py-2 bg-slate-800 text-slate-300 rounded-xl text-xs">Cancel</button>
+                    </div>
+                </div>
+            </div>
         `;
+    }
+
+    switchTab(tabName, event) {
+        document.getElementById('admin-dashboard-tab').style.display = 'none';
+        document.getElementById('admin-customers').style.display = 'none';
+        document.getElementById('admin-tickets').style.display = 'none';
+        document.getElementById('admin-payments').style.display = 'none';
+        document.getElementById('admin-notifications').style.display = 'none';
+        document.getElementById('admin-bookAppointment').style.display = 'none';
+        document.getElementById('admin-settings').style.display = 'none';
+
+        const buttons = document.querySelectorAll('#admin-dashboard .tab-button');
+        buttons.forEach(btn => btn.classList.remove('active'));
+
+        if (tabName === 'dashboard') {
+            document.getElementById('admin-dashboard-tab').style.display = 'block';
+        } else if (tabName === 'customers') {
+            document.getElementById('admin-customers').style.display = 'block';
+        } else if (tabName === 'tickets') {
+            document.getElementById('admin-tickets').style.display = 'block';
+        } else if (tabName === 'payments') {
+            document.getElementById('admin-payments').style.display = 'block';
+        } else if (tabName === 'notifications') {
+            document.getElementById('admin-notifications').style.display = 'block';
+        } else if (tabName === 'bookAppointment') {
+            document.getElementById('admin-bookAppointment').style.display = 'block';
+        } else if (tabName === 'settings') {
+            document.getElementById('admin-settings').style.display = 'block';
+        }
+
+        if (event && event.target) {
+            event.target.classList.add('active');
+            event.target.style.color = '#FCD34D';
+        }
     }
 
     async loadData() {
         try {
-            console.log('📥 AdminDashboard: Starting loadData...');
-
-            // Load all components in parallel
-            await Promise.all([
-                this.loadTickets(),
-                this.loadAppointments(),
-                this.loadPayments(),
-                this.loadSettings(),
-                this.loadNotifications()
-            ]);
-
+            await loadAdminCustomers();
+            await loadAdminPayments();
+            await loadAdminStats();
+            
             if (window.adminLottery) {
                 await window.adminLottery.init();
             }
-
-            this.loadTabs();
-            this.updateDashboardStats();
-            notify('info', '✅ Dashboard loaded');
-        } catch (error) {
-            console.error('❌ Error loading admin dashboard:', error);
-        }
-    }
-
-    async loadTickets() {
-        try {
-            if (!window.adminTickets) {
-                window.adminTickets = new AdminTickets(this.adminId);
-            }
-        } catch (e) {
-            console.error('Error loading tickets:', e);
-        }
-    }
-
-    async loadAppointments() {
-        try {
-            if (!window.adminAppointments) {
-                window.adminAppointments = new AdminAppointments(this.adminId);
-            }
-        } catch (e) {
-            console.error('Error loading appointments:', e);
-        }
-    }
-
-    async loadPayments() {
-        try {
-            if (!window.adminPayments) {
-                window.adminPayments = new AdminPayments(this.adminId);
-            }
-        } catch (e) {
-            console.error('Error loading payments:', e);
-        }
-    }
-
-    async loadSettings() {
-        try {
-            if (!window.adminSettings) {
-                window.adminSettings = new AdminSettings(this.adminId);
-            }
-        } catch (e) {
-            console.error('Error loading settings:', e);
-        }
-    }
-
-    async loadNotifications() {
-        try {
-            // FIXED: Always pass the CURRENT admin's email, not cached instance
+            if (!window.adminTickets) window.adminTickets = new AdminTickets(this.adminId);
+            if (!window.adminPayments) window.adminPayments = new AdminPayments(this.adminId);
             if (!window.adminNotifications || window.adminNotifications.adminId !== this.adminId) {
                 window.adminNotifications = new AdminNotifications(this.adminId);
-                console.log(`✅ Created AdminNotifications for: ${this.adminId}`);
             }
-        } catch (e) {
-            console.error('Error loading notifications:', e);
-        }
-    }
-
-    loadTabs() {
-        try {
-            const ticketsContent = document.getElementById('admin-tickets');
-            const appointmentsContent = document.getElementById('admin-appointments');
-            const notificationsContent = document.getElementById('admin-notifications');
-            const paymentsContent = document.getElementById('admin-payments');
-            const settingsContent = document.getElementById('admin-settings');
-
-            if (ticketsContent && window.adminTickets) {
-                ticketsContent.innerHTML = window.adminTickets.render();
-            }
-            if (appointmentsContent && window.adminAppointments) {
-                appointmentsContent.innerHTML = window.adminAppointments.render();
-            }
-            if (notificationsContent && window.adminNotifications) {
-                notificationsContent.innerHTML = window.adminNotifications.render();
-            }
-            if (paymentsContent && window.adminPayments) {
-                paymentsContent.innerHTML = window.adminPayments.render();
-            }
-            if (settingsContent && window.adminSettings) {
-                settingsContent.innerHTML = window.adminSettings.render();
-            }
-
-            console.log('✅ All tabs loaded');
-        } catch (error) {
-            console.error('Error in loadTabs:', error);
-        }
-    }
-
-    async updateDashboardStats() {
-        try {
-            if (!db || !this.adminId) return;
-
-            // Get this admin's customers
-            const customersSnap = await db.collection('admin_customers')
-                .where('adminEmail', '==', this.adminId)
-                .get();
+            if (!window.adminBookAppointment) window.adminBookAppointment = new AdminBookAppointment(this.adminId);
+            if (!window.adminSettings) window.adminSettings = new AdminSettings(this.adminId);
             
-            const customerEmails = customersSnap.docs.map(doc => doc.data().email);
-            const customerEl = document.getElementById('customer-count');
-            if (customerEl) customerEl.textContent = customerEmails.length;
+            const ticketsTab = document.getElementById('admin-tickets');
+            if (ticketsTab) {
+                ticketsTab.innerHTML = window.adminTickets.render();
+                await window.adminTickets.init();
+            }
+            const paymentsTab = document.getElementById('admin-payments');
+            if (paymentsTab) paymentsTab.innerHTML = await window.adminPayments.render();
 
-            // Get tickets from this admin's customers
-            let pending = 0, approved = 0, revenue = 0;
-            
-            for (const custEmail of customerEmails) {
-                const ticketsSnap = await db.collection('customer_tickets')
-                    .where('customerEmail', '==', custEmail)
-                    .get();
-
-                ticketsSnap.forEach(doc => {
-                    const data = doc.data();
-                    revenue += data.cost || 0;
-                    if (data.status === 'pending') pending++;
-                    if (data.status === 'approved') approved++;
-                });
+            const notifTab = document.getElementById('admin-notifications');
+            if (notifTab) {
+                notifTab.innerHTML = window.adminNotifications.render();
+                if (typeof window.adminNotifications.displayHistory === 'function') window.adminNotifications.displayHistory();
             }
 
-            const pendingEl = document.getElementById('pending-count');
-            const approvedEl = document.getElementById('approved-count');
-            const revenueEl = document.getElementById('revenue-count');
+            const apptTab = document.getElementById('admin-bookAppointment');
+            if (apptTab) apptTab.innerHTML = await window.adminBookAppointment.render();
 
-            if (pendingEl) pendingEl.textContent = pending;
-            if (approvedEl) approvedEl.textContent = approved;
-            if (revenueEl) revenueEl.textContent = revenue.toLocaleString() + ' ETB';
+            const settingsTab = document.getElementById('admin-settings');
+            if (settingsTab) settingsTab.innerHTML = window.adminSettings.render();
+
         } catch (error) {
-            console.error('Error updating stats:', error);
+            console.error('Error loading admin data:', error);
         }
     }
 
-    switchTab(tabName, event) {
-        console.log('🔀 Switching to tab:', tabName);
-        
-        // Hide all tabs
-        const tabElements = document.querySelectorAll('[id^="admin-"]');
-        tabElements.forEach(el => {
-            if (el.classList && el.classList.contains('tab-content')) {
-                el.style.display = 'none';
-            }
+    async approvePayment(docId) {
+        if (!db) return notify('error', '❌ Database not initialized');
+        try {
+            await db.collection('customer_tickets').doc(docId).update({
+                status: 'Approved',
+                approvedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            notify('success', '✅ Payment approved successfully!');
+            await loadAdminTickets();
+            await loadAdminStats();
+        } catch (error) {
+            notify('error', `❌ Error: ${error.message}`);
+        }
+    }
+
+    async deleteTicket(docId) {
+        if (!confirm('Are you sure you want to delete this ticket?')) return;
+        if (!db) return notify('error', '❌ Database not initialized');
+
+        try {
+            await db.collection('customer_tickets').doc(docId).delete();
+            notify('success', '🗑️ Ticket deleted successfully!');
+            await loadAdminTickets();
+            await loadAdminStats();
+        } catch (error) {
+            notify('error', `❌ Error: ${error.message}`);
+        }
+    }
+
+    async rejectPayment(docId) {
+        if (!db) return notify('error', '❌ Database not initialized');
+        try {
+            await db.collection('customer_tickets').doc(docId).update({
+                status: 'Rejected',
+                rejectedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            notify('error', '❌ Payment rejected');
+            await loadAdminTickets();
+            await loadAdminStats();
+        } catch (error) {
+            notify('error', `❌ Error: ${error.message}`);
+        }
+    }
+}
+
+async function openAddCustomerModal() {
+    document.getElementById('customer-modal').style.display = 'flex';
+}
+
+function closeAddCustomerModal() {
+    document.getElementById('customer-modal').style.display = 'none';
+}
+
+async function addAdminCustomer() {
+    const name = document.getElementById('cust-name-input').value.trim();
+    const email = document.getElementById('cust-email-input').value.trim();
+    const phone = document.getElementById('cust-phone-input').value.trim();
+    const password = document.getElementById('cust-password-input').value.trim();
+
+    if (!name || !email || !password) {
+        return notify('error', '❌ Please fill in all required fields');
+    }
+
+    try {
+        await db.collection('admin_customers').add({
+            adminEmail: currentUser.email,
+            name,
+            email,
+            phone,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        // Remove active from all buttons
-        const tabButtons = document.querySelectorAll('.tab-button');
-        tabButtons.forEach(btn => {
-            btn.classList.remove('active');
+        notify('success', '✅ Customer added successfully!');
+        closeAddCustomerModal();
+        await loadAdminCustomers();
+        await loadAdminStats();
+    } catch (error) {
+        notify('error', `❌ Error: ${error.message}`);
+    }
+}
+
+async function loadAdminCustomers() {
+    if (!db || !currentUser) return;
+
+    try {
+        const manualSnapshot = await db.collection('admin_customers')
+            .where('adminEmail', '==', currentUser.email)
+            .get();
+
+        const selfRegisteredSnapshot = await db.collection('customer_settings')
+            .where('preferredAdmin', '==', currentUser.email)
+            .get();
+
+        const content = document.getElementById('admin-customers-list');
+        if (!content) return;
+
+        let allCustomers = [];
+        manualSnapshot.forEach(doc => allCustomers.push({ id: doc.id, type: 'manual', ...doc.data() }));
+        selfRegisteredSnapshot.forEach(doc => {
+            const data = doc.data();
+            allCustomers.push({ 
+                id: doc.id, 
+                type: 'self', 
+                name: data.customerName || 'N/A',
+                email: data.customerEmail || doc.id,
+                phone: data.phone || 'N/A',
+                tickets: data.tickets || 0,
+                spent: data.spent || 0
+            });
         });
 
-        // Show selected tab
-        const tab = document.getElementById(`admin-${tabName}`);
-        if (tab) {
-            tab.style.display = 'block';
-            tab.classList.add('active');
-            console.log('✅ Tab shown:', tabName);
+        if (allCustomers.length === 0) {
+            content.innerHTML = '<p class="text-slate-400 text-center py-6">No customers yet</p>';
+            return;
         }
 
-        // Highlight button
-        if (event && event.target) {
-            event.target.classList.add('active');
+        content.innerHTML = allCustomers.map(cust => `
+            <div class="glass-panel rounded-lg p-4 border border-yellow-400/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs">
+                <div>
+                    <p class="font-bold text-white text-sm">${cust.name} ${cust.type === 'self' ? '<span class="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded ml-2">Self-Registered</span>' : ''}</p>
+                    <p class="text-slate-400 mt-0.5">${cust.email} • ${cust.phone}</p>
+                    <p class="text-slate-400 mt-0.5">Tickets: ${cust.tickets || 0} • Spent: ${cust.spent || 0} ETB</p>
+                </div>
+                ${cust.type === 'manual' ? `<button onclick="deleteAdminCustomer('${cust.id}')" class="px-2.5 py-1 bg-red-400/20 text-red-400 rounded">Delete</button>` : '<span class="text-slate-500 italic">Platform User</span>'}
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error('Error loading customers:', error);
+    }
+}
+
+async function deleteAdminCustomer(docId) {
+    if (!confirm('Delete customer?')) return;
+
+    try {
+        await db.collection('admin_customers').doc(docId).delete();
+        notify('success', '✅ Customer deleted');
+        await loadAdminCustomers();
+        await loadAdminStats();
+    } catch (error) {
+        notify('error', `❌ Error: ${error.message}`);
+    }
+}
+
+async function loadAdminPayments() {
+    if (!db || !currentUser) return;
+
+    try {
+        const doc = await db.collection('admin_settings').doc(currentUser.email).get();
+        if (doc.exists) {
+            const data = doc.data();
+            if (data.telebirrPhone && document.getElementById('admin-telebirr')) document.getElementById('admin-telebirr').value = data.telebirrPhone;
+            if (data.cbeAccount && document.getElementById('admin-cbe')) document.getElementById('admin-cbe').value = data.cbeAccount;
+        }
+    } catch (error) {
+        console.error('Error loading payments:', error);
+    }
+}
+
+async function loadAdminStats() {
+    if (!db || !currentUser) return;
+
+    try {
+        const manualSnapshot = await db.collection('admin_customers')
+            .where('adminEmail', '==', currentUser.email)
+            .get();
+
+        const selfRegisteredSnapshot = await db.collection('customer_settings')
+            .where('preferredAdmin', '==', currentUser.email)
+            .get();
+
+        const totalCustomersCount = manualSnapshot.size + selfRegisteredSnapshot.size;
+        if (document.getElementById('admin-total-customers')) {
+            document.getElementById('admin-total-customers').textContent = totalCustomersCount;
         }
 
-        // Scroll tabs to view on mobile
-        if (event && event.target) {
-            event.target.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        const ticketSnapshot = await db.collection('customer_tickets')
+            .where('adminEmail', '==', currentUser.email)
+            .get();
+            
+        if (document.getElementById('admin-total-tickets')) {
+            document.getElementById('admin-total-tickets').textContent = ticketSnapshot.size;
         }
+
+        let revenue = 0;
+        ticketSnapshot.forEach(doc => {
+            revenue += doc.data().cost || 0;
+        });
+        if (document.getElementById('admin-total-revenue')) {
+            document.getElementById('admin-total-revenue').textContent = revenue.toLocaleString() + ' ETB';
+        }
+    } catch (error) {
+        console.error('Error loading stats:', error);
     }
 }
