@@ -140,6 +140,18 @@
             notify('success', '✅ Logged out');
         }
 
+        // Password complexity validator function
+        function validatePasswordComplexity(password) {
+            // Requires at least 8 characters, 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character
+            const minLength = password.length >= 8;
+            const hasUppercase = /[A-Z]/.test(password);
+            const hasLowercase = /[a-z]/.test(password);
+            const hasNumber = /[0-9]/.test(password);
+            const hasSpecial = /[^A-Za-z0-9]/.test(password);
+            
+            return minLength && hasUppercase && hasLowercase && hasNumber && hasSpecial;
+        }
+
         // Render Public Page with Responsive Layouts
         function renderPublicPage() {
             return `
@@ -195,7 +207,7 @@
                             <input type="email" id="signup-email" name="email" autocomplete="email" placeholder="customer@email.com" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs sm:text-sm">
                         </div>
                         <div>
-                            <label class="block text-xs text-slate-400 mb-1">Password</label>
+                            <label class="block text-xs text-slate-400 mb-1">Password (Min 8 chars, Upper, Lower, Number, Special)</label>
                             <input type="password" id="signup-password" name="new-password" autocomplete="new-password" placeholder="••••••••" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs sm:text-sm">
                         </div>
                         <div>
@@ -264,14 +276,19 @@
             const adminSelectEl = document.getElementById('signup-admin-select');
 
             const name = nameEl?.value.trim();
-            // Make email case-sensitive by preserving exact input (or lowercase if standard preference, but keeping literal input makes it strictly case-sensitive)
-            const email = emailEl?.value.trim();
-            const password = passwordEl?.value; // Password kept strictly case-sensitive as inputted
+            const email = emailEl?.value.trim(); // Case-sensitive exact value preserved
+            const password = passwordEl?.value; // Case-sensitive exact value preserved
             const phone = phoneEl?.value.trim();
             const preferredAdmin = adminSelectEl?.value;
 
             if (!name || !email || !password || !phone || !preferredAdmin) {
                 notify('error', '❌ Please fill in all fields and select an admin');
+                return;
+            }
+
+            // Enforce strict password complexity
+            if (!validatePasswordComplexity(password)) {
+                notify('error', '❌ Password must be at least 8 characters long and include uppercase, lowercase, number, and special character.');
                 return;
             }
 
@@ -309,7 +326,7 @@
         async function handleLogin(event) {
             if (event) event.preventDefault();
             
-            // Preserve exact case-sensitivity for both email and password inputs
+            // Strictly case-sensitive email and password inputs
             const email = document.getElementById('login-email')?.value.trim() || '';
             const password = document.getElementById('login-password')?.value || '';
 
