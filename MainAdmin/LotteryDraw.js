@@ -1,7 +1,3 @@
-// ============================================
-// MAIN ADMIN LOTTERY DRAW COMPONENT (SCHEDULE-LOCKED WITH PHONE & HISTORY)
-// ============================================
-
 class MainAdminLotteryDraw {
     constructor() {
         this.selectedScope = 'global';
@@ -14,13 +10,13 @@ class MainAdminLotteryDraw {
                 <div>
                     <span class="bg-yellow-400/20 text-yellow-300 border border-yellow-400/30 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">⚡ LIVE DRAW CENTER</span>
                     <h3 class="text-3xl font-black text-gradient mt-2">🎰 Global Lucky Draw</h3>
-                    <p class="text-xs text-slate-300 mt-1">Set your exact target date and AM/PM time below to schedule the draw and unlock the wheel.</p>
+                    <p class="text-xs text-slate-300 mt-1">Set your exact target date, AM/PM time, and TikTok live link below to schedule the draw and broadcast notifications.</p>
                 </div>
 
-                <!-- PRECISE DATE & AM/PM SCHEDULE CONTAINER -->
+                <!-- PRECISE DATE, TIME & TIKTOK LINK SCHEDULE CONTAINER -->
                 <div class="bg-black/40 p-4 rounded-xl border border-yellow-400/20 space-y-3 text-left">
                     <h4 class="text-xs font-bold text-yellow-400 flex items-center gap-2">
-                        ⚙️ PRECISE DATE & AM/PM SCHEDULE
+                        ⚙️ PRECISE DATE, TIME & TIKTOK LIVE LINK
                     </h4>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
                         <div>
@@ -39,10 +35,14 @@ class MainAdminLotteryDraw {
                             </select>
                         </div>
                     </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">TikTok Live Link</label>
+                        <input type="url" id="main-tiktok-link-input" placeholder="https://tiktok.com/@boniLottery" class="w-full bg-black/60 border border-yellow-400/30 rounded-lg py-2 px-3 text-white text-xs">
+                    </div>
                     <div class="flex items-center justify-between pt-2">
                         <span id="main-target-display-text" class="text-[11px] text-yellow-400/80 font-medium">📅 Target Draw Time: Not Set</span>
                         <button onclick="window.mainAdminLottery.saveSchedule()" class="px-4 py-2 bg-yellow-400/20 hover:bg-yellow-400/30 border border-yellow-400/40 text-yellow-300 font-bold text-xs rounded-lg transition-all flex items-center gap-1.5">
-                            💾 Save Schedule
+                            💾 Save Schedule & TikTok Link
                         </button>
                     </div>
                 </div>
@@ -100,7 +100,6 @@ class MainAdminLotteryDraw {
         await this.loadSchedule();
         await this.loadPastWinners();
 
-        // Start real-time check loop every second
         if (this.scheduleCheckInterval) clearInterval(this.scheduleCheckInterval);
         this.scheduleCheckInterval = setInterval(() => this.checkScheduleTiming(), 1000);
     }
@@ -138,7 +137,6 @@ class MainAdminLotteryDraw {
         }
 
         if (now >= targetDateObj) {
-            // Unlocked
             drawBtn.disabled = false;
             drawBtn.className = "w-full py-4 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 text-black font-black rounded-xl text-sm shadow-lg hover:opacity-95 transform active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer";
             drawBtn.innerHTML = "🎲 SPIN & DRAW WINNER NOW";
@@ -146,7 +144,6 @@ class MainAdminLotteryDraw {
             statusBadge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-950/40 text-emerald-400 border border-emerald-500/30";
             statusBadge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> DRAW UNLOCKED & READY!';
         } else {
-            // Locked
             drawBtn.disabled = true;
             drawBtn.className = "w-full py-4 bg-slate-800 text-slate-500 font-black rounded-xl text-sm shadow-lg cursor-not-allowed transition-all flex items-center justify-center gap-2";
             
@@ -167,6 +164,7 @@ class MainAdminLotteryDraw {
         const date = document.getElementById('main-draw-date-input')?.value;
         const time = document.getElementById('main-draw-time-input')?.value;
         const ampm = document.getElementById('main-draw-ampm-input')?.value;
+        const tiktokLink = document.getElementById('main-tiktok-link-input')?.value.trim() || 'https://tiktok.com/@boniLottery';
 
         if (!date || !time) {
             return notify('error', '❌ Please provide both date and time.');
@@ -178,12 +176,13 @@ class MainAdminLotteryDraw {
                     targetDate: date,
                     targetTime: time,
                     ampm: ampm,
+                    tiktokLink: tiktokLink,
                     updatedAt: new Date()
                 }, { merge: true });
             }
             
             this.checkScheduleTiming();
-            notify('success', '💾 Schedule saved successfully!');
+            notify('success', '💾 Schedule & TikTok link saved successfully!');
         } catch (error) {
             console.error('Error saving schedule:', error);
             notify('error', '❌ Failed to save schedule.');
@@ -199,10 +198,12 @@ class MainAdminLotteryDraw {
                 const dateInput = document.getElementById('main-draw-date-input');
                 const timeInput = document.getElementById('main-draw-time-input');
                 const ampmInput = document.getElementById('main-draw-ampm-input');
+                const tiktokLinkInput = document.getElementById('main-tiktok-link-input');
 
                 if (dateInput && data.targetDate) dateInput.value = data.targetDate;
                 if (timeInput && data.targetTime) timeInput.value = data.targetTime;
                 if (ampmInput && data.ampm) ampmInput.value = data.ampm;
+                if (tiktokLinkInput && data.tiktokLink) tiktokLinkInput.value = data.tiktokLink;
 
                 this.checkScheduleTiming();
             }
