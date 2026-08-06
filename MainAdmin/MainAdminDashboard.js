@@ -1,10 +1,10 @@
 // ============================================
-// MAIN ADMIN DASHBOARD - MOBILE OPTIMIZED
+// MAIN ADMIN DASHBOARD (PARENT COMPONENT)
 // ============================================
 
 class MainAdminDashboard {
     constructor() {
-        // Initialize ALL child components
+        // Initialize ALL child components including the lottery draw
         this.admins = new Admins();
         this.bookings = new MainAdminBookings();
         this.customers = new Customers();
@@ -16,64 +16,62 @@ class MainAdminDashboard {
         this.notifications = new Notifications();
         this.settings = new Settings();
         
+        // Independent lottery draw instance
         window.mainAdminLottery = new MainAdminLotteryDraw();
     }
 
     render() {
         return `
             <div id="main-admin-dashboard" class="min-h-screen bg-black flex flex-col">
-                <!-- Mobile-friendly Header -->
-                <header class="sticky top-0 z-40 w-full glass-panel border-b border-yellow-400/10 px-3 sm:px-6 py-3 sm:py-4">
-                    <div class="flex items-center justify-between gap-2">
-                        <h1 class="font-bold text-base sm:text-xl text-gradient truncate">👑 MAIN ADMIN</h1>
-                        <button onclick="logout()" class="px-2 sm:px-4 py-2 bg-red-950/30 text-red-400 text-xs font-bold rounded-lg hover:bg-red-950/50">Logout</button>
+                <header class="sticky top-0 z-40 w-full glass-panel border-b border-yellow-400/10 px-4 sm:px-6 py-4">
+                    <div class="max-w-7xl mx-auto flex items-center justify-between">
+                        <h1 class="font-bold text-base sm:text-xl text-gradient">👑 MAIN ADMIN DASHBOARD</h1>
+                        <button onclick="logout()" class="px-3 sm:px-4 py-2 bg-red-950/30 text-red-400 text-xs font-bold rounded-xl">Logout</button>
                     </div>
                 </header>
-
-                <!-- Responsive Tabs (Horizontal Scroll on Mobile) -->
-                <div class="sticky top-12 sm:top-16 z-30 w-full glass-panel border-b border-yellow-400/10 px-0 py-0 overflow-x-auto scrollbar-none">
-                    <div class="flex gap-1 sm:gap-2 px-3 sm:px-6 py-2 whitespace-nowrap min-w-min">
-                        <button onclick="window.mainAdminDashboard.switchTab('dashboard', event)" class="tab-button active px-2 sm:px-4 py-2 text-xs sm:text-sm font-bold text-yellow-400">📊 Dashboard</button>
-                        <button onclick="window.mainAdminDashboard.switchTab('admins', event)" class="tab-button px-2 sm:px-4 py-2 text-xs sm:text-sm font-bold text-slate-400 hover:text-white">🛡️ Admins</button>
-                        <button onclick="window.mainAdminDashboard.switchTab('customers', event)" class="tab-button px-2 sm:px-4 py-2 text-xs sm:text-sm font-bold text-slate-400 hover:text-white">👥 Customers</button>
-                        <button onclick="window.mainAdminDashboard.switchTab('ranges', event)" class="tab-button px-2 sm:px-4 py-2 text-xs sm:text-sm font-bold text-slate-400 hover:text-white">📊 Ranges</button>
-                        <button onclick="window.mainAdminDashboard.switchTab('payments', event)" class="tab-button px-2 sm:px-4 py-2 text-xs sm:text-sm font-bold text-slate-400 hover:text-white">💳 Payments</button>
-                        <button onclick="window.mainAdminDashboard.switchTab('analytics', event)" class="tab-button px-2 sm:px-4 py-2 text-xs sm:text-sm font-bold text-slate-400 hover:text-white">📈 Analytics</button>
-                        <button onclick="window.mainAdminDashboard.switchTab('transactions', event)" class="tab-button px-2 sm:px-4 py-2 text-xs sm:text-sm font-bold text-slate-400 hover:text-white">📋 Trans</button>
-                        <button onclick="window.mainAdminDashboard.switchTab('auditlog', event)" class="tab-button px-2 sm:px-4 py-2 text-xs sm:text-sm font-bold text-slate-400 hover:text-white">🔒 Audit</button>
-                        <button onclick="window.mainAdminDashboard.switchTab('bookings', event)" class="tab-button px-2 sm:px-4 py-2 text-xs sm:text-sm font-bold text-slate-400 hover:text-white relative">
-                            📅 Bookings <span id="badge-main-bookings" class="hidden absolute -top-1 -right-0 px-1 py-0.5 bg-red-500 text-white rounded-full text-[9px] font-bold">0</span>
-                        </button>
-                        <button onclick="window.mainAdminDashboard.switchTab('notifications', event)" class="tab-button px-2 sm:px-4 py-2 text-xs sm:text-sm font-bold text-slate-400 hover:text-white relative">
-                            📢 Notify <span id="badge-main-notifications" class="hidden absolute -top-1 -right-0 px-1 py-0.5 bg-red-500 text-white rounded-full text-[9px] font-bold">0</span>
-                        </button>
-                        <button onclick="window.mainAdminDashboard.switchTab('settings', event)" class="tab-button px-2 sm:px-4 py-2 text-xs sm:text-sm font-bold text-slate-400 hover:text-white">⚙️ Settings</button>
-                    </div>
-                </div>
-
-                <!-- Main Content Area (Scrollable) -->
-                <main class="flex-grow overflow-y-auto p-3 sm:p-6">
-                    <div class="max-w-7xl mx-auto space-y-4 sm:space-y-6">
-                        <h2 class="text-xl sm:text-3xl font-bold text-white">System Control Center</h2>
-
+                
+                <main class="flex-grow p-4 sm:p-6 overflow-y-auto">
+                    <div class="max-w-7xl mx-auto space-y-6">
+                        <h2 class="text-2xl sm:text-3xl font-bold text-white">System Control Center</h2>
+                        
+                        <!-- TABS -->
+                        <div class="flex gap-2 border-b border-yellow-400/10 pb-2 overflow-x-auto whitespace-nowrap scrollbar-none">
+                            <button onclick="window.mainAdminDashboard.switchTab('dashboard', event)" class="tab-button active px-3 sm:px-4 py-2 text-xs font-bold text-yellow-400">📊 Dashboard</button>
+                            <button onclick="window.mainAdminDashboard.switchTab('admins', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🛡️ Admins</button>
+                            <button onclick="window.mainAdminDashboard.switchTab('customers', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">👥 Customers</button>
+                            <button onclick="window.mainAdminDashboard.switchTab('ranges', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📊 Ranges</button>
+                            <button onclick="window.mainAdminDashboard.switchTab('payments', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">💳 Payments</button>
+                            <button onclick="window.mainAdminDashboard.switchTab('analytics', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📈 Analytics</button>
+                            <button onclick="window.mainAdminDashboard.switchTab('transactions', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📋 Transactions</button>
+                            <button onclick="window.mainAdminDashboard.switchTab('auditlog', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🔒 Audit</button>                         
+                            <button onclick="window.mainAdminDashboard.switchTab('bookings', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white relative">
+                                📅 Bookings <span id="badge-main-bookings" class="hidden absolute -top-1 -right-1 px-1.5 py-0.5 bg-red-500 text-white rounded-full text-[9px] font-bold">0</span>
+                            </button>
+                            <button onclick="window.mainAdminDashboard.switchTab('notifications', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white relative">
+                                📢 Notify <span id="badge-main-notifications" class="hidden absolute -top-1 -right-1 px-1.5 py-0.5 bg-red-500 text-white rounded-full text-[9px] font-bold">0</span>
+                            </button>
+                            <button onclick="window.mainAdminDashboard.switchTab('settings', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">⚙️ Settings</button>
+                        </div>
+                       
+                        <!-- TAB CONTENTS -->
                         <!-- Dashboard Tab -->
-                        <div id="main-dashboard" class="tab-content active space-y-4 sm:space-y-6">
-                            <!-- Quick Stats (Mobile: 1 col, Tablet: 2 col, Desktop: 4 col) -->
-                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                                <div class="glass-panel rounded-lg sm:rounded-xl p-4 sm:p-5 border border-yellow-400/10">
-                                    <p class="text-xs sm:text-sm text-slate-400">Total Admins</p>
+                        <div id="main-dashboard" class="tab-content active space-y-6">
+                            <!-- Compact Stat Cards -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <div class="glass-panel rounded-2xl p-5 sm:p-6 border border-yellow-400/10">
+                                    <p class="text-xs text-slate-400">Total Admins</p>
                                     <p class="text-2xl sm:text-3xl font-bold text-yellow-400 mt-2" id="total-admins">0</p>
                                 </div>
-                                <div class="glass-panel rounded-lg sm:rounded-xl p-4 sm:p-5 border border-yellow-400/10">
-                                    <p class="text-xs sm:text-sm text-slate-400">Total Customers</p>
+                                <div class="glass-panel rounded-2xl p-5 sm:p-6 border border-yellow-400/10">
+                                    <p class="text-xs text-slate-400">Total Customers</p>
                                     <p class="text-2xl sm:text-3xl font-bold text-blue-400 mt-2" id="total-customers">0</p>
                                 </div>
-                                <div class="glass-panel rounded-lg sm:rounded-xl p-4 sm:p-5 border border-yellow-400/10">
-                                    <p class="text-xs sm:text-sm text-slate-400">Total Tickets</p>
+                                <div class="glass-panel rounded-2xl p-5 sm:p-6 border border-yellow-400/10">
+                                    <p class="text-xs text-slate-400">Total Tickets</p>
                                     <p class="text-2xl sm:text-3xl font-bold text-emerald-400 mt-2" id="total-tickets">0</p>
                                 </div>
-                                <div class="glass-panel rounded-lg sm:rounded-xl p-4 sm:p-5 border border-yellow-400/10">
-                                    <p class="text-xs sm:text-sm text-slate-400">Platform Revenue</p>
+                                <div class="glass-panel rounded-2xl p-5 sm:p-6 border border-yellow-400/10">
+                                    <p class="text-xs text-slate-400">Platform Revenue</p>
                                     <p class="text-2xl sm:text-3xl font-bold text-purple-400 mt-2" id="total-revenue">0 ETB</p>
                                 </div>
                             </div>
@@ -82,7 +80,6 @@ class MainAdminDashboard {
                             ${window.mainAdminLottery ? window.mainAdminLottery.render() : ''}
                         </div>
 
-                        <!-- Tab Contents (Hidden Initially) -->
                         <div id="main-bookings" class="tab-content" style="display: none;"></div>
                         <div id="main-admins" class="tab-content" style="display: none;"></div>
                         <div id="main-customers" class="tab-content" style="display: none;"></div>
@@ -101,7 +98,7 @@ class MainAdminDashboard {
 
     async loadData() {
         try {
-            console.log('📥 MainAdminDashboard: Starting loadData...');
+            console.log('📥 Starting loadData...');
             
             await Promise.all([
                 this.admins.loadData(),
@@ -193,7 +190,6 @@ class MainAdminDashboard {
     switchTab(tabName, event) {
         console.log('🔀 Switching to tab:', tabName);
         
-        // Hide all tabs
         const tabElements = document.querySelectorAll('[id^="main-"]');
         tabElements.forEach(el => {
             if (el.classList && el.classList.contains('tab-content')) {
@@ -201,28 +197,24 @@ class MainAdminDashboard {
             }
         });
 
-        // Remove active from all buttons
         const tabButtons = document.querySelectorAll('.tab-button');
         tabButtons.forEach(btn => {
             btn.classList.remove('active');
+            btn.style.color = '';
         });
 
-        // Show selected tab
         const tab = document.getElementById(`main-${tabName}`);
         if (tab) {
             tab.style.display = 'block';
             tab.classList.add('active');
             console.log('✅ Tab shown:', tabName);
+        } else {
+            console.warn('⚠️ Tab not found:', `main-${tabName}`);
         }
 
-        // Highlight button
         if (event && event.target) {
             event.target.classList.add('active');
-        }
-
-        // Scroll tabs to view on mobile
-        if (event && event.target) {
-            event.target.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            event.target.style.color = '#FCD34D';
         }
     }
 }
