@@ -85,7 +85,7 @@
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-        window.currentUser = null;
+        let currentUser = null;
         let sessionTimeoutTimer = null;
 
         console.log('✅ Firebase initialized');
