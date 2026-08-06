@@ -1,9 +1,3 @@
-// ============================================
-// CUSTOMER DRAWINGS (CHILD COMPONENT - WITH LIVE COUNTDOWN)
-// Parent: CustomerDashboard
-// View drawings managed by the customer's registered admin
-// ============================================
-
 class CustomerDrawings {
     constructor(custId) {
         this.custId = custId;
@@ -18,12 +12,11 @@ class CustomerDrawings {
     async init() {
         await this.loadCustomerAndDrawings();
         this.initCustomerScheduleListener();
-        this.initLiveDrawAutoListener(); // 👈 Automated TikTok notification listener
+        this.initLiveDrawAutoListener(); 
     }
 
     async loadCustomerAndDrawings() {
         try {
-            // 1. Get customer profile to see which admin they are registered under
             let customerData = null;
             const doc = await db.collection('customers').doc(this.custId).get();
             if (doc.exists) {
@@ -35,7 +28,6 @@ class CustomerDrawings {
 
             this.customerAdmin = customerData.assignedAdmin || customerData.adminId || customerData.branchAdmin || customerData.preferredAdmin || 'Main Admin';
 
-            // 2. Fetch drawings managed by this specific admin from Firestore collections
             let snapshot = await db.collection('draws')
                 .where('adminId', '==', this.customerAdmin)
                 .get();
@@ -77,7 +69,6 @@ class CustomerDrawings {
         }
     }
 
-    // Real-time listener for the admin's saved schedule updates & countdown calculation
     async initCustomerScheduleListener() {
         if (!db) return;
 
@@ -99,7 +90,6 @@ class CustomerDrawings {
                     nextDrawTitleEl.textContent = `${targetDate} • ${targetTime} ${ampm}`;
                 }
 
-                // Parse exact target date for live countdown calculation
                 if (targetDate && targetTime) {
                     const parts = targetDate.split('-').map(Number);
                     if (parts.length === 3) {
@@ -111,7 +101,6 @@ class CustomerDrawings {
 
                         this.targetDateObj = new Date(year, month - 1, day, hours, minutes, 0, 0);
                         
-                        // Start interval ticker
                         if (this.countdownTimer) clearInterval(this.countdownTimer);
                         this.updateCountdownDisplay();
                         this.countdownTimer = setInterval(() => this.updateCountdownDisplay(), 1000);
@@ -125,7 +114,6 @@ class CustomerDrawings {
         });
     }
 
-    // Automatic Client-Side Live Notification Trigger
     initLiveDrawAutoListener() {
         if (!db) return;
 
@@ -156,21 +144,25 @@ class CustomerDrawings {
                 const now = new Date().getTime();
                 const timeDiff = now - drawTimeMs;
                 const windowKey = `notified_draw_${year}-${month}-${day}_${hours}-${minutes}`;
+                const dismissedKey = `dismissed_tiktok_link_${year}-${month}-${day}_${hours}-${minutes}`;
 
-                // Triggers automatically within a 2-minute window of the target drawing time without manual intervention
-                if (timeDiff >= 0 && timeDiff <= 120000 && !localStorage.getItem(windowKey)) {
+                // Stay on dashboard for 30 minutes (1,800,000 ms) after start time unless dismissed or clicked
+                const thirtyMinutesMs = 30 * 60 * 1000;
+
+                if (timeDiff >= 0 && timeDiff <= thirtyMinutesMs && !localStorage.getItem(windowKey) && !localStorage.getItem(dismissedKey)) {
                     localStorage.setItem(windowKey, 'true');
                     this.showLiveDrawModal(
                         '🔴 Live Drawing is Happening Now!',
                         'The scheduled draw has started. Join the TikTok stream to see if your numbers won!',
-                        tiktokLink
+                        tiktokLink,
+                        dismissedKey
                     );
                 }
             }, 1000);
         });
     }
 
-    showLiveDrawModal(title, message, link) {
+    showLiveDrawModal(title, message, link, dismissedKey) {
         if (document.getElementById('live-draw-modal')) return;
 
         const modalHtml = `
@@ -182,10 +174,10 @@ class CustomerDrawings {
                     <h3 class="text-xl font-bold text-yellow-400 mt-2">${title}</h3>
                     <p class="text-xs text-slate-300 leading-relaxed">${message}</p>
                     <div class="pt-2 space-y-2">
-                        <a href="${link}" target="_blank" class="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-extrabold rounded-xl block text-xs shadow-lg hover:opacity-90 transition-all">
-                            🚀 Join TikTok Live Stream
+                        <a href="${link}" target="_blank" onclick="localStorage.setItem('${dismissedKey}', 'true'); document.getElementById('live-draw-modal').remove();" class="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-extrabold rounded-xl block text-xs shadow-lg hover:opacity-90 transition-all">
+                            🚀 Join TikTok Live Stream (Makes Notification Disappear)
                         </a>
-                        <button onclick="document.getElementById('live-draw-modal').remove()" class="w-full py-2 bg-slate-900 text-slate-400 hover:text-white rounded-xl text-xs font-bold border border-slate-800">
+                        <button onclick="localStorage.setItem('${dismissedKey}', 'true'); document.getElementById('live-draw-modal').remove();" class="w-full py-2 bg-slate-900 text-slate-400 hover:text-white rounded-xl text-xs font-bold border border-slate-800">
                             Close
                         </button>
                     </div>
@@ -262,17 +254,24 @@ class CustomerDrawings {
                     <span class="text-xs bg-yellow-400/10 text-yellow-400 border border-yellow-400/20 px-3 py-1 rounded-full">Managed by: ${this.customerAdmin}</span>
                 </div>
 
-                <!-- LIVE SCHEDULE SYNC BANNER -->
+                <!-- CUSTOMERS PARENT DASHBOARD WINNING NUMBERS AUDIT WIDGET -->
+                <div class="glass-panel rounded-2xl p-5 border border-yellow-400/30 bg-yellow-400/5 space-y-3">
+                    <h4 class="text-sm font-bold text-yellow-400 flex items-center gap-2">
+                        🎯 Live Winning Numbers Audit Feed
+                    </h4>
+                    <div id="customer-winning-numbers-audit-feed" class="space-y-2 max-h-40 overflow-y-auto pr-1 text-xs text-slate-300">
+                        <p class="italic text-slate-500">Loading audit feed...</p>
+                    </div>
+                </div>
+
                 <div id="customer-active-draw-schedule" class="bg-black/50 border border-yellow-400/30 rounded-xl px-4 py-2.5 text-xs text-slate-300 flex items-center justify-between">
                     🎯 Next Scheduled Draw: <span class="text-slate-400 italic">Loading live schedule...</span>
                 </div>
 
-                <!-- UPCOMING DRAW & LIVE COUNTDOWN -->
                 <div class="glass-panel rounded-2xl p-8 border border-yellow-400/10 text-center space-y-4 bg-gradient-to-br from-yellow-400/10 to-transparent">
                     <h4 class="text-2xl font-bold text-yellow-400">Next Admin Drawing</h4>
                     <p id="next-draw-datetime-display" class="text-3xl font-bold text-white">${nextDraw.date} • ${nextDraw.time}</p>
                     
-                    <!-- DYNAMIC COUNTDOWN BADGE -->
                     <div>
                         <span id="customer-live-countdown-badge" class="text-xs font-mono font-bold text-amber-400 bg-amber-400/10 px-3 py-1 rounded-full border border-amber-400/20 inline-block my-1">
                             ⏳ Calculating Countdown...
@@ -285,7 +284,6 @@ class CustomerDrawings {
                         class="px-8 py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl transition-all">📱 Watch Live on TikTok</button>
                 </div>
 
-                <!-- CHECK IF WON -->
                 <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
                     <h4 class="font-bold text-white">🏆 Check Your Tickets</h4>
                     <p class="text-sm text-slate-300">Select a drawing date and enter your winning number</p>
@@ -310,7 +308,6 @@ class CustomerDrawings {
                     <div id="win-result"></div>
                 </div>
 
-                <!-- PAST DRAWS -->
                 <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
                     <h4 class="font-bold text-white mb-4">📜 Past Admin Drawings</h4>
                     <div class="space-y-3">
@@ -329,7 +326,6 @@ class CustomerDrawings {
                     </div>
                 </div>
 
-                <!-- WINNING RULES -->
                 <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
                     <h4 class="font-bold text-white mb-4">🎯 How Winning Works</h4>
                     <ul class="text-sm text-slate-300 space-y-2">
@@ -342,6 +338,32 @@ class CustomerDrawings {
                 </div>
             </div>
         `;
+    }
+
+    async initWinningAuditListener() {
+        if (!db) return;
+        db.collection('lottery_draws').orderBy('drawnAt', 'desc').limit(5).onSnapshot(snapshot => {
+            const feedContainer = document.getElementById('customer-winning-numbers-audit-feed');
+            if (!feedContainer) return;
+            if (snapshot.empty) {
+                feedContainer.innerHTML = `<p class="italic text-slate-500">No winning numbers audited yet.</p>`;
+                return;
+            }
+            let html = '';
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const date = data.drawnAt?.toDate ? data.drawnAt.toDate().toLocaleString() : 'Just now';
+                html += `
+                    <div class="bg-black/40 border border-yellow-400/20 rounded-lg p-2.5 flex justify-between items-center">
+                        <div>
+                            <span class="text-yellow-400 font-bold">Winning Number: #${data.winningNumber}</span> — Winner: <span class="text-white">${data.winnerName || 'N/A'}</span> (${data.winnerPhone || 'N/A'})
+                        </div>
+                        <span class="text-[10px] text-slate-400">${date}</span>
+                    </div>
+                `;
+            });
+            feedContainer.innerHTML = html;
+        });
     }
 
     async checkWinner() {
@@ -382,9 +404,20 @@ class CustomerDrawings {
         }
     }
 
-    goToTikTok() {
-        this.notify('info', '📱 Opening TikTok @BoniLottery...');
-        window.open('https://tiktok.com/@boniLottery', '_blank');
+    async goToTikTok() {
+        let link = 'https://tiktok.com/@boniLottery';
+        try {
+            const doc = await db.collection('settings').doc('main_draw_schedule').get();
+            if (doc.exists && doc.data().tiktokLink) {
+                link = doc.data().tiktokLink;
+            }
+        } catch(e) {}
+
+        this.notify('info', '📱 Opening TikTok Live Stream...');
+        window.open(link, '_blank');
+        
+        const modal = document.getElementById('live-draw-modal');
+        if (modal) modal.remove();
     }
 
     notify(type, message) {
@@ -399,4 +432,7 @@ class CustomerDrawings {
 let customerDrawings;
 document.addEventListener('DOMContentLoaded', () => {
     customerDrawings = new CustomerDrawings(localStorage.getItem('currentCustId') || 'DEFAULT');
+    if (window.customerDrawings) {
+        window.customerDrawings.initWinningAuditListener();
+    }
 });
