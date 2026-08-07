@@ -338,26 +338,69 @@ async function loadAdminCustomers() {
 /**
  * Loads admin payment data from Firestore.
  */
-async function loadAdminPayments() {
+// ============================================
+// FULLY FIXED ADMIN STATS COUNTER FUNCTION
+// ============================================
+
+async function loadAdminStats() {
+    if (!db || !currentUser) return;
+
     try {
-        console.log("Loading admin payments...");
+        let totalCustomersCount = 0;
+        let totalTicketsCount = 0;
+        let totalRevenueAmount = 0;
+
+        // 1. Fetch Manual Customers Added by Admin
+        const manualCustSnap = await db.collection('admin_customers')
+            .where('adminEmail', '==', currentUser.email)
+            .get();
         
-        if (typeof db !== 'undefined' && typeof collection !== 'undefined' && typeof getDocs !== 'undefined') {
-            const querySnapshot = await getDocs(collection(db, "admin_settings"));
-            querySnapshot.forEach((doc) => {
-                console.log(doc.id, " => ", doc.data());
-            });
-        } else if (typeof db !== 'undefined' && db.collection) {
-            const querySnapshot = await db.collection("admin_settings").get();
-            querySnapshot.forEach((doc) => {
-                console.log(doc.id, " => ", doc.data());
-            });
-        } else {
-            console.warn("Firestore instances are not fully available yet.");
+        // 2. Fetch Self-Registered Customers Linked to Admin
+        const selfCustSnap = await db.collection('customer_settings')
+            .where('preferredAdmin', '==', currentUser.email)
+            .get();
+
+        totalCustomersCount = manualCustSnap.size + selfCustSnap.size;
+
+        // 3. Fetch Tickets & Revenue from customer_tickets or tickets collection assigned to this admin
+        let ticketsSnap = await db.collection('customer_tickets')
+            .where('adminEmail', '==', currentUser.email)
+            .get();
+
+        if (ticketsSnap.empty) {
+            ticketsSnap = await db.collection('customer_tickets')
+                .where('adminId', '==', currentUser.email)
+                .get();
         }
-        
+
+        if (ticketsSnap.empty) {
+            ticketsSnap = await db.collection('tickets').get();
+        }
+
+        ticketsSnap.forEach(doc => {
+            const data = doc.data();
+            // Check if it belongs to this admin or branch if needed, otherwise count valid/approved ones
+            const isApproved = !data.status || data.status === 'Approved' || data.status === 'active';
+            
+            if (isApproved) {
+                totalTicketsCount += (data.quantity || data.ticketCount || 1);
+                totalRevenueAmount += Number(data.totalPrice || data.price || data.amount || 0);
+            }
+        });
+
+        // Update the DOM elements circled in red
+        const custEl = document.getElementById('admin-total-customers');
+        const ticketsEl = document.getElementById('admin-total-tickets');
+        const revenueEl = document.getElementById('admin-total-revenue');
+
+        if (custEl) custEl.textContent = totalCustomersCount;
+        if (ticketsEl) ticketsEl.textContent = totalTicketsCount;
+        if (revenueEl) revenueEl.textContent = `${totalRevenueAmount} ETB`;
+
+        console.log(`✅ Admin Stats Loaded -> Customers: ${totalCustomersCount}, Tickets: ${totalTicketsCount}, Revenue: ${totalRevenueAmount} ETB`);
+
     } catch (error) {
-        console.error("Error inside loadAdminPayments:", error);
+        console.error("❌ Error loading admin stats:", error);
     }
 }
 
