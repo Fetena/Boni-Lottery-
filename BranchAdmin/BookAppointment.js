@@ -13,7 +13,7 @@ class BookAppointment {
         return this.renderContent();
     }
 
-    async loadAppointmentsData() {
+    async async loadData() {
         try {
             if (!db) return;
             const snapshot = await db.collection('appointments')
