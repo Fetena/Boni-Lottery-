@@ -1,5 +1,5 @@
 // ============================================
-// UPDATED ADMIN LOTTERY COMPONENT (3 WINNERS RESPECTIVELY ON SINGLE DRAW)
+// FULLY UPDATED ADMIN LOTTERY COMPONENT (LOCK-AFTER-SPIN & PROPER USER FIELD FETCHING)
 // ============================================
 
 class AdminLotteryDraw {
@@ -100,7 +100,7 @@ class AdminLotteryDraw {
     }
 
     async init() {
-        console.log('✅ AdminLotteryDraw initialized for 3 Winners');
+        console.log('✅ AdminLotteryDraw initialized (Lock-After-Spin & Correct Fields)');
         
         const dateInput = document.getElementById('draw-target-date');
         const timeInput = document.getElementById('draw-target-time');
@@ -156,11 +156,13 @@ class AdminLotteryDraw {
                     const medals = ['🥇', '🥈', '🥉'];
                     spinnerBox.innerHTML = state.winners.map((w, idx) => {
                         const sortedNums = [...w.numbers].sort((a, b) => Number(a) - Number(b)).join(', ');
+                        const phoneVal = w.phone || w.phoneNumber || w.customerPhone || 'N/A';
+                        const nameVal = w.customer || w.customerName || w.name || 'N/A';
                         return `
-                            <div class="flex items-center justify-between bg-black/80 border border-yellow-400/30 rounded-xl p-3 shadow-[0_0_10px_rgba(252,211,77,0.15)]">
+                            <div class="flex items-center justify-between bg-black/80 border border-yellow-400/20 rounded-xl p-3 shadow-[0_0_10px_rgba(252,211,77,0.15)]">
                                 <div class="space-y-0.5">
-                                    <span class="text-xs font-black text-yellow-400">${medals[idx]} ${idx + 1}st Place: ${w.customer}</span>
-                                    <div class="text-[10px] text-slate-400">📞 ${w.phone} • ✉️ ${w.email}</div>
+                                    <span class="text-xs font-black text-yellow-400">${medals[idx]} ${idx + 1}st Place: ${nameVal}</span>
+                                    <div class="text-[10px] text-slate-400">📞 ${phoneVal}</div>
                                 </div>
                                 <span class="px-2 py-1 bg-yellow-400/20 border border-yellow-400/40 rounded-lg text-yellow-300 text-xs font-bold">
                                     #${sortedNums}
@@ -173,6 +175,8 @@ class AdminLotteryDraw {
                     winnerInfoBox.innerHTML = `🏆 Successfully drew 3 top winners with live link notification dispatched!`;
                 }
             }
+            // Update button lock state dynamically upon state change
+            this.checkScheduleTiming();
         });
     }
 
@@ -231,13 +235,13 @@ class AdminLotteryDraw {
         return new Date(year, month - 1, day, hours, minutes, 0, 0);
     }
 
-    checkScheduleTiming() {
+    async checkScheduleTiming() {
         const targetDateObj = this.getTargetDateTime();
         const drawBtn = document.getElementById('spin-draw-btn');
         const statusBadge = document.getElementById('draw-countdown-timer');
         const scheduleStatusText = document.getElementById('schedule-status-text');
 
-        if (!targetDateObj || !drawBtn || !statusBadge) return;
+        if (!drawBtn || !statusBadge) return;
 
         const now = new Date();
         const dateStr = document.getElementById('draw-target-date')?.value;
@@ -245,7 +249,50 @@ class AdminLotteryDraw {
         const ampmStr = document.getElementById('draw-target-ampm')?.value;
 
         if (scheduleStatusText) {
-            scheduleStatusText.textContent = `Active Schedule Target: ${dateStr}, ${timeStr} ${ampmStr}`;
+            scheduleStatusText.textContent = `Active Schedule Target: ${dateStr || 'None'}, ${timeStr || ''} ${ampmStr || ''}`;
+        }
+
+        // Fetch current draw state from Firestore to verify if a draw has already been executed for the current schedule / session
+        let isAlreadyCompleted = false;
+        try {
+            if (db) {
+                const stateDoc = await db.collection('settings').doc('live_draw_state').get();
+                if (stateDoc.exists && stateDoc.data().status === 'completed') {
+                    // Check if the draw was completed for this target schedule or if it needs to remain locked until a new schedule is saved/reached
+                    const completedAt = stateDoc.data().updatedAt?.toDate ? stateDoc.data().updatedAt.toDate() : null;
+                    const targetTimestamp = targetDateObj ? targetDateObj.getTime() : 0;
+                    
+                    // If completed after or during the current target window, keep it locked until next schedule update
+                    if (targetTimestamp && completedAt && completedAt >= targetTimestamp - 86400000) {
+                        isAlreadyCompleted = true;
+                    } else if (!targetTimestamp && stateDoc.data().status === 'completed') {
+                        // If no target time is set, keep locked once spun until new schedule is saved
+                        isAlreadyCompleted = true;
+                    }
+                }
+            }
+        } catch (e) {
+            console.error('Error checking completion state:', e);
+        }
+
+        if (isAlreadyCompleted) {
+            drawBtn.disabled = true;
+            drawBtn.className = "w-full py-3.5 bg-slate-800 text-slate-500 font-black rounded-xl text-sm cursor-not-allowed transition-all shadow-none";
+            drawBtn.innerHTML = "🔒 DRAW COMPLETED (SET NEW SCHEDULE TO UNLOCK)";
+            statusBadge.className = "text-xs font-mono font-bold text-amber-400 bg-amber-400/10 px-3 py-1 rounded-full border border-amber-400/20";
+            statusBadge.innerHTML = '⏳ WAITING FOR NEXT SCHEDULE';
+            return;
+        }
+
+        if (!targetDateObj) {
+            // No schedule target set, enable button immediately if not completed
+            drawBtn.disabled = false;
+            drawBtn.className = "w-full py-4 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 text-black font-black rounded-xl text-sm shadow-lg hover:opacity-95 transform active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer";
+            drawBtn.innerHTML = "🎲 SPIN & DRAW 3 WINNERS NOW";
+
+            statusBadge.className = "text-xs font-mono font-bold text-emerald-400 bg-emerald-950/40 px-3 py-1 rounded-full border border-emerald-500/30";
+            statusBadge.innerHTML = '🟢 READY TO DRAW';
+            return;
         }
 
         if (now >= targetDateObj) {
@@ -283,6 +330,12 @@ class AdminLotteryDraw {
 
         try {
             if (db) {
+                // Reset live_draw_state status back to pending/ready when a new schedule is saved so the button unlocks when time arrives
+                await db.collection('settings').doc('live_draw_state').set({
+                    status: 'pending',
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+
                 await db.collection('settings').doc('main_draw_schedule').set({
                     targetDate: date,
                     targetTime: time,
@@ -292,7 +345,7 @@ class AdminLotteryDraw {
             }
             
             this.checkScheduleTiming();
-            notify('success', '💾 Schedule saved successfully!');
+            notify('success', '💾 Schedule saved and draw unlocked for new target!');
         } catch (error) {
             console.error('Error saving schedule:', error);
             notify('error', '❌ Failed to save schedule.');
@@ -358,16 +411,16 @@ class AdminLotteryDraw {
                         const medals = ['🥇', '🥈', '🥉'];
                         draw.winners.forEach((w, idx) => {
                             const sortedNums = [...w.numbers].sort((a, b) => Number(a) - Number(b)).join(', ');
+                            const phoneVal = w.phone || w.phoneNumber || w.customerPhone || 'N/A';
+                            const nameVal = w.customer || w.customerName || w.name || 'N/A';
                             html += `
                                 <div class="bg-black/60 border border-yellow-400/20 rounded-xl p-3 flex items-center justify-between gap-2">
                                     <div class="space-y-0.5">
                                         <div class="text-sm font-black text-yellow-400">
-                                            ${medals[idx]} #${sortedNums} — ${w.customer} (${idx + 1}st/nd/rd Place)
+                                            ${medals[idx]} #${sortedNums} — ${nameVal} (${idx + 1}st/nd/rd Place)
                                         </div>
                                         <div class="text-[11px] text-slate-400 flex items-center gap-2">
-                                            <span>📞 ${w.phone}</span>
-                                            <span>•</span>
-                                            <span>✉️ ${w.email}</span>
+                                            <span>📞 ${phoneVal}</span>
                                         </div>
                                         <div class="text-[10px] text-slate-500">
                                             Drawn: ${formattedDate}
@@ -419,9 +472,9 @@ class AdminLotteryDraw {
                     allTickets.push({ 
                         ticketId: doc.id, 
                         numbers: ticket.numbers, 
-                        customer: ticket.customerName || ticket.name || 'N/A', 
+                        customer: ticket.customerName || ticket.name || ticket.username || 'Customer', 
                         email: ticket.customerEmail || ticket.email || 'N/A',
-                        phone: ticket.phone || ticket.customerPhone || ticket.phoneNumber || 'N/A'
+                        phone: ticket.phone || ticket.customerPhone || ticket.phoneNumber || ticket.mobile || 'N/A'
                     });
                 }
             });
@@ -474,11 +527,13 @@ class AdminLotteryDraw {
                     if (spinnerBox) {
                         spinnerBox.innerHTML = topThree.map((w, idx) => {
                             const sortedNums = [...w.numbers].sort((a, b) => Number(a) - Number(b)).join(', ');
+                            const phoneVal = w.phone || 'N/A';
+                            const nameVal = w.customer || 'Customer';
                             return `
                                 <div class="flex items-center justify-between bg-black/80 border border-yellow-400/30 rounded-xl p-3 shadow-[0_0_10px_rgba(252,211,77,0.15)]">
                                     <div class="space-y-0.5">
-                                        <span class="text-xs font-black text-yellow-400">${medals[idx]} ${idx + 1}st Place: ${w.customer}</span>
-                                        <div class="text-[10px] text-slate-400">📞 ${w.phone} • ✉️ ${w.email}</div>
+                                        <span class="text-xs font-black text-yellow-400">${medals[idx]} ${idx + 1}st Place: ${nameVal}</span>
+                                        <div class="text-[10px] text-slate-400">📞 ${phoneVal}</div>
                                     </div>
                                     <span class="px-2 py-1 bg-yellow-400/20 border border-yellow-400/40 rounded-lg text-yellow-300 text-xs font-bold">
                                         #${sortedNums}
@@ -517,6 +572,7 @@ class AdminLotteryDraw {
                     });
 
                     this.loadPastWinners();
+                    this.checkScheduleTiming(); // immediately lock button after draw
                     notify('success', `🎉 3 WINNERS SUCCESSFULLY DRAWN & NOTIFICATIONS SENT!`);
                 }
             }, 60);
