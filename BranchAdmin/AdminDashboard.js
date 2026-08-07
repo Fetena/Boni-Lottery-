@@ -328,75 +328,9 @@ async function loadAdminCustomers() {
                     <p class="text-slate-400 mt-0.5">${cust.email} • ${cust.phone}</p>
                     <p class="text-slate-400 mt-0.5">Tickets: ${cust.tickets || 0} • Spent: ${cust.spent || 0} ETB</p>
                 </div>
-                ${cust.type === 'manual' ? `<button onclick="deleteAdminCustomer('${cust.id}')" class="px-2.5 py-1 bg-red-400/20 text-red-400 rounded">Delete</button>` : '<span class="text-slate-500 italic">Platform User</span>'}
             </div>
         `).join('');
     } catch (error) {
-        console.error('Error loading customers:', error);
-    }
-}
-
-async function deleteAdminCustomer(docId) {
-    if (!confirm('Delete customer?')) return;
-
-    try {
-        await db.collection('admin_customers').doc(docId).delete();
-        notify('success', '✅ Customer deleted');
-        await loadAdminCustomers();
-        await loadAdminStats();
-    } catch (error) {
-        notify('error', `❌ Error: ${error.message}`);
-    }
-}
-
-async function loadAdminPayments() {
-    if (!db || !currentUser) return;
-
-    try {
-        const doc = await db.collection('admin_settings').doc(currentUser.email).get();
-        if (doc.exists) {
-            const data = doc.data();
-            if (data.telebirrPhone && document.getElementById('admin-telebirr')) document.getElementById('admin-telebirr').value = data.telebirrPhone;
-            if (data.cbeAccount && document.getElementById('admin-cbe')) document.getElementById('admin-cbe').value = data.cbeAccount;
-        }
-    } catch (error) {
-        console.error('Error loading payments:', error);
-    }
-}
-
-async function loadAdminStats() {
-    if (!db || !currentUser) return;
-
-    try {
-        const manualSnapshot = await db.collection('admin_customers')
-            .where('adminEmail', '==', currentUser.email)
-            .get();
-
-        const selfRegisteredSnapshot = await db.collection('customer_settings')
-            .where('preferredAdmin', '==', currentUser.email)
-            .get();
-
-        const totalCustomersCount = manualSnapshot.size + selfRegisteredSnapshot.size;
-        if (document.getElementById('admin-total-customers')) {
-            document.getElementById('admin-total-customers').textContent = totalCustomersCount;
-        }
-
-        const ticketSnapshot = await db.collection('customer_tickets')
-            .where('adminEmail', '==', currentUser.email)
-            .get();
-            
-        if (document.getElementById('admin-total-tickets')) {
-            document.getElementById('admin-total-tickets').textContent = ticketSnapshot.size;
-        }
-
-        let revenue = 0;
-        ticketSnapshot.forEach(doc => {
-            revenue += doc.data().cost || 0;
-        });
-        if (document.getElementById('admin-total-revenue')) {
-            document.getElementById('admin-total-revenue').textContent = revenue.toLocaleString() + ' ETB';
-        }
-    } catch (error) {
-        console.error('Error loading stats:', error);
+        console.error('Error loading admin customers:', error);
     }
 }
