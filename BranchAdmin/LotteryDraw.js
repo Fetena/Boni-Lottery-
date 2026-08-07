@@ -1,5 +1,5 @@
 // ============================================
-// UPDATED ADMIN LOTTERY COMPONENT (HIDE SPIN BUTTON ON COMPLETION)
+// UPDATED ADMIN LOTTERY COMPONENT (REMOVED STREAM BOX, RESTORED SPIN BUTTON)
 // ============================================
 
 class AdminLotteryDraw {
@@ -14,24 +14,20 @@ class AdminLotteryDraw {
                 <div>
                     <span class="bg-yellow-400/20 text-yellow-300 border border-yellow-400/30 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">⚡ Live Draw Center</span>
                     <h3 class="text-2xl font-black text-gradient mt-2">🎰 Branch Lucky Draw & TikTok Live</h3>
-                    <p class="text-xs text-slate-300 mt-1">Manage your precise schedule, stream your TikTok Live link, and automatically dispatch notifications to customers upon drawing.</p>
+                    <p class="text-xs text-slate-300 mt-1">Manage your precise schedule, set your TikTok Live link, and automatically dispatch notifications to customers upon drawing.</p>
                 </div>
 
-                <!-- TikTok Live Link & Embedded Player Section -->
+                <!-- TikTok Live Link Input Only (Black Preview Container Removed) -->
                 <div class="bg-black/40 p-4 rounded-xl border border-yellow-400/20 space-y-3">
-                    <h4 class="text-xs font-bold text-yellow-400 uppercase tracking-wide">🔴 TikTok Live Stream Integration</h4>
+                    <h4 class="text-xs font-bold text-yellow-400 uppercase tracking-wide">🔴 TikTok Live Stream Link</h4>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                         <div class="md:col-span-2">
-                            <label class="block text-[10px] text-slate-400 mb-1">TikTok Live URL or Embed Link</label>
+                            <label class="block text-[10px] text-slate-400 mb-1">TikTok Live URL</label>
                             <input type="text" id="tiktok-live-url-input" placeholder="https://www.tiktok.com/@username/live" class="w-full bg-black/60 border border-yellow-400/30 rounded-xl py-2 px-3 text-white text-xs">
                         </div>
                         <div class="flex items-end">
-                            <button onclick="window.adminLottery.saveTikTokLive()" class="w-full py-2 bg-yellow-400/20 hover:bg-yellow-400/30 border border-yellow-400/40 text-yellow-300 font-bold rounded-xl text-xs transition-all cursor-pointer">📡 Update Stream</button>
+                            <button onclick="window.adminLottery.saveTikTokLive()" class="w-full py-2 bg-yellow-400/20 hover:bg-yellow-400/30 border border-yellow-400/40 text-yellow-300 font-bold rounded-xl text-xs transition-all cursor-pointer">💾 Save Link</button>
                         </div>
-                    </div>
-                    <!-- Live Stream Preview Container -->
-                    <div id="tiktok-stream-container" class="mt-3 aspect-video bg-black/80 rounded-xl border border-yellow-400/20 flex flex-col items-center justify-center overflow-hidden relative">
-                        <p class="text-xs text-slate-500 italic">No TikTok Live stream configured yet. Enter a URL above.</p>
                     </div>
                 </div>
 
@@ -75,8 +71,8 @@ class AdminLotteryDraw {
                     <div id="winner-info-display" class="text-xs text-slate-300 mt-2 font-medium text-center px-4"></div>
                 </div>
 
-                <!-- Spin Action Button (Controlled completely via JS display properties) -->
-                <div id="spin-action-container" style="display: block;">
+                <!-- Spin & Draw Action Button (Always visible container, styled dynamically by timer/status) -->
+                <div id="spin-action-container">
                     <button id="spin-draw-btn" onclick="window.adminLottery.runDraw()" disabled class="w-full py-3.5 bg-slate-800 text-slate-500 font-black rounded-xl text-sm cursor-not-allowed transition-all shadow-none">🔒 DRAW LOCKED (WAITING FOR TIMER)</button>
                 </div>
 
@@ -133,14 +129,12 @@ class AdminLotteryDraw {
             const state = doc.data();
             const spinnerBox = document.getElementById('lottery-spinner-box');
             const winnerInfoBox = document.getElementById('winner-info-display');
-            const spinContainer = document.getElementById('spin-action-container');
 
             if (state.status === 'spinning') {
                 if (spinnerBox) {
                     spinnerBox.innerHTML = `<span class="text-3xl sm:text-4xl font-black text-yellow-400 tracking-wider">#${state.currentNumber || '---'}</span>`;
                 }
                 if (winnerInfoBox) winnerInfoBox.innerHTML = `<span class="text-amber-400 animate-pulse font-bold">⚡ LIVE DRAWING IN PROGRESS...</span>`;
-                if (spinContainer) spinContainer.style.display = 'block';
             } else if (state.status === 'completed' && state.winningNumbers) {
                 if (spinnerBox) {
                     const sortedNums = [...state.winningNumbers].sort((a, b) => Number(a) - Number(b));
@@ -153,8 +147,6 @@ class AdminLotteryDraw {
                 if (winnerInfoBox) {
                     winnerInfoBox.innerHTML = `🏆 Winner: <span class="text-yellow-400 font-bold">${state.winnerName}</span> (${state.winnerPhone} • ${state.winnerEmail})`;
                 }
-                // Explicitly hide the spin button container once draw is completed
-                if (spinContainer) spinContainer.style.display = 'none';
             }
         });
     }
@@ -172,11 +164,10 @@ class AdminLotteryDraw {
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 }, { merge: true });
             }
-            this.renderTikTokStream(urlInput);
-            notify('success', '📡 TikTok Live stream updated successfully!');
+            notify('success', '📡 TikTok Live link saved successfully!');
         } catch (error) {
             console.error('Error saving TikTok Live:', error);
-            notify('error', '❌ Failed to save TikTok Live stream.');
+            notify('error', '❌ Failed to save TikTok Live link.');
         }
     }
 
@@ -189,27 +180,11 @@ class AdminLotteryDraw {
                 const urlInput = document.getElementById('tiktok-live-url-input');
                 if (data.url && urlInput) {
                     urlInput.value = data.url;
-                    this.renderTikTokStream(data.url);
                 }
             }
         } catch (error) {
             console.error('Error loading TikTok Live:', error);
         }
-    }
-
-    renderTikTokStream(url) {
-        const container = document.getElementById('tiktok-stream-container');
-        if (!container) return;
-
-        container.innerHTML = `
-            <div class="w-full h-full flex flex-col items-center justify-center bg-black p-4 text-center space-y-2">
-                <span class="text-red-500 font-bold text-xs uppercase tracking-wider animate-pulse">🔴 LIVE STREAM ACTIVE</span>
-                <p class="text-xs text-slate-300 truncate max-w-md">Source: <a href="${url}" target="_blank" class="text-yellow-400 underline">${url}</a></p>
-                <div class="flex gap-2 mt-2">
-                    <a href="${url}" target="_blank" class="px-4 py-2 bg-yellow-400 text-black font-bold rounded-xl text-xs hover:bg-yellow-300 transition-all">📺 Open TikTok Live in New Tab</a>
-                </div>
-            </div>
-        `;
     }
 
     getTargetDateTime() {
@@ -441,7 +416,6 @@ class AdminLotteryDraw {
 
             const spinnerBox = document.getElementById('lottery-spinner-box');
             const winnerInfoBox = document.getElementById('winner-info-display');
-            const spinContainer = document.getElementById('spin-action-container');
             if (winnerInfoBox) winnerInfoBox.textContent = '';
 
             let spinCount = 0;
@@ -479,9 +453,6 @@ class AdminLotteryDraw {
                     if (winnerInfoBox) {
                         winnerInfoBox.innerHTML = `🏆 Winner: <span class="text-yellow-400 font-bold">${winningTicket.customer}</span> (${winningTicket.phone} • ${winningTicket.email})`;
                     }
-
-                    // Hide the spin button container immediately upon draw completion
-                    if (spinContainer) spinContainer.style.display = 'none';
 
                     await db.collection('lottery_draws').add({
                         winningNumber: sortedSequentialNumbers[0],
