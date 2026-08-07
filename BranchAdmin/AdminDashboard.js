@@ -4,7 +4,7 @@
 
 class AdminDashboard {
     constructor() {
-        this.bookings = new AdminBookings(); // Assuming standard branch admin bookings class
+        this.bookings = new BookAppointment(); // Assuming standard branch admin bookings class
         this.customers = new Customers();
         this.ranges = new Ranges();
         this.payments = new Payments();
