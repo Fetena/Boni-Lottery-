@@ -12,8 +12,6 @@ class AdminDashboard {
         }
         
         window.adminLottery = new AdminLotteryDraw(this.adminId);
-        // Expose a global reference so inline onclick handlers pointing to window.adminDashboard work seamlessly
-        window.adminDashboard = this;
     }
 
     render() {
@@ -167,9 +165,6 @@ class AdminDashboard {
 
     async loadData() {
         try {
-            // Ensure global pointer is maintained on reload
-            window.adminDashboard = this;
-
             await loadAdminCustomers();
             await loadAdminPayments();
             await loadAdminStats();
@@ -274,32 +269,15 @@ async function addAdminCustomer() {
     }
 
     try {
-        // 1. Create Firebase Auth user profile so they can log in
-        await firebase.auth().createUserWithEmailAndPassword(email, password);
-
-        const currentAdminEmail = currentUser?.email || localStorage.getItem('currentUserEmail') || '';
-
-        // 2. Save under admin_customers collection for branch tracking
         await db.collection('admin_customers').add({
-            adminEmail: currentAdminEmail,
+            adminEmail: currentUser.email,
             name,
             email,
             phone,
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        // 3. Save under customer_settings so it links seamlessly across the entire app
-        await db.collection('customer_settings').doc(email).set({
-            customerEmail: email,
-            customerName: name,
-            phone: phone,
-            preferredAdmin: currentAdminEmail,
-            preferredPayment: 'Telebirr',
-            role: 'customer',
-            createdAt: new Date()
-        });
-
-        notify('success', '✅ Customer added and registered successfully!');
+        notify('success', '✅ Customer added successfully!');
         closeAddCustomerModal();
         await loadAdminCustomers();
         await loadAdminStats();
