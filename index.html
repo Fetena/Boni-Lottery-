@@ -2,21 +2,17 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lottery Ticket System</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Firebase v9 Compat -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<!-- Firebase v9 Compat (Add auth script here) -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <style>
-    * {
-        -webkit-tap-highlight-color: transparent;
-    }
     .glass-panel {
-        background: rgba(15, 23, 42, 0.85);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
+        background: rgba(15, 23, 42, 0.8);
+        backdrop-filter: blur(10px);
     }
     .text-gradient {
         background: linear-gradient(135deg, #FCD34D 0%, #F59E0B 100%);
@@ -32,40 +28,30 @@
         position: fixed;
         top: 20px;
         right: 20px;
-        left: 20px;
-        max-width: 400px;
-        margin: 0 auto;
         padding: 16px;
-        border-radius: 12px;
+        border-radius: 8px;
         z-index: 10000;
         animation: slideIn 0.3s ease;
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
     }
     .notification-toast.success { background: #10b981; color: white; }
     .notification-toast.error { background: #ef4444; color: white; }
     .notification-toast.info { background: #3b82f6; color: white; }
     @keyframes slideIn {
-        from { transform: translateY(-20px); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
+        from { transform: translateX(400px); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
     }
 
+    /* === ADD THIS FIX HERE === */
     input[type="date"]::-webkit-calendar-picker-indicator,
     input[type="time"]::-webkit-calendar-picker-indicator {
         filter: invert(1) brightness(2);
         cursor: pointer;
         opacity: 1;
     }
-
-    /* Mobile input enhancements to prevent iOS zoom */
-    @media screen and (max-width: 768px) {
-        input, select, textarea {
-            font-size: 16px !important;
-        }
-    }
 </style>
 </head>
 
-<body class="bg-black text-white antialiased selection:bg-yellow-400 selection:text-black">
+<body class="bg-black text-white">
 
     <!-- NOTIFICATION CONTAINER -->
     <div id="notification-container"></div>
@@ -85,7 +71,7 @@
     <!-- ============================================
          FIREBASE & GLOBAL SETUP
          ============================================ -->
-    <script>
+ <script>
         // Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyBW0egtlG4JXjkoWB2Lfu5GcYhZz_oEjbI",
@@ -97,9 +83,7 @@
         };
 
         // Initialize Firebase
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
+        firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         let currentUser = null;
         let sessionTimeoutTimer = null;
@@ -140,7 +124,7 @@
             toast.className = `notification-toast ${type}`;
             toast.textContent = message;
             container.appendChild(toast);
-            setTimeout(() => toast.remove(), 3500);
+            setTimeout(() => toast.remove(), 3000);
         }
 
         // Logout Function
@@ -156,105 +140,76 @@
             notify('success', '✅ Logged out');
         }
 
-        // Password Security Validator Helper
-        function validatePasswordStrength(password) {
-            if (!password || password.length < 8) {
-                return "Password must be at least 8 characters long.";
-            }
-            if (!/[A-Z]/.test(password)) {
-                return "Password must contain at least one uppercase letter.";
-            }
-            if (!/[0-9]/.test(password)) {
-                return "Password must contain at least one number.";
-            }
-            if (!/[^A-Za-z0-9]/.test(password)) {
-                return "Password must contain at least one special character.";
-            }
-            return null;
-        }
-
         // Render Public Page with Responsive Layouts
         function renderPublicPage() {
             return `
-                <div class="min-h-screen bg-black flex flex-col justify-between">
-                    <header class="sticky top-0 z-40 w-full glass-panel border-b border-yellow-400/10 px-4 sm:px-8 py-4">
+                <div class="min-h-screen bg-black flex flex-col">
+                    <header class="sticky top-0 z-40 w-full glass-panel border-b border-yellow-400/10 px-4 sm:px-6 py-4">
                         <div class="max-w-7xl mx-auto flex items-center justify-between">
-                            <h1 class="font-bold text-xl sm:text-2xl text-gradient tracking-wide">🎰 LOTTERY TICKET</h1>
-                            <div class="flex items-center space-x-3">
-                                <button onclick="openLoginModal()" class="px-4 py-2 bg-transparent border border-yellow-400 text-yellow-400 font-bold rounded-xl text-xs sm:text-sm hover:bg-yellow-400/10 transition-all">Login</button>
-                                <button onclick="openSignupModal()" class="px-4 py-2 bg-yellow-400 text-black font-bold rounded-xl text-xs sm:text-sm hover:bg-yellow-500 transition-all shadow-lg shadow-yellow-400/20">Sign Up</button>
+                            <h1 class="font-bold text-xl sm:text-2xl text-gradient">🎰 LOTTERY TICKET</h1>
+                            <div class="space-x-2">
+                                <button onclick="openLoginModal()" class="px-3 sm:px-4 py-2 bg-transparent border border-yellow-400 text-yellow-400 font-bold rounded-xl text-xs">Login</button>
+                                <button onclick="openSignupModal()" class="px-3 sm:px-4 py-2 bg-yellow-400 text-black font-bold rounded-xl text-xs">Sign Up</button>
                             </div>
                         </div>
                     </header>
                     <main class="flex-grow flex items-center justify-center p-4 sm:p-6">
-                        <div class="text-center max-w-2xl mx-auto px-4 py-12">
-                            <div class="inline-block mb-4 p-3 rounded-2xl bg-yellow-400/10 border border-yellow-400/20 text-yellow-400 text-2xl">✨</div>
-                            <h2 class="text-3xl sm:text-6xl font-extrabold text-white mb-6 tracking-tight">Welcome to Lottery Ticket</h2>
-                            <p class="text-slate-400 mb-8 text-base sm:text-xl leading-relaxed">Complete lottery management platform optimized for desktop and mobile devices with high-grade security.</p>
-                            <button onclick="openSignupModal()" class="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-extrabold rounded-2xl text-base shadow-xl shadow-yellow-500/10 hover:scale-[1.02] transition-transform">Get Started Today →</button>
+                        <div class="text-center max-w-2xl mx-auto px-4">
+                            <h2 class="text-3xl sm:text-5xl font-bold text-white mb-4">Welcome to Lottery Ticket</h2>
+                            <p class="text-slate-400 mb-8 text-base sm:text-xl">Complete lottery management platform optimized for desktop and mobile devices.</p>
+                            <button onclick="openSignupModal()" class="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl text-sm sm:text-base">Get Started →</button>
                         </div>
                     </main>
-                    <footer class="py-6 text-center text-xs text-slate-600 border-t border-slate-900">
-                        &copy; 2026 Lottery Ticket System. All rights reserved.
-                    </footer>
                 </div>
 
                 <!-- Login Modal -->
-                <div id="login-modal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 overflow-y-auto">
-                    <div class="glass-panel rounded-3xl p-6 sm:p-8 w-full max-w-md border border-yellow-400/20 space-y-5 my-auto shadow-2xl">
-                        <div class="flex justify-between items-center">
-                            <h3 class="text-2xl font-bold text-white">Welcome Back</h3>
-                            <button onclick="closeLoginModal()" class="text-slate-400 hover:text-white p-1">✕</button>
-                        </div>
+                <div id="login-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50 p-4 overflow-y-auto">
+                    <div class="glass-panel rounded-2xl p-6 sm:p-8 w-full max-w-md border border-yellow-400/10 space-y-4 my-auto">
+                        <h3 class="text-2xl font-bold text-white mb-2">Login</h3>
+                        <!-- Form with explicit attributes to trigger browser password save prompts -->
                         <form onsubmit="handleLogin(event)" class="space-y-4">
                             <div>
-                                <label class="block text-xs font-medium text-slate-400 mb-1.5 uppercase tracking-wider">Email Address</label>
-                                <input type="email" id="login-email" name="email" autocomplete="email" required placeholder="name@example.com" class="w-full bg-black/60 border border-yellow-400/20 rounded-2xl py-3.5 px-4 text-white text-sm placeholder-slate-600 focus:outline-none focus:border-yellow-400 transition-colors">
+                                <label class="block text-xs text-slate-400 mb-1">Email</label>
+                                <input type="email" id="login-email" name="email" autocomplete="email" required placeholder="name@example.com" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-3 px-4 text-white text-xs sm:text-sm placeholder-slate-500 focus:outline-none focus:border-yellow-400">
                             </div>
                             <div>
-                                <label class="block text-xs font-medium text-slate-400 mb-1.5 uppercase tracking-wider">Password</label>
-                                <input type="password" id="login-password" name="password" autocomplete="current-password" required placeholder="••••••••" class="w-full bg-black/60 border border-yellow-400/20 rounded-2xl py-3.5 px-4 text-white text-sm placeholder-slate-600 focus:outline-none focus:border-yellow-400 transition-colors">
+                                <label class="block text-xs text-slate-400 mb-1">Password</label>
+                                <input type="password" id="login-password" name="password" autocomplete="current-password" required placeholder="••••••••" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-3 px-4 text-white text-xs sm:text-sm placeholder-slate-500 focus:outline-none focus:border-yellow-400">
                             </div>
-                            <button type="submit" class="w-full py-4 bg-yellow-400 text-black font-extrabold rounded-2xl text-sm hover:bg-yellow-500 transition-all shadow-lg shadow-yellow-400/10 mt-2">Login to Account</button>
+                            <button type="submit" class="w-full py-3 bg-yellow-400 text-black font-bold rounded-xl text-xs sm:text-sm hover:bg-yellow-500 transition-colors">Login</button>
                         </form>
-                        <button onclick="closeLoginModal()" class="w-full py-3 bg-slate-900/80 text-slate-400 rounded-2xl text-xs hover:bg-slate-800 transition-colors">Cancel</button>
+                        <button onclick="closeLoginModal()" class="w-full py-2 bg-slate-800 text-slate-300 rounded-xl text-xs">Cancel</button>
                     </div>
                 </div>
 
                 <!-- Sign Up Modal -->
-                <div id="signup-modal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4 overflow-y-auto">
-                    <div class="glass-panel rounded-3xl p-6 sm:p-8 w-full max-w-md border border-yellow-400/20 space-y-4 my-auto shadow-2xl max-h-[90vh] overflow-y-auto">
-                        <div class="flex justify-between items-center">
-                            <h3 class="text-2xl font-bold text-white">Create Account</h3>
-                            <button onclick="closeSignupModal()" class="text-slate-400 hover:text-white p-1">✕</button>
+                <div id="signup-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50 p-4 overflow-y-auto">
+                    <div class="glass-panel rounded-2xl p-6 sm:p-8 w-full max-w-md border border-yellow-400/10 space-y-3 my-auto">
+                        <h3 class="text-2xl font-bold text-white mb-2">Customer Sign Up</h3>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Full Name</label>
+                            <input type="text" id="signup-name" name="name" autocomplete="name" placeholder="John Doe" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs sm:text-sm">
                         </div>
-                        <div class="space-y-3.5">
-                            <div>
-                                <label class="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wider">Full Name</label>
-                                <input type="text" id="signup-name" name="name" autocomplete="name" placeholder="John Doe" class="w-full bg-black/60 border border-yellow-400/20 rounded-2xl py-3 px-4 text-white text-sm focus:outline-none focus:border-yellow-400">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wider">Email Address</label>
-                                <input type="email" id="signup-email" name="email" autocomplete="email" placeholder="customer@email.com" class="w-full bg-black/60 border border-yellow-400/20 rounded-2xl py-3 px-4 text-white text-sm focus:outline-none focus:border-yellow-400">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wider">Secure Password</label>
-                                <input type="password" id="signup-password" name="new-password" autocomplete="new-password" placeholder="Min 8 chars, Upper, Number, Symbol" class="w-full bg-black/60 border border-yellow-400/20 rounded-2xl py-3 px-4 text-white text-sm focus:outline-none focus:border-yellow-400">
-                                <p class="text-[10px] text-slate-500 mt-1">Must include uppercase letter, number, and special character.</p>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wider">Phone Number</label>
-                                <input type="tel" id="signup-phone" name="tel" autocomplete="tel" placeholder="0912345678" class="w-full bg-black/60 border border-yellow-400/20 rounded-2xl py-3 px-4 text-white text-sm focus:outline-none focus:border-yellow-400">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wider">Preferred Admin / Branch</label>
-                                <select id="signup-admin-select" class="w-full bg-black/60 border border-yellow-400/20 rounded-2xl py-3 px-4 text-white text-sm focus:outline-none focus:border-yellow-400">
-                                    <option value="">-- Loading Admins --</option>
-                                </select>
-                            </div>
-                            <button onclick="registerNewCustomer()" class="w-full py-4 bg-yellow-400 text-black font-extrabold rounded-2xl text-sm hover:bg-yellow-500 mt-2 transition-all shadow-lg shadow-yellow-400/10">Register Account</button>
-                            <button onclick="closeSignupModal()" class="w-full py-3 bg-slate-900/80 text-slate-400 rounded-2xl text-xs hover:bg-slate-800 transition-colors">Cancel</button>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Email</label>
+                            <input type="email" id="signup-email" name="email" autocomplete="email" placeholder="customer@email.com" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs sm:text-sm">
                         </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Password</label>
+                            <input type="password" id="signup-password" name="new-password" autocomplete="new-password" placeholder="••••••••" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs sm:text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Phone Number</label>
+                            <input type="tel" id="signup-phone" name="tel" autocomplete="tel" placeholder="0912345678" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs sm:text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Choose Preferred Admin / Branch</label>
+                            <select id="signup-admin-select" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs sm:text-sm">
+                                <option value="">-- Loading Admins --</option>
+                            </select>
+                        </div>
+                        <button onclick="registerNewCustomer()" class="w-full py-3 bg-yellow-400 text-black font-bold rounded-xl text-xs sm:text-sm hover:bg-yellow-500 mt-2 transition-colors">Register Account</button>
+                        <button onclick="closeSignupModal()" class="w-full py-2 bg-slate-800 text-slate-300 rounded-xl text-xs">Cancel</button>
                     </div>
                 </div>
             `;
@@ -309,8 +264,6 @@
             const adminSelectEl = document.getElementById('signup-admin-select');
 
             const name = nameEl?.value.trim();
-            // Case-sensitive email handling by strictly preserving input case or lowercasing consistently. 
-            // The prompt requests email case sensitivity & password security. We store raw input or exact case matching depending on DB key setup.
             const email = emailEl?.value.trim();
             const password = passwordEl?.value;
             const phone = phoneEl?.value.trim();
@@ -321,14 +274,7 @@
                 return;
             }
 
-            const passwordError = validatePasswordStrength(password);
-            if (passwordError) {
-                notify('error', `❌ ${passwordError}`);
-                return;
-            }
-
             try {
-                // Check if account with exact case-sensitive email already exists or handle standard Firebase Auth creation
                 await firebase.auth().createUserWithEmailAndPassword(email, password);
                 
                 await db.collection('customer_settings').doc(email).set({
@@ -362,7 +308,6 @@
         async function handleLogin(event) {
             if (event) event.preventDefault();
             
-            // Retain exact case for email (case sensitive check)
             const email = document.getElementById('login-email')?.value.trim() || '';
             const password = document.getElementById('login-password')?.value || '';
 
@@ -371,7 +316,7 @@
                 return;
             }
 
-            // 1. Main Admin Check (Case sensitive check for email/password)
+            // 1. Main Admin Check
             if (email === 'fita.regassa@gmail.com' && password === 'fita123') {
                 currentUser = { type: 'main_admin', email };
                 startSessionTimer();
@@ -466,11 +411,11 @@
                         currentUser = { type: 'admin', email };
                         startSessionTimer();
                         document.getElementById('public-page').innerHTML = '';
-                        if (!window.branchAdminDashboard) {
-    window.branchAdminDashboard = new AdminDashboard(email);
-}
-document.getElementById('admin-container').innerHTML = window.branchAdminDashboard.render();
-await window.branchAdminDashboard.loadData();
+                        if (!window.adminDashboard) {
+                            window.adminDashboard = new AdminDashboard(email);
+                        }
+                        document.getElementById('admin-container').innerHTML = window.adminDashboard.render();
+                        await window.adminDashboard.loadData();
                         return;
                     }
 
@@ -507,7 +452,7 @@ await window.branchAdminDashboard.loadData();
          LOAD COMPONENTS (WITH CORRECT PATHS FROM public/ FOLDER)
          ============================================ -->
     
-    <!-- MAIN ADMIN COMPONENTS -->
+    <!-- MAIN ADMIN COMPONENTS (Go up one level: ../) -->
     <script src="/MainAdmin/Admins.js"></script>
     <script src="/MainAdmin/Customers.js"></script>
     <script src="/MainAdmin/Ranges.js"></script>
@@ -519,24 +464,25 @@ await window.branchAdminDashboard.loadData();
     <script src="/MainAdmin/Settings.js"></script>
     <script src="/MainAdmin/MainAdminBookings.js"></script>
     <script src="/MainAdmin/LotteryDraw.js"></script>
-
     <!-- BRANCH ADMIN COMPONENTS -->
-    <script src="/BranchAdmin/Notifications.js"></script>
-    <script src="/BranchAdmin/BookAppointment.js"></script>
-    <script src="/BranchAdmin/Payments.js"></script>
-    <script src="/BranchAdmin/Settings.js"></script>
-    <script src="/BranchAdmin/LotteryDraw.js"></script>
-    <script src="/BranchAdmin/Tickets.js"></script>
-    <script src="/BranchAdmin/Customers.js"></script>
+<script src="/BranchAdmin/Notifications.js"></script>
+<script src="/BranchAdmin/BookAppointment.js"></script>
+<script src="/BranchAdmin/Payments.js"></script>
+<script src="/BranchAdmin/Settings.js"></script>
+<script src="/BranchAdmin/LotteryDraw.js"></script>
+<script src="/BranchAdmin/Tickets.js"></script>
+<script src="/BranchAdmin/Customers.js"></script>
+<!-- Load Branch Admin Main Dashboard -->
     <script src="/BranchAdmin/AdminDashboard.js"></script>
 
     <!-- CUSTOMER COMPONENTS -->
-    <script src="/Customer/Profile.js"></script>
-    <script src="/Customer/NumberGrid.js"></script>
-    <script src="/Customer/Library.js"></script>
-    <script src="/Customer/Drawings.js"></script>
-    <script src="/Customer/Appointments.js"></script>
-    <script src="/Customer/Tickets.js"></script>
+ <script src="/Customer/Profile.js"></script>
+<script src="/Customer/NumberGrid.js"></script>
+<script src="/Customer/Library.js"></script>
+<script src="/Customer/Drawings.js"></script>
+<script src="/Customer/Appointments.js"></script>
+<script src="/Customer/Tickets.js"></script>
+<!-- Load Branch Customer Dashboard -->
     <script src="/Customer/CustomerDashboard.js"></script>
     
     <!-- MAIN ADMIN DASHBOARD (LAST) -->
