@@ -2,7 +2,7 @@
 // 1. BRANCH ADMIN LOTTERY DRAW COMPONENT (SCHEDULE-LOCKED WITH PHONE, HISTORY & TIKTOK LINK MANAGEMENT)
 // ============================================
 
-class BranchAdminLotteryDraw {
+class AdminLotteryDraw {
     constructor() {
         this.selectedScope = 'branch';
         this.scheduleCheckInterval = null;
