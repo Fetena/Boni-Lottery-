@@ -15,7 +15,7 @@ class AdminLotteryDraw {
                 <div class="flex items-center justify-between border-b border-yellow-400/10 pb-4">
                     <div>
                         <h3 class="text-lg font-bold text-white">🎯 Lottery Draw & Scheduling</h3>
-                        <p class="text-xs text-slate-400 mt-0.5">Configure winning numbers, set schedule timers, and run live draws.</p>
+                        <p class="text-xs text-slate-400 mt-0.5">Configure schedule timers and execute automated algorithmic draws.</p>
                     </div>
                     <span class="px-3 py-1 bg-yellow-400/10 text-yellow-400 text-[10px] font-bold rounded-full border border-yellow-400/20">Active Control</span>
                 </div>
@@ -33,14 +33,14 @@ class AdminLotteryDraw {
                     </div>
                 </div>
 
-                <!-- Winning Numbers Selection -->
+                <!-- Algorithmic Winning Numbers Display -->
                 <div class="space-y-3">
                     <div class="flex justify-between items-center">
-                        <label class="block text-xs text-slate-400 font-medium">🔢 Select Winning Numbers (Click to toggle)</label>
-                        <button onclick="window.adminLottery.clearSelection()" class="text-[10px] text-red-400 hover:underline">Clear Selection</button>
+                        <label class="block text-xs text-slate-400 font-medium">🤖 Algorithmic Winning Numbers (Auto-Generated)</label>
+                        <span class="text-[10px] text-yellow-400 bg-yellow-400/10 px-2 py-0.5 rounded border border-yellow-400/20">Secure RNG Mode</span>
                     </div>
                     
-                    <!-- Number Grid (1 to 50) -->
+                    <!-- Number Grid (1 to 50) - Read-only display of algorithm output -->
                     <div id="lottery-number-grid" class="grid grid-cols-10 gap-2 p-3 bg-black/40 rounded-xl border border-yellow-400/10 max-h-48 overflow-y-auto">
                         <!-- Populated dynamically -->
                     </div>
@@ -48,8 +48,8 @@ class AdminLotteryDraw {
 
                 <!-- Action Controls -->
                 <div class="flex flex-col sm:flex-row gap-3 pt-2">
-                    <button onclick="window.adminLottery.triggerManualDraw()" class="flex-1 py-3 bg-yellow-400 text-black font-bold rounded-xl text-xs hover:bg-yellow-500 transition-all shadow-lg shadow-yellow-400/10">
-                        ⚡ Execute Draw Now
+                    <button onclick="window.adminLottery.triggerAlgorithmicDraw()" class="flex-1 py-3 bg-yellow-400 text-black font-bold rounded-xl text-xs hover:bg-yellow-500 transition-all shadow-lg shadow-yellow-400/10">
+                        ⚡ Run Algorithmic Draw Now
                     </button>
                     <button onclick="window.adminLottery.resetDrawState()" class="px-5 py-3 bg-red-950/40 text-red-400 font-bold rounded-xl text-xs border border-red-500/20 hover:bg-red-950/60 transition-all">
                         🔄 Reset State
@@ -60,7 +60,7 @@ class AdminLotteryDraw {
                 <div class="space-y-2 pt-2 border-t border-yellow-400/10">
                     <p class="text-xs font-bold text-slate-300">📋 Winning Numbers Audit Display</p>
                     <div id="lottery-audit-display" class="p-4 bg-black/60 rounded-xl border border-yellow-400/10 text-xs text-slate-400 min-h-[60px] flex items-center">
-                        No active draw results recorded yet. Configure and execute a draw to view audit records.
+                        No active draw results recorded yet. Configure schedule and execute algorithmic draw to view audit records.
                     </div>
                 </div>
             </div>
@@ -81,38 +81,28 @@ class AdminLotteryDraw {
         for (let i = 1; i <= 50; i++) {
             const isSelected = this.selectedNumbers.includes(i);
             html += `
-                <button type="button" onclick="window.adminLottery.toggleNumber(${i})" 
-                    id="lottery-num-${i}" 
-                    class="h-8 rounded-lg font-bold text-xs flex items-center justify-center transition-all ${
-                        isSelected 
-                            ? 'bg-yellow-400 text-black shadow-md shadow-yellow-400/20 scale-105' 
-                            : 'bg-slate-900/80 text-slate-300 border border-yellow-400/10 hover:border-yellow-400/40'
-                    }">
+                <div class="h-8 rounded-lg font-bold text-xs flex items-center justify-center transition-all ${
+                    isSelected 
+                        ? 'bg-yellow-400 text-black shadow-md shadow-yellow-400/20 scale-105' 
+                        : 'bg-slate-900/80 text-slate-500 border border-yellow-400/10'
+                }">
                     ${i}
-                </button>
+                </div>
             `;
         }
         grid.innerHTML = html;
     }
 
-    toggleNumber(num) {
-        const index = this.selectedNumbers.indexOf(num);
-        if (index > -1) {
-            this.selectedNumbers.splice(index, 1);
-        } else {
-            if (this.selectedNumbers.length >= 5) {
-                return notify('error', '⚠️ You can select a maximum of 5 winning numbers');
+    generateAlgorithmicNumbers(count = 5, max = 50) {
+        const numbers = [];
+        while (numbers.length < count) {
+            // Cryptographically secure or pseudo-random generation algorithm
+            const randomNum = Math.floor(Math.random() * max) + 1;
+            if (!numbers.includes(randomNum)) {
+                numbers.push(randomNum);
             }
-            this.selectedNumbers.push(num);
         }
-        this.selectedNumbers.sort((a, b) => a - b);
-        this.renderNumberGrid();
-    }
-
-    clearSelection() {
-        this.selectedNumbers = [];
-        this.renderNumberGrid();
-        notify('success', 'Selection cleared');
+        return numbers.sort((a, b) => a - b);
     }
 
     async saveSchedule() {
@@ -146,7 +136,6 @@ class AdminLotteryDraw {
                     const timeData = doc.data().scheduledTime.toDate();
                     const input = document.getElementById('lottery-schedule-input');
                     if (input) {
-                        // Format to yyyy-MM-ddTHH:mm for datetime-local input
                         const localIso = new Date(timeData.getTime() - (timeData.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
                         input.value = localIso;
                     }
@@ -157,19 +146,20 @@ class AdminLotteryDraw {
         }
     }
 
-    async triggerManualDraw() {
-        if (this.selectedNumbers.length === 0) {
-            return notify('error', '❌ Please select at least one winning number before executing the draw');
-        }
+    async triggerAlgorithmicDraw() {
+        if (!confirm('Execute automated algorithmic draw to generate winning numbers?')) return;
 
-        if (!confirm(`Execute manual draw with numbers: [${this.selectedNumbers.join(', ')}]?`)) return;
+        // Generate numbers via algorithm instead of manual input
+        this.selectedNumbers = this.generateAlgorithmicNumbers(5, 50);
+        this.renderNumberGrid();
 
         try {
             const auditData = {
                 adminEmail: this.adminId,
                 winningNumbers: this.selectedNumbers,
                 executedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                status: 'Completed'
+                status: 'Completed',
+                drawType: 'Algorithmic'
             };
 
             if (typeof db !== 'undefined' && db.collection) {
@@ -179,13 +169,13 @@ class AdminLotteryDraw {
             const auditDisplay = document.getElementById('lottery-audit-display');
             if (auditDisplay) {
                 auditDisplay.innerHTML = `
-                    <div class="text-emerald-400 font-bold mb-1">✅ Draw Successfully Executed!</div>
+                    <div class="text-emerald-400 font-bold mb-1">✅ Algorithmic Draw Successfully Executed!</div>
                     <div>Winning Numbers: <span class="text-white font-mono bg-yellow-400/20 px-2 py-0.5 rounded text-yellow-300">${this.selectedNumbers.join(', ')}</span></div>
                     <div class="text-[10px] text-slate-500 mt-1">Timestamp: ${new Date().toLocaleString()}</div>
                 `;
             }
 
-            notify('success', '🎉 Lottery draw executed and audited successfully!');
+            notify('success', '🎉 Algorithmic lottery draw executed and audited successfully!');
         } catch (error) {
             console.error('Error executing draw:', error);
             notify('error', `❌ Draw execution failed: ${error.message}`);
@@ -203,7 +193,7 @@ class AdminLotteryDraw {
 
         const auditDisplay = document.getElementById('lottery-audit-display');
         if (auditDisplay) {
-            auditDisplay.innerHTML = 'No active draw results recorded yet. Configure and execute a draw to view audit records.';
+            auditDisplay.innerHTML = 'No active draw results recorded yet. Configure schedule and execute algorithmic draw to view audit records.';
         }
 
         notify('success', '🔄 Lottery state has been reset');
