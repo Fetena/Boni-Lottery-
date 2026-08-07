@@ -1,7 +1,6 @@
 // ============================================
-// CUSTOMER DRAWINGS (CHILD COMPONENT - WITH LIVE COUNTDOWN)
+// UPDATED CUSTOMER DRAWINGS COMPONENT (WITH 3 WINNERS VIEW & TIKTOK LIVE SYNC)
 // Parent: CustomerDashboard
-// View drawings managed by the customer's registered admin
 // ============================================
 
 class CustomerDrawings {
@@ -18,12 +17,12 @@ class CustomerDrawings {
     async init() {
         await this.loadCustomerAndDrawings();
         this.initCustomerScheduleListener();
-        this.initLiveDrawAutoListener(); // 👈 Automated TikTok notification listener with 30-min window & click-to-dismiss
+        this.initLiveDrawAutoListener(); 
+        this.initLiveDrawStateListener(); // 👈 Real-time listener for the 3 drawn winners
     }
 
     async loadCustomerAndDrawings() {
         try {
-            // 1. Get customer profile to see which admin they are registered under
             let customerData = null;
             const doc = await db.collection('customers').doc(this.custId).get();
             if (doc.exists) {
@@ -35,7 +34,6 @@ class CustomerDrawings {
 
             this.customerAdmin = customerData.assignedAdmin || customerData.adminId || customerData.branchAdmin || customerData.preferredAdmin || 'Main Admin';
 
-            // 2. Fetch drawings managed by this specific admin from Firestore collections
             let snapshot = await db.collection('draws')
                 .where('adminId', '==', this.customerAdmin)
                 .get();
@@ -62,6 +60,7 @@ class CustomerDrawings {
                         date: data.date || data.targetDate || 'Upcoming Draw',
                         time: data.time || (data.targetTime ? `${data.targetTime} ${data.ampm || data.amPm || ''}` : '20:00'),
                         status: data.status || 'Upcoming',
+                        winners: data.winners || [],
                         winningNumber: data.winningNumber || null,
                         tickets: data.tickets || 0,
                         prizePool: data.prizePool || data.pool || 5000
@@ -77,7 +76,7 @@ class CustomerDrawings {
         }
     }
 
-    // Real-time listener for the admin's saved schedule updates & countdown calculation
+    // Real-time listener for schedule updates and synchronized TikTok link
     async initCustomerScheduleListener() {
         if (!db) return;
 
@@ -89,6 +88,7 @@ class CustomerDrawings {
                 const targetDate = data.targetDate || '';
                 const targetTime = data.targetTime || '';
                 const ampm = data.ampm || 'PM';
+                const tiktokLink = data.tiktokLink || 'https://tiktok.com/@boniLottery';
 
                 if (scheduleBanner) {
                     scheduleBanner.innerHTML = `🎯 Next Scheduled Draw: <span class="text-yellow-400 font-bold">${targetDate} at ${targetTime} ${ampm}</span>`;
@@ -99,7 +99,12 @@ class CustomerDrawings {
                     nextDrawTitleEl.textContent = `${targetDate} • ${targetTime} ${ampm}`;
                 }
 
-                // Parse exact target date for live countdown calculation
+                // Update watch live button click handler dynamically with admin's saved link
+                const watchBtn = document.getElementById('customer-tiktok-btn');
+                if (watchBtn) {
+                    watchBtn.setAttribute('onclick', `customerDrawings.goToTikTok('${tiktokLink}')`);
+                }
+
                 if (targetDate && targetTime) {
                     const parts = targetDate.split('-').map(Number);
                     if (parts.length === 3) {
@@ -111,7 +116,6 @@ class CustomerDrawings {
 
                         this.targetDateObj = new Date(year, month - 1, day, hours, minutes, 0, 0);
                         
-                        // Start interval ticker
                         if (this.countdownTimer) clearInterval(this.countdownTimer);
                         this.updateCountdownDisplay();
                         this.countdownTimer = setInterval(() => this.updateCountdownDisplay(), 1000);
@@ -121,6 +125,56 @@ class CustomerDrawings {
                 if (scheduleBanner) {
                     scheduleBanner.innerHTML = `🎯 Next Scheduled Draw: <span class="text-slate-400 italic">Not scheduled yet</span>`;
                 }
+            }
+        });
+    }
+
+    // Real-time listener for live draw state (Spins & 3 Winners Display)
+    initLiveDrawStateListener() {
+        if (!db) return;
+
+        db.collection('settings').doc('live_draw_state').onSnapshot(doc => {
+            if (!doc.exists) return;
+            const state = doc.data();
+            const liveDisplayBox = document.getElementById('customer-live-winners-display');
+            if (!liveDisplayBox) return;
+
+            const tiktokLink = state.tiktokLiveUrl || 'https://tiktok.com/@boniLottery';
+
+            if (state.status === 'spinning') {
+                liveDisplayBox.innerHTML = `
+                    <div class="bg-black/80 border border-yellow-400/40 rounded-xl p-4 text-center animate-pulse space-y-2">
+                        <span class="text-xs font-bold text-yellow-400 uppercase tracking-wider">⚡ Admin is Drawing 3 Winners Now...</span>
+                        <div class="text-2xl font-black text-white">#${state.currentNumber || '---'}</div>
+                    </div>
+                `;
+            } else if (state.status === 'completed' && state.winners) {
+                const medals = ['🥇', '🥈', '🥉'];
+                liveDisplayBox.innerHTML = `
+                    <div class="bg-black/90 border border-yellow-400/45 rounded-xl p-5 space-y-3 shadow-[0_0_20px_rgba(252,211,77,0.15)]">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-black text-yellow-400 uppercase tracking-widest">🏆 Official Top 3 Winners</span>
+                            <a href="${tiktokLink}" target="_blank" class="text-[11px] bg-yellow-400 text-black px-3 py-1 rounded-lg font-bold hover:opacity-90">📱 Watch Stream</a>
+                        </div>
+                        <div class="space-y-2">
+                            ${state.winners.map((w, idx) => {
+                                const sortedNums = [...w.numbers].sort((a, b) => Number(a) - Number(b)).join(', ');
+                                const isCurrentUser = w.customer === (currentUser?.name || currentUser?.displayName || '') || w.email === currentUser?.email;
+                                return `
+                                    <div class="flex items-center justify-between bg-black/60 border ${isCurrentUser ? 'border-emerald-400/60 bg-emerald-950/20' : 'border-yellow-400/20'} rounded-xl p-3">
+                                        <div>
+                                            <span class="text-xs font-black text-yellow-400">${medals[idx]} ${idx + 1}st Place: ${w.customer} ${isCurrentUser ? '<span class="text-emerald-400 text-[10px] font-bold">(YOU!)</span>' : ''}</span>
+                                            <div class="text-[10px] text-slate-400">📞 ${w.phone || 'N/A'}</div>
+                                        </div>
+                                        <span class="px-2.5 py-1 bg-yellow-400/20 border border-yellow-400/40 rounded-lg text-yellow-300 text-xs font-bold font-mono">
+                                            #${sortedNums}
+                                        </span>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
             }
         });
     }
@@ -158,12 +212,11 @@ class CustomerDrawings {
                 const windowKey = `notified_draw_${year}-${month}-${day}_${hours}-${minutes}`;
                 const thirtyMinutesMs = 30 * 60 * 1000; // 30 minutes duration
 
-                // Triggers automatically within a 30-minute window starting from target draw time
                 if (timeDiff >= 0 && timeDiff <= thirtyMinutesMs && !localStorage.getItem(windowKey)) {
                     localStorage.setItem(windowKey, 'true');
                     this.showLiveDrawModal(
                         '🔴 Live Drawing is Happening Now!',
-                        'The scheduled draw has started. Join the TikTok stream to see if your numbers won!',
+                        'The scheduled draw has started by your admin. Join the TikTok stream to see if your numbers won!',
                         tiktokLink
                     );
                 }
@@ -243,6 +296,7 @@ class CustomerDrawings {
                 date: 'Next Scheduled Draw',
                 time: '20:00',
                 status: 'Upcoming',
+                winners: [],
                 winningNumber: null,
                 tickets: 0,
                 prizePool: 5000
@@ -282,8 +336,11 @@ class CustomerDrawings {
 
                     <p class="text-slate-300 font-medium">Prize Pool: <span class="text-yellow-400">${nextDraw.prizePool || 0} ETB</span></p>
                     
-                    <button id="customer-tiktok-btn" onclick="customerDrawings.goToTikTok()" 
-                        class="px-8 py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl transition-all">📱 Watch Live on TikTok</button>
+                    <!-- REAL-TIME 3 WINNERS CONTAINER -->
+                    <div id="customer-live-winners-display" class="w-full max-w-lg mx-auto"></div>
+
+                    <button id="customer-tiktok-btn" onclick="customerDrawings.goToTikTok('https://tiktok.com/@boniLottery')" 
+                        class="px-8 py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-bold rounded-xl transition-all cursor-pointer shadow-lg">📱 Watch Live on TikTok</button>
                 </div>
 
                 <!-- CHECK IF WON -->
@@ -306,7 +363,7 @@ class CustomerDrawings {
                     </div>
 
                     <button onclick="customerDrawings.checkWinner()" 
-                        class="w-full py-3 bg-yellow-400 text-black font-bold rounded-xl mt-2">Check Winning Status</button>
+                        class="w-full py-3 bg-yellow-400 text-black font-bold rounded-xl mt-2 cursor-pointer">Check Winning Status</button>
 
                     <div id="win-result"></div>
                 </div>
@@ -315,18 +372,31 @@ class CustomerDrawings {
                 <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
                     <h4 class="font-bold text-white mb-4">📜 Past Admin Drawings & Winning Numbers Audit</h4>
                     <div class="space-y-3">
-                        ${pastDraws.length > 0 ? pastDraws.map(draw => `
-                            <div class="bg-black/30 rounded-lg p-4 border border-yellow-400/10">
-                                <div class="flex justify-between items-start">
-                                    <div>
-                                        <p class="font-bold text-white">${draw.date}</p>
-                                        <p class="text-sm text-yellow-400">Winning Number Audit Result: #${draw.winningNumber || 'Pending'}</p>
-                                        <p class="text-xs text-slate-400 mt-1">${draw.tickets || 0} tickets • ${draw.prizePool || 0} ETB pool</p>
+                        ${pastDraws.length > 0 ? pastDraws.map(draw => {
+                            const medals = ['🥇', '🥈', '🥉'];
+                            let winnersHtml = '';
+                            if (draw.winners && Array.isArray(draw.winners)) {
+                                winnersHtml = draw.winners.map((w, idx) => {
+                                    const sortedNums = [...w.numbers].sort((a, b) => Number(a) - Number(b)).join(', ');
+                                    return `<div class="text-xs text-yellow-300 font-bold">${medals[idx]} ${idx + 1}st Place: ${w.customer} (#${sortedNums})</div>`;
+                                }).join('');
+                            } else if (draw.winningNumber) {
+                                winnersHtml = `<p class="text-sm text-yellow-400">Winning Number Audit Result: #${draw.winningNumber}</p>`;
+                            }
+
+                            return `
+                                <div class="bg-black/30 rounded-lg p-4 border border-yellow-400/10 space-y-2">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <p class="font-bold text-white">${draw.date}</p>
+                                            <div class="space-y-1 mt-1">${winnersHtml}</div>
+                                            <p class="text-xs text-slate-400 mt-1">${draw.tickets || 0} tickets • ${draw.prizePool || 0} ETB pool</p>
+                                        </div>
+                                        <span class="text-xs bg-emerald-400/20 text-emerald-400 px-3 py-1 rounded">${draw.status}</span>
                                     </div>
-                                    <span class="text-xs bg-emerald-400/20 text-emerald-400 px-3 py-1 rounded">${draw.status}</span>
                                 </div>
-                            </div>
-                        `).join('') : '<p class="text-slate-400 text-sm">No past drawings audit available.</p>'}
+                            `;
+                        }).join('') : '<p class="text-slate-400 text-sm">No past drawings audit available.</p>'}
                     </div>
                 </div>
 
@@ -383,11 +453,11 @@ class CustomerDrawings {
         }
     }
 
-    goToTikTok() {
-        this.notify('info', '📱 Opening TikTok @BoniLottery...');
-        // Remove any active live modals or notifications when the user clicks the link
+    goToTikTok(link) {
+        const targetUrl = link || 'https://tiktok.com/@boniLottery';
+        this.notify('info', '📱 Opening TikTok Live Stream...');
         document.getElementById('live-draw-modal')?.remove();
-        window.open('https://tiktok.com/@boniLottery', '_blank');
+        window.open(targetUrl, '_blank');
     }
 
     notify(type, message) {
