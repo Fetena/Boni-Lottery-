@@ -1,8 +1,6 @@
 // ============================================
-// INDEPENDENT LOTTERY COMPONENT (REAL-TIME SYNC & CUSTOMER VISIBILITY)
+// UPDATED ADMIN LOTTERY COMPONENT (SEQUENTIAL WINNING NUMBERS & TIKTOK LIVE EMBED)
 // ============================================
-
-let countdownInterval = null;
 
 class AdminLotteryDraw {
     constructor(adminId) {
@@ -15,8 +13,26 @@ class AdminLotteryDraw {
             <div class="glass-panel rounded-2xl p-6 border-2 border-yellow-400/40 bg-gradient-to-b from-yellow-400/10 to-black space-y-6 shadow-[0_0_25px_rgba(252,211,77,0.15)]">
                 <div>
                     <span class="bg-yellow-400/20 text-yellow-300 border border-yellow-400/30 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">⚡ Live Draw Center</span>
-                    <h3 class="text-2xl font-black text-gradient mt-2">🎰 Branch Lucky Draw</h3>
-                    <p class="text-xs text-slate-300 mt-1">Set your exact target date and AM/PM time below. Draws sync globally in real-time so customers see the live spinning and final results instantly.</p>
+                    <h3 class="text-2xl font-black text-gradient mt-2">🎰 Branch Lucky Draw & TikTok Live</h3>
+                    <p class="text-xs text-slate-300 mt-1">Manage your precise schedule, stream your TikTok Live link directly on the dashboard, and display sequential winning numbers.</p>
+                </div>
+
+                <!-- TikTok Live Link & Embedded Player Section -->
+                <div class="bg-black/40 p-4 rounded-xl border border-yellow-400/20 space-y-3">
+                    <h4 class="text-xs font-bold text-yellow-400 uppercase tracking-wide">🔴 TikTok Live Stream Integration</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div class="md:col-span-2">
+                            <label class="block text-[10px] text-slate-400 mb-1">TikTok Live URL or Embed Link</label>
+                            <input type="text" id="tiktok-live-url-input" placeholder="https://www.tiktok.com/@username/live" class="w-full bg-black/60 border border-yellow-400/30 rounded-xl py-2 px-3 text-white text-xs">
+                        </div>
+                        <div class="flex items-end">
+                            <button onclick="window.adminLottery.saveTikTokLive()" class="w-full py-2 bg-yellow-400/20 hover:bg-yellow-400/30 border border-yellow-400/40 text-yellow-300 font-bold rounded-xl text-xs transition-all cursor-pointer">📡 Update Stream</button>
+                        </div>
+                    </div>
+                    <!-- Live Stream Preview Container -->
+                    <div id="tiktok-stream-container" class="mt-3 aspect-video bg-black/80 rounded-xl border border-yellow-400/20 flex flex-col items-center justify-center overflow-hidden relative">
+                        <p class="text-xs text-slate-500 italic">No TikTok Live stream configured yet. Enter a URL above.</p>
+                    </div>
                 </div>
 
                 <!-- AM/PM Custom Schedule Selector -->
@@ -45,12 +61,12 @@ class AdminLotteryDraw {
                     <p id="schedule-status-text" class="text-[11px] text-slate-400 italic">No schedule active.</p>
                 </div>
 
-                <!-- Countdown & Spinner Box -->
+                <!-- Countdown & Spinner Box (Sequential Numbers Display) -->
                 <div class="py-6 bg-black/60 rounded-xl border border-yellow-400/30 flex flex-col items-center justify-center relative overflow-hidden space-y-2">
                     <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-yellow-400/10 via-transparent to-transparent pointer-events-none"></div>
                     <span id="draw-countdown-timer" class="text-xs font-mono font-bold text-amber-400 bg-amber-400/10 px-3 py-1 rounded-full border border-amber-400/20">⏳ LOCKED UNTIL TIMER ENDS</span>
-                    <span class="text-[10px] uppercase tracking-widest text-slate-400 mt-1">Winning Number Result</span>
-                    <div id="lottery-spinner-box" class="text-5xl font-black text-yellow-400 tracking-wider drop-shadow-[0_0_15px_rgba(252,211,77,0.6)]">---</div>
+                    <span class="text-[10px] uppercase tracking-widest text-slate-400 mt-1">Sequential Winning Number Result</span>
+                    <div id="lottery-spinner-box" class="text-5xl font-black text-yellow-400 tracking-wider drop-shadow-[0_0_15px_rgba(252,211,77,0.6)]">1, 2, 3...</div>
                     <div id="winner-info-display" class="text-xs text-slate-300 mt-2 font-medium text-center px-4"></div>
                 </div>
 
@@ -69,7 +85,7 @@ class AdminLotteryDraw {
     }
 
     async init() {
-        console.log('✅ AdminLotteryDraw initialized with Real-Time Customer Sync');
+        console.log('✅ AdminLotteryDraw initialized with Sequential Numbers & TikTok Live');
         
         const dateInput = document.getElementById('draw-target-date');
         const timeInput = document.getElementById('draw-target-time');
@@ -92,12 +108,12 @@ class AdminLotteryDraw {
         }
 
         await this.loadSchedule();
+        await this.loadTikTokLive();
         await this.loadPastWinners();
 
         if (this.scheduleCheckInterval) clearInterval(this.scheduleCheckInterval);
         this.scheduleCheckInterval = setInterval(() => this.checkScheduleTiming(), 1000);
 
-        // Listen for live state changes on Firestore to sync customer dashboards automatically
         this.initRealtimeStateListener();
     }
 
@@ -114,13 +130,68 @@ class AdminLotteryDraw {
             if (state.status === 'spinning') {
                 if (spinnerBox) spinnerBox.textContent = `#${state.currentNumber || '---'}`;
                 if (winnerInfoBox) winnerInfoBox.innerHTML = `<span class="text-amber-400 animate-pulse font-bold">⚡ LIVE DRAWING IN PROGRESS...</span>`;
-            } else if (state.status === 'completed' && state.winningNumber) {
-                if (spinnerBox) spinnerBox.textContent = `#${state.winningNumber}`;
+            } else if (state.status === 'completed' && state.winningNumbers) {
+                // Display sorted sequential numbers nicely
+                const formattedSeq = Array.isArray(state.winningNumbers) ? state.winningNumbers.join(', ') : state.winningNumbers;
+                if (spinnerBox) spinnerBox.textContent = `#${formattedSeq}`;
                 if (winnerInfoBox) {
                     winnerInfoBox.innerHTML = `🏆 Winner: <span class="text-yellow-400 font-bold">${state.winnerName}</span> (${state.winnerPhone} • ${state.winnerEmail})`;
                 }
             }
         });
+    }
+
+    async saveTikTokLive() {
+        const urlInput = document.getElementById('tiktok-live-url-input')?.value;
+        if (!urlInput) {
+            return notify('error', '❌ Please enter a valid TikTok Live URL.');
+        }
+
+        try {
+            if (db) {
+                await db.collection('settings').doc('tiktok_live_stream').set({
+                    url: urlInput,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+            }
+            this.renderTikTokStream(urlInput);
+            notify('success', '📡 TikTok Live stream updated successfully!');
+        } catch (error) {
+            console.error('Error saving TikTok Live:', error);
+            notify('error', '❌ Failed to save TikTok Live stream.');
+        }
+    }
+
+    async loadTikTokLive() {
+        try {
+            if (!db) return;
+            const doc = await db.collection('settings').doc('tiktok_live_stream').get();
+            if (doc.exists) {
+                const data = doc.data();
+                const urlInput = document.getElementById('tiktok-live-url-input');
+                if (data.url && urlInput) {
+                    urlInput.value = data.url;
+                    this.renderTikTokStream(data.url);
+                }
+            }
+        } catch (error) {
+            console.error('Error loading TikTok Live:', error);
+        }
+    }
+
+    renderTikTokStream(url) {
+        const container = document.getElementById('tiktok-stream-container');
+        if (!container) return;
+
+        container.innerHTML = `
+            <div class="w-full h-full flex flex-col items-center justify-center bg-black p-4 text-center space-y-2">
+                <span class="text-red-500 font-bold text-xs uppercase tracking-wider animate-pulse">🔴 LIVE STREAM ACTIVE</span>
+                <p class="text-xs text-slate-300 truncate max-w-md">Source: <a href="${url}" target="_blank" class="text-yellow-400 underline">${url}</a></p>
+                <div class="flex gap-2 mt-2">
+                    <a href="${url}" target="_blank" class="px-4 py-2 bg-yellow-400 text-black font-bold rounded-xl text-xs hover:bg-yellow-300 transition-all">📺 Open TikTok Live in New Tab</a>
+                </div>
+            </div>
+        `;
     }
 
     getTargetDateTime() {
@@ -266,12 +337,23 @@ class AdminLotteryDraw {
                     const phone = draw.winnerPhone || draw.phone || 'N/A';
                     const email = draw.winnerEmail || 'N/A';
                     const scopeText = draw.scope || 'Global Main Admin';
+                    
+                    // Format winning numbers sequentially (sorted numerically)
+                    let winningNumsFormatted = '';
+                    if (Array.isArray(draw.winningNumbers)) {
+                        const sortedNums = [...draw.winningNumbers].sort((a, b) => Number(a) - Number(b));
+                        winningNumsFormatted = sortedNums.join(', ');
+                    } else if (draw.winningNumber) {
+                        winningNumsFormatted = String(draw.winningNumber);
+                    } else {
+                        winningNumsFormatted = 'N/A';
+                    }
 
                     html += `
                         <div class="bg-black/60 border border-yellow-400/20 rounded-xl p-3 flex items-center justify-between gap-2">
                             <div class="space-y-0.5">
                                 <div class="text-sm font-black text-yellow-400">
-                                    #${draw.winningNumber} — ${draw.winnerName || 'Winner'}
+                                    #${winningNumsFormatted} — ${draw.winnerName || 'Winner'}
                                 </div>
                                 <div class="text-[11px] text-slate-400 flex items-center gap-2">
                                     <span>📞 ${phone}</span>
@@ -319,24 +401,22 @@ class AdminLotteryDraw {
                 return notify('error', '❌ No approved tickets found to draw from!');
             }
 
-            let allAvailableNumbers = [];
+            let allTickets = [];
             snapshot.forEach(doc => {
                 const ticket = doc.data();
-                if (ticket.numbers && Array.isArray(ticket.numbers)) {
-                    ticket.numbers.forEach(num => {
-                        allAvailableNumbers.push({ 
-                            ticketId: doc.id, 
-                            number: num, 
-                            customer: ticket.customerName || ticket.name || 'N/A', 
-                            email: ticket.customerEmail || ticket.email || 'N/A',
-                            phone: ticket.phone || ticket.customerPhone || ticket.phoneNumber || 'N/A'
-                        });
+                if (ticket.numbers && Array.isArray(ticket.numbers) && ticket.numbers.length > 0) {
+                    allTickets.push({ 
+                        ticketId: doc.id, 
+                        numbers: ticket.numbers, 
+                        customer: ticket.customerName || ticket.name || 'N/A', 
+                        email: ticket.customerEmail || ticket.email || 'N/A',
+                        phone: ticket.phone || ticket.customerPhone || ticket.phoneNumber || 'N/A'
                     });
                 }
             });
 
-            if (allAvailableNumbers.length === 0) {
-                return notify('error', '❌ No active numbers available for this draw scope.');
+            if (allTickets.length === 0) {
+                return notify('error', '❌ No active ticket numbers available.');
             }
 
             const spinnerBox = document.getElementById('lottery-spinner-box');
@@ -349,7 +429,6 @@ class AdminLotteryDraw {
                 const randomNum = Math.floor(Math.random() * 300) + 1;
                 if (spinnerBox) spinnerBox.textContent = `#${randomNum}`;
                 
-                // Broadcast live spinning state to all customer screens in real-time
                 await db.collection('settings').doc('live_draw_state').set({
                     status: 'spinning',
                     currentNumber: randomNum,
@@ -361,21 +440,27 @@ class AdminLotteryDraw {
                 if (spinCount >= maxSpins) {
                     clearInterval(spinInterval);
 
-                    const randomIndex = Math.floor(Math.random() * allAvailableNumbers.length);
-                    const winningSelection = allAvailableNumbers[randomIndex];
+                    // Pick a winning ticket randomly
+                    const randomIndex = Math.floor(Math.random() * allTickets.length);
+                    const winningTicket = allTickets[randomIndex];
 
-                    if (spinnerBox) spinnerBox.textContent = `#${winningSelection.number}`;
+                    // Sort winning numbers sequentially (numerically)
+                    const sortedSequentialNumbers = [...winningTicket.numbers].sort((a, b) => Number(a) - Number(b));
+                    const formattedSequentialStr = sortedSequentialNumbers.join(', ');
+
+                    if (spinnerBox) spinnerBox.textContent = `#${formattedSequentialStr}`;
                     if (winnerInfoBox) {
-                        winnerInfoBox.innerHTML = `🏆 Winner: <span class="text-yellow-400 font-bold">${winningSelection.customer}</span> (${winningSelection.phone} • ${winningSelection.email})`;
+                        winnerInfoBox.innerHTML = `🏆 Winner: <span class="text-yellow-400 font-bold">${winningTicket.customer}</span> (${winningTicket.phone} • ${winningTicket.email})`;
                     }
 
-                    // Save final winning result and update live state for customers instantly
+                    // Save final winning result with sequential numbers
                     await db.collection('lottery_draws').add({
-                        winningNumber: winningSelection.number,
-                        winningTicketId: winningSelection.ticketId,
-                        winnerName: winningSelection.customer,
-                        winnerEmail: winningSelection.email,
-                        winnerPhone: winningSelection.phone,
+                        winningNumber: sortedSequentialNumbers[0], // primary for backwards compatibility
+                        winningNumbers: sortedSequentialNumbers, // sequential array
+                        winningTicketId: winningTicket.ticketId,
+                        winnerName: winningTicket.customer,
+                        winnerEmail: winningTicket.email,
+                        winnerPhone: winningTicket.phone,
                         drawnBy: currentUser?.email || 'Main Admin',
                         scope: 'Global Main Admin',
                         drawnAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -383,15 +468,16 @@ class AdminLotteryDraw {
 
                     await db.collection('settings').doc('live_draw_state').set({
                         status: 'completed',
-                        winningNumber: winningSelection.number,
-                        winnerName: winningSelection.customer,
-                        winnerPhone: winningSelection.phone,
-                        winnerEmail: winningSelection.email,
+                        winningNumber: sortedSequentialNumbers[0],
+                        winningNumbers: sortedSequentialNumbers,
+                        winnerName: winningTicket.customer,
+                        winnerPhone: winningTicket.phone,
+                        winnerEmail: winningTicket.email,
                         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                     }, { merge: true });
 
                     this.loadPastWinners();
-                    notify('success', `🎉 WINNING NUMBER DRAWN: #${winningSelection.number} (${winningSelection.customer})!`);
+                    notify('success', `🎉 WINNING NUMBERS DRAWN: #${formattedSequentialStr} (${winningTicket.customer})!`);
                 }
             }, 60);
 
