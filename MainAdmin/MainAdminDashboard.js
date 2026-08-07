@@ -1,9 +1,10 @@
 // ============================================
-// 2. MAIN ADMIN DASHBOARD (PARENT COMPONENT WITH WINNING NUMBERS AUDIT WIDGET)
+// MAIN ADMIN DASHBOARD (PARENT COMPONENT)
 // ============================================
 
 class MainAdminDashboard {
     constructor() {
+        // Initialize ALL child components including the lottery draw
         this.admins = new Admins();
         this.bookings = new MainAdminBookings();
         this.customers = new Customers();
@@ -15,6 +16,7 @@ class MainAdminDashboard {
         this.notifications = new Notifications();
         this.settings = new Settings();
         
+        // Independent lottery draw instance
         window.mainAdminLottery = new MainAdminLotteryDraw();
     }
 
@@ -32,16 +34,6 @@ class MainAdminDashboard {
                     <div class="max-w-7xl mx-auto space-y-6">
                         <h2 class="text-2xl sm:text-3xl font-bold text-white">System Control Center</h2>
                         
-                        <!-- WINNING NUMBERS AUDIT WIDGET (STAYING ON ALL PARENTS DASHBOARD) -->
-                        <div class="glass-panel rounded-2xl p-5 border border-yellow-400/30 bg-yellow-400/5 space-y-3">
-                            <h3 class="text-sm font-bold text-yellow-400 flex items-center gap-2">
-                                🎯 Live Winning Numbers Audit Feed
-                            </h3>
-                            <div id="parent-winning-numbers-audit-feed" class="space-y-2 max-h-40 overflow-y-auto pr-1 text-xs text-slate-300">
-                                <p class="italic text-slate-500">Loading audit feed...</p>
-                            </div>
-                        </div>
-
                         <!-- TABS -->
                         <div class="flex gap-2 border-b border-yellow-400/10 pb-2 overflow-x-auto whitespace-nowrap scrollbar-none">
                             <button onclick="window.mainAdminDashboard.switchTab('dashboard', event)" class="tab-button active px-3 sm:px-4 py-2 text-xs font-bold text-yellow-400">📊 Dashboard</button>
@@ -52,17 +44,19 @@ class MainAdminDashboard {
                             <button onclick="window.mainAdminDashboard.switchTab('analytics', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📈 Analytics</button>
                             <button onclick="window.mainAdminDashboard.switchTab('transactions', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📋 Transactions</button>
                             <button onclick="window.mainAdminDashboard.switchTab('auditlog', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🔒 Audit</button>                         
-                            <button onclick="window.mainAdminDashboard.switchTab('bookings', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white relative">
+                            <button onclick="window.mainAdminDashboard.switchTab('bookings', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 relative">
                                 📅 Bookings <span id="badge-main-bookings" class="hidden absolute -top-1 -right-1 px-1.5 py-0.5 bg-red-500 text-white rounded-full text-[9px] font-bold">0</span>
                             </button>
-                            <button onclick="window.mainAdminDashboard.switchTab('notifications', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white relative">
+                            <button onclick="window.mainAdminDashboard.switchTab('notifications', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 relative">
                                 📢 Notify <span id="badge-main-notifications" class="hidden absolute -top-1 -right-1 px-1.5 py-0.5 bg-red-500 text-white rounded-full text-[9px] font-bold">0</span>
                             </button>
                             <button onclick="window.mainAdminDashboard.switchTab('settings', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">⚙️ Settings</button>
                         </div>
                        
                         <!-- TAB CONTENTS -->
+                        <!-- Dashboard Tab -->
                         <div id="main-dashboard" class="tab-content active space-y-6">
+                            <!-- Compact Stat Cards -->
                             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                 <div class="glass-panel rounded-2xl p-5 sm:p-6 border border-yellow-400/10">
                                     <p class="text-xs text-slate-400">Total Admins</p>
@@ -82,6 +76,7 @@ class MainAdminDashboard {
                                 </div>
                             </div>
 
+                            <!-- Render Independent Lottery Draw Component -->
                             ${window.mainAdminLottery ? window.mainAdminLottery.render() : ''}
                         </div>
 
@@ -103,6 +98,8 @@ class MainAdminDashboard {
 
     async loadData() {
         try {
+            console.log('📥 Starting loadData...');
+            
             await Promise.all([
                 this.admins.loadData(),
                 this.customers.loadData(),
@@ -122,41 +119,15 @@ class MainAdminDashboard {
             
             this.loadTabs(); 
             await this.updateDashboardStats();
-            this.initWinningAuditListener();
             notify('info', '✅ Data loaded successfully');
         } catch (error) {
             console.error('Error loading data:', error);
         }
     }
 
-    initWinningAuditListener() {
-        if (!db) return;
-        db.collection('lottery_draws').orderBy('drawnAt', 'desc').limit(5).onSnapshot(snapshot => {
-            const feedContainer = document.getElementById('parent-winning-numbers-audit-feed');
-            if (!feedContainer) return;
-            if (snapshot.empty) {
-                feedContainer.innerHTML = `<p class="italic text-slate-500">No winning numbers audited yet.</p>`;
-                return;
-            }
-            let html = '';
-            snapshot.forEach(doc => {
-                const data = doc.data();
-                const date = data.drawnAt?.toDate ? data.drawnAt.toDate().toLocaleString() : 'Just now';
-                html += `
-                    <div class="bg-black/40 border border-yellow-400/20 rounded-lg p-2.5 flex justify-between items-center">
-                        <div>
-                            <span class="text-yellow-400 font-bold">Winning Number: #${data.winningNumber}</span> — Winner: <span class="text-white">${data.winnerName || 'N/A'}</span> (${data.winnerPhone || 'N/A'})
-                        </div>
-                        <span class="text-[10px] text-slate-400">${date}</span>
-                    </div>
-                `;
-            });
-            feedContainer.innerHTML = html;
-        });
-    }
-
     loadTabs() {
         try {
+            console.log('🔄 Loading tabs content...');
             const adminsContent = document.getElementById('main-admins');
             const customersContent = document.getElementById('main-customers');
             const rangesContent = document.getElementById('main-ranges');
@@ -179,6 +150,8 @@ class MainAdminDashboard {
             if (auditlogContent) auditlogContent.innerHTML = this.auditLog.render();
             if (notificationsContent) notificationsContent.innerHTML = this.notifications.render();
             if (settingsContent) settingsContent.innerHTML = this.settings.render();
+            
+            console.log('✅ All tabs content loaded');
         } catch (error) {
             console.error('Error in loadTabs:', error);
         }
@@ -186,7 +159,11 @@ class MainAdminDashboard {
 
     async updateDashboardStats() {
         try {
-            if (!db) return;
+            if (!db) {
+                console.error('Database not initialized');
+                return;
+            }
+
             const adminsSnap = await db.collection('admins').get();
             const adminsEl = document.getElementById('total-admins');
             if (adminsEl) adminsEl.textContent = adminsSnap.size;
@@ -211,6 +188,8 @@ class MainAdminDashboard {
     }
 
     switchTab(tabName, event) {
+        console.log('🔀 Switching to tab:', tabName);
+        
         const tabElements = document.querySelectorAll('[id^="main-"]');
         tabElements.forEach(el => {
             if (el.classList && el.classList.contains('tab-content')) {
@@ -228,6 +207,9 @@ class MainAdminDashboard {
         if (tab) {
             tab.style.display = 'block';
             tab.classList.add('active');
+            console.log('✅ Tab shown:', tabName);
+        } else {
+            console.warn('⚠️ Tab not found:', `main-${tabName}`);
         }
 
         if (event && event.target) {
