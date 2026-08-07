@@ -1,3 +1,7 @@
+// ============================================
+// MAIN ADMIN LOTTERY DRAW COMPONENT (SCHEDULE-LOCKED WITH PHONE & HISTORY)
+// ============================================
+
 class MainAdminLotteryDraw {
     constructor() {
         this.selectedScope = 'global';
@@ -10,13 +14,13 @@ class MainAdminLotteryDraw {
                 <div>
                     <span class="bg-yellow-400/20 text-yellow-300 border border-yellow-400/30 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">⚡ LIVE DRAW CENTER</span>
                     <h3 class="text-3xl font-black text-gradient mt-2">🎰 Global Lucky Draw</h3>
-                    <p class="text-xs text-slate-300 mt-1">Set your exact target date, AM/PM time, and TikTok live link below to schedule the draw and broadcast notifications.</p>
+                    <p class="text-xs text-slate-300 mt-1">Set your exact target date and AM/PM time below to schedule the draw and unlock the wheel.</p>
                 </div>
 
-                <!-- PRECISE DATE, TIME & TIKTOK LINK SCHEDULE CONTAINER -->
+                <!-- PRECISE DATE & AM/PM SCHEDULE CONTAINER -->
                 <div class="bg-black/40 p-4 rounded-xl border border-yellow-400/20 space-y-3 text-left">
                     <h4 class="text-xs font-bold text-yellow-400 flex items-center gap-2">
-                        ⚙️ PRECISE DATE, TIME & TIKTOK LIVE LINK
+                        ⚙️ PRECISE DATE & AM/PM SCHEDULE
                     </h4>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
                         <div>
@@ -35,14 +39,10 @@ class MainAdminLotteryDraw {
                             </select>
                         </div>
                     </div>
-                    <div>
-                        <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">TikTok Live Link</label>
-                        <input type="url" id="main-tiktok-link-input" placeholder="https://tiktok.com/@boniLottery" class="w-full bg-black/60 border border-yellow-400/30 rounded-lg py-2 px-3 text-white text-xs">
-                    </div>
                     <div class="flex items-center justify-between pt-2">
                         <span id="main-target-display-text" class="text-[11px] text-yellow-400/80 font-medium">📅 Target Draw Time: Not Set</span>
                         <button onclick="window.mainAdminLottery.saveSchedule()" class="px-4 py-2 bg-yellow-400/20 hover:bg-yellow-400/30 border border-yellow-400/40 text-yellow-300 font-bold text-xs rounded-lg transition-all flex items-center gap-1.5">
-                            💾 Save Schedule & TikTok Link
+                            💾 Save Schedule
                         </button>
                     </div>
                 </div>
@@ -64,13 +64,13 @@ class MainAdminLotteryDraw {
                     🔒 LOCKED (WAITING FOR SCHEDULE)
                 </button>
 
-                <!-- PAST WINNERS FEED (LAST 7 DAYS) -->
+                <!-- WINNING NUMBERS AUDIT & PAST WINNERS FEED (LAST 7 DAYS) -->
                 <div class="space-y-3 text-left pt-4 border-t border-yellow-400/10">
                     <h4 class="text-xs font-bold text-yellow-400 flex items-center gap-2">
-                        🏆 PAST WINNERS (LAST 7 DAYS)
+                        📊 WINNING NUMBERS AUDIT & PAST WINNERS
                     </h4>
                     <div id="main-past-winners-list" class="space-y-2 max-h-72 overflow-y-auto pr-1">
-                        <p class="text-xs text-slate-500 italic py-2">Loading past draw history...</p>
+                        <p class="text-xs text-slate-500 italic py-2">Loading past draw history and audit logs...</p>
                     </div>
                 </div>
             </div>
@@ -100,6 +100,7 @@ class MainAdminLotteryDraw {
         await this.loadSchedule();
         await this.loadPastWinners();
 
+        // Start real-time check loop every second
         if (this.scheduleCheckInterval) clearInterval(this.scheduleCheckInterval);
         this.scheduleCheckInterval = setInterval(() => this.checkScheduleTiming(), 1000);
     }
@@ -137,6 +138,7 @@ class MainAdminLotteryDraw {
         }
 
         if (now >= targetDateObj) {
+            // Unlocked
             drawBtn.disabled = false;
             drawBtn.className = "w-full py-4 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 text-black font-black rounded-xl text-sm shadow-lg hover:opacity-95 transform active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer";
             drawBtn.innerHTML = "🎲 SPIN & DRAW WINNER NOW";
@@ -144,6 +146,7 @@ class MainAdminLotteryDraw {
             statusBadge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-950/40 text-emerald-400 border border-emerald-500/30";
             statusBadge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> DRAW UNLOCKED & READY!';
         } else {
+            // Locked
             drawBtn.disabled = true;
             drawBtn.className = "w-full py-4 bg-slate-800 text-slate-500 font-black rounded-xl text-sm shadow-lg cursor-not-allowed transition-all flex items-center justify-center gap-2";
             
@@ -164,7 +167,6 @@ class MainAdminLotteryDraw {
         const date = document.getElementById('main-draw-date-input')?.value;
         const time = document.getElementById('main-draw-time-input')?.value;
         const ampm = document.getElementById('main-draw-ampm-input')?.value;
-        const tiktokLink = document.getElementById('main-tiktok-link-input')?.value.trim() || 'https://tiktok.com/@boniLottery';
 
         if (!date || !time) {
             return notify('error', '❌ Please provide both date and time.');
@@ -176,13 +178,12 @@ class MainAdminLotteryDraw {
                     targetDate: date,
                     targetTime: time,
                     ampm: ampm,
-                    tiktokLink: tiktokLink,
                     updatedAt: new Date()
                 }, { merge: true });
             }
             
             this.checkScheduleTiming();
-            notify('success', '💾 Schedule & TikTok link saved successfully!');
+            notify('success', '💾 Schedule saved successfully!');
         } catch (error) {
             console.error('Error saving schedule:', error);
             notify('error', '❌ Failed to save schedule.');
@@ -198,12 +199,10 @@ class MainAdminLotteryDraw {
                 const dateInput = document.getElementById('main-draw-date-input');
                 const timeInput = document.getElementById('main-draw-time-input');
                 const ampmInput = document.getElementById('main-draw-ampm-input');
-                const tiktokLinkInput = document.getElementById('main-tiktok-link-input');
 
                 if (dateInput && data.targetDate) dateInput.value = data.targetDate;
                 if (timeInput && data.targetTime) timeInput.value = data.targetTime;
                 if (ampmInput && data.ampm) ampmInput.value = data.ampm;
-                if (tiktokLinkInput && data.tiktokLink) tiktokLinkInput.value = data.tiktokLink;
 
                 this.checkScheduleTiming();
             }
@@ -230,7 +229,7 @@ class MainAdminLotteryDraw {
                 .get();
 
             if (snapshot.empty) {
-                container.innerHTML = `<p class="text-xs text-slate-500 italic py-2">No past winners recorded yet.</p>`;
+                container.innerHTML = `<p class="text-xs text-slate-500 italic py-2">No past winning numbers audit records found yet.</p>`;
                 return;
             }
 
@@ -252,7 +251,7 @@ class MainAdminLotteryDraw {
                         <div class="bg-black/60 border border-yellow-400/20 rounded-xl p-3 flex items-center justify-between gap-2">
                             <div class="space-y-0.5">
                                 <div class="text-sm font-black text-yellow-400">
-                                    #${draw.winningNumber} — ${draw.winnerName || 'Winner'}
+                                    Winning Number: #${draw.winningNumber} — ${draw.winnerName || 'Winner'}
                                 </div>
                                 <div class="text-[11px] text-slate-400 flex items-center gap-2">
                                     <span>📞 ${phone}</span>
@@ -260,7 +259,7 @@ class MainAdminLotteryDraw {
                                     <span>✉️ ${email}</span>
                                 </div>
                                 <div class="text-[10px] text-slate-500">
-                                    Drawn: ${formattedDate}
+                                    Audit Log Timestamp: ${formattedDate}
                                 </div>
                             </div>
                             <span class="px-2.5 py-1 bg-yellow-400/10 border border-yellow-400/20 text-yellow-300 text-[10px] font-bold rounded-lg whitespace-nowrap">
@@ -272,13 +271,13 @@ class MainAdminLotteryDraw {
             });
 
             if (count === 0) {
-                container.innerHTML = `<p class="text-xs text-slate-500 italic py-2">No winners found within the last 7 days.</p>`;
+                container.innerHTML = `<p class="text-xs text-slate-500 italic py-2">No winning numbers audit found within the last 7 days.</p>`;
             } else {
                 container.innerHTML = html;
             }
         } catch (error) {
             console.error('Error loading past winners:', error);
-            container.innerHTML = `<p class="text-xs text-red-400 italic py-2">Error loading draw history.</p>`;
+            container.innerHTML = `<p class="text-xs text-red-400 italic py-2">Error loading winning numbers audit history.</p>`;
         }
     }
 
