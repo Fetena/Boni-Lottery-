@@ -2,7 +2,7 @@
 // ADMIN BOOKAPPOINTMENT (CHILD COMPONENT) - FIXED
 // ============================================
 
-class BookAppointment {
+class AdminBookAppointment {
     constructor(adminId) {
         this.adminId = adminId;
         this.appointments = [];
