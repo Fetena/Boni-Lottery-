@@ -1,5 +1,5 @@
 // ============================================
-// UPDATED ADMIN LOTTERY COMPONENT (REMOVED STREAM BOX, RESTORED SPIN BUTTON)
+// UPDATED ADMIN LOTTERY COMPONENT (3 WINNERS RESPECTIVELY ON SINGLE DRAW)
 // ============================================
 
 class AdminLotteryDraw {
@@ -14,10 +14,10 @@ class AdminLotteryDraw {
                 <div>
                     <span class="bg-yellow-400/20 text-yellow-300 border border-yellow-400/30 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">⚡ Live Draw Center</span>
                     <h3 class="text-2xl font-black text-gradient mt-2">🎰 Branch Lucky Draw & TikTok Live</h3>
-                    <p class="text-xs text-slate-300 mt-1">Manage your precise schedule, set your TikTok Live link, and automatically dispatch notifications to customers upon drawing.</p>
+                    <p class="text-xs text-slate-300 mt-1">Manage your precise schedule, set your TikTok Live link, and automatically dispatch notifications to customers upon drawing 3 winners.</p>
                 </div>
 
-                <!-- TikTok Live Link Input Only (Black Preview Container Removed) -->
+                <!-- TikTok Live Link Input Only -->
                 <div class="bg-black/40 p-4 rounded-xl border border-yellow-400/20 space-y-3">
                     <h4 class="text-xs font-bold text-yellow-400 uppercase tracking-wide">🔴 TikTok Live Stream Link</h4>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -57,26 +57,38 @@ class AdminLotteryDraw {
                     <p id="schedule-status-text" class="text-[11px] text-slate-400 italic">No schedule active.</p>
                 </div>
 
-                <!-- Countdown & Spinner Box -->
-                <div class="py-6 bg-black/60 rounded-xl border border-yellow-400/30 flex flex-col items-center justify-center relative overflow-hidden space-y-2">
+                <!-- Countdown & 3 Winners Display Box -->
+                <div class="py-6 bg-black/60 rounded-xl border border-yellow-400/30 flex flex-col items-center justify-center relative overflow-hidden space-y-3">
                     <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-yellow-400/10 via-transparent to-transparent pointer-events-none"></div>
                     <span id="draw-countdown-timer" class="text-xs font-mono font-bold text-amber-400 bg-amber-400/10 px-3 py-1 rounded-full border border-amber-400/20">⏳ LOCKED UNTIL TIMER ENDS</span>
                     
-                    <!-- Sequential Winning Numbers Container -->
-                    <span class="text-[10px] uppercase tracking-widest text-slate-400 mt-1">Sequential Winning Numbers</span>
-                    <div id="lottery-spinner-box" class="flex flex-wrap justify-center gap-2 px-4 my-2">
-                        <span class="text-3xl sm:text-4xl font-black text-yellow-400 tracking-wider drop-shadow-[0_0_15px_rgba(252,211,77,0.6)]">1, 2, 3...</span>
+                    <span class="text-[10px] uppercase tracking-widest text-slate-400 mt-1">Top 3 Winners (Drawn Respectively)</span>
+                    
+                    <!-- 3 Winners Container Placed Exactly at the Specified Red Line Spot -->
+                    <div id="lottery-spinner-box" class="w-full px-4 flex flex-col gap-2 my-2">
+                        <div class="flex items-center justify-between bg-black/80 border border-yellow-400/20 rounded-xl p-3">
+                            <span class="text-xs font-black text-yellow-400">🥇 1st Place: ---</span>
+                            <span class="text-xs text-slate-400">Numbers: ---</span>
+                        </div>
+                        <div class="flex items-center justify-between bg-black/80 border border-yellow-400/20 rounded-xl p-3">
+                            <span class="text-xs font-black text-yellow-400">🥈 2nd Place: ---</span>
+                            <span class="text-xs text-slate-400">Numbers: ---</span>
+                        </div>
+                        <div class="flex items-center justify-between bg-black/80 border border-yellow-400/20 rounded-xl p-3">
+                            <span class="text-xs font-black text-yellow-400">🥉 3rd Place: ---</span>
+                            <span class="text-xs text-slate-400">Numbers: ---</span>
+                        </div>
                     </div>
 
-                    <div id="winner-info-display" class="text-xs text-slate-300 mt-2 font-medium text-center px-4"></div>
+                    <div id="winner-info-display" class="text-xs text-slate-300 mt-1 font-medium text-center px-4"></div>
                 </div>
 
-                <!-- Spin & Draw Action Button (Always visible container, styled dynamically by timer/status) -->
+                <!-- Spin & Draw Action Button -->
                 <div id="spin-action-container">
                     <button id="spin-draw-btn" onclick="window.adminLottery.runDraw()" disabled class="w-full py-3.5 bg-slate-800 text-slate-500 font-black rounded-xl text-sm cursor-not-allowed transition-all shadow-none">🔒 DRAW LOCKED (WAITING FOR TIMER)</button>
                 </div>
 
-                <!-- Recent Winners History -->
+                <!-- Recent Winners History (Last 7 Days) -->
                 <div class="space-y-3 pt-4 border-t border-yellow-400/10">
                     <h4 class="text-xs font-bold text-white uppercase tracking-wider">🏆 Past Winners (Last 7 Days)</h4>
                     <div id="lottery-history-list" class="space-y-2 max-h-48 overflow-y-auto">
@@ -88,7 +100,7 @@ class AdminLotteryDraw {
     }
 
     async init() {
-        console.log('✅ AdminLotteryDraw initialized');
+        console.log('✅ AdminLotteryDraw initialized for 3 Winners');
         
         const dateInput = document.getElementById('draw-target-date');
         const timeInput = document.getElementById('draw-target-time');
@@ -132,20 +144,33 @@ class AdminLotteryDraw {
 
             if (state.status === 'spinning') {
                 if (spinnerBox) {
-                    spinnerBox.innerHTML = `<span class="text-3xl sm:text-4xl font-black text-yellow-400 tracking-wider">#${state.currentNumber || '---'}</span>`;
+                    spinnerBox.innerHTML = `
+                        <div class="flex items-center justify-center p-4 bg-black/80 border border-yellow-400/30 rounded-xl animate-pulse">
+                            <span class="text-xl font-black text-yellow-400">⚡ DRAWING 3 WINNERS RESPECTIVELY... #${state.currentNumber || '---'}</span>
+                        </div>
+                    `;
                 }
-                if (winnerInfoBox) winnerInfoBox.innerHTML = `<span class="text-amber-400 animate-pulse font-bold">⚡ LIVE DRAWING IN PROGRESS...</span>`;
-            } else if (state.status === 'completed' && state.winningNumbers) {
+                if (winnerInfoBox) winnerInfoBox.innerHTML = `<span class="text-amber-400 animate-pulse font-bold">⚡ SELECTING TOP 3 WINNERS...</span>`;
+            } else if (state.status === 'completed' && state.winners) {
                 if (spinnerBox) {
-                    const sortedNums = [...state.winningNumbers].sort((a, b) => Number(a) - Number(b));
-                    spinnerBox.innerHTML = sortedNums.map(num => `
-                        <span class="px-3 py-1.5 bg-yellow-400/20 border border-yellow-400/40 rounded-xl text-yellow-300 text-lg sm:text-2xl font-black shadow-[0_0_10px_rgba(252,211,77,0.3)]">
-                            #${num}
-                        </span>
-                    `).join('');
+                    const medals = ['🥇', '🥈', '🥉'];
+                    spinnerBox.innerHTML = state.winners.map((w, idx) => {
+                        const sortedNums = [...w.numbers].sort((a, b) => Number(a) - Number(b)).join(', ');
+                        return `
+                            <div class="flex items-center justify-between bg-black/80 border border-yellow-400/30 rounded-xl p-3 shadow-[0_0_10px_rgba(252,211,77,0.15)]">
+                                <div class="space-y-0.5">
+                                    <span class="text-xs font-black text-yellow-400">${medals[idx]} ${idx + 1}st Place: ${w.customer}</span>
+                                    <div class="text-[10px] text-slate-400">📞 ${w.phone} • ✉️ ${w.email}</div>
+                                </div>
+                                <span class="px-2 py-1 bg-yellow-400/20 border border-yellow-400/40 rounded-lg text-yellow-300 text-xs font-bold">
+                                    #${sortedNums}
+                                </span>
+                            </div>
+                        `;
+                    }).join('');
                 }
                 if (winnerInfoBox) {
-                    winnerInfoBox.innerHTML = `🏆 Winner: <span class="text-yellow-400 font-bold">${state.winnerName}</span> (${state.winnerPhone} • ${state.winnerEmail})`;
+                    winnerInfoBox.innerHTML = `🏆 Successfully drew 3 top winners with live link notification dispatched!`;
                 }
             }
         });
@@ -226,7 +251,7 @@ class AdminLotteryDraw {
         if (now >= targetDateObj) {
             drawBtn.disabled = false;
             drawBtn.className = "w-full py-4 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 text-black font-black rounded-xl text-sm shadow-lg hover:opacity-95 transform active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer";
-            drawBtn.innerHTML = "🎲 SPIN & DRAW WINNER NOW";
+            drawBtn.innerHTML = "🎲 SPIN & DRAW 3 WINNERS NOW";
 
             statusBadge.className = "text-xs font-mono font-bold text-emerald-400 bg-emerald-950/40 px-3 py-1 rounded-full border border-emerald-500/30";
             statusBadge.innerHTML = '🟢 DRAW UNLOCKED & READY!';
@@ -327,40 +352,34 @@ class AdminLotteryDraw {
                 if (drawnDate >= sevenDaysAgo) {
                     count++;
                     const formattedDate = drawnDate.toLocaleString();
-                    const phone = draw.winnerPhone || draw.phone || 'N/A';
-                    const email = draw.winnerEmail || 'N/A';
                     const scopeText = draw.scope || 'Global Main Admin';
                     
-                    let winningNumsFormatted = '';
-                    if (Array.isArray(draw.winningNumbers)) {
-                        const sortedNums = [...draw.winningNumbers].sort((a, b) => Number(a) - Number(b));
-                        winningNumsFormatted = sortedNums.join(', ');
-                    } else if (draw.winningNumber) {
-                        winningNumsFormatted = String(draw.winningNumber);
-                    } else {
-                        winningNumsFormatted = 'N/A';
+                    if (draw.winners && Array.isArray(draw.winners)) {
+                        const medals = ['🥇', '🥈', '🥉'];
+                        draw.winners.forEach((w, idx) => {
+                            const sortedNums = [...w.numbers].sort((a, b) => Number(a) - Number(b)).join(', ');
+                            html += `
+                                <div class="bg-black/60 border border-yellow-400/20 rounded-xl p-3 flex items-center justify-between gap-2">
+                                    <div class="space-y-0.5">
+                                        <div class="text-sm font-black text-yellow-400">
+                                            ${medals[idx]} #${sortedNums} — ${w.customer} (${idx + 1}st/nd/rd Place)
+                                        </div>
+                                        <div class="text-[11px] text-slate-400 flex items-center gap-2">
+                                            <span>📞 ${w.phone}</span>
+                                            <span>•</span>
+                                            <span>✉️ ${w.email}</span>
+                                        </div>
+                                        <div class="text-[10px] text-slate-500">
+                                            Drawn: ${formattedDate}
+                                        </div>
+                                    </div>
+                                    <span class="px-2.5 py-1 bg-yellow-400/10 border border-yellow-400/20 text-yellow-300 text-[10px] font-bold rounded-lg whitespace-nowrap">
+                                        ${scopeText}
+                                    </span>
+                                </div>
+                            `;
+                        });
                     }
-
-                    html += `
-                        <div class="bg-black/60 border border-yellow-400/20 rounded-xl p-3 flex items-center justify-between gap-2">
-                            <div class="space-y-0.5">
-                                <div class="text-sm font-black text-yellow-400">
-                                    #${winningNumsFormatted} — ${draw.winnerName || 'Winner'}
-                                </div>
-                                <div class="text-[11px] text-slate-400 flex items-center gap-2">
-                                    <span>📞 ${phone}</span>
-                                    <span>•</span>
-                                    <span>✉️ ${email}</span>
-                                </div>
-                                <div class="text-[10px] text-slate-500">
-                                    Drawn: ${formattedDate}
-                                </div>
-                            </div>
-                            <span class="px-2.5 py-1 bg-yellow-400/10 border border-yellow-400/20 text-yellow-300 text-[10px] font-bold rounded-lg whitespace-nowrap">
-                                ${scopeText}
-                            </span>
-                        </div>
-                    `;
                 }
             });
 
@@ -407,8 +426,8 @@ class AdminLotteryDraw {
                 }
             });
 
-            if (allTickets.length === 0) {
-                return notify('error', '❌ No active ticket numbers available.');
+            if (allTickets.length < 3) {
+                return notify('error', '❌ At least 3 tickets are required to draw 3 distinct winners.');
             }
 
             const liveDoc = await db.collection('settings').doc('tiktok_live_stream').get();
@@ -423,7 +442,11 @@ class AdminLotteryDraw {
             const spinInterval = setInterval(async () => {
                 const randomNum = Math.floor(Math.random() * 300) + 1;
                 if (spinnerBox) {
-                    spinnerBox.innerHTML = `<span class="text-3xl sm:text-4xl font-black text-yellow-400 tracking-wider">#${randomNum}</span>`;
+                    spinnerBox.innerHTML = `
+                        <div class="flex items-center justify-center p-4 bg-black/85 border border-yellow-400/40 rounded-xl animate-pulse">
+                            <span class="text-xl font-black text-yellow-400">⚡ DRAWING 3 WINNERS... #${randomNum}</span>
+                        </div>
+                    `;
                 }
                 
                 await db.collection('settings').doc('live_draw_state').set({
@@ -437,30 +460,40 @@ class AdminLotteryDraw {
                 if (spinCount >= maxSpins) {
                     clearInterval(spinInterval);
 
-                    const randomIndex = Math.floor(Math.random() * allTickets.length);
-                    const winningTicket = allTickets[randomIndex];
+                    // Randomly select 3 unique winners
+                    let shuffled = [...allTickets].sort(() => 0.5 - Math.random());
+                    let topThree = shuffled.slice(0, 3).map(t => ({
+                        ticketId: t.ticketId,
+                        numbers: t.numbers,
+                        customer: t.customer,
+                        email: t.email,
+                        phone: t.phone
+                    }));
 
-                    const sortedSequentialNumbers = [...winningTicket.numbers].sort((a, b) => Number(a) - Number(b));
-
+                    const medals = ['🥇', '🥈', '🥉'];
                     if (spinnerBox) {
-                        spinnerBox.innerHTML = sortedSequentialNumbers.map(num => `
-                            <span class="px-3 py-1.5 bg-yellow-400/20 border border-yellow-400/40 rounded-xl text-yellow-300 text-lg sm:text-2xl font-black shadow-[0_0_10px_rgba(252,211,77,0.3)]">
-                                #${num}
-                            </span>
-                        `).join('');
+                        spinnerBox.innerHTML = topThree.map((w, idx) => {
+                            const sortedNums = [...w.numbers].sort((a, b) => Number(a) - Number(b)).join(', ');
+                            return `
+                                <div class="flex items-center justify-between bg-black/80 border border-yellow-400/30 rounded-xl p-3 shadow-[0_0_10px_rgba(252,211,77,0.15)]">
+                                    <div class="space-y-0.5">
+                                        <span class="text-xs font-black text-yellow-400">${medals[idx]} ${idx + 1}st Place: ${w.customer}</span>
+                                        <div class="text-[10px] text-slate-400">📞 ${w.phone} • ✉️ ${w.email}</div>
+                                    </div>
+                                    <span class="px-2 py-1 bg-yellow-400/20 border border-yellow-400/40 rounded-lg text-yellow-300 text-xs font-bold">
+                                        #${sortedNums}
+                                    </span>
+                                </div>
+                            `;
+                        }).join('');
                     }
 
                     if (winnerInfoBox) {
-                        winnerInfoBox.innerHTML = `🏆 Winner: <span class="text-yellow-400 font-bold">${winningTicket.customer}</span> (${winningTicket.phone} • ${winningTicket.email})`;
+                        winnerInfoBox.innerHTML = `🏆 Top 3 Winners Drawn Successfully!`;
                     }
 
                     await db.collection('lottery_draws').add({
-                        winningNumber: sortedSequentialNumbers[0],
-                        winningNumbers: sortedSequentialNumbers,
-                        winningTicketId: winningTicket.ticketId,
-                        winnerName: winningTicket.customer,
-                        winnerEmail: winningTicket.email,
-                        winnerPhone: winningTicket.phone,
+                        winners: topThree,
                         drawnBy: currentUser?.email || 'Main Admin',
                         scope: 'Global Main Admin',
                         drawnAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -468,19 +501,15 @@ class AdminLotteryDraw {
 
                     await db.collection('settings').doc('live_draw_state').set({
                         status: 'completed',
-                        winningNumber: sortedSequentialNumbers[0],
-                        winningNumbers: sortedSequentialNumbers,
-                        winnerName: winningTicket.customer,
-                        winnerPhone: winningTicket.phone,
-                        winnerEmail: winningTicket.email,
+                        winners: topThree,
                         tiktokLiveUrl: tiktokLiveUrl,
                         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                     }, { merge: true });
 
-                    const formattedSequentialStr = sortedSequentialNumbers.join(', ');
+                    // Dispatch notification to customers containing the live stream link and winners list
                     await db.collection('notifications').add({
-                        title: '🔴 LIVE DRAW COMPLETED & WINNING NUMBERS!',
-                        message: `The live draw has concluded! Winning Numbers: #${formattedSequentialStr}. Winner: ${winningTicket.customer}. Click here to watch the TikTok Live stream!`,
+                        title: '🔴 3 WINNERS DRAWN & LIVE STREAM LINK!',
+                        message: `The live draw has concluded! Top 3 Winners: 1) ${topThree[0].customer}, 2) ${topThree[1].customer}, 3) ${topThree[2].customer}. Click here to watch the TikTok Live stream!`,
                         link: tiktokLiveUrl,
                         type: 'live_draw',
                         target: 'all_customers',
@@ -488,7 +517,7 @@ class AdminLotteryDraw {
                     });
 
                     this.loadPastWinners();
-                    notify('success', `🎉 WINNING NUMBERS DRAWN & NOTIFICATIONS SENT: #${formattedSequentialStr}!`);
+                    notify('success', `🎉 3 WINNERS SUCCESSFULLY DRAWN & NOTIFICATIONS SENT!`);
                 }
             }, 60);
 
