@@ -1,29 +1,20 @@
 // ============================================
-// BRANCH ADMIN DASHBOARD (UNIFIED & FIXED)
+// 2. BRANCH ADMIN DASHBOARD (PARENT COMPONENT WITH WINNING NUMBERS AUDIT WIDGET)
 // ============================================
 
 class AdminDashboard {
-    constructor(adminId) {
-        this.adminId = adminId || window.currentUser?.email || localStorage.getItem('currentUserEmail') || '';
+    constructor() {
+        this.bookings = new BookAppointment(); // Assuming standard branch admin bookings class
+        this.customers = new Customers();
+        this.ranges = new Ranges();
+        this.payments = new Payments();
+        this.analytics = new Analytics();
+        this.transactions = new Transactions();
+        this.auditLog = new AuditLog();
+        this.notifications = new Notifications();
+        this.settings = new Settings();
         
-        if (this.adminId) {
-            localStorage.setItem('currentAdminEmail', this.adminId);
-            console.log(`✅ AdminDashboard - Admin Email: ${this.adminId}`);
-        }
-
-        // Initialize child components properly matching the second template's structure
-        this.bookings = new AdminBookAppointment(this.adminId);
-        
-        if (typeof AdminCustomers === 'function') this.customers = new AdminCustomers(this.adminId);
-        if (typeof AdminRanges === 'function') this.ranges = new Ranges(this.adminId);
-        if (typeof AdminPayments === 'function') this.payments = new AdminPayments(this.adminId);
-        if (typeof AdminAnalytics === 'function') this.analytics = new Analytics(this.adminId);
-        if (typeof AdminTransactions === 'function') this.transactions = new Transactions(this.adminId);
-        if (typeof AdminAuditLog === 'function') this.auditLog = new AuditLog(this.adminId);
-        if (typeof AdminNotifications === 'function') this.notifications = new AdminNotifications(this.adminId);
-        if (typeof AdminSettings === 'function') this.settings = new AdminSettings(this.adminId);
-
-        window.adminLottery = new AdminLotteryDraw(this.adminId);
+        window.branchAdminLottery = new BranchAdminLotteryDraw();
     }
 
     render() {
@@ -31,7 +22,7 @@ class AdminDashboard {
             <div id="branch-admin-dashboard" class="min-h-screen bg-black flex flex-col">
                 <header class="sticky top-0 z-40 w-full glass-panel border-b border-yellow-400/10 px-4 sm:px-6 py-4">
                     <div class="max-w-7xl mx-auto flex items-center justify-between">
-                        <h1 class="font-bold text-base sm:text-xl text-gradient">🛡️ BRANCH ADMIN CONTROL CENTER</h1>
+                        <h1 class="font-bold text-base sm:text-xl text-gradient">🛡️ BRANCH ADMIN DASHBOARD</h1>
                         <button onclick="logout()" class="px-3 sm:px-4 py-2 bg-red-950/30 text-red-400 text-xs font-bold rounded-xl">Logout</button>
                     </div>
                 </header>
@@ -40,7 +31,7 @@ class AdminDashboard {
                     <div class="max-w-7xl mx-auto space-y-6">
                         <h2 class="text-2xl sm:text-3xl font-bold text-white">Branch Control Center</h2>
                         
-                        <!-- WINNING NUMBERS AUDIT WIDGET -->
+                        <!-- WINNING NUMBERS AUDIT WIDGET (STAYING ON ALL PARENTS DASHBOARD) -->
                         <div class="glass-panel rounded-2xl p-5 border border-yellow-400/30 bg-yellow-400/5 space-y-3">
                             <h3 class="text-sm font-bold text-yellow-400 flex items-center gap-2">
                                 🎯 Live Winning Numbers Audit Feed
@@ -50,7 +41,7 @@ class AdminDashboard {
                             </div>
                         </div>
 
-                        <!-- TABS NAVIGATION -->
+                        <!-- TABS -->
                         <div class="flex gap-2 border-b border-yellow-400/10 pb-2 overflow-x-auto whitespace-nowrap scrollbar-none">
                             <button onclick="window.branchAdminDashboard.switchTab('dashboard', event)" class="tab-button active px-3 sm:px-4 py-2 text-xs font-bold text-yellow-400">📊 Dashboard</button>
                             <button onclick="window.branchAdminDashboard.switchTab('customers', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">👥 Customers</button>
@@ -85,7 +76,7 @@ class AdminDashboard {
                                 </div>
                             </div>
 
-                            ${window.adminLottery ? window.adminLottery.render() : ''}
+                            ${window.branchAdminLottery ? window.branchAdminLottery.render() : ''}
                         </div>
 
                         <div id="branch-bookings" class="tab-content" style="display: none;"></div>
@@ -106,24 +97,25 @@ class AdminDashboard {
     async loadData() {
         try {
             await Promise.all([
-                this.customers?.loadData ? this.customers.loadData() : Promise.resolve(),
-                this.ranges?.loadData ? this.ranges.loadData() : Promise.resolve(),
-                this.payments?.loadData ? this.payments.loadData() : Promise.resolve(),
-                this.analytics?.loadData ? this.analytics.loadData() : Promise.resolve(),
-                this.transactions?.loadData ? this.transactions.loadData() : Promise.resolve(),
-                this.auditLog?.loadData ? this.auditLog.loadData() : Promise.resolve(),
-                this.notifications?.loadData ? this.notifications.loadData() : Promise.resolve(),
-                this.settings?.loadData ? this.settings.loadData() : Promise.resolve(),
-                this.bookings?.loadData ? this.bookings.loadData() : Promise.resolve()
+                this.customers.loadData(),
+                this.ranges.loadData(),
+                this.payments.loadData(),
+                this.analytics.loadData(),
+                this.transactions.loadData(),
+                this.auditLog.loadData(),
+                this.notifications.loadData(),
+                this.settings.loadData(),
+                this.bookings.loadData()
             ]);   
 
-            if (window.adminLottery) {
-                await window.adminLottery.init();
+            if (window.branchAdminLottery) {
+                await window.branchAdminLottery.init();
             }
             
             this.loadTabs(); 
             await this.updateDashboardStats();
             this.initWinningAuditListener();
+            notify('info', '✅ Branch data loaded successfully');
         } catch (error) {
             console.error('Error loading branch data:', error);
         }
@@ -143,7 +135,7 @@ class AdminDashboard {
                 const data = doc.data();
                 const date = data.drawnAt?.toDate ? data.drawnAt.toDate().toLocaleString() : 'Just now';
                 html += `
-                    <div class="bg-black/40 border border-yellow-400/20 rounded-lg p-2.5 flex justify-between items-center text-xs">
+                    <div class="bg-black/40 border border-yellow-400/20 rounded-lg p-2.5 flex justify-between items-center">
                         <div>
                             <span class="text-yellow-400 font-bold">Winning Number: #${data.winningNumber}</span> — Winner: <span class="text-white">${data.winnerName || 'N/A'}</span> (${data.winnerPhone || 'N/A'})
                         </div>
@@ -157,7 +149,6 @@ class AdminDashboard {
 
     loadTabs() {
         try {
-            const bookingsContent = document.getElementById('branch-bookings');
             const customersContent = document.getElementById('branch-customers');
             const rangesContent = document.getElementById('branch-ranges');
             const paymentsContent = document.getElementById('branch-payments');
@@ -166,16 +157,18 @@ class AdminDashboard {
             const auditlogContent = document.getElementById('branch-auditlog');
             const notificationsContent = document.getElementById('branch-notifications');
             const settingsContent = document.getElementById('branch-settings');
+            const bookingsContent = document.getElementById('branch-bookings');
             
-            if (bookingsContent) bookingsContent.innerHTML = this.bookings.render() instanceof Promise ? '' : this.bookings.render();
-            if (customersContent && this.customers?.render) customersContent.innerHTML = this.customers.render();
-            if (rangesContent && this.ranges?.render) rangesContent.innerHTML = this.ranges.render();
-            if (paymentsContent && this.payments?.render) paymentsContent.innerHTML = this.payments.render();
-            if (analyticsContent && this.analytics?.render) analyticsContent.innerHTML = this.analytics.render();
-            if (transactionsContent && this.transactions?.render) transactionsContent.innerHTML = this.transactions.render();
-            if (auditlogContent && this.auditLog?.render) auditlogContent.innerHTML = this.auditLog.render();
-            if (notificationsContent && this.notifications?.render) notificationsContent.innerHTML = this.notifications.render();
-            if (settingsContent && this.settings?.render) settingsContent.innerHTML = this.settings.render();
+            if (bookingsContent) bookingsContent.innerHTML = this.bookings.render();
+            if (bookingsContent && typeof this.bookings.renderBookingsList === 'function') this.bookings.renderBookingsList();
+            if (customersContent) customersContent.innerHTML = this.customers.render();
+            if (rangesContent) rangesContent.innerHTML = this.ranges.render();
+            if (paymentsContent) paymentsContent.innerHTML = this.payments.render();
+            if (analyticsContent) analyticsContent.innerHTML = this.analytics.render();
+            if (transactionsContent) transactionsContent.innerHTML = this.transactions.render();
+            if (auditlogContent) auditlogContent.innerHTML = this.auditLog.render();
+            if (notificationsContent) notificationsContent.innerHTML = this.notifications.render();
+            if (settingsContent) settingsContent.innerHTML = this.settings.render();
         } catch (error) {
             console.error('Error in branch loadTabs:', error);
         }
@@ -184,31 +177,32 @@ class AdminDashboard {
     async updateDashboardStats() {
         try {
             if (!db) return;
-            const branchId = this.adminId || currentUser?.email || 'branch_default';
+            const branchId = currentUser?.uid || currentUser?.email || 'branch_default';
 
-            const manualSnapshot = await db.collection('admin_customers')
-                .where('adminEmail', '==', branchId)
-                .get();
-
-            const selfRegisteredSnapshot = await db.collection('customer_settings')
-                .where('preferredAdmin', '==', branchId)
-                .get();
-
-            const totalCustomersCount = manualSnapshot.size + selfRegisteredSnapshot.size;
-            const customersEl = document.getElementById('branch-total-customers');
-            if (customersEl) customersEl.textContent = totalCustomersCount;
-
-            const ticketSnapshot = await db.collection('customer_tickets')
-                .where('adminEmail', '==', branchId)
-                .get();
-            
-            const ticketsEl = document.getElementById('branch-total-tickets');
-            if (ticketsEl) ticketsEl.textContent = ticketSnapshot.size;
-
-            let revenue = 0;
-            ticketSnapshot.forEach(doc => {
-                revenue += doc.data().cost || 0;
+            const customersSnap = await db.collection('customers').get();
+            let branchCustCount = 0;
+            customersSnap.forEach(doc => {
+                const data = doc.data();
+                if (data.assignedAdmin === branchId || data.branchId === branchId || !data.assignedAdmin) {
+                    branchCustCount++;
+                }
             });
+            const customersEl = document.getElementById('branch-total-customers');
+            if (customersEl) customersEl.textContent = branchCustCount;
+
+            const ticketsSnap = await db.collection('customer_tickets').get();
+            let branchTicketCount = 0;
+            let revenue = 0;
+            ticketsSnap.forEach(doc => {
+                const data = doc.data();
+                if (data.adminId === branchId || data.branchId === branchId || !data.adminId) {
+                    branchTicketCount++;
+                    revenue += data.cost || 0;
+                }
+            });
+
+            const ticketsEl = document.getElementById('branch-total-tickets');
+            if (ticketsEl) ticketsEl.textContent = branchTicketCount;
 
             const revenueEl = document.getElementById('branch-total-revenue');
             if (revenueEl) revenueEl.textContent = revenue.toLocaleString() + ' ETB';
@@ -218,9 +212,11 @@ class AdminDashboard {
     }
 
     switchTab(tabName, event) {
-        const tabElements = document.querySelectorAll('.tab-content');
+        const tabElements = document.querySelectorAll('[id^="branch-"]');
         tabElements.forEach(el => {
-            el.style.display = 'none';
+            if (el.classList && el.classList.contains('tab-content')) {
+                el.style.display = 'none';
+            }
         });
 
         const tabButtons = document.querySelectorAll('.tab-button');
@@ -229,11 +225,7 @@ class AdminDashboard {
             btn.style.color = '';
         });
 
-        // Handle target tab id mapping
-        let targetId = `branch-${tabName}`;
-        if (tabName === 'dashboard') targetId = 'branch-dashboard';
-        
-        const tab = document.getElementById(targetId);
+        const tab = document.getElementById(`branch-${tabName}`);
         if (tab) {
             tab.style.display = 'block';
             tab.classList.add('active');
@@ -243,5 +235,68 @@ class AdminDashboard {
             event.target.classList.add('active');
             event.target.style.color = '#FCD34D';
         }
+    }
+}
+
+// Global Manual Customer Addition with Firebase Auth & Multi-Collection Sync
+async function addAdminCustomer() {
+    const nameInput = document.getElementById('cust-name-input');
+    const emailInput = document.getElementById('cust-email-input');
+    const phoneInput = document.getElementById('cust-phone-input');
+    const passwordInput = document.getElementById('cust-password-input');
+
+    if (!nameInput || !emailInput || !passwordInput) {
+        return notify('error', '❌ Form inputs are missing from the DOM');
+    }
+
+    const name = nameInput.value.trim();
+    const email = emailInput.value.trim();
+    const phone = phoneInput ? phoneInput.value.trim() : '';
+    const password = passwordInput.value.trim();
+
+    if (!name || !email || !password) {
+        return notify('error', '❌ Please fill in all required fields');
+    }
+
+    try {
+        // 1. Create authentication profile for the customer so they can log in
+        await firebase.auth().createUserWithEmailAndPassword(email, password);
+
+        const currentAdminId = currentUser?.uid || currentUser?.email || 'branch_default';
+
+        // 2. Save under admin_customers collection for branch tracking
+        await db.collection('admin_customers').add({
+            adminEmail: currentAdminId,
+            name,
+            email,
+            phone,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // 3. Save under customer_settings so it links seamlessly across the entire app
+        await db.collection('customer_settings').doc(email).set({
+            customerEmail: email,
+            customerName: name,
+            phone: phone,
+            preferredAdmin: currentAdminId,
+            preferredPayment: 'Telebirr',
+            role: 'customer',
+            createdAt: new Date()
+        });
+
+        notify('success', '✅ Customer added and registered successfully!');
+        
+        if (typeof closeAddCustomerModal === 'function') {
+            closeAddCustomerModal();
+        }
+
+        if (window.branchAdminDashboard && window.branchAdminDashboard.customers) {
+            await window.branchAdminDashboard.customers.loadData();
+        }
+        if (window.branchAdminDashboard && typeof window.branchAdminDashboard.updateDashboardStats === 'function') {
+            await window.branchAdminDashboard.updateDashboardStats();
+        }
+    } catch (error) {
+        notify('error', `❌ Error: ${error.message}`);
     }
 }
