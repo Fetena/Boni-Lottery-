@@ -1,5 +1,5 @@
 // ============================================
-// ADMIN LOTTERY DRAW - ONE-TIME SPIN & LOCK FIX
+// ADMIN LOTTERY DRAW - TIME-LOCKED & SINGLE-USE SPIN
 // ============================================
 
 class AdminLotteryDraw {
@@ -8,6 +8,7 @@ class AdminLotteryDraw {
         this.schedule = { targetDate: '', targetTime: '', ampm: 'PM', tiktokLink: '' };
         this.liveState = { status: 'idle', currentNumber: null, winners: [] };
         this.allTickets = [];
+        this.countdownInterval = null;
     }
 
     async init() {
@@ -52,6 +53,7 @@ class AdminLotteryDraw {
             if (doc.exists) {
                 this.schedule = doc.data();
                 this.updateUIState();
+                this.setupTimeChecker();
             }
         });
 
@@ -101,15 +103,15 @@ class AdminLotteryDraw {
 
                 <div class="flex justify-end">
                     <button onclick="window.adminLottery.saveSchedule()" class="px-6 py-2.5 bg-yellow-400 text-black font-bold rounded-xl text-xs hover:bg-yellow-500 transition-all cursor-pointer shadow-lg">
-                        💾 Save Schedule & Reset Draw State
+                        💾 Save Schedule
                     </button>
                 </div>
 
-                <!-- LIVE DRAW ACTION BUTTON (STRICTLY ONE-TIME USE PER SCHEDULE) -->
+                <!-- LIVE DRAW ACTION BUTTON (TIME-LOCKED & SINGLE USE) -->
                 <div class="pt-2">
                     <button id="admin-spin-btn" onclick="window.adminLottery.executeDraw()" 
                         class="w-full py-4 bg-slate-800 text-slate-500 font-extrabold rounded-xl text-sm cursor-not-allowed transition-all shadow-xl" disabled>
-                        🎲 SPIN & DRAW 3 WINNERS NOW
+                        🔒 Spin Locked Until Draw Time
                     </button>
                 </div>
 
@@ -131,7 +133,7 @@ class AdminLotteryDraw {
 
         try {
             const newSchedule = { targetDate, targetTime, ampm, tiktokLink, updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
-            const freshDrawState = { status: 'idle', currentNumber: null, winners: [], drawnForSchedule: `${targetDate}_${targetTime}_${ampm}` };
+            const freshDrawState = { status: 'idle', currentNumber: null, winners: [], drawnForSchedule: null };
 
             await db.collection('settings').doc('main_draw_schedule').set(newSchedule);
             await db.collection('settings').doc('live_draw_state').set(freshDrawState);
@@ -139,11 +141,20 @@ class AdminLotteryDraw {
             this.schedule = newSchedule;
             this.liveState = freshDrawState;
             this.updateUIState();
+            this.setupTimeChecker();
 
-            notify('success', '✅ Schedule saved & Spin unlocked for this schedule!');
+            notify('success', '✅ Schedule saved successfully!');
         } catch (e) {
             notify('error', `❌ Error saving schedule: ${e.message}`);
         }
+    }
+
+    setupTimeChecker() {
+        if (this.countdownInterval) clearInterval(this.countdownInterval);
+
+        this.countdownInterval = setInterval(() => {
+            this.updateUIState();
+        }, 1000);
     }
 
     updateUIState() {
@@ -177,25 +188,69 @@ class AdminLotteryDraw {
             return;
         }
 
-        if (isAlreadyDrawn) {
-            if (badge) {
-                badge.className = "px-3 py-1 bg-red-950/40 text-red-400 rounded-full text-xs font-bold border border-red-500/30";
-                badge.textContent = "🔴 Draw Completed (Locked)";
-            }
-            if (spinBtn) {
-                spinBtn.disabled = true;
-                spinBtn.className = "w-full py-4 bg-slate-800 text-slate-500 font-extrabold rounded-xl text-sm cursor-not-allowed transition-all shadow-xl";
-                spinBtn.innerHTML = "🔒 Draw Already Executed for this Schedule";
-            }
-        } else {
-            if (badge) {
-                badge.className = "px-3 py-1 bg-emerald-950/40 text-emerald-400 rounded-full text-xs font-bold border border-emerald-500/30";
-                badge.textContent = "🟢 DRAW UNLOCKED & READY!";
-            }
-            if (spinBtn) {
-                spinBtn.disabled = false;
-                spinBtn.className = "w-full py-4 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-extrabold rounded-xl text-sm cursor-pointer shadow-xl hover:opacity-95 transition-all animate-pulse";
-                spinBtn.innerHTML = "🎲 SPIN & DRAW 3 WINNERS NOW";
+        // Calculate time target
+        const parts = this.schedule.targetDate.split('-').map(Number);
+        if (parts.length === 3) {
+            const [year, month, day] = parts;
+            let [hours, minutes] = this.schedule.targetTime.split(':').map(Number);
+
+            if (this.schedule.ampm === 'PM' && hours < 12) hours += 12;
+            if (this.schedule.ampm === 'AM' && hours === 12) hours = 0;
+
+            const targetObj = new Date(year, month - 1, day, hours, minutes, 0, 0);
+            const now = new Date();
+            const diffMs = targetObj - now;
+            const thirtyMinutesMs = 30 * 60 * 1000; // Active window: from target time up to 30 mins after
+
+            const isTimeReached = diffMs <= 0;
+            const isWithinActiveWindow = diffMs >= -thirtyMinutesMs;
+
+            if (isAlreadyDrawn) {
+                if (badge) {
+                    badge.className = "px-3 py-1 bg-red-950/40 text-red-400 rounded-full text-xs font-bold border border-red-500/30";
+                    badge.textContent = "🔴 Draw Completed (Locked until next schedule)";
+                }
+                if (spinBtn) {
+                    spinBtn.disabled = true;
+                    spinBtn.className = "w-full py-4 bg-slate-800 text-slate-500 font-extrabold rounded-xl text-sm cursor-not-allowed transition-all shadow-xl";
+                    spinBtn.innerHTML = "🔒 Draw Already Executed for this Schedule";
+                }
+            } else if (isTimeReached && isWithinActiveWindow) {
+                if (badge) {
+                    badge.className = "px-3 py-1 bg-emerald-950/40 text-emerald-400 rounded-full text-xs font-bold border border-emerald-500/30";
+                    badge.textContent = "🟢 DRAW TIME REACHED & ACTIVE!";
+                }
+                if (spinBtn) {
+                    spinBtn.disabled = false;
+                    spinBtn.className = "w-full py-4 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-extrabold rounded-xl text-sm cursor-pointer shadow-xl hover:opacity-95 transition-all animate-pulse";
+                    spinBtn.innerHTML = "🎲 SPIN & DRAW 3 WINNERS NOW";
+                }
+            } else if (diffMs > 0) {
+                const diffMins = Math.floor(diffMs / 60000);
+                const hrs = Math.floor(diffMins / 60);
+                const mins = diffMins % 60;
+                const secs = Math.floor((diffMs % 60000) / 1000);
+
+                if (badge) {
+                    badge.className = "px-3 py-1 bg-amber-950/40 text-amber-400 rounded-full text-xs font-bold border border-amber-500/30";
+                    badge.textContent = `⏳ Locked until ${this.schedule.targetDate} ${this.schedule.targetTime} ${this.schedule.ampm}`;
+                }
+                if (spinBtn) {
+                    spinBtn.disabled = true;
+                    spinBtn.className = "w-full py-4 bg-slate-800 text-slate-500 font-extrabold rounded-xl text-sm cursor-not-allowed transition-all shadow-xl";
+                    spinBtn.innerHTML = `🔒 Spin Unlocks in ${hrs}h ${mins}m ${secs}s`;
+                }
+            } else {
+                // Past active window without draw
+                if (badge) {
+                    badge.className = "px-3 py-1 bg-slate-800 text-slate-400 rounded-full text-xs font-bold border border-slate-700";
+                    badge.textContent = "⏰ Schedule Window Passed";
+                }
+                if (spinBtn) {
+                    spinBtn.disabled = true;
+                    spinBtn.className = "w-full py-4 bg-slate-800 text-slate-500 font-extrabold rounded-xl text-sm cursor-not-allowed transition-all shadow-xl";
+                    spinBtn.innerHTML = "🔒 Schedule Time Passed (Update Schedule)";
+                }
             }
         }
 
@@ -234,7 +289,7 @@ class AdminLotteryDraw {
             return;
         }
 
-        if (!confirm('Are you sure you want to draw the top 3 winners now? This will lock the button until the next schedule.')) return;
+        if (!confirm('Are you sure you want to draw the top 3 winners now? This will immediately lock the button until the next schedule is set.')) return;
 
         try {
             notify('info', '⚡ Spinning for 3 top winners...');
@@ -273,7 +328,7 @@ class AdminLotteryDraw {
             this.liveState = finalState;
             this.updateUIState();
 
-            notify('success', '🏆 Successfully drew 3 top winners with live link notification dispatched!');
+            notify('success', '🏆 Successfully drew 3 top winners! Spin is now locked until the next schedule.');
         } catch (e) {
             notify('error', `❌ Draw failed: ${e.message}`);
         }
