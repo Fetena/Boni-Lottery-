@@ -2,7 +2,7 @@
 // 2. BRANCH ADMIN DASHBOARD (PARENT COMPONENT WITH WINNING NUMBERS AUDIT WIDGET)
 // ============================================
 
-class BranchAdminDashboard {
+class AdminDashboard {
     constructor() {
         this.bookings = new AdminBookings(); // Assuming standard branch admin bookings class
         this.customers = new Customers();
