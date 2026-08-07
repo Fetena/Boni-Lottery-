@@ -1,5 +1,5 @@
 // ============================================
-// UPDATED ADMIN LOTTERY COMPONENT (AUTO NOTIFICATIONS & HIDE SPIN AFTER DRAW)
+// UPDATED ADMIN LOTTERY COMPONENT (SEQUENTIAL NUMBERS ON RED LINE SPOT)
 // ============================================
 
 class AdminLotteryDraw {
@@ -61,12 +61,17 @@ class AdminLotteryDraw {
                     <p id="schedule-status-text" class="text-[11px] text-slate-400 italic">No schedule active.</p>
                 </div>
 
-                <!-- Countdown & Spinner Box (Sequential Numbers Display) -->
+                <!-- Countdown & Spinner Box (Sequential Numbers Displayed Exactly Where Indicated) -->
                 <div class="py-6 bg-black/60 rounded-xl border border-yellow-400/30 flex flex-col items-center justify-center relative overflow-hidden space-y-2">
                     <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-yellow-400/10 via-transparent to-transparent pointer-events-none"></div>
                     <span id="draw-countdown-timer" class="text-xs font-mono font-bold text-amber-400 bg-amber-400/10 px-3 py-1 rounded-full border border-amber-400/20">⏳ LOCKED UNTIL TIMER ENDS</span>
-                    <span class="text-[10px] uppercase tracking-widest text-slate-400 mt-1">Sequential Winning Number Result</span>
-                    <div id="lottery-spinner-box" class="text-5xl font-black text-yellow-400 tracking-wider drop-shadow-[0_0_15px_rgba(252,211,77,0.6)]">1, 2, 3...</div>
+                    
+                    <!-- Sequential Winning Numbers Container (Placed right at the requested red line spot) -->
+                    <span class="text-[10px] uppercase tracking-widest text-slate-400 mt-1">Sequential Winning Numbers</span>
+                    <div id="lottery-spinner-box" class="flex flex-wrap justify-center gap-2 px-4 my-2">
+                        <span class="text-3xl sm:text-4xl font-black text-yellow-400 tracking-wider drop-shadow-[0_0_15px_rgba(252,211,77,0.6)]">1, 2, 3...</span>
+                    </div>
+
                     <div id="winner-info-display" class="text-xs text-slate-300 mt-2 font-medium text-center px-4"></div>
                 </div>
 
@@ -87,7 +92,7 @@ class AdminLotteryDraw {
     }
 
     async init() {
-        console.log('✅ AdminLotteryDraw initialized with Auto Notifications & Spin Hiding');
+        console.log('✅ AdminLotteryDraw initialized with Sequential Numbers & Auto Notifications');
         
         const dateInput = document.getElementById('draw-target-date');
         const timeInput = document.getElementById('draw-target-time');
@@ -131,16 +136,23 @@ class AdminLotteryDraw {
             const spinContainer = document.getElementById('spin-action-container');
 
             if (state.status === 'spinning') {
-                if (spinnerBox) spinnerBox.textContent = `#${state.currentNumber || '---'}`;
+                if (spinnerBox) {
+                    spinnerBox.innerHTML = `<span class="text-3xl sm:text-4xl font-black text-yellow-400 tracking-wider">#${state.currentNumber || '---'}</span>`;
+                }
                 if (winnerInfoBox) winnerInfoBox.innerHTML = `<span class="text-amber-400 animate-pulse font-bold">⚡ LIVE DRAWING IN PROGRESS...</span>`;
                 if (spinContainer) spinContainer.style.display = 'block';
             } else if (state.status === 'completed' && state.winningNumbers) {
-                const formattedSeq = Array.isArray(state.winningNumbers) ? state.winningNumbers.join(', ') : state.winningNumbers;
-                if (spinnerBox) spinnerBox.textContent = `#${formattedSeq}`;
+                if (spinnerBox) {
+                    const sortedNums = [...state.winningNumbers].sort((a, b) => Number(a) - Number(b));
+                    spinnerBox.innerHTML = sortedNums.map(num => `
+                        <span class="px-3 py-1.5 bg-yellow-400/20 border border-yellow-400/40 rounded-xl text-yellow-300 text-lg sm:text-2xl font-black shadow-[0_0_10px_rgba(252,211,77,0.3)]">
+                            #${num}
+                        </span>
+                    `).join('');
+                }
                 if (winnerInfoBox) {
                     winnerInfoBox.innerHTML = `🏆 Winner: <span class="text-yellow-400 font-bold">${state.winnerName}</span> (${state.winnerPhone} • ${state.winnerEmail})`;
                 }
-                // Hide the spin button section completely after the draw is completed
                 if (spinContainer) spinContainer.style.display = 'none';
             }
         });
@@ -423,7 +435,6 @@ class AdminLotteryDraw {
                 return notify('error', '❌ No active ticket numbers available.');
             }
 
-            // Fetch current TikTok Live link to forward to customers
             const liveDoc = await db.collection('settings').doc('tiktok_live_stream').get();
             const tiktokLiveUrl = liveDoc.exists ? liveDoc.data().url || '#' : '#';
 
@@ -436,7 +447,9 @@ class AdminLotteryDraw {
             const maxSpins = 30;
             const spinInterval = setInterval(async () => {
                 const randomNum = Math.floor(Math.random() * 300) + 1;
-                if (spinnerBox) spinnerBox.textContent = `#${randomNum}`;
+                if (spinnerBox) {
+                    spinnerBox.innerHTML = `<span class="text-3xl sm:text-4xl font-black text-yellow-400 tracking-wider">#${randomNum}</span>`;
+                }
                 
                 await db.collection('settings').doc('live_draw_state').set({
                     status: 'spinning',
@@ -453,17 +466,21 @@ class AdminLotteryDraw {
                     const winningTicket = allTickets[randomIndex];
 
                     const sortedSequentialNumbers = [...winningTicket.numbers].sort((a, b) => Number(a) - Number(b));
-                    const formattedSequentialStr = sortedSequentialNumbers.join(', ');
 
-                    if (spinnerBox) spinnerBox.textContent = `#${formattedSequentialStr}`;
+                    if (spinnerBox) {
+                        spinnerBox.innerHTML = sortedSequentialNumbers.map(num => `
+                            <span class="px-3 py-1.5 bg-yellow-400/20 border border-yellow-400/40 rounded-xl text-yellow-300 text-lg sm:text-2xl font-black shadow-[0_0_10px_rgba(252,211,77,0.3)]">
+                                #${num}
+                            </span>
+                        `).join('');
+                    }
+
                     if (winnerInfoBox) {
                         winnerInfoBox.innerHTML = `🏆 Winner: <span class="text-yellow-400 font-bold">${winningTicket.customer}</span> (${winningTicket.phone} • ${winningTicket.email})`;
                     }
 
-                    // Hide the spin button immediately after drawing completes
                     if (spinContainer) spinContainer.style.display = 'none';
 
-                    // Save final winning result
                     await db.collection('lottery_draws').add({
                         winningNumber: sortedSequentialNumbers[0],
                         winningNumbers: sortedSequentialNumbers,
@@ -476,7 +493,6 @@ class AdminLotteryDraw {
                         drawnAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
 
-                    // Update live draw state to completed
                     await db.collection('settings').doc('live_draw_state').set({
                         status: 'completed',
                         winningNumber: sortedSequentialNumbers[0],
@@ -488,7 +504,7 @@ class AdminLotteryDraw {
                         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                     }, { merge: true });
 
-                    // Broadcast Notification to all customers with the TikTok Live link and winning numbers
+                    const formattedSequentialStr = sortedSequentialNumbers.join(', ');
                     await db.collection('notifications').add({
                         title: '🔴 LIVE DRAW COMPLETED & WINNING NUMBERS!',
                         message: `The live draw has concluded! Winning Numbers: #${formattedSequentialStr}. Winner: ${winningTicket.customer}. Click here to watch the TikTok Live stream!`,
