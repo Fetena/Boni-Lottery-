@@ -1,5 +1,5 @@
 // ============================================
-// INDEPENDENT LOTTERY COMPONENT (STRICT TIME-LOCKED DRAW)
+// INDEPENDENT LOTTERY COMPONENT (STRICT TIME-LOCK & CLEAN UI)
 // ============================================
 
 class AdminLotteryDraw {
@@ -17,7 +17,7 @@ class AdminLotteryDraw {
                         <h3 class="text-2xl font-black text-gradient mt-2">🎰 Branch Lucky Draw</h3>
                         <p class="text-xs text-slate-300 mt-1">Set your exact target date and AM/PM time below. The draw button remains completely locked and inactive until the exact scheduled time arrives.</p>
                     </div>
-                    <span class="px-3 py-1 bg-yellow-400/10 text-yellow-400 text-[10px] font-bold rounded-full border border-yellow-400/20 shadow-sm animate-pulse">🤖 Secure Algorithm Mode</span>
+                    <span class="px-3 py-1 bg-yellow-400/10 text-yellow-400 text-[10px] font-bold rounded-full border border-yellow-400/25 shadow-sm">🤖 Secure Algorithm Mode</span>
                 </div>
 
                 <!-- AM/PM Custom Schedule Selector -->
@@ -55,8 +55,8 @@ class AdminLotteryDraw {
                     <div id="winner-info-display" class="text-xs text-slate-300 mt-2 font-medium text-center px-4"></div>
                 </div>
 
-                <!-- Spin Action Button (Strictly Locked until time is reached) -->
-                <button id="spin-draw-btn" onclick="window.adminLottery.runDraw()" disabled class="w-full py-4 bg-slate-800 text-slate-500 font-black rounded-xl text-sm cursor-not-allowed transition-all shadow-none border border-slate-700">🔒 DRAW LOCKED (WAITING FOR SCHEDULE)</button>
+                <!-- Spin Action Button (Strictly Locked until time is reached - No bouncing or pulsing movement) -->
+                <button id="spin-draw-btn" onclick="window.adminLottery.runDraw()" disabled class="w-full py-4 bg-slate-900 text-slate-500 font-bold rounded-xl text-sm cursor-not-allowed transition-all shadow-none border border-slate-800 opacity-80">🔒 DRAW LOCKED (WAITING FOR SCHEDULE)</button>
 
                 <!-- Recent Winners History -->
                 <div class="space-y-3 pt-4 border-t border-yellow-400/10">
@@ -70,7 +70,7 @@ class AdminLotteryDraw {
     }
 
     async init() {
-        console.log('✅ AdminLotteryDraw initialized with strict time-lock');
+        console.log('✅ AdminLotteryDraw initialized with strict time-lock and stable UI');
         
         const dateInput = document.getElementById('draw-target-date');
         const timeInput = document.getElementById('draw-target-time');
@@ -140,15 +140,15 @@ class AdminLotteryDraw {
         }
 
         if (now >= targetDateObj) {
-            // UNLOCKED STATE - Active only when current time meets or exceeds target
+            // UNLOCKED STATE (Static, stable style with no bouncing movement)
             drawBtn.disabled = false;
-            drawBtn.className = "w-full py-4 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 text-black font-black rounded-xl text-sm shadow-lg hover:opacity-95 transform active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer animate-bounce border border-yellow-300";
+            drawBtn.className = "w-full py-4 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 text-black font-black rounded-xl text-sm shadow-lg hover:opacity-95 transition-all flex items-center justify-center gap-2 cursor-pointer border border-yellow-300";
             drawBtn.innerHTML = "🤖 RUN ALGORITHMIC DRAW NOW";
 
             statusBadge.className = "text-xs font-mono font-bold text-emerald-400 bg-emerald-950/40 px-3 py-1 rounded-full border border-emerald-500/30";
             statusBadge.innerHTML = '🟢 ALGORITHM UNLOCKED & ACTIVE!';
         } else {
-            // LOCKED STATE - Strict restriction before target time
+            // LOCKED STATE (Strictly locked until target time is reached)
             drawBtn.disabled = true;
             drawBtn.className = "w-full py-4 bg-slate-900 text-slate-500 font-bold rounded-xl text-sm cursor-not-allowed transition-all shadow-none border border-slate-800 opacity-80";
             
