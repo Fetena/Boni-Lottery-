@@ -56,11 +56,11 @@ class AdminLotteryDraw {
                 <!-- Spin Action Button -->
                 <button id="spin-draw-btn" onclick="window.adminLottery.runDraw()" disabled class="w-full py-3.5 bg-slate-800 text-slate-500 font-black rounded-xl text-sm cursor-not-allowed transition-all shadow-none">🔒 DRAW LOCKED (WAITING FOR TIMER)</button>
 
-                <!-- Recent Winners History -->
+                <!-- Recent Winners History & Winning Numbers Audit -->
                 <div class="space-y-3 pt-4 border-t border-yellow-400/10">
-                    <h4 class="text-xs font-bold text-white uppercase tracking-wider">🏆 Past Winners (Last 7 Days)</h4>
+                    <h4 class="text-xs font-bold text-white uppercase tracking-wider">🏆 Winning Numbers Audit & Past Winners (Last 7 Days)</h4>
                     <div id="lottery-history-list" class="space-y-2 max-h-48 overflow-y-auto">
-                        <p class="text-slate-500 text-xs italic text-center py-2">Loading recent history...</p>
+                        <p class="text-slate-500 text-xs italic text-center py-2">Loading recent history and audit logs...</p>
                     </div>
                 </div>
             </div>
@@ -104,7 +104,6 @@ class AdminLotteryDraw {
 
         if (!dateStr || !timeStr) return null;
 
-        // Force split strictly assuming standard HTML5 date picker YYYY-MM-DD format
         const parts = dateStr.split('-').map(Number);
         if (parts.length !== 3) return null;
 
@@ -114,7 +113,6 @@ class AdminLotteryDraw {
         if (ampmStr === 'PM' && hours < 12) hours += 12;
         if (ampmStr === 'AM' && hours === 12) hours = 0;
 
-        // Construct standard local date object safely
         return new Date(year, month - 1, day, hours, minutes, 0, 0);
     }
 
@@ -225,7 +223,7 @@ class AdminLotteryDraw {
                 .get();
 
             if (snapshot.empty) {
-                container.innerHTML = `<p class="text-xs text-slate-500 italic text-center py-2">No past winners recorded yet.</p>`;
+                container.innerHTML = `<p class="text-xs text-slate-500 italic text-center py-2">No past winning numbers audit recorded yet.</p>`;
                 return;
             }
 
@@ -247,7 +245,7 @@ class AdminLotteryDraw {
                         <div class="bg-black/60 border border-yellow-400/20 rounded-xl p-3 flex items-center justify-between gap-2">
                             <div class="space-y-0.5">
                                 <div class="text-sm font-black text-yellow-400">
-                                    #${draw.winningNumber} — ${draw.winnerName || 'Winner'}
+                                    Winning Number: #${draw.winningNumber} — ${draw.winnerName || 'Winner'}
                                 </div>
                                 <div class="text-[11px] text-slate-400 flex items-center gap-2">
                                     <span>📞 ${phone}</span>
@@ -255,7 +253,7 @@ class AdminLotteryDraw {
                                     <span>✉️ ${email}</span>
                                 </div>
                                 <div class="text-[10px] text-slate-500">
-                                    Drawn: ${formattedDate}
+                                    Audit Log Timestamp: ${formattedDate}
                                 </div>
                             </div>
                             <span class="px-2.5 py-1 bg-yellow-400/10 border border-yellow-400/20 text-yellow-300 text-[10px] font-bold rounded-lg whitespace-nowrap">
@@ -267,13 +265,13 @@ class AdminLotteryDraw {
             });
 
             if (count === 0) {
-                container.innerHTML = `<p class="text-xs text-slate-500 italic text-center py-2">No winners found within the last 7 days.</p>`;
+                container.innerHTML = `<p class="text-xs text-slate-500 italic text-center py-2">No winning numbers audit found within the last 7 days.</p>`;
             } else {
                 container.innerHTML = html;
             }
         } catch (error) {
             console.error('Error loading past winners:', error);
-            container.innerHTML = `<p class="text-xs text-red-400 italic text-center py-2">Error loading draw history.</p>`;
+            container.innerHTML = `<p class="text-xs text-red-400 italic text-center py-2">Error loading draw history audit.</p>`;
         }
     }
 
