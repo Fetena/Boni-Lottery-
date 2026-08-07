@@ -1,5 +1,5 @@
 // ============================================
-// UPDATED CUSTOMER DRAWINGS COMPONENT (WITH 3 WINNERS VIEW & TIKTOK LIVE SYNC)
+// UPDATED CUSTOMER DRAWINGS COMPONENT (FIXED STREAM LINK)
 // Parent: CustomerDashboard
 // ============================================
 
@@ -18,7 +18,7 @@ class CustomerDrawings {
         await this.loadCustomerAndDrawings();
         this.initCustomerScheduleListener();
         this.initLiveDrawAutoListener(); 
-        this.initLiveDrawStateListener(); // 👈 Real-time listener for the 3 drawn winners
+        this.initLiveDrawStateListener(); 
     }
 
     async loadCustomerAndDrawings() {
@@ -99,7 +99,7 @@ class CustomerDrawings {
                     nextDrawTitleEl.textContent = `${targetDate} • ${targetTime} ${ampm}`;
                 }
 
-                // Update watch live button click handler dynamically with admin's saved link
+                // Update watch live button click handlers dynamically with admin's saved link
                 const watchBtn = document.getElementById('customer-tiktok-btn');
                 if (watchBtn) {
                     watchBtn.setAttribute('onclick', `customerDrawings.goToTikTok('${tiktokLink}')`);
@@ -134,11 +134,15 @@ class CustomerDrawings {
         if (!db) return;
 
         db.collection('settings').doc('live_draw_state').onSnapshot(doc => {
-            if (!doc.exists) return;
-            const state = doc.data();
             const liveDisplayBox = document.getElementById('customer-live-winners-display');
             if (!liveDisplayBox) return;
 
+            if (!doc.exists) {
+                liveDisplayBox.innerHTML = '';
+                return;
+            }
+
+            const state = doc.data();
             const tiktokLink = state.tiktokLiveUrl || 'https://tiktok.com/@boniLottery';
 
             if (state.status === 'spinning') {
@@ -148,22 +152,22 @@ class CustomerDrawings {
                         <div class="text-2xl font-black text-white">#${state.currentNumber || '---'}</div>
                     </div>
                 `;
-            } else if (state.status === 'completed' && state.winners) {
+            } else if (state.status === 'completed' && state.winners && state.winners.length > 0) {
                 const medals = ['🥇', '🥈', '🥉'];
                 liveDisplayBox.innerHTML = `
-                    <div class="bg-black/90 border border-yellow-400/45 rounded-xl p-5 space-y-3 shadow-[0_0_20px_rgba(252,211,77,0.15)]">
+                    <div class="bg-black/90 border border-yellow-400/45 rounded-xl p-5 space-y-3 shadow-[0_0_20px_rgba(252,211,77,0.15)] text-left">
                         <div class="flex items-center justify-between">
-                            <span class="text-xs font-black text-yellow-400 uppercase tracking-widest">🏆 Official Top 3 Winners</span>
-                            <a href="${tiktokLink}" target="_blank" class="text-[11px] bg-yellow-400 text-black px-3 py-1 rounded-lg font-bold hover:opacity-90">📱 Watch Stream</a>
+                            <span class="text-xs font-black text-yellow-400 uppercase tracking-widest">🏆 OFFICIAL TOP 3 WINNERS</span>
+                            <button onclick="customerDrawings.goToTikTok('${tiktokLink}')" class="text-[11px] bg-yellow-400 text-black px-3 py-1 rounded-lg font-bold hover:opacity-90 cursor-pointer">📱 Watch Stream</button>
                         </div>
                         <div class="space-y-2">
                             ${state.winners.map((w, idx) => {
-                                const sortedNums = [...w.numbers].sort((a, b) => Number(a) - Number(b)).join(', ');
+                                const sortedNums = Array.isArray(w.numbers) ? [...w.numbers].sort((a, b) => Number(a) - Number(b)).join(', ') : w.number || '';
                                 const isCurrentUser = w.customer === (currentUser?.name || currentUser?.displayName || '') || w.email === currentUser?.email;
                                 return `
                                     <div class="flex items-center justify-between bg-black/60 border ${isCurrentUser ? 'border-emerald-400/60 bg-emerald-950/20' : 'border-yellow-400/20'} rounded-xl p-3">
                                         <div>
-                                            <span class="text-xs font-black text-yellow-400">${medals[idx]} ${idx + 1}st Place: ${w.customer} ${isCurrentUser ? '<span class="text-emerald-400 text-[10px] font-bold">(YOU!)</span>' : ''}</span>
+                                            <span class="text-xs font-black text-yellow-400">${medals[idx] || '🏆'} ${idx + 1}st Place: ${w.customer || 'Customer'} ${isCurrentUser ? '<span class="text-emerald-400 text-[10px] font-bold">(YOU!)</span>' : ''}</span>
                                             <div class="text-[10px] text-slate-400">📞 ${w.phone || 'N/A'}</div>
                                         </div>
                                         <span class="px-2.5 py-1 bg-yellow-400/20 border border-yellow-400/40 rounded-lg text-yellow-300 text-xs font-bold font-mono">
@@ -175,6 +179,8 @@ class CustomerDrawings {
                         </div>
                     </div>
                 `;
+            } else {
+                liveDisplayBox.innerHTML = '';
             }
         });
     }
@@ -236,10 +242,10 @@ class CustomerDrawings {
                     <h3 class="text-xl font-bold text-yellow-400 mt-2">${title}</h3>
                     <p class="text-xs text-slate-300 leading-relaxed">${message}</p>
                     <div class="pt-2 space-y-2">
-                        <a href="${link}" target="_blank" onclick="document.getElementById('live-draw-modal')?.remove()" class="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-extrabold rounded-xl block text-xs shadow-lg hover:opacity-90 transition-all">
+                        <button onclick="customerDrawings.goToTikTok('${link}')" class="w-full py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black font-extrabold rounded-xl block text-xs shadow-lg hover:opacity-90 transition-all cursor-pointer">
                             🚀 Join TikTok Live Stream
-                        </a>
-                        <button onclick="document.getElementById('live-draw-modal')?.remove()" class="w-full py-2 bg-slate-900 text-slate-400 hover:text-white rounded-xl text-xs font-bold border border-slate-800">
+                        </button>
+                        <button onclick="document.getElementById('live-draw-modal')?.remove()" class="w-full py-2 bg-slate-900 text-slate-400 hover:text-white rounded-xl text-xs font-bold border border-slate-800 cursor-pointer">
                             Close
                         </button>
                     </div>
@@ -377,8 +383,8 @@ class CustomerDrawings {
                             let winnersHtml = '';
                             if (draw.winners && Array.isArray(draw.winners)) {
                                 winnersHtml = draw.winners.map((w, idx) => {
-                                    const sortedNums = [...w.numbers].sort((a, b) => Number(a) - Number(b)).join(', ');
-                                    return `<div class="text-xs text-yellow-300 font-bold">${medals[idx]} ${idx + 1}st Place: ${w.customer} (#${sortedNums})</div>`;
+                                    const sortedNums = Array.isArray(w.numbers) ? [...w.numbers].sort((a, b) => Number(a) - Number(b)).join(', ') : w.number || '';
+                                    return `<div class="text-xs text-yellow-300 font-bold">${medals[idx]} ${idx + 1}st Place: ${w.customer || 'Customer'} (#${sortedNums})</div>`;
                                 }).join('');
                             } else if (draw.winningNumber) {
                                 winnersHtml = `<p class="text-sm text-yellow-400">Winning Number Audit Result: #${draw.winningNumber}</p>`;
@@ -445,7 +451,7 @@ class CustomerDrawings {
             `;
         } else {
             resultDiv.innerHTML = `
-                <div class="bg-red-400/10 border border-red-400 rounded-lg p-4 mt-4">
+                <div class="bg-red-400/10 border border-red-400 rounded-lg p-4 md:mt-4">
                     <p class="text-red-400 font-bold">❌ No matching tickets</p>
                     <p class="text-sm text-slate-300 mt-2">Try another number or buy more tickets</p>
                 </div>
@@ -454,8 +460,11 @@ class CustomerDrawings {
     }
 
     goToTikTok(link) {
-        const targetUrl = link || 'https://tiktok.com/@boniLottery';
-        this.notify('info', '📱 Opening TikTok Live Stream...');
+        let targetUrl = link && link !== 'undefined' && link !== 'null' ? link : 'https://tiktok.com/@boniLottery';
+        if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
+            targetUrl = 'https://' + targetUrl;
+        }
+        this.notify('info', '📱 Opening Live Stream...');
         document.getElementById('live-draw-modal')?.remove();
         window.open(targetUrl, '_blank');
     }
