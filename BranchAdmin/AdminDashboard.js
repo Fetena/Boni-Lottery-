@@ -12,6 +12,8 @@ class AdminDashboard {
         }
         
         window.adminLottery = new AdminLotteryDraw(this.adminId);
+        // Expose a global reference so inline onclick handlers pointing to window.adminDashboard work seamlessly
+        window.adminDashboard = this;
     }
 
     render() {
@@ -165,6 +167,9 @@ class AdminDashboard {
 
     async loadData() {
         try {
+            // Ensure global pointer is maintained on reload
+            window.adminDashboard = this;
+
             await loadAdminCustomers();
             await loadAdminPayments();
             await loadAdminStats();
