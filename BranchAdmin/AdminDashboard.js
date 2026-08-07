@@ -1,234 +1,160 @@
 // ============================================
-// 2. BRANCH ADMIN DASHBOARD (PARENT COMPONENT WITH WINNING NUMBERS AUDIT WIDGET)
+// ADMIN DASHBOARD - PARENT COMPONENT
 // ============================================
 
 class AdminDashboard {
-    constructor() {
-        this.bookings = new BookAppointment(); // Assuming standard branch admin bookings class
-        this.customers = new Customers();
-        this.ranges = new Ranges();
-        this.payments = new Payments();
-        this.analytics = new Analytics();
-        this.transactions = new Transactions();
-        this.auditLog = new AuditLog();
-        this.notifications = new Notifications();
-        this.settings = new Settings();
+    constructor(adminId) {
+        this.adminId = adminId || window.currentUser?.email || localStorage.getItem('currentUserEmail') || '';
         
-        window.branchAdminLottery = new BranchAdminLotteryDraw();
+        if (this.adminId) {
+            localStorage.setItem('currentAdminEmail', this.adminId);
+            console.log(`✅ AdminDashboard - Admin Email: ${this.adminId}`);
+        }
+        
+        window.adminLottery = new AdminLotteryDraw(this.adminId);
     }
 
     render() {
         return `
-            <div id="branch-admin-dashboard" class="min-h-screen bg-black flex flex-col">
+            <div id="admin-dashboard" class="min-h-screen bg-black flex flex-col">
                 <header class="sticky top-0 z-40 w-full glass-panel border-b border-yellow-400/10 px-4 sm:px-6 py-4">
                     <div class="max-w-7xl mx-auto flex items-center justify-between">
-                        <h1 class="font-bold text-base sm:text-xl text-gradient">🛡️ BRANCH ADMIN DASHBOARD</h1>
+                        <h1 class="font-bold text-base sm:text-xl text-gradient">🛡️ ADMIN DASHBOARD</h1>
                         <button onclick="logout()" class="px-3 sm:px-4 py-2 bg-red-950/30 text-red-400 text-xs font-bold rounded-xl">Logout</button>
                     </div>
                 </header>
                 
                 <main class="flex-grow p-4 sm:p-6 overflow-y-auto">
                     <div class="max-w-7xl mx-auto space-y-6">
-                        <h2 class="text-2xl sm:text-3xl font-bold text-white">Branch Control Center</h2>
+                        <h2 class="text-2xl sm:text-3xl font-bold text-white">Admin Control Center</h2>
                         
-                        <!-- WINNING NUMBERS AUDIT WIDGET (STAYING ON ALL PARENTS DASHBOARD) -->
-                        <div class="glass-panel rounded-2xl p-5 border border-yellow-400/30 bg-yellow-400/5 space-y-3">
-                            <h3 class="text-sm font-bold text-yellow-400 flex items-center gap-2">
-                                🎯 Live Winning Numbers Audit Feed
-                            </h3>
-                            <div id="branch-winning-numbers-audit-feed" class="space-y-2 max-h-40 overflow-y-auto pr-1 text-xs text-slate-300">
-                                <p class="italic text-slate-500">Loading audit feed...</p>
-                            </div>
-                        </div>
-
-                        <!-- TABS -->
                         <div class="flex gap-2 border-b border-yellow-400/10 pb-2 overflow-x-auto whitespace-nowrap scrollbar-none">
-                            <button onclick="window.branchAdminDashboard.switchTab('dashboard', event)" class="tab-button active px-3 sm:px-4 py-2 text-xs font-bold text-yellow-400">📊 Dashboard</button>
-                            <button onclick="window.branchAdminDashboard.switchTab('customers', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">👥 Customers</button>
-                            <button onclick="window.branchAdminDashboard.switchTab('ranges', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📊 Ranges</button>
-                            <button onclick="window.branchAdminDashboard.switchTab('payments', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">💳 Payments</button>
-                            <button onclick="window.branchAdminDashboard.switchTab('analytics', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📈 Analytics</button>
-                            <button onclick="window.branchAdminDashboard.switchTab('transactions', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📋 Transactions</button>
-                            <button onclick="window.branchAdminDashboard.switchTab('auditlog', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🔒 Audit</button>                         
-                            <button onclick="window.branchAdminDashboard.switchTab('bookings', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white relative">
-                                📅 Bookings <span id="badge-branch-bookings" class="hidden absolute -top-1 -right-1 px-1.5 py-0.5 bg-red-500 text-white rounded-full text-[9px] font-bold">0</span>
+                            <button onclick="window.adminDashboard.switchTab('dashboard', event)" class="tab-button active px-3 sm:px-4 py-2 text-xs font-bold text-yellow-400">📊 Dashboard</button>
+                            <button onclick="window.adminDashboard.switchTab('customers', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400">👥 Customers</button>
+                            <button onclick="window.adminDashboard.switchTab('tickets', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 relative">
+                               🎫 Tickets <span id="badge-branch-tickets" class="hidden absolute -top-1 -right-1 px-1.5 py-0.5 bg-red-500 text-white rounded-full text-[9px] font-bold">0</span>
                             </button>
-                            <button onclick="window.branchAdminDashboard.switchTab('notifications', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white relative">
-                                📢 Notify <span id="badge-branch-notifications" class="hidden absolute -top-1 -right-1 px-1.5 py-0.5 bg-red-500 text-white rounded-full text-[9px] font-bold">0</span>
+                            <button onclick="window.adminDashboard.switchTab('payments', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400">💳 Payments</button>
+                            <button onclick="window.adminDashboard.switchTab('notifications', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 relative">
+                                🔔 Notifications <span id="badge-branch-notifications" class="hidden absolute -top-1 -right-1 px-1.5 py-0.5 bg-red-500 text-white rounded-full text-[9px] font-bold">0</span>
                             </button>
-                            <button onclick="window.branchAdminDashboard.switchTab('settings', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">⚙️ Settings</button>
+                            <button onclick="window.adminDashboard.switchTab('bookAppointment', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 relative">
+                                📅 BookAppointment <span id="badge-branch-bookings" class="hidden absolute -top-1 -right-1 px-1.5 py-0.5 bg-red-500 text-white rounded-full text-[9px] font-bold">0</span>
+                            </button>
+                            <button onclick="window.adminDashboard.switchTab('settings', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400">⚙️ Settings</button>
                         </div>
-                       
-                        <!-- TAB CONTENTS -->
-                        <div id="branch-dashboard" class="tab-content active space-y-6">
-                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                <div class="glass-panel rounded-2xl p-5 sm:p-6 border border-yellow-400/10">
-                                    <p class="text-xs text-slate-400">Branch Customers</p>
-                                    <p class="text-2xl sm:text-3xl font-bold text-blue-400 mt-2" id="branch-total-customers">0</p>
+
+                        <!-- Dashboard Tab -->
+                        <div id="admin-dashboard-tab" class="tab-content active space-y-4">
+                            <!-- Compact Stat Cards -->
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div class="glass-panel rounded-xl p-4 border border-yellow-400/10">
+                                    <p class="text-[10px] text-slate-400">Total Customers</p>
+                                    <h3 id="admin-total-customers" class="text-xl sm:text-2xl font-bold text-blue-400 mt-0.5">0</h3>
                                 </div>
-                                <div class="glass-panel rounded-2xl p-5 sm:p-6 border border-yellow-400/10">
-                                    <p class="text-xs text-slate-400">Branch Tickets</p>
-                                    <p class="text-2xl sm:text-3xl font-bold text-emerald-400 mt-2" id="branch-total-tickets">0</p>
+                                <div class="glass-panel rounded-xl p-4 border border-yellow-400/10">
+                                    <p class="text-[10px] text-slate-400">Total Tickets</p>
+                                    <h3 id="admin-total-tickets" class="text-xl sm:text-2xl font-bold text-emerald-400 mt-0.5">0</h3>
                                 </div>
-                                <div class="glass-panel rounded-2xl p-5 sm:p-6 border border-yellow-400/10">
-                                    <p class="text-xs text-slate-400">Branch Revenue</p>
-                                    <p class="text-2xl sm:text-3xl font-bold text-purple-400 mt-2" id="branch-total-revenue">0 ETB</p>
+                                <div class="glass-panel rounded-xl p-4 border border-yellow-400/10">
+                                    <p class="text-[10px] text-slate-400">Total Revenue</p>
+                                    <h3 id="admin-total-revenue" class="text-xl sm:text-2xl font-bold text-purple-400 mt-0.5">0 ETB</h3>
                                 </div>
                             </div>
 
-                            ${window.branchAdminLottery ? window.branchAdminLottery.render() : ''}
+                            <!-- Embedded Independent Lottery Component -->
+                            ${window.adminLottery ? window.adminLottery.render() : ''}
                         </div>
 
-                        <div id="branch-bookings" class="tab-content" style="display: none;"></div>
-                        <div id="branch-customers" class="tab-content" style="display: none;"></div>
-                        <div id="branch-ranges" class="tab-content" style="display: none;"></div>
-                        <div id="branch-payments" class="tab-content" style="display: none;"></div>
-                        <div id="branch-analytics" class="tab-content" style="display: none;"></div>
-                        <div id="branch-transactions" class="tab-content" style="display: none;"></div>
-                        <div id="branch-auditlog" class="tab-content" style="display: none;"></div>
-                        <div id="branch-notifications" class="tab-content" style="display: none;"></div>
-                        <div id="branch-settings" class="tab-content" style="display: none;"></div>
+                        <!-- Customers Tab -->
+                        <div id="admin-customers" class="tab-content" style="display: none;">
+                            <div class="space-y-4">
+                                <button onclick="openAddCustomerModal()" class="w-full sm:w-auto px-6 py-2.5 bg-yellow-400 text-black font-bold rounded-xl text-xs">+ Add Customer</button>
+                                <div id="admin-customers-list" class="space-y-3"></div>
+                            </div>
+                        </div>
+
+                        <!-- Tickets Tab -->
+                        <div id="admin-tickets" class="tab-content" style="display: none;">
+                            <div class="space-y-4">
+                                <h3 class="text-xl font-bold text-white">Recent Tickets</h3>
+                                <div id="admin-tickets-list" class="space-y-3"></div>
+                            </div>
+                        </div>
+
+                        <!-- Payments Tab -->
+                        <div id="admin-payments" class="tab-content" style="display: none;"></div>
+
+                        <!-- Notifications Tab Content -->
+                        <div id="admin-notifications" class="tab-content" style="display: none;"></div>
+
+                        <!-- Book Appointment Tab Content -->
+                        <div id="admin-bookAppointment" class="tab-content" style="display: none;"></div>
+
+                        <!-- Settings Tab -->
+                        <div id="admin-settings" class="tab-content" style="display: none;"></div>
                     </div>
                 </main>
+            </div>
+
+            <!-- Add Customer Modal -->
+            <div id="customer-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50 p-4">
+                <div class="glass-panel rounded-2xl p-6 sm:p-8 w-full max-w-md border border-yellow-400/10 space-y-4">
+                    <h3 class="text-2xl font-bold text-white mb-2">Add Customer</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Customer Name</label>
+                            <input type="text" id="cust-name-input" placeholder="John Doe" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-3 px-4 text-white text-xs placeholder-slate-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Email</label>
+                            <input type="email" id="cust-email-input" placeholder="customer@email.com" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-3 px-4 text-white text-xs placeholder-slate-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Phone Number</label>
+                            <input type="tel" id="cust-phone-input" placeholder="0912345678" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-3 px-4 text-white text-xs placeholder-slate-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Default Password</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="cust-password-input" value="Welcome123!" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-3 px-4 text-white text-xs">
+                                <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('cust-password-input').value); notify('success', 'Password copied!');" class="px-3 bg-slate-800 hover:bg-slate-700 text-yellow-400 rounded-xl text-xs border border-yellow-400/20">Copy</button>
+                            </div>
+                        </div>
+                        <button onclick="addAdminCustomer()" class="w-full py-3 bg-yellow-400 text-black font-bold rounded-xl text-xs hover:bg-yellow-500 mt-2">Add Customer</button>
+                        <button onclick="closeAddCustomerModal()" class="w-full py-2 bg-slate-800 text-slate-300 rounded-xl text-xs">Cancel</button>
+                    </div>
+                </div>
             </div>
         `;
     }
 
-    async loadData() {
-        try {
-            await Promise.all([
-                this.customers.loadData(),
-                this.ranges.loadData(),
-                this.payments.loadData(),
-                this.analytics.loadData(),
-                this.transactions.loadData(),
-                this.auditLog.loadData(),
-                this.notifications.loadData(),
-                this.settings.loadData(),
-                this.bookings.loadData()
-            ]);   
-
-            if (window.branchAdminLottery) {
-                await window.branchAdminLottery.init();
-            }
-            
-            this.loadTabs(); 
-            await this.updateDashboardStats();
-            this.initWinningAuditListener();
-            notify('info', '✅ Branch data loaded successfully');
-        } catch (error) {
-            console.error('Error loading branch data:', error);
-        }
-    }
-
-    initWinningAuditListener() {
-        if (!db) return;
-        db.collection('lottery_draws').orderBy('drawnAt', 'desc').limit(5).onSnapshot(snapshot => {
-            const feedContainer = document.getElementById('branch-winning-numbers-audit-feed');
-            if (!feedContainer) return;
-            if (snapshot.empty) {
-                feedContainer.innerHTML = `<p class="italic text-slate-500">No winning numbers audited yet.</p>`;
-                return;
-            }
-            let html = '';
-            snapshot.forEach(doc => {
-                const data = doc.data();
-                const date = data.drawnAt?.toDate ? data.drawnAt.toDate().toLocaleString() : 'Just now';
-                html += `
-                    <div class="bg-black/40 border border-yellow-400/20 rounded-lg p-2.5 flex justify-between items-center">
-                        <div>
-                            <span class="text-yellow-400 font-bold">Winning Number: #${data.winningNumber}</span> — Winner: <span class="text-white">${data.winnerName || 'N/A'}</span> (${data.winnerPhone || 'N/A'})
-                        </div>
-                        <span class="text-[10px] text-slate-400">${date}</span>
-                    </div>
-                `;
-            });
-            feedContainer.innerHTML = html;
-        });
-    }
-
-    loadTabs() {
-        try {
-            const customersContent = document.getElementById('branch-customers');
-            const rangesContent = document.getElementById('branch-ranges');
-            const paymentsContent = document.getElementById('branch-payments');
-            const analyticsContent = document.getElementById('branch-analytics');
-            const transactionsContent = document.getElementById('branch-transactions');
-            const auditlogContent = document.getElementById('branch-auditlog');
-            const notificationsContent = document.getElementById('branch-notifications');
-            const settingsContent = document.getElementById('branch-settings');
-            const bookingsContent = document.getElementById('branch-bookings');
-            
-            if (bookingsContent) bookingsContent.innerHTML = this.bookings.render();
-            if (bookingsContent && typeof this.bookings.renderBookingsList === 'function') this.bookings.renderBookingsList();
-            if (customersContent) customersContent.innerHTML = this.customers.render();
-            if (rangesContent) rangesContent.innerHTML = this.ranges.render();
-            if (paymentsContent) paymentsContent.innerHTML = this.payments.render();
-            if (analyticsContent) analyticsContent.innerHTML = this.analytics.render();
-            if (transactionsContent) transactionsContent.innerHTML = this.transactions.render();
-            if (auditlogContent) auditlogContent.innerHTML = this.auditLog.render();
-            if (notificationsContent) notificationsContent.innerHTML = this.notifications.render();
-            if (settingsContent) settingsContent.innerHTML = this.settings.render();
-        } catch (error) {
-            console.error('Error in branch loadTabs:', error);
-        }
-    }
-
-    async updateDashboardStats() {
-        try {
-            if (!db) return;
-            const branchId = currentUser?.uid || currentUser?.email || 'branch_default';
-
-            const customersSnap = await db.collection('customers').get();
-            let branchCustCount = 0;
-            customersSnap.forEach(doc => {
-                const data = doc.data();
-                if (data.assignedAdmin === branchId || data.branchId === branchId || !data.assignedAdmin) {
-                    branchCustCount++;
-                }
-            });
-            const customersEl = document.getElementById('branch-total-customers');
-            if (customersEl) customersEl.textContent = branchCustCount;
-
-            const ticketsSnap = await db.collection('customer_tickets').get();
-            let branchTicketCount = 0;
-            let revenue = 0;
-            ticketsSnap.forEach(doc => {
-                const data = doc.data();
-                if (data.adminId === branchId || data.branchId === branchId || !data.adminId) {
-                    branchTicketCount++;
-                    revenue += data.cost || 0;
-                }
-            });
-
-            const ticketsEl = document.getElementById('branch-total-tickets');
-            if (ticketsEl) ticketsEl.textContent = branchTicketCount;
-
-            const revenueEl = document.getElementById('branch-total-revenue');
-            if (revenueEl) revenueEl.textContent = revenue.toLocaleString() + ' ETB';
-        } catch (error) {
-            console.error('Error updating branch dashboard stats:', error);
-        }
-    }
-
     switchTab(tabName, event) {
-        const tabElements = document.querySelectorAll('[id^="branch-"]');
-        tabElements.forEach(el => {
-            if (el.classList && el.classList.contains('tab-content')) {
-                el.style.display = 'none';
-            }
-        });
+        document.getElementById('admin-dashboard-tab').style.display = 'none';
+        document.getElementById('admin-customers').style.display = 'none';
+        document.getElementById('admin-tickets').style.display = 'none';
+        document.getElementById('admin-payments').style.display = 'none';
+        document.getElementById('admin-notifications').style.display = 'none';
+        document.getElementById('admin-bookAppointment').style.display = 'none';
+        document.getElementById('admin-settings').style.display = 'none';
 
-        const tabButtons = document.querySelectorAll('.tab-button');
-        tabButtons.forEach(btn => {
-            btn.classList.remove('active');
-            btn.style.color = '';
-        });
+        const buttons = document.querySelectorAll('#admin-dashboard .tab-button');
+        buttons.forEach(btn => btn.classList.remove('active'));
 
-        const tab = document.getElementById(`branch-${tabName}`);
-        if (tab) {
-            tab.style.display = 'block';
-            tab.classList.add('active');
+        if (tabName === 'dashboard') {
+            document.getElementById('admin-dashboard-tab').style.display = 'block';
+        } else if (tabName === 'customers') {
+            document.getElementById('admin-customers').style.display = 'block';
+        } else if (tabName === 'tickets') {
+            document.getElementById('admin-tickets').style.display = 'block';
+        } else if (tabName === 'payments') {
+            document.getElementById('admin-payments').style.display = 'block';
+        } else if (tabName === 'notifications') {
+            document.getElementById('admin-notifications').style.display = 'block';
+        } else if (tabName === 'bookAppointment') {
+            document.getElementById('admin-bookAppointment').style.display = 'block';
+        } else if (tabName === 'settings') {
+            document.getElementById('admin-settings').style.display = 'block';
         }
 
         if (event && event.target) {
@@ -236,37 +162,121 @@ class AdminDashboard {
             event.target.style.color = '#FCD34D';
         }
     }
-}
 
-// Global Manual Customer Addition with Firebase Auth & Multi-Collection Sync
-async function addAdminCustomer() {
-    const nameInput = document.getElementById('cust-name-input');
-    const emailInput = document.getElementById('cust-email-input');
-    const phoneInput = document.getElementById('cust-phone-input');
-    const passwordInput = document.getElementById('cust-password-input');
+    async loadData() {
+        try {
+            await loadAdminCustomers();
+            await loadAdminPayments();
+            await loadAdminStats();
+            
+            if (window.adminLottery) {
+                await window.adminLottery.init();
+            }
+            if (!window.adminTickets) window.adminTickets = new AdminTickets(this.adminId);
+            if (!window.adminPayments) window.adminPayments = new AdminPayments(this.adminId);
+            if (!window.adminNotifications || window.adminNotifications.adminId !== this.adminId) {
+                window.adminNotifications = new AdminNotifications(this.adminId);
+            }
+            if (!window.adminBookAppointment) window.adminBookAppointment = new AdminBookAppointment(this.adminId);
+            if (!window.adminSettings) window.adminSettings = new AdminSettings(this.adminId);
+            
+            const ticketsTab = document.getElementById('admin-tickets');
+            if (ticketsTab) {
+                ticketsTab.innerHTML = window.adminTickets.render();
+                await window.adminTickets.init();
+            }
+            const paymentsTab = document.getElementById('admin-payments');
+            if (paymentsTab) paymentsTab.innerHTML = await window.adminPayments.render();
 
-    if (!nameInput || !emailInput || !passwordInput) {
-        return notify('error', '❌ Form inputs are missing from the DOM');
+            const notifTab = document.getElementById('admin-notifications');
+            if (notifTab) {
+                notifTab.innerHTML = window.adminNotifications.render();
+                if (typeof window.adminNotifications.displayHistory === 'function') window.adminNotifications.displayHistory();
+            }
+
+            const apptTab = document.getElementById('admin-bookAppointment');
+            if (apptTab) apptTab.innerHTML = await window.adminBookAppointment.render();
+
+            const settingsTab = document.getElementById('admin-settings');
+            if (settingsTab) settingsTab.innerHTML = window.adminSettings.render();
+
+        } catch (error) {
+            console.error('Error loading admin data:', error);
+        }
     }
 
-    const name = nameInput.value.trim();
-    const email = emailInput.value.trim();
-    const phone = phoneInput ? phoneInput.value.trim() : '';
-    const password = passwordInput.value.trim();
+    async approvePayment(docId) {
+        if (!db) return notify('error', '❌ Database not initialized');
+        try {
+            await db.collection('customer_tickets').doc(docId).update({
+                status: 'Approved',
+                approvedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            notify('success', '✅ Payment approved successfully!');
+            await loadAdminTickets();
+            await loadAdminStats();
+        } catch (error) {
+            notify('error', `❌ Error: ${error.message}`);
+        }
+    }
+
+    async deleteTicket(docId) {
+        if (!confirm('Are you sure you want to delete this ticket?')) return;
+        if (!db) return notify('error', '❌ Database not initialized');
+
+        try {
+            await db.collection('customer_tickets').doc(docId).delete();
+            notify('success', '🗑️ Ticket deleted successfully!');
+            await loadAdminTickets();
+            await loadAdminStats();
+        } catch (error) {
+            notify('error', `❌ Error: ${error.message}`);
+        }
+    }
+
+    async rejectPayment(docId) {
+        if (!db) return notify('error', '❌ Database not initialized');
+        try {
+            await db.collection('customer_tickets').doc(docId).update({
+                status: 'Rejected',
+                rejectedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            notify('error', '❌ Payment rejected');
+            await loadAdminTickets();
+            await loadAdminStats();
+        } catch (error) {
+            notify('error', `❌ Error: ${error.message}`);
+        }
+    }
+}
+
+async function openAddCustomerModal() {
+    document.getElementById('customer-modal').style.display = 'flex';
+}
+
+function closeAddCustomerModal() {
+    document.getElementById('customer-modal').style.display = 'none';
+}
+
+async function addAdminCustomer() {
+    const name = document.getElementById('cust-name-input').value.trim();
+    const email = document.getElementById('cust-email-input').value.trim();
+    const phone = document.getElementById('cust-phone-input').value.trim();
+    const password = document.getElementById('cust-password-input').value.trim();
 
     if (!name || !email || !password) {
         return notify('error', '❌ Please fill in all required fields');
     }
 
     try {
-        // 1. Create authentication profile for the customer so they can log in
+        // 1. Create Firebase Auth user profile so they can log in
         await firebase.auth().createUserWithEmailAndPassword(email, password);
 
-        const currentAdminId = currentUser?.uid || currentUser?.email || 'branch_default';
+        const currentAdminEmail = currentUser?.email || localStorage.getItem('currentUserEmail') || '';
 
         // 2. Save under admin_customers collection for branch tracking
         await db.collection('admin_customers').add({
-            adminEmail: currentAdminId,
+            adminEmail: currentAdminEmail,
             name,
             email,
             phone,
@@ -278,25 +288,132 @@ async function addAdminCustomer() {
             customerEmail: email,
             customerName: name,
             phone: phone,
-            preferredAdmin: currentAdminId,
+            preferredAdmin: currentAdminEmail,
             preferredPayment: 'Telebirr',
             role: 'customer',
             createdAt: new Date()
         });
 
         notify('success', '✅ Customer added and registered successfully!');
-        
-        if (typeof closeAddCustomerModal === 'function') {
-            closeAddCustomerModal();
-        }
-
-        if (window.branchAdminDashboard && window.branchAdminDashboard.customers) {
-            await window.branchAdminDashboard.customers.loadData();
-        }
-        if (window.branchAdminDashboard && typeof window.branchAdminDashboard.updateDashboardStats === 'function') {
-            await window.branchAdminDashboard.updateDashboardStats();
-        }
+        closeAddCustomerModal();
+        await loadAdminCustomers();
+        await loadAdminStats();
     } catch (error) {
         notify('error', `❌ Error: ${error.message}`);
+    }
+}
+
+async function loadAdminCustomers() {
+    if (!db || !currentUser) return;
+
+    try {
+        const manualSnapshot = await db.collection('admin_customers')
+            .where('adminEmail', '==', currentUser.email)
+            .get();
+
+        const selfRegisteredSnapshot = await db.collection('customer_settings')
+            .where('preferredAdmin', '==', currentUser.email)
+            .get();
+
+        const content = document.getElementById('admin-customers-list');
+        if (!content) return;
+
+        let allCustomers = [];
+        manualSnapshot.forEach(doc => allCustomers.push({ id: doc.id, type: 'manual', ...doc.data() }));
+        selfRegisteredSnapshot.forEach(doc => {
+            const data = doc.data();
+            allCustomers.push({ 
+                id: doc.id, 
+                type: 'self', 
+                name: data.customerName || 'N/A',
+                email: data.customerEmail || doc.id,
+                phone: data.phone || 'N/A',
+                tickets: data.tickets || 0,
+                spent: data.spent || 0
+            });
+        });
+
+        if (allCustomers.length === 0) {
+            content.innerHTML = '<p class="text-slate-400 text-center py-6">No customers yet</p>';
+            return;
+        }
+
+        content.innerHTML = allCustomers.map(cust => `
+            <div class="glass-panel rounded-lg p-4 border border-yellow-400/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs">
+                <div>
+                    <p class="font-bold text-white text-sm">${cust.name} ${cust.type === 'self' ? '<span class="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded ml-2">Self-Registered</span>' : ''}</p>
+                    <p class="text-slate-400 mt-0.5">${cust.email} • ${cust.phone}</p>
+                    <p class="text-slate-400 mt-0.5">Tickets: ${cust.tickets || 0} • Spent: ${cust.spent || 0} ETB</p>
+                </div>
+                ${cust.type === 'manual' ? `<button onclick="deleteAdminCustomer('${cust.id}')" class="px-2.5 py-1 bg-red-400/20 text-red-400 rounded">Delete</button>` : '<span class="text-slate-500 italic">Platform User</span>'}
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error('Error loading customers:', error);
+    }
+}
+
+async function deleteAdminCustomer(docId) {
+    if (!confirm('Delete customer?')) return;
+
+    try {
+        await db.collection('admin_customers').doc(docId).delete();
+        notify('success', '✅ Customer deleted');
+        await loadAdminCustomers();
+        await loadAdminStats();
+    } catch (error) {
+        notify('error', `❌ Error: ${error.message}`);
+    }
+}
+
+async function loadAdminPayments() {
+    if (!db || !currentUser) return;
+
+    try {
+        const doc = await db.collection('admin_settings').doc(currentUser.email).get();
+        if (doc.exists) {
+            const data = doc.data();
+            if (data.telebirrPhone && document.getElementById('admin-telebirr')) document.getElementById('admin-telebirr').value = data.telebirrPhone;
+            if (data.cbeAccount && document.getElementById('admin-cbe')) document.getElementById('admin-cbe').value = data.cbeAccount;
+        }
+    } catch (error) {
+        console.error('Error loading payments:', error);
+    }
+}
+
+async function loadAdminStats() {
+    if (!db || !currentUser) return;
+
+    try {
+        const manualSnapshot = await db.collection('admin_customers')
+            .where('adminEmail', '==', currentUser.email)
+            .get();
+
+        const selfRegisteredSnapshot = await db.collection('customer_settings')
+            .where('preferredAdmin', '==', currentUser.email)
+            .get();
+
+        const totalCustomersCount = manualSnapshot.size + selfRegisteredSnapshot.size;
+        if (document.getElementById('admin-total-customers')) {
+            document.getElementById('admin-total-customers').textContent = totalCustomersCount;
+        }
+
+        const ticketSnapshot = await db.collection('customer_tickets')
+            .where('adminEmail', '==', currentUser.email)
+            .get();
+            
+        if (document.getElementById('admin-total-tickets')) {
+            document.getElementById('admin-total-tickets').textContent = ticketSnapshot.size;
+        }
+
+        let revenue = 0;
+        ticketSnapshot.forEach(doc => {
+            revenue += doc.data().cost || 0;
+        });
+        if (document.getElementById('admin-total-revenue')) {
+            document.getElementById('admin-total-revenue').textContent = revenue.toLocaleString() + ' ETB';
+        }
+    } catch (error) {
+        console.error('Error loading stats:', error);
     }
 }
