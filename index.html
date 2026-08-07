@@ -466,11 +466,11 @@
                         currentUser = { type: 'admin', email };
                         startSessionTimer();
                         document.getElementById('public-page').innerHTML = '';
-                        if (!window.adminDashboard) {
-                            window.adminDashboard = new AdminDashboard(email);
-                        }
-                        document.getElementById('admin-container').innerHTML = window.adminDashboard.render();
-                        await window.adminDashboard.loadData();
+                        if (!window.branchAdminDashboard) {
+    window.branchAdminDashboard = new AdminDashboard(email);
+}
+document.getElementById('admin-container').innerHTML = window.branchAdminDashboard.render();
+await window.branchAdminDashboard.loadData();
                         return;
                     }
 
