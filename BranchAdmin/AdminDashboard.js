@@ -334,3 +334,29 @@ async function loadAdminCustomers() {
         console.error('Error loading admin customers:', error);
     }
 }
+
+/**
+ * Loads admin payment data from Firestore.
+ */
+async function loadAdminPayments() {
+    try {
+        console.log("Loading admin payments...");
+        
+        if (typeof db !== 'undefined' && typeof collection !== 'undefined' && typeof getDocs !== 'undefined') {
+            const querySnapshot = await getDocs(collection(db, "admin_settings"));
+            querySnapshot.forEach((doc) => {
+                console.log(doc.id, " => ", doc.data());
+            });
+        } else if (typeof db !== 'undefined' && db.collection) {
+            const querySnapshot = await db.collection("admin_settings").get();
+            querySnapshot.forEach((doc) => {
+                console.log(doc.id, " => ", doc.data());
+            });
+        } else {
+            console.warn("Firestore instances are not fully available yet.");
+        }
+        
+    } catch (error) {
+        console.error("Error inside loadAdminPayments:", error);
+    }
+}
