@@ -57,7 +57,7 @@ class AdminLotteryDraw {
                 </div>
 
                 <!-- Spin Action Button -->
-                <button id="spin-draw-btn" onclick="window.adminLottery.runDraw()" disabled class="w-full py-3.5 bg-slate-800 text-slate-500 font-black rounded-xl text-sm cursor-not-allowed transition-all shadow-none">🔒 DRAW LOCKED (WAITING FOR TIMER)</button>
+                <button id="spin-draw-btn" onclick="window.adminLottery.runDraw()" class="w-full py-4 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 text-black font-black rounded-xl text-sm shadow-lg hover:opacity-95 transform active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer animate-bounce">🤖 RUN ALGORITHMIC DRAW NOW</button>
 
                 <!-- Recent Winners History -->
                 <div class="space-y-3 pt-4 border-t border-yellow-400/10">
@@ -121,11 +121,10 @@ class AdminLotteryDraw {
 
     checkScheduleTiming() {
         const targetDateObj = this.getTargetDateTime();
-        const drawBtn = document.getElementById('spin-draw-btn');
         const statusBadge = document.getElementById('draw-countdown-timer');
         const scheduleStatusText = document.getElementById('schedule-status-text');
 
-        if (!targetDateObj || !drawBtn || !statusBadge) return;
+        if (!targetDateObj || !statusBadge) return;
 
         const now = new Date();
         const dateStr = document.getElementById('draw-target-date')?.value;
@@ -137,23 +136,14 @@ class AdminLotteryDraw {
         }
 
         if (now >= targetDateObj) {
-            drawBtn.disabled = false;
-            drawBtn.className = "w-full py-4 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 text-black font-black rounded-xl text-sm shadow-lg hover:opacity-95 transform active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer animate-bounce";
-            drawBtn.innerHTML = "🤖 RUN ALGORITHMIC DRAW NOW";
-
             statusBadge.className = "text-xs font-mono font-bold text-emerald-400 bg-emerald-950/40 px-3 py-1 rounded-full border border-emerald-500/30";
             statusBadge.innerHTML = '🟢 ALGORITHM UNLOCKED & READY!';
         } else {
-            drawBtn.disabled = true;
-            drawBtn.className = "w-full py-3.5 bg-slate-800 text-slate-500 font-black rounded-xl text-sm cursor-not-allowed transition-all shadow-none";
-            
             const diffMs = targetDateObj - now;
             const diffMins = Math.floor(diffMs / 60000);
             const hrs = Math.floor(diffMins / 60);
             const mins = diffMins % 60;
             const secs = Math.floor((diffMs % 60000) / 1000);
-
-            drawBtn.innerHTML = `🔒 DRAW LOCKED (OPENS IN ${hrs}h ${mins}m ${secs}s)`;
 
             statusBadge.className = "text-xs font-mono font-bold text-amber-400 bg-amber-400/10 px-3 py-1 rounded-full border border-amber-400/20";
             statusBadge.innerHTML = `⏳ OPENS IN: ${hrs}h ${mins}m ${secs}s`;
@@ -279,11 +269,6 @@ class AdminLotteryDraw {
     }
 
     async runDraw() {
-        const targetDateObj = this.getTargetDateTime();
-        if (targetDateObj && new Date() < targetDateObj) {
-            return notify('error', '❌ Draw is locked until the scheduled target time!');
-        }
-
         if (!db) {
             return notify('error', '❌ Database not initialized');
         }
@@ -330,7 +315,6 @@ class AdminLotteryDraw {
                 if (spinCount >= maxSpins) {
                     clearInterval(spinInterval);
 
-                    // Fully Algorithmic Selection without manual admin entry
                     const randomIndex = Math.floor(Math.random() * allAvailableNumbers.length);
                     const winningSelection = allAvailableNumbers[randomIndex];
 
