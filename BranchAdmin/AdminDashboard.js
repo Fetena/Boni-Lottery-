@@ -360,3 +360,15 @@ async function loadAdminPayments() {
         console.error("Error inside loadAdminPayments:", error);
     }
 }
+
+/**
+ * Fallback stub for loadAdminStats to prevent ReferenceErrors if not defined elsewhere.
+ */
+async function loadAdminStats() {
+    try {
+        console.log("Loading admin stats...");
+        // Add your logic to update total customers, tickets, and revenue counts here
+    } catch (error) {
+        console.error("Error inside loadAdminStats:", error);
+    }
+}
