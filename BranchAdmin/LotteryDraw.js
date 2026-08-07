@@ -1,5 +1,5 @@
 // ============================================
-// UPDATED ADMIN LOTTERY COMPONENT (SEQUENTIAL WINNING NUMBERS & TIKTOK LIVE EMBED)
+// UPDATED ADMIN LOTTERY COMPONENT (AUTO NOTIFICATIONS & HIDE SPIN AFTER DRAW)
 // ============================================
 
 class AdminLotteryDraw {
@@ -14,7 +14,7 @@ class AdminLotteryDraw {
                 <div>
                     <span class="bg-yellow-400/20 text-yellow-300 border border-yellow-400/30 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">⚡ Live Draw Center</span>
                     <h3 class="text-2xl font-black text-gradient mt-2">🎰 Branch Lucky Draw & TikTok Live</h3>
-                    <p class="text-xs text-slate-300 mt-1">Manage your precise schedule, stream your TikTok Live link directly on the dashboard, and display sequential winning numbers.</p>
+                    <p class="text-xs text-slate-300 mt-1">Manage your precise schedule, stream your TikTok Live link, and automatically dispatch notifications to customers upon drawing.</p>
                 </div>
 
                 <!-- TikTok Live Link & Embedded Player Section -->
@@ -70,8 +70,10 @@ class AdminLotteryDraw {
                     <div id="winner-info-display" class="text-xs text-slate-300 mt-2 font-medium text-center px-4"></div>
                 </div>
 
-                <!-- Spin Action Button -->
-                <button id="spin-draw-btn" onclick="window.adminLottery.runDraw()" disabled class="w-full py-3.5 bg-slate-800 text-slate-500 font-black rounded-xl text-sm cursor-not-allowed transition-all shadow-none">🔒 DRAW LOCKED (WAITING FOR TIMER)</button>
+                <!-- Spin Action Button (Hidden Automatically After Draw Completion) -->
+                <div id="spin-action-container">
+                    <button id="spin-draw-btn" onclick="window.adminLottery.runDraw()" disabled class="w-full py-3.5 bg-slate-800 text-slate-500 font-black rounded-xl text-sm cursor-not-allowed transition-all shadow-none">🔒 DRAW LOCKED (WAITING FOR TIMER)</button>
+                </div>
 
                 <!-- Recent Winners History -->
                 <div class="space-y-3 pt-4 border-t border-yellow-400/10">
@@ -85,7 +87,7 @@ class AdminLotteryDraw {
     }
 
     async init() {
-        console.log('✅ AdminLotteryDraw initialized with Sequential Numbers & TikTok Live');
+        console.log('✅ AdminLotteryDraw initialized with Auto Notifications & Spin Hiding');
         
         const dateInput = document.getElementById('draw-target-date');
         const timeInput = document.getElementById('draw-target-time');
@@ -126,17 +128,20 @@ class AdminLotteryDraw {
             const state = doc.data();
             const spinnerBox = document.getElementById('lottery-spinner-box');
             const winnerInfoBox = document.getElementById('winner-info-display');
+            const spinContainer = document.getElementById('spin-action-container');
 
             if (state.status === 'spinning') {
                 if (spinnerBox) spinnerBox.textContent = `#${state.currentNumber || '---'}`;
                 if (winnerInfoBox) winnerInfoBox.innerHTML = `<span class="text-amber-400 animate-pulse font-bold">⚡ LIVE DRAWING IN PROGRESS...</span>`;
+                if (spinContainer) spinContainer.style.display = 'block';
             } else if (state.status === 'completed' && state.winningNumbers) {
-                // Display sorted sequential numbers nicely
                 const formattedSeq = Array.isArray(state.winningNumbers) ? state.winningNumbers.join(', ') : state.winningNumbers;
                 if (spinnerBox) spinnerBox.textContent = `#${formattedSeq}`;
                 if (winnerInfoBox) {
                     winnerInfoBox.innerHTML = `🏆 Winner: <span class="text-yellow-400 font-bold">${state.winnerName}</span> (${state.winnerPhone} • ${state.winnerEmail})`;
                 }
+                // Hide the spin button section completely after the draw is completed
+                if (spinContainer) spinContainer.style.display = 'none';
             }
         });
     }
@@ -338,7 +343,6 @@ class AdminLotteryDraw {
                     const email = draw.winnerEmail || 'N/A';
                     const scopeText = draw.scope || 'Global Main Admin';
                     
-                    // Format winning numbers sequentially (sorted numerically)
                     let winningNumsFormatted = '';
                     if (Array.isArray(draw.winningNumbers)) {
                         const sortedNums = [...draw.winningNumbers].sort((a, b) => Number(a) - Number(b));
@@ -419,8 +423,13 @@ class AdminLotteryDraw {
                 return notify('error', '❌ No active ticket numbers available.');
             }
 
+            // Fetch current TikTok Live link to forward to customers
+            const liveDoc = await db.collection('settings').doc('tiktok_live_stream').get();
+            const tiktokLiveUrl = liveDoc.exists ? liveDoc.data().url || '#' : '#';
+
             const spinnerBox = document.getElementById('lottery-spinner-box');
             const winnerInfoBox = document.getElementById('winner-info-display');
+            const spinContainer = document.getElementById('spin-action-container');
             if (winnerInfoBox) winnerInfoBox.textContent = '';
 
             let spinCount = 0;
@@ -440,11 +449,9 @@ class AdminLotteryDraw {
                 if (spinCount >= maxSpins) {
                     clearInterval(spinInterval);
 
-                    // Pick a winning ticket randomly
                     const randomIndex = Math.floor(Math.random() * allTickets.length);
                     const winningTicket = allTickets[randomIndex];
 
-                    // Sort winning numbers sequentially (numerically)
                     const sortedSequentialNumbers = [...winningTicket.numbers].sort((a, b) => Number(a) - Number(b));
                     const formattedSequentialStr = sortedSequentialNumbers.join(', ');
 
@@ -453,10 +460,13 @@ class AdminLotteryDraw {
                         winnerInfoBox.innerHTML = `🏆 Winner: <span class="text-yellow-400 font-bold">${winningTicket.customer}</span> (${winningTicket.phone} • ${winningTicket.email})`;
                     }
 
-                    // Save final winning result with sequential numbers
+                    // Hide the spin button immediately after drawing completes
+                    if (spinContainer) spinContainer.style.display = 'none';
+
+                    // Save final winning result
                     await db.collection('lottery_draws').add({
-                        winningNumber: sortedSequentialNumbers[0], // primary for backwards compatibility
-                        winningNumbers: sortedSequentialNumbers, // sequential array
+                        winningNumber: sortedSequentialNumbers[0],
+                        winningNumbers: sortedSequentialNumbers,
                         winningTicketId: winningTicket.ticketId,
                         winnerName: winningTicket.customer,
                         winnerEmail: winningTicket.email,
@@ -466,6 +476,7 @@ class AdminLotteryDraw {
                         drawnAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
 
+                    // Update live draw state to completed
                     await db.collection('settings').doc('live_draw_state').set({
                         status: 'completed',
                         winningNumber: sortedSequentialNumbers[0],
@@ -473,11 +484,22 @@ class AdminLotteryDraw {
                         winnerName: winningTicket.customer,
                         winnerPhone: winningTicket.phone,
                         winnerEmail: winningTicket.email,
+                        tiktokLiveUrl: tiktokLiveUrl,
                         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                     }, { merge: true });
 
+                    // Broadcast Notification to all customers with the TikTok Live link and winning numbers
+                    await db.collection('notifications').add({
+                        title: '🔴 LIVE DRAW COMPLETED & WINNING NUMBERS!',
+                        message: `The live draw has concluded! Winning Numbers: #${formattedSequentialStr}. Winner: ${winningTicket.customer}. Click here to watch the TikTok Live stream!`,
+                        link: tiktokLiveUrl,
+                        type: 'live_draw',
+                        target: 'all_customers',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
                     this.loadPastWinners();
-                    notify('success', `🎉 WINNING NUMBERS DRAWN: #${formattedSequentialStr} (${winningTicket.customer})!`);
+                    notify('success', `🎉 WINNING NUMBERS DRAWN & NOTIFICATIONS SENT: #${formattedSequentialStr}!`);
                 }
             }, 60);
 
