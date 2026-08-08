@@ -1,11 +1,12 @@
 // ============================================
-// UPDATED ADMIN LOTTERY COMPONENT (3 WINNERS RESPECTIVELY ON SINGLE DRAW)
+// UPDATED ADMIN LOTTERY COMPONENT (INACTIVE BY DEFAULT, LOCKED UNTIL SCHEDULED & RE-LOCKS AFTER DRAW)
 // ============================================
 
 class AdminLotteryDraw {
     constructor(adminId) {
         this.adminId = adminId;
         this.liveListener = null;
+        this.scheduleListener = null;
     }
 
     render() {
@@ -51,20 +52,20 @@ class AdminLotteryDraw {
                             </select>
                         </div>
                         <div class="flex items-end">
-                            <button onclick="window.adminLottery.saveSchedule()" class="w-full py-2 bg-yellow-400/20 hover:bg-yellow-400/30 border border-yellow-400/40 text-yellow-300 font-bold rounded-xl text-xs transition-all cursor-pointer">💾 Save Schedule</button>
+                            <button onclick="window.adminLottery.saveSchedule()" class="w-full py-2 bg-yellow-400/20 hover:bg-yellow-400/30 border border-yellow-400/40 text-yellow-300 font-bold rounded-xl text-xs transition-all cursor-pointer">💾 Set Schedule & Activate</button>
                         </div>
                     </div>
-                    <p id="schedule-status-text" class="text-[11px] text-slate-400 italic">No schedule active.</p>
+                    <p id="schedule-status-text" class="text-[11px] text-slate-400 italic">Inactive until admin sets next schedule.</p>
                 </div>
 
                 <!-- Countdown & 3 Winners Display Box -->
                 <div class="py-6 bg-black/60 rounded-xl border border-yellow-400/30 flex flex-col items-center justify-center relative overflow-hidden space-y-3">
                     <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-yellow-400/10 via-transparent to-transparent pointer-events-none"></div>
-                    <span id="draw-countdown-timer" class="text-xs font-mono font-bold text-amber-400 bg-amber-400/10 px-3 py-1 rounded-full border border-amber-400/20">⏳ LOCKED UNTIL TIMER ENDS</span>
+                    <span id="draw-countdown-timer" class="text-xs font-mono font-bold text-amber-400 bg-amber-400/10 px-3 py-1 rounded-full border border-amber-400/20">⏳ INACTIVE - AWAITING ADMIN SCHEDULE</span>
                     
                     <span class="text-[10px] uppercase tracking-widest text-slate-400 mt-1">Top 3 Winners (Drawn Respectively)</span>
                     
-                    <!-- 3 Winners Container Placed Exactly at the Specified Red Line Spot -->
+                    <!-- 3 Winners Container -->
                     <div id="lottery-spinner-box" class="w-full px-4 flex flex-col gap-2 my-2">
                         <div class="flex items-center justify-between bg-black/80 border border-yellow-400/20 rounded-xl p-3">
                             <span class="text-xs font-black text-yellow-400">🥇 1st Place: ---</span>
@@ -85,7 +86,7 @@ class AdminLotteryDraw {
 
                 <!-- Spin & Draw Action Button -->
                 <div id="spin-action-container">
-                    <button id="spin-draw-btn" onclick="window.adminLottery.runDraw()" disabled class="w-full py-3.5 bg-slate-800 text-slate-500 font-black rounded-xl text-sm cursor-not-allowed transition-all shadow-none">🔒 DRAW LOCKED (WAITING FOR TIMER)</button>
+                    <button id="spin-draw-btn" onclick="window.adminLottery.runDraw()" disabled class="w-full py-3.5 bg-slate-800 text-slate-500 font-black rounded-xl text-sm cursor-not-allowed transition-all shadow-none">🔒 DRAW INACTIVE (SET SCHEDULE TO UNLOCK)</button>
                 </div>
 
                 <!-- Recent Winners History (Last 7 Days) -->
@@ -100,7 +101,7 @@ class AdminLotteryDraw {
     }
 
     async init() {
-        console.log('✅ AdminLotteryDraw initialized for 3 Winners');
+        console.log('✅ AdminLotteryDraw initialized with Inactive-by-Default rule');
         
         const dateInput = document.getElementById('draw-target-date');
         const timeInput = document.getElementById('draw-target-time');
@@ -170,7 +171,7 @@ class AdminLotteryDraw {
                     }).join('');
                 }
                 if (winnerInfoBox) {
-                    winnerInfoBox.innerHTML = `🏆 Successfully drew 3 top winners with live link notification dispatched!`;
+                    winnerInfoBox.innerHTML = `🏆 Successfully drew 3 top winners! Draw is now inactive until next schedule is set.`;
                 }
             }
         });
@@ -213,39 +214,47 @@ class AdminLotteryDraw {
     }
 
     getTargetDateTime() {
-        const dateStr = document.getElementById('draw-target-date')?.value;
-        const timeStr = document.getElementById('draw-target-time')?.value;
-        const ampmStr = document.getElementById('draw-target-ampm')?.value;
+        if (!this.scheduleData || !this.scheduleData.targetDate || !this.scheduleData.targetTime) return null;
+        const { targetDate, targetTime, ampm } = this.scheduleData;
 
-        if (!dateStr || !timeStr) return null;
-
-        const parts = dateStr.split('-').map(Number);
+        const parts = targetDate.split('-').map(Number);
         if (parts.length !== 3) return null;
 
         const [year, month, day] = parts;
-        let [hours, minutes] = timeStr.split(':').map(Number);
+        let [hours, minutes] = targetTime.split(':').map(Number);
 
-        if (ampmStr === 'PM' && hours < 12) hours += 12;
-        if (ampmStr === 'AM' && hours === 12) hours = 0;
+        if (ampm === 'PM' && hours < 12) hours += 12;
+        if (ampm === 'AM' && hours === 12) hours = 0;
 
         return new Date(year, month - 1, day, hours, minutes, 0, 0);
     }
 
     checkScheduleTiming() {
-        const targetDateObj = this.getTargetDateTime();
         const drawBtn = document.getElementById('spin-draw-btn');
         const statusBadge = document.getElementById('draw-countdown-timer');
         const scheduleStatusText = document.getElementById('schedule-status-text');
 
-        if (!targetDateObj || !drawBtn || !statusBadge) return;
+        if (!drawBtn || !statusBadge) return;
+
+        // If no schedule has been saved or explicitly activated, keep completely inactive
+        if (!this.scheduleData || !this.scheduleData.active) {
+            drawBtn.disabled = true;
+            drawBtn.className = "w-full py-3.5 bg-slate-800 text-slate-500 font-black rounded-xl text-sm cursor-not-allowed transition-all shadow-none";
+            drawBtn.innerHTML = "🔒 DRAW INACTIVE (SET SCHEDULE TO UNLOCK)";
+            statusBadge.className = "text-xs font-mono font-bold text-amber-400 bg-amber-400/10 px-3 py-1 rounded-full border border-amber-400/20";
+            statusBadge.innerHTML = '⏳ INACTIVE - AWAITING ADMIN SCHEDULE';
+            if (scheduleStatusText) scheduleStatusText.textContent = 'Inactive until admin sets next schedule.';
+            return;
+        }
+
+        const targetDateObj = this.getTargetDateTime();
+        if (!targetDateObj) return;
 
         const now = new Date();
-        const dateStr = document.getElementById('draw-target-date')?.value;
-        const timeStr = document.getElementById('draw-target-time')?.value;
-        const ampmStr = document.getElementById('draw-target-ampm')?.value;
+        const { targetDate, targetTime, ampm } = this.scheduleData;
 
         if (scheduleStatusText) {
-            scheduleStatusText.textContent = `Active Schedule Target: ${dateStr}, ${timeStr} ${ampmStr}`;
+            scheduleStatusText.textContent = `Active Schedule Target: ${targetDate}, ${targetTime} ${ampm}`;
         }
 
         if (now >= targetDateObj) {
@@ -282,17 +291,25 @@ class AdminLotteryDraw {
         }
 
         try {
+            this.scheduleData = {
+                targetDate: date,
+                targetTime: time,
+                ampm: ampm,
+                active: true // Explicitly set active when admin saves schedule
+            };
+
             if (db) {
                 await db.collection('settings').doc('main_draw_schedule').set({
                     targetDate: date,
                     targetTime: time,
                     ampm: ampm,
+                    active: true,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 }, { merge: true });
             }
             
             this.checkScheduleTiming();
-            notify('success', '💾 Schedule saved successfully!');
+            notify('success', '💾 Schedule saved and draw activated successfully!');
         } catch (error) {
             console.error('Error saving schedule:', error);
             notify('error', '❌ Failed to save schedule.');
@@ -304,19 +321,24 @@ class AdminLotteryDraw {
             if (!db) return;
             const doc = await db.collection('settings').doc('main_draw_schedule').get();
             if (doc.exists) {
-                const data = doc.data();
+                this.scheduleData = doc.data();
                 const dateInput = document.getElementById('draw-target-date');
                 const timeInput = document.getElementById('draw-target-time');
                 const ampmInput = document.getElementById('draw-target-ampm');
 
-                if (data.targetDate && dateInput) dateInput.value = data.targetDate;
-                if (data.targetTime && timeInput) timeInput.value = data.targetTime;
-                if (data.ampm && ampmInput) ampmInput.value = data.ampm;
+                if (this.scheduleData.targetDate && dateInput) dateInput.value = this.scheduleData.targetDate;
+                if (this.scheduleData.targetTime && timeInput) timeInput.value = this.scheduleData.targetTime;
+                if (this.scheduleData.ampm && ampmInput) ampmInput.value = this.scheduleData.ampm;
 
+                this.checkScheduleTiming();
+            } else {
+                this.scheduleData = { active: false };
                 this.checkScheduleTiming();
             }
         } catch (error) {
             console.error('Error loading schedule:', error);
+            this.scheduleData = { active: false };
+            this.checkScheduleTiming();
         }
     }
 
@@ -489,7 +511,7 @@ class AdminLotteryDraw {
                     }
 
                     if (winnerInfoBox) {
-                        winnerInfoBox.innerHTML = `🏆 Top 3 Winners Drawn Successfully!`;
+                        winnerInfoBox.innerHTML = `🏆 Top 3 Winners Drawn Successfully! Draw is now inactive.`;
                     }
 
                     await db.collection('lottery_draws').add({
@@ -506,6 +528,15 @@ class AdminLotteryDraw {
                         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                     }, { merge: true });
 
+                    // Automatically set schedule to inactive in Firestore once the draw is completed
+                    this.scheduleData = { active: false };
+                    await db.collection('settings').doc('main_draw_schedule').set({
+                        active: false,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true });
+
+                    this.checkScheduleTiming();
+
                     // Dispatch notification to customers containing the live stream link and winners list
                     await db.collection('notifications').add({
                         title: '🔴 3 WINNERS DRAWN & LIVE STREAM LINK!',
@@ -517,7 +548,7 @@ class AdminLotteryDraw {
                     });
 
                     this.loadPastWinners();
-                    notify('success', `🎉 3 WINNERS SUCCESSFULLY DRAWN & NOTIFICATIONS SENT!`);
+                    notify('success', `🎉 3 WINNERS SUCCESSFULLY DRAWN & DRAW SET TO INACTIVE!`);
                 }
             }, 60);
 
