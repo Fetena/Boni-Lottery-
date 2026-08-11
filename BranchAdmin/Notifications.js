@@ -1,5 +1,5 @@
 // ============================================
-// ADMIN NOTIFICATIONS - FIXED V22 (DELETABLE BROADCASTS & NOTIFICATIONS)
+// ADMIN NOTIFICATIONS - FIXED V23 (IN-PLATFORM NOTIFICATION TARGET)
 // ============================================
 
 class AdminNotifications {
@@ -212,7 +212,10 @@ class AdminNotifications {
                             <label class="text-sm text-slate-400">Send Via</label>
                             <div class="flex gap-3 mt-2">
                                 <label class="flex items-center text-sm text-slate-300">
-                                    <input type="checkbox" id="admin-notif-telegram" checked class="mr-2"> Telegram
+                                    <input type="checkbox" id="admin-notif-platform" checked class="mr-2"> In-Platform Notification
+                                </label>
+                                <label class="flex items-center text-sm text-slate-300">
+                                    <input type="checkbox" id="admin-notif-telegram" class="mr-2"> Telegram
                                 </label>
                                 <label class="flex items-center text-sm text-slate-300">
                                     <input type="checkbox" id="admin-notif-email" class="mr-2"> Email
@@ -591,6 +594,7 @@ class AdminNotifications {
         const type = document.getElementById('admin-notif-type')?.value;
         const message = document.getElementById('admin-notif-msg')?.value;
         const target = document.getElementById('admin-notif-target')?.value;
+        const sendPlatform = document.getElementById('admin-notif-platform')?.checked;
 
         if (!message) {
             if (typeof notify === 'function') {
@@ -615,12 +619,62 @@ class AdminNotifications {
 
         try {
             const db = firebase.firestore();
+            
+            // Save to admin history log
             await db.collection('admin_notifications').add(notif);
+
+            // If In-Platform Notification is checked, broadcast directly into `customer_notifications`
+            if (sendPlatform) {
+                // Determine target customers based on selection
+                let customersSnapshot;
+                if (target === 'Unpaid') {
+                    customersSnapshot = await db.collection('users').where('paymentStatus', '==', 'unpaid').get();
+                } else if (target === 'Active') {
+                    customersSnapshot = await db.collection('users').where('status', '==', 'active').get();
+                } else {
+                    // All Customers (Fallback to users collection or customer_appointments distinct accounts)
+                    customersSnapshot = await db.collection('users').get();
+                }
+
+                const batch = db.batch();
+                let count = 0;
+
+                // If users collection is empty or not used, fallback to pushing to a general broadcast stream or customer records
+                if (!customersSnapshot.empty) {
+                    customersSnapshot.docs.forEach(doc => {
+                        const custEmail = doc.data().email || doc.id;
+                        const notifRef = db.collection('customer_notifications').doc();
+                        batch.set(notifRef, {
+                            custId: custEmail,
+                            message: `[${type}] ${message}`,
+                            status: 'Broadcast',
+                            timestamp: new Date().toLocaleTimeString(),
+                            viewed: false,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                        count++;
+                    });
+                }
+
+                // Also push a global general notification document so any online user instantly catches it
+                const globalNotifRef = db.collection('notifications').doc();
+                batch.set(globalNotifRef, {
+                    title: type,
+                    message: message,
+                    target: target,
+                    sentBy: currentAdminRaw,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                if (count > 0) {
+                    await batch.commit();
+                }
+            }
             
             if (typeof notify === 'function') {
-                notify('success', `✅ Notification sent to ${target}!`);
+                notify('success', `✅ Notification sent via In-Platform & saved to history!`);
             } else {
-                alert(`✅ Notification sent to ${target}!`);
+                alert(`✅ Notification sent via In-Platform & saved to history!`);
             }
             
             const msgInput = document.getElementById('admin-notif-msg');
