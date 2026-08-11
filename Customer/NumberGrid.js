@@ -9,18 +9,35 @@ class CustomerNumberGrid {
         this.custId = custId;
         this.selectedNumbers = db.getSelectedNumbers(custId);
         this.ticketPrice = 100;
+        this.rangeStart = 1;
+        this.rangeEnd = 300;
     }
 
-    render() {
+    async initRange() {
+        if (db && typeof db.collection === 'function') {
+            try {
+                const doc = await db.collection('settings').doc('main_draw_schedule').get();
+                if (doc.exists && doc.data().ticketRange) {
+                    this.rangeStart = Number(doc.data().ticketRange.start) || 1;
+                    this.rangeEnd = Number(doc.data().ticketRange.end) || 300;
+                }
+            } catch (e) {
+                console.error('Error fetching ticket range:', e);
+            }
+        }
+    }
+
+    async render() {
+        await this.initRange();
         let html = `
             <div class="space-y-4">
-                <h3 class="text-2xl font-bold text-white">🎫 Buy Ticket</h3>
+                <h3 class="text-2xl font-bold text-white">🎫 Buy Ticket (${this.rangeStart}-${this.rangeEnd})</h3>
                 <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
                     <p class="text-sm text-slate-300">Click numbers to select (max 10):</p>
                     <div id="numbers-grid" class="grid grid-cols-10 gap-2 max-h-64 overflow-y-auto p-4 bg-black/30 rounded-xl">
         `;
 
-        for (let i = 1; i <= 300; i++) {
+        for (let i = this.rangeStart; i <= this.rangeEnd; i++) {
             const isSelected = this.selectedNumbers.includes(i);
             const btnClass = isSelected 
                 ? 'w-8 h-8 bg-yellow-400 text-black text-xs font-bold rounded'
@@ -77,7 +94,7 @@ class CustomerNumberGrid {
         if (!container) return;
 
         let html = '';
-        for (let i = 1; i <= 300; i++) {
+        for (let i = this.rangeStart; i <= this.rangeEnd; i++) {
             const isSelected = this.selectedNumbers.includes(i);
             const btnClass = isSelected 
                 ? 'w-8 h-8 bg-yellow-400 text-black text-xs font-bold rounded'
