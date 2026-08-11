@@ -1,5 +1,5 @@
 // ============================================
-// ADMIN NOTIFICATIONS - FIXED V23 (IN-PLATFORM NOTIFICATION TARGET)
+// ADMIN NOTIFICATIONS - FIXED V24 (ISOLATED ADMIN TARGET)
 // ============================================
 
 class AdminNotifications {
@@ -61,7 +61,7 @@ class AdminNotifications {
                 this.loadPendingApprovals();
             }, e => console.error('Admin real-time listener error:', e));
 
-        // Real-time listener for Main Admin Broadcasts (`notifications` collection)
+        // Real-time listener for Main Admin Broadcasts & Admin-to-Admin broadcasts (`notifications` collection)
         this._unsubscribeBroadcasts = db.collection('notifications')
             .onSnapshot(snapshot => {
                 let hasNewBroadcast = false;
@@ -75,13 +75,19 @@ class AdminNotifications {
                 });
 
                 if (hasNewBroadcast && latestBroadcast) {
-                    const title = latestBroadcast.title || 'Admin Broadcast';
-                    const message = latestBroadcast.message || '';
-                    this.showExternalPopup(`📢 [MAIN ADMIN BROADCAST]: ${message}`, title);
-                    if (typeof notify === 'function') {
-                        notify('success', `📢 Main Admin Broadcast: ${title}`);
+                    const target = (latestBroadcast.target || '').toLowerCase();
+                    const isTargetingAdminsOnly = target === 'all admins' || target === 'admin only';
+                    
+                    // Only trigger popup if targeted to admins or general broadcast
+                    if (!isTargetingAdminsOnly || currentAdminRaw) {
+                        const title = latestBroadcast.title || 'Admin Broadcast';
+                        const message = latestBroadcast.message || '';
+                        this.showExternalPopup(`📢 [ADMIN NOTICE]: ${message}`, title);
+                        if (typeof notify === 'function') {
+                            notify('success', `📢 Notice: ${title}`);
+                        }
+                        this.loadPendingApprovals();
                     }
-                    this.loadPendingApprovals();
                 }
             }, e => console.error('Broadcast listener error:', e));
     }
@@ -95,7 +101,7 @@ class AdminNotifications {
                 <div style="display: flex; align-items: flex-start; gap: 12px;">
                     <span style="font-size: 24px;">📢</span>
                     <div style="flex: 1;">
-                        <h4 style="color: #facc15; font-size: 15px; font-weight: bold; margin: 0 0 4px 0;">${title} <span style="font-size:10px; background:#facc15; color:#000; padding:1px 5px; border-radius:4px; margin-left:4px;">BROADCAST</span></h4>
+                        <h4 style="color: #facc15; font-size: 15px; font-weight: bold; margin: 0 0 4px 0;">${title} <span style="font-size:10px; background:#facc15; color:#000; padding:1px 5px; border-radius:4px; margin-left:4px;">NOTICE</span></h4>
                         <p style="color: #cbd5e1; font-size: 13px; margin: 0 0 12px 0; line-height: 1.4;">${message}</p>
                         <button onclick="window.adminNotifications.dismissExternalPopup()" 
                             style="width: 100%; padding: 8px; background: #facc15; color: #000; font-weight: bold; border-radius: 6px; border: none; cursor: pointer; font-size: 12px;">
@@ -232,6 +238,7 @@ class AdminNotifications {
                                 <option>All Customers</option>
                                 <option>Unpaid</option>
                                 <option>Active</option>
+                                <option>All Admins (Admin Only)</option>
                             </select>
                         </div>
 
@@ -304,26 +311,26 @@ class AdminNotifications {
             const notifSnapshot = await db.collection('admin_notifications').get();
             const regularNotifs = notifSnapshot.docs.map(doc => ({ id: doc.id, collection: 'admin_notifications', ...doc.data() }));
 
-            // Fetch Main Admin broadcasts from the 'notifications' collection and assign a UNIQUE flag
+            // Fetch Main Admin broadcasts from the 'notifications' collection
             const broadcastSnapshot = await db.collection('notifications').get();
             const broadcastNotifs = broadcastSnapshot.docs.map(doc => {
                 const data = doc.data();
                 const tDate = data.createdAt?.toDate?.() || new Date(data.createdAt || Date.now());
                 return {
                     id: doc.id,
-                    collection: 'notifications', // Target collection for deletion
-                    type: '📢 MAIN ADMIN BROADCAST', // Unique Flag
+                    collection: 'notifications', 
+                    type: '📢 ADMIN NOTICE', 
                     isMainAdminBroadcast: true,
                     message: `[${data.title || 'Broadcast'}] ${data.message || ''}`,
                     timestamp: tDate.toLocaleTimeString(),
-                    sentBy: data.sentBy || 'Main Admin'
+                    sentBy: data.sentBy || 'Admin'
                 };
             });
 
             const combinedList = [...broadcastNotifs, ...regularNotifs];
 
             this.adminNotificationsList = combinedList.filter(n => {
-                if (n.isMainAdminBroadcast) return true; // Always show broadcasts to all admins
+                if (n.isMainAdminBroadcast) return true; 
                 const nAdmin = (n.adminId || n.adminEmail || '').toString().toLowerCase().trim();
                 return currentAdminRaw ? (nAdmin === currentAdminRaw || !nAdmin) : true;
             });
@@ -619,52 +626,63 @@ class AdminNotifications {
 
         try {
             const db = firebase.firestore();
-            
+            const isAdminOnlyTarget = target.toLowerCase().includes('admin');
+
             // Save to admin history log
             await db.collection('admin_notifications').add(notif);
 
-            // If In-Platform Notification is checked, broadcast directly into `customer_notifications`
+            // If In-Platform Notification is checked
             if (sendPlatform) {
-                // Determine target customers based on selection
-                let customersSnapshot;
-                if (target === 'Unpaid') {
-                    customersSnapshot = await db.collection('users').where('paymentStatus', '==', 'unpaid').get();
-                } else if (target === 'Active') {
-                    customersSnapshot = await db.collection('users').where('status', '==', 'active').get();
-                } else {
-                    // All Customers (Fallback to users collection or customer_appointments distinct accounts)
-                    customersSnapshot = await db.collection('users').get();
-                }
-
                 const batch = db.batch();
                 let count = 0;
 
-                // If users collection is empty or not used, fallback to pushing to a general broadcast stream or customer records
-                if (!customersSnapshot.empty) {
-                    customersSnapshot.docs.forEach(doc => {
-                        const custEmail = doc.data().email || doc.id;
-                        const notifRef = db.collection('customer_notifications').doc();
-                        batch.set(notifRef, {
-                            custId: custEmail,
-                            message: `[${type}] ${message}`,
-                            status: 'Broadcast',
-                            timestamp: new Date().toLocaleTimeString(),
-                            viewed: false,
-                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                if (isAdminOnlyTarget) {
+                    // Save to global notifications stream so only admins receive it in their listener
+                    const globalNotifRef = db.collection('notifications').doc();
+                    batch.set(globalNotifRef, {
+                        title: type,
+                        message: message,
+                        target: 'Admin Only',
+                        sentBy: currentAdminRaw,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    count++;
+                } else {
+                    // Send to customer accounts
+                    let customersSnapshot;
+                    if (target === 'Unpaid') {
+                        customersSnapshot = await db.collection('users').where('paymentStatus', '==', 'unpaid').get();
+                    } else if (target === 'Active') {
+                        customersSnapshot = await db.collection('users').where('status', '==', 'active').get();
+                    } else {
+                        customersSnapshot = await db.collection('users').get();
+                    }
+
+                    if (!customersSnapshot.empty) {
+                        customersSnapshot.docs.forEach(doc => {
+                            const custEmail = doc.data().email || doc.id;
+                            const notifRef = db.collection('customer_notifications').doc();
+                            batch.set(notifRef, {
+                                custId: custEmail,
+                                message: `[${type}] ${message}`,
+                                status: 'Broadcast',
+                                timestamp: new Date().toLocaleTimeString(),
+                                viewed: false,
+                                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                            });
+                            count++;
                         });
-                        count++;
+                    }
+
+                    const globalNotifRef = db.collection('notifications').doc();
+                    batch.set(globalNotifRef, {
+                        title: type,
+                        message: message,
+                        target: target,
+                        sentBy: currentAdminRaw,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
                 }
-
-                // Also push a global general notification document so any online user instantly catches it
-                const globalNotifRef = db.collection('notifications').doc();
-                batch.set(globalNotifRef, {
-                    title: type,
-                    message: message,
-                    target: target,
-                    sentBy: currentAdminRaw,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
 
                 if (count > 0) {
                     await batch.commit();
@@ -672,9 +690,9 @@ class AdminNotifications {
             }
             
             if (typeof notify === 'function') {
-                notify('success', `✅ Notification sent via In-Platform & saved to history!`);
+                notify('success', `✅ Notification sent successfully!`);
             } else {
-                alert(`✅ Notification sent via In-Platform & saved to history!`);
+                alert(`✅ Notification sent successfully!`);
             }
             
             const msgInput = document.getElementById('admin-notif-msg');
