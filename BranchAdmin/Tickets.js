@@ -1,5 +1,5 @@
 // ============================================
-// ADMIN TICKETS MODULE COMPONENT
+// ADMIN TICKETS MODULE COMPONENT (EYE-FRIENDLY UI DESIGN)
 // ============================================
 
 class AdminTickets {
@@ -11,20 +11,20 @@ class AdminTickets {
     render() {
         return `
             <div class="space-y-4">
-                <h3 class="text-xl font-bold text-white">Recent Tickets</h3>
+                <h3 class="text-2xl font-bold text-white">📋 Customer Tickets & Requests</h3>
                 <div id="admin-tickets-list" class="space-y-3"></div>
             </div>
 
             <!-- Receipt Modal Preview Container -->
-            <div id="receipt-modal" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center p-4">
-                <div class="glass-panel rounded-2xl max-w-2xl w-full p-6 border border-yellow-400/30 space-y-4 bg-black relative">
+            <div id="receipt-modal" class="fixed inset-0 bg-black/85 z-50 hidden flex items-center justify-center p-4">
+                <div class="glass-panel rounded-2xl max-w-2xl w-full p-6 border border-yellow-400/30 space-y-4 bg-black relative shadow-2xl">
                     <div class="flex justify-between items-center border-b border-yellow-400/20 pb-3">
                         <h4 class="text-base font-bold text-yellow-400">📄 Attached Payment Document / Receipt</h4>
-                        <button onclick="window.adminTickets.closeReceiptModal()" class="text-slate-400 hover:text-white text-lg font-bold">&times;</button>
+                        <button onclick="window.adminTickets.closeReceiptModal()" class="text-slate-400 hover:text-white text-base font-bold px-2 py-1 rounded-lg bg-slate-900 border border-slate-800">&times;</button>
                     </div>
                     <div id="receipt-modal-content" class="flex justify-center items-center max-h-[70vh] overflow-auto py-2"></div>
                     <div class="flex justify-end pt-3 border-t border-yellow-400/20">
-                        <button onclick="window.adminTickets.closeReceiptModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold">Close Preview</button>
+                        <button onclick="window.adminTickets.closeReceiptModal()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition-all">Close Preview</button>
                     </div>
                 </div>
             </div>
@@ -74,7 +74,7 @@ class AdminTickets {
         if (!content) return;
 
         if (this.tickets.length === 0) {
-            content.innerHTML = '<p class="text-slate-400">No tickets from your customers yet</p>';
+            content.innerHTML = '<div class="glass-panel rounded-2xl p-8 border border-yellow-400/10 text-center text-slate-400">No tickets from your customers yet</div>';
             this.updateTicketsTabBadge(0);
             return;
         }
@@ -82,6 +82,8 @@ class AdminTickets {
         let pendingCount = 0;
 
         content.innerHTML = this.tickets.map(ticket => {
+            const isApproved = ticket.status === 'Approved' || ticket.status === 'active';
+            const isRejected = ticket.status === 'Rejected';
             const isPending = !ticket.status || ticket.status === 'Pending';
             const ticketId = ticket.id;
 
@@ -96,30 +98,42 @@ class AdminTickets {
                 `;
             }
 
+            const statusColor = isApproved ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 
+                                (isRejected ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-yellow-400/20 text-yellow-400 border border-yellow-400/30 animate-pulse');
+            
+            const statusText = isApproved ? `Approved by ${ticket.approvedByAdminName || ticket.assignedAdmin || 'Admin'}` : (isRejected ? 'Rejected' : 'Pending Review');
+            const createdAtDate = ticket.createdAt?.toDate ? ticket.createdAt.toDate().toLocaleString() : (ticket.createdAt ? new Date(ticket.createdAt).toLocaleString() : 'N/A');
+
             const attachmentUrl = ticket.receiptFile || ticket.receiptUrl || ticket.attachment || ticket.fileUrl || ticket.imageUrl || null;
-            let attachmentButton = attachmentUrl ? `
-                <button onclick="window.adminTickets.viewReceipt('${attachmentUrl.replace(/'/g, "\\'")}')" class="px-3 py-1.5 bg-yellow-400/10 hover:bg-yellow-400/20 text-yellow-300 border border-yellow-400/30 font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all">
-                    <span>📄</span> View Attached Receipt
+            let attachmentSection = attachmentUrl ? `
+                <button onclick="window.adminTickets.viewReceipt('${attachmentUrl.replace(/'/g, "\\'")}')" class="px-3 py-1.5 bg-yellow-400/10 hover:bg-yellow-400/20 text-yellow-300 border border-yellow-400/30 font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all w-fit">
+                    <span>📄</span> View Attached Receipt Document
                 </button>
             ` : `<span class="text-[11px] text-slate-500 italic">No receipt attached</span>`;
 
             return `
-                <div class="glass-panel rounded-lg p-4 border ${isPending ? 'border-yellow-400/50 bg-yellow-500/[0.02]' : 'border-yellow-400/10'} text-xs space-y-2 relative mt-3">
+                <div class="glass-panel rounded-xl p-5 border ${isPending ? 'border-yellow-400/50 bg-yellow-500/[0.02]' : 'border-yellow-400/10'} text-xs space-y-3 relative mt-3 shadow-lg">
                     ${notificationBadge}
-                    <p class="text-white font-bold text-sm">Customer: ${ticket.customerName || 'N/A'} (${ticket.customerEmail || ''})</p>
-                    <p class="text-slate-400">Numbers: ${ticket.numbers?.join(', ') || 'N/A'}</p>
-                    <p class="text-slate-400">Cost: ${ticket.cost} ETB • Payment: ${ticket.paymentMethod || 'N/A'}</p>
-                    
-                    <div class="py-1 flex items-center justify-between">
-                        ${attachmentButton}
-                    </div>
-
-                    <div class="flex justify-between items-center pt-2 border-t border-yellow-400/10">
-                        <span class="px-2 py-1 bg-yellow-400/20 text-yellow-400 rounded">${ticket.status || 'Pending'}</span>
-                        <div class="flex gap-2">
-                            <button onclick="window.adminTickets.approvePayment('${ticketId}')" class="px-3 py-1 bg-emerald-600 text-white font-bold rounded hover:bg-emerald-500">Approve</button>
-                            <button onclick="window.adminTickets.rejectPayment('${ticketId}')" class="px-3 py-1 bg-red-600 text-white font-bold rounded hover:bg-red-500">Reject</button>
-                            <button onclick="window.adminTickets.deleteTicket('${ticketId}')" class="px-3 py-1 bg-slate-800 hover:bg-rose-900 text-rose-400 border border-rose-500/20 font-bold rounded">🗑️ Delete</button>
+                    <div class="flex flex-col sm:flex-row justify-between items-start gap-4">
+                        <div class="space-y-1.5">
+                            <p class="font-extrabold text-white text-base">Ticket ID: <span class="font-mono text-yellow-400">${ticketId}</span></p>
+                            <p class="text-slate-300">Customer Name: <span class="text-white font-medium">${ticket.customerName || 'N/A'}</span> (${ticket.customerEmail || ''})</p>
+                            <p class="text-slate-300">Selected Numbers: <span class="text-yellow-400 font-bold tracking-wide">${ticket.numbers?.join(', ') || 'N/A'}</span></p>
+                            <p class="text-slate-300">Amount: <span class="text-purple-400 font-bold">${ticket.cost || 0} ETB</span></p>
+                            <p class="text-slate-300">Payment Method: <span class="text-slate-200 font-medium">${ticket.paymentMethod || 'N/A'}</span></p>
+                            <p class="text-slate-300">Transaction ID / Ref: <span class="text-slate-200 font-mono">${ticket.transactionId || 'N/A'}</span></p>
+                            <p class="text-slate-400 pt-0.5">Date: ${createdAtDate}</p>
+                            <div class="pt-1">
+                                ${attachmentSection}
+                            </div>
+                        </div>
+                        <div class="flex flex-col sm:items-end gap-3 w-full sm:w-auto">
+                            <span class="px-3 py-1 rounded-md text-xs font-bold ${statusColor}">${statusText}</span>
+                            <div class="flex flex-wrap gap-2 pt-1">
+                                <button onclick="window.adminTickets.approvePayment('${ticketId}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs transition-all shadow-sm">Approve</button>
+                                <button onclick="window.adminTickets.rejectPayment('${ticketId}')" class="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg text-xs transition-all shadow-sm">Reject</button>
+                                <button onclick="window.adminTickets.deleteTicket('${ticketId}')" class="px-3 py-1.5 bg-slate-900 hover:bg-rose-900/60 text-rose-400 border border-rose-500/25 font-bold rounded-lg text-xs transition-all">🗑️ Delete</button>
+                            </div>
                         </div>
                     </div>
                 </div>
