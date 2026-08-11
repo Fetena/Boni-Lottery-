@@ -8,6 +8,37 @@ class Notifications {
         this.adminsList = [];
         this.selectedIds = new Set();
         this.lastSeenCount = parseInt(localStorage.getItem('admin_last_seen_notif_count') || '0', 10);
+        this.startRealtimeListener();
+    }
+
+    startRealtimeListener() {
+        if (typeof firebase === 'undefined' || !firebase.firestore) return;
+        const db = firebase.firestore();
+
+        if (this._unsubscribeNotifs) this._unsubscribeNotifs();
+
+        this._unsubscribeNotifs = db.collection('notifications')
+            .onSnapshot(snapshot => {
+                let hasNew = false;
+                let latest = null;
+
+                snapshot.docChanges().forEach(change => {
+                    if (change.type === 'added') {
+                        const data = change.doc.data();
+                        hasNew = true;
+                        latest = { id: change.doc.id, ...data };
+                    }
+                });
+
+                if (hasNew && latest) {
+                    this.showPopup(latest.title || 'New Notification', latest.message || '');
+                    if (typeof notify === 'function') {
+                        notify('success', `🔔 New Notification: ${latest.title || 'Alert'}`);
+                    }
+                }
+
+                this.loadData();
+            }, e => console.error('Notifications real-time listener error:', e));
     }
 
     render() {
@@ -108,10 +139,6 @@ class Notifications {
                 return timeB - timeA;
             });
 
-            if (this.notifications.length > this.lastSeenCount && this.lastSeenCount > 0) {
-                const latest = this.notifications[0];
-                this.showPopup(latest.title, latest.message);
-            }
             this.lastSeenCount = this.notifications.length;
             localStorage.setItem('admin_last_seen_notif_count', this.lastSeenCount);
 
@@ -255,7 +282,9 @@ class Notifications {
                     <div class="flex items-start justify-between gap-3 border-b border-white/5 pb-3">
                         <div class="flex items-center gap-3">
                             <input type="checkbox" data-id="${notif.id}" ${isChecked} onchange="window.mainAdminDashboard.notifications.toggleItemCheckbox(this, '${notif.id}')" class="notif-checkbox w-4 h-4 rounded border-slate-700 bg-slate-900 text-yellow-400 focus:ring-0 cursor-pointer">
-                            <span class="px-2 py-0.5 rounded bg-yellow-400/20 text-yellow-400 border border-yellow-400/30 font-bold text-[10px]">${notif.recipient || 'Admins Only'}</span>
+                            <span class="px-2 py-0.5 rounded bg-yellow-400/20 text-yellow-400 border border-yellow-400/30 font-bold text-[10px] flex items-center gap-1.5">
+                                📢 [ADMIN BROADCAST] ${notif.recipient || 'Admins Only'}
+                            </span>
                         </div>
                         <button onclick="window.mainAdminDashboard.notifications.deleteNotification('${notif.id}')" class="px-3 py-1 bg-slate-900 hover:bg-rose-900/60 text-rose-400 border border-rose-500/25 font-bold rounded-lg transition-all">🗑️ Delete</button>
                     </div>
