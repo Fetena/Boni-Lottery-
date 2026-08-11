@@ -280,34 +280,44 @@ async function generateNumbersGrid() {
     const grid = document.getElementById('numbers-grid');
     if (!grid) return;
 
-    // Default range values
     let rangeStart = 1;
-    let rangeEnd = 300;
+    let rangeEnd = 100; // Matches default admin range end
 
-    // 1. Check if range is cached or stored in window/localStorage first for instant load
-    if (window.activeTicketRange) {
-        rangeStart = window.activeTicketRange.start;
-        rangeEnd = window.activeTicketRange.end;
-    } else if (localStorage.getItem('admin_ticket_range_end')) {
-        rangeEnd = parseInt(localStorage.getItem('admin_ticket_range_end')) || 300;
-    }
-
-    // 2. Fetch live from Firestore database to ensure sync with Main Admin settings
-    if (db && typeof db.collection === 'function') {
+    if (db && typeof db.collection === 'function' && currentUser) {
         try {
-            // Check main admin or global settings collection paths
-            const snapshot = await db.collection('settings').doc('main_draw_schedule').get();
-            if (snapshot.exists) {
-                const data = snapshot.data();
-                if (data.ticketRange) {
-                    rangeStart = Number(data.ticketRange.start) || 1;
-                    rangeEnd = Number(data.ticketRange.end) || 300;
-                } else if (data.rangeEnd || data.maxNumber) {
-                    rangeEnd = Number(data.rangeEnd || data.maxNumber) || 300;
+            let assignedAdminEmail = null;
+
+            // 1. Find which admin this customer is assigned to
+            const custSettingsDoc = await db.collection('customer_settings').doc(currentUser.email).get();
+            if (custSettingsDoc.exists && custSettingsDoc.data().preferredAdmin) {
+                assignedAdminEmail = custSettingsDoc.data().preferredAdmin;
+            }
+
+            // 2. If no preferred admin in settings, try finding it from their tickets or default to the first available admin
+            if (!assignedAdminEmail) {
+                const adminsSnap = await db.collection('admins').limit(1).get();
+                if (!adminsSnap.empty) {
+                    assignedAdminEmail = adminsSnap.docs[0].id;
+                }
+            }
+
+            // 3. Fetch the exact ticketRange configured for that specific admin
+            if (assignedAdminEmail) {
+                const adminDoc = await db.collection('admins').doc(assignedAdminEmail).get();
+                if (adminDoc.exists && adminDoc.data().ticketRange) {
+                    rangeStart = Number(adminDoc.data().ticketRange.start) || 1;
+                    rangeEnd = Number(adminDoc.data().ticketRange.end) || 100;
+                } else {
+                    // Fallback to checking admin_settings collection
+                    const adminSettingsDoc = await db.collection('admin_settings').doc(assignedAdminEmail).get();
+                    if (adminSettingsDoc.exists && adminSettingsDoc.data().ticketRange) {
+                        rangeStart = Number(adminSettingsDoc.data().ticketRange.start) || 1;
+                        rangeEnd = Number(adminSettingsDoc.data().ticketRange.end) || 100;
+                    }
                 }
             }
         } catch (e) {
-            console.error('Error fetching range from Firestore:', e);
+            console.error('Error fetching admin ticket range for customer:', e);
         }
     }
 
@@ -317,11 +327,11 @@ async function generateNumbersGrid() {
         headingEl.textContent = `Select Numbers (${rangeStart}-${rangeEnd})`;
     }
 
-    // Re-render the grid based on the verified dynamic range end
+    // Re-render the grid based on the admin's custom range bounds
     grid.innerHTML = '';
     
-    // Adjust CSS columns dynamically if range is large (e.g. up to 500 or 1000)
-    if (rangeEnd > 300) {
+    // Adjust grid columns if the range is large
+    if (rangeEnd > 100) {
         grid.className = "grid grid-cols-8 sm:grid-cols-12 gap-1.5 sm:gap-2 max-h-96 overflow-y-auto p-2";
     }
 
