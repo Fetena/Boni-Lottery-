@@ -1,5 +1,5 @@
 // ============================================
-// MAIN ADMIN - NOTIFICATIONS (ADMIN-TO-ADMIN & POPUP ALERTS)[cite: 11]
+// MAIN ADMIN - NOTIFICATIONS (ADMIN-TO-ADMIN & POPUP ALERTS)
 // ============================================
 
 class Notifications {
@@ -71,12 +71,10 @@ class Notifications {
         try {
             if (!db) return;
 
-            // Fetch only admin-related notifications, omitting customers entirely
             const snapshot = await db.collection('notifications')
                 .where('recipient', 'in', ['Admins Only', 'Main Admin Only', 'All Admins'])
                 .get();
 
-            // Fallback or sort manually if composite index is absent
             this.notifications = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
@@ -86,7 +84,6 @@ class Notifications {
                 return timeB - timeA;
             });
 
-            // Check for brand new notifications to trigger popup alert
             if (this.notifications.length > this.lastSeenCount && this.lastSeenCount > 0) {
                 const latest = this.notifications[0];
                 this.showPopup(latest.title, latest.message);
@@ -226,4 +223,3 @@ class Notifications {
         }
     }
 }
-```[cite: 11]
