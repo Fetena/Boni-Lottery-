@@ -1,5 +1,5 @@
 // ============================================
-// MAIN ADMIN - TRANSACTIONS & TICKET APPROVALS (WITH RECEIPT POPUP)
+// MAIN ADMIN - TRANSACTIONS & TICKET APPROVALS (WITH RECEIPT POPUP & DELETE)
 // ============================================
 
 class Transactions {
@@ -85,6 +85,18 @@ class Transactions {
         }
     }
 
+    async deleteTransaction(docId) {
+        if (!confirm('Are you sure you want to delete this transaction/ticket?')) return;
+        if (!db) return notify('error', '❌ Database not initialized');
+        try {
+            await db.collection('customer_tickets').doc(docId).delete();
+            notify('success', '🗑️ Transaction deleted successfully!');
+            await this.loadData();
+        } catch (error) {
+            notify('error', `❌ Error: ${error.message}`);
+        }
+    }
+
     viewReceipt(url) {
         const modal = document.getElementById('main-admin-receipt-modal');
         const container = document.getElementById('main-admin-receipt-content');
@@ -138,9 +150,10 @@ class Transactions {
                         </div>
                         <div class="flex flex-col sm:items-end gap-3 w-full sm:w-auto">
                             <span class="px-3 py-1 rounded-md text-xs font-bold ${statusColor}">${trans.status || 'Pending'}</span>
-                            <div class="flex gap-2 pt-1">
+                            <div class="flex flex-wrap gap-2 pt-1">
                                 <button onclick="window.mainAdminDashboard.transactions.approvePayment('${trans.id}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs transition-all shadow-sm">Approve</button>
                                 <button onclick="window.mainAdminDashboard.transactions.rejectPayment('${trans.id}')" class="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg text-xs transition-all shadow-sm">Reject</button>
+                                <button onclick="window.mainAdminDashboard.transactions.deleteTransaction('${trans.id}')" class="px-3 py-1.5 bg-slate-900 hover:bg-rose-900/60 text-rose-400 border border-rose-500/25 font-bold rounded-lg text-xs transition-all">🗑️ Delete</button>
                             </div>
                         </div>
                     </div>
