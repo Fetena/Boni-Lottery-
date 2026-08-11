@@ -1,5 +1,5 @@
 // ============================================
-// ADMIN NOTIFICATIONS - FIXED V25 (MAIN ADMIN TARGET)
+// ADMIN NOTIFICATIONS - FIXED V26 (ISOLATED ADMIN & MAIN ADMIN POPUPS)
 // ============================================
 
 class AdminNotifications {
@@ -25,7 +25,7 @@ class AdminNotifications {
         if (this._unsubscribeAdminNotifs) this._unsubscribeAdminNotifs();
         if (this._unsubscribeBroadcasts) this._unsubscribeBroadcasts();
 
-        // Listener for customer appointments
+        // 1. Listener for customer appointments
         this._unsubscribeAdminNotifs = db.collection('customer_appointments')
             .onSnapshot(snapshot => {
                 let hasNewUnnotified = false;
@@ -61,34 +61,41 @@ class AdminNotifications {
                 this.loadPendingApprovals();
             }, e => console.error('Admin real-time listener error:', e));
 
-        // Real-time listener for Main Admin Broadcasts & Main Admin targeted notifications (`notifications` collection)
+        // 2. Real-time listener for Platform Broadcasts (`notifications` collection) with Strict Role Isolation
         this._unsubscribeBroadcasts = db.collection('notifications')
             .onSnapshot(snapshot => {
-                let hasNewBroadcast = false;
-                let latestBroadcast = null;
-
                 snapshot.docChanges().forEach(change => {
                     if (change.type === 'added') {
-                        hasNewBroadcast = true;
-                        latestBroadcast = { id: change.doc.id, ...change.doc.data() };
-                    }
-                });
+                        const broadcastData = change.doc.data();
+                        const target = (broadcastData.target || '').toLowerCase();
+                        
+                        // Check if user is Main Admin (e.g. mainadmin@gmail.com or designated main admin flag/email)
+                        // Adjust condition based on your platform's main admin identifier, or check if target matches 'main admin'
+                        const isMainAdmin = currentAdminRaw.includes('mainadmin') || currentAdminRaw === 'main@gmail.com'; // Change or extend to match your main admin account
 
-                if (hasNewBroadcast && latestBroadcast) {
-                    const target = (latestBroadcast.target || '').toLowerCase();
-                    const isTargetingMainAdmin = target === 'main admin' || target === 'main admin only';
-                    
-                    // Only trigger popup if targeted to Main Admin or general broadcast
-                    if (!isTargetingMainAdmin || currentAdminRaw) {
-                        const title = latestBroadcast.title || 'Admin Broadcast';
-                        const message = latestBroadcast.message || '';
+                        const isTargetingMainAdminOnly = target.includes('main admin') || target.includes('main admin only');
+                        const isTargetingAdminsOnly = target.includes('admins only') || target.includes('all admins');
+
+                        // 🛑 ISOLATION LOGIC:
+                        // - If it targets Main Admin Only, ONLY show popup if the current user IS the Main Admin.
+                        // - If it targets Admins Only (sent from Main Admin to Branch Admins), ONLY show popup if the current user is a Branch Admin (NOT Main Admin).
+                        if (isTargetingMainAdminOnly && !isMainAdmin) {
+                            return; // Skip showing Main Admin targeted notices to regular admins
+                        }
+                        if (isTargetingAdminsOnly && isMainAdmin) {
+                            return; // Skip showing regular admin broadcasts to Main Admin if desired, or let them see it. Let's make sure branch admin notices trigger for branch admins.
+                        }
+
+                        const title = broadcastData.title || 'Broadcast Notice';
+                        const message = broadcastData.message || '';
+                        
                         this.showExternalPopup(`📢 [NOTICE]: ${message}`, title);
                         if (typeof notify === 'function') {
                             notify('success', `📢 Notice: ${title}`);
                         }
                         this.loadPendingApprovals();
                     }
-                }
+                });
             }, e => console.error('Broadcast listener error:', e));
     }
 
@@ -239,6 +246,7 @@ class AdminNotifications {
                                 <option>Unpaid</option>
                                 <option>Active</option>
                                 <option>Main Admin</option>
+                                <option>Admins Only</option>
                             </select>
                         </div>
 
@@ -627,6 +635,7 @@ class AdminNotifications {
         try {
             const db = firebase.firestore();
             const isMainAdminTarget = target.toLowerCase().includes('main admin');
+            const isAdminOnlyTarget = target.toLowerCase().includes('admins only');
 
             // Save to admin history log
             await db.collection('admin_notifications').add(notif);
@@ -636,13 +645,13 @@ class AdminNotifications {
                 const batch = db.batch();
                 let count = 0;
 
-                if (isMainAdminTarget) {
-                    // Save to global notifications stream so only the Main Admin receives it in their listener
+                if (isMainAdminTarget || isAdminOnlyTarget) {
+                    // Save to global `notifications` collection with targeted property so only intended roles get popups
                     const globalNotifRef = db.collection('notifications').doc();
                     batch.set(globalNotifRef, {
                         title: type,
                         message: message,
-                        target: 'Main Admin',
+                        target: target, // 'Main Admin' or 'Admins Only'
                         sentBy: currentAdminRaw,
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
