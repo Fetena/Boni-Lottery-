@@ -1,10 +1,11 @@
 // ============================================
-// MAIN ADMIN - NOTIFICATIONS (ADMIN-TO-ADMIN & POPUP ALERTS)
+// MAIN ADMIN - NOTIFICATIONS (WITH SPECIFIC ADMIN TARGETING & GROUPS)
 // ============================================
 
 class Notifications {
     constructor() {
         this.notifications = [];
+        this.adminsList = [];
         this.lastSeenCount = parseInt(localStorage.getItem('admin_last_seen_notif_count') || '0', 10);
     }
 
@@ -22,7 +23,7 @@ class Notifications {
             <div id="send-notification-modal" class="fixed inset-0 bg-black/85 z-50 hidden flex items-center justify-center p-4">
                 <div class="glass-panel rounded-2xl max-w-lg w-full p-6 border border-yellow-400/30 space-y-4 bg-black relative shadow-2xl">
                     <div class="flex justify-between items-center border-b border-yellow-400/20 pb-3">
-                        <h4 class="text-base font-bold text-yellow-400">📨 Broadcast to Admins Only</h4>
+                        <h4 class="text-base font-bold text-yellow-400">📨 Broadcast to Admins</h4>
                         <button onclick="window.mainAdminDashboard.notifications.closeSendModal()" class="text-slate-400 hover:text-white text-base font-bold px-2 py-1 rounded-lg bg-slate-900 border border-slate-800">&times;</button>
                     </div>
                     <div class="space-y-3 text-xs">
@@ -35,10 +36,15 @@ class Notifications {
                             <textarea id="notif-message-input" placeholder="Write message details for other admins..." rows="4" class="w-full bg-slate-900/80 border border-yellow-400/20 rounded-xl py-2.5 px-4 text-white resize-none focus:border-yellow-400 outline-none"></textarea>
                         </div>
                         <div class="space-y-1">
-                            <label class="text-slate-300 font-medium">Target Recipient Group</label>
+                            <label class="text-slate-300 font-medium">Target Recipient Group or Specific Admin</label>
                             <select id="notif-recipient-input" class="w-full bg-slate-900/80 border border-yellow-400/20 rounded-xl py-2.5 px-4 text-white focus:border-yellow-400 outline-none">
-                                <option value="Admins Only">Admins Only (Main Admin & Branch Admins)</option>
-                                <option value="Main Admin Only">Main Admin Only</option>
+                                <optgroup label="Groups">
+                                    <option value="Admins Only">Admins Only (Main Admin & Branch Admins)</option>
+                                    <option value="Main Admin Only">Main Admin Only</option>
+                                </optgroup>
+                                <optgroup label="Specific Admins" id="specific-admins-options">
+                                    <!-- Dynamically loaded admins -->
+                                </optgroup>
                             </select>
                         </div>
                         <div class="flex gap-2 pt-2">
@@ -71,9 +77,16 @@ class Notifications {
         try {
             if (!db) return;
 
-            const snapshot = await db.collection('notifications')
-                .where('recipient', 'in', ['Admins Only', 'Main Admin Only', 'All Admins'])
-                .get();
+            // Load list of admins for specific targeting option
+            try {
+                const adminSnap = await db.collection('admins').get();
+                this.adminsList = adminSnap.docs.map(doc => doc.data().email || doc.data().name).filter(Boolean);
+                this.updateAdminDropdown();
+            } catch (e) {
+                console.warn('Could not fetch admins list for targeting:', e);
+            }
+
+            const snapshot = await db.collection('notifications').get();
 
             this.notifications = snapshot.docs.map(doc => ({
                 id: doc.id,
@@ -98,6 +111,15 @@ class Notifications {
         } catch (error) {
             console.error('Error loading notifications:', error);
         }
+    }
+
+    updateAdminDropdown() {
+        const groupContainer = document.getElementById('specific-admins-options');
+        if (!groupContainer || this.adminsList.length === 0) return;
+
+        groupContainer.innerHTML = this.adminsList.map(adminEmail => 
+            `<option value="Admin: ${adminEmail}">Admin: ${adminEmail}</option>`
+        ).join('');
     }
 
     showPopup(title, message) {
@@ -189,10 +211,10 @@ class Notifications {
             });
 
             if (typeof AuditLog !== 'undefined' && typeof AuditLog.logAction === 'function') {
-                await AuditLog.logAction('Send Admin Notification', adminName, `Title: ${title}`, 'INFO');
+                await AuditLog.logAction('Send Admin Notification', adminName, `Title: ${title} to ${recipient}`, 'INFO');
             }
 
-            notify('success', '✅ Notification sent successfully to admins!');
+            notify('success', '✅ Notification sent successfully!');
             this.closeSendModal();
             
             const titleEl = document.getElementById('notif-title-input');
