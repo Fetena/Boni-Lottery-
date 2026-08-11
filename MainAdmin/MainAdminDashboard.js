@@ -41,7 +41,7 @@ class MainAdminDashboard {
                             <button onclick="window.mainAdminDashboard.switchTab('customers', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">👥 Customers</button>
                             <button onclick="window.mainAdminDashboard.switchTab('ranges', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📊 Ranges</button>
                             <button onclick="window.mainAdminDashboard.switchTab('payments', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">💳 Payments</button>
-                            <button onclick="window.mainAdminDashboard.switchTab('analytics', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📈 Analytics</button>
+                           // <button onclick="window.mainAdminDashboard.switchTab('analytics', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📈 Analytics</button>
                             <button onclick="window.mainAdminDashboard.switchTab('transactions', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📋 Transactions</button>
                             <button onclick="window.mainAdminDashboard.switchTab('auditlog', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🔒 Audit</button>                         
                             <button onclick="window.mainAdminDashboard.switchTab('bookings', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 relative">
