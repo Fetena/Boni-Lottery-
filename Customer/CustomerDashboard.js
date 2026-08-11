@@ -280,47 +280,51 @@ async function generateNumbersGrid() {
     const grid = document.getElementById('numbers-grid');
     if (!grid) return;
 
+    // Default range values
     let rangeStart = 1;
-    let rangeEnd = 300; // Final absolute fallback
+    let rangeEnd = 300;
 
+    // 1. Check if range is cached or stored in window/localStorage first for instant load
+    if (window.activeTicketRange) {
+        rangeStart = window.activeTicketRange.start;
+        rangeEnd = window.activeTicketRange.end;
+    } else if (localStorage.getItem('admin_ticket_range_end')) {
+        rangeEnd = parseInt(localStorage.getItem('admin_ticket_range_end')) || 300;
+    }
+
+    // 2. Fetch live from Firestore database to ensure sync with Main Admin settings
     if (db && typeof db.collection === 'function') {
         try {
-            // Check multiple potential Firestore paths where admin settings might be stored
-            const paths = [
-                db.collection('settings').doc('main_draw_schedule'),
-                db.collection('admin_settings').doc('general'),
-                db.collection('settings').doc('admin_config'),
-                db.collection('settings').doc('draw_settings')
-            ];
-
-            for (const pathRef of paths) {
-                const doc = await pathRef.get();
-                if (doc.exists) {
-                    const data = doc.data();
-                    
-                    // Check various possible object structures or field names
-                    if (data.ticketRange) {
-                        rangeStart = Number(data.ticketRange.start) || 1;
-                        rangeEnd = Number(data.ticketRange.end) || 300;
-                        break;
-                    } else if (data.rangeEnd || data.maxTicket || data.end) {
-                        rangeStart = Number(data.rangeStart || data.minTicket || data.start) || 1;
-                        rangeEnd = Number(data.rangeEnd || data.maxTicket || data.end) || 300;
-                        break;
-                    }
+            // Check main admin or global settings collection paths
+            const snapshot = await db.collection('settings').doc('main_draw_schedule').get();
+            if (snapshot.exists) {
+                const data = snapshot.data();
+                if (data.ticketRange) {
+                    rangeStart = Number(data.ticketRange.start) || 1;
+                    rangeEnd = Number(data.ticketRange.end) || 300;
+                } else if (data.rangeEnd || data.maxNumber) {
+                    rangeEnd = Number(data.rangeEnd || data.maxNumber) || 300;
                 }
             }
         } catch (e) {
-            console.error('Error fetching dynamic ticket range:', e);
+            console.error('Error fetching range from Firestore:', e);
         }
     }
 
-    const headingEl = document.getElementById('cust-buytickets-heading');
+    // Update heading title dynamically
+    const headingEl = document.getElementById('cust-buytickets-heading') || document.querySelector('#cust-buytickets h3');
     if (headingEl) {
         headingEl.textContent = `Select Numbers (${rangeStart}-${rangeEnd})`;
     }
 
+    // Re-render the grid based on the verified dynamic range end
     grid.innerHTML = '';
+    
+    // Adjust CSS columns dynamically if range is large (e.g. up to 500 or 1000)
+    if (rangeEnd > 300) {
+        grid.className = "grid grid-cols-8 sm:grid-cols-12 gap-1.5 sm:gap-2 max-h-96 overflow-y-auto p-2";
+    }
+
     for (let i = rangeStart; i <= rangeEnd; i++) {
         const btn = document.createElement('button');
         btn.type = 'button';
