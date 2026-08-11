@@ -44,7 +44,7 @@ class CustomerDashboard {
                         <!-- Buy Tickets Tab -->
                         <div id="cust-buytickets" class="tab-content" style="display: none;">
                             <div class="space-y-4">
-                                <h3 class="text-xl font-bold text-white">Select Numbers (1-300)</h3>
+                                <h3 id="cust-buytickets-heading" class="text-xl font-bold text-white">Select Numbers</h3>
                                 <!-- Responsive 6-col grid on mobile, 10-col on desktop -->
                                 <div id="numbers-grid" class="grid grid-cols-6 sm:grid-cols-10 gap-1.5 sm:gap-2"></div>
                                 <div class="glass-panel rounded-lg p-4 border border-yellow-400/10 space-y-3">
@@ -170,7 +170,7 @@ class CustomerDashboard {
 
     async loadData() {
         try {
-            generateNumbersGrid();
+            await generateNumbersGrid();
             await loadAdminsDropdown();
             await loadCustomerSettings();
             
@@ -334,12 +334,32 @@ async function loadAdminsDropdown() {
     }
 }
 
-function generateNumbersGrid() {
+async function generateNumbersGrid() {
     const grid = document.getElementById('numbers-grid');
     if (!grid) return;
 
+    let rangeStart = 1;
+    let rangeEnd = 300;
+
+    if (db && typeof db.collection === 'function') {
+        try {
+            const doc = await db.collection('settings').doc('main_draw_schedule').get();
+            if (doc.exists && doc.data().ticketRange) {
+                rangeStart = Number(doc.data().ticketRange.start) || 1;
+                rangeEnd = Number(doc.data().ticketRange.end) || 300;
+            }
+        } catch (e) {
+            console.error('Error fetching ticket range:', e);
+        }
+    }
+
+    const headingEl = document.getElementById('cust-buytickets-heading');
+    if (headingEl) {
+        headingEl.textContent = `Select Numbers (${rangeStart}-${rangeEnd})`;
+    }
+
     grid.innerHTML = '';
-    for (let i = 1; i <= 300; i++) {
+    for (let i = rangeStart; i <= rangeEnd; i++) {
         const btn = document.createElement('button');
         btn.className = selectedNumbers.includes(i) 
             ? 'p-2 bg-yellow-400 text-black font-bold rounded text-xs'
@@ -427,7 +447,7 @@ async function submitCustomerTicket() {
         selectedNumbers = [];
         document.getElementById('ticket-transaction-id').value = '';
         if (receiptFileInput) receiptFileInput.value = '';
-        generateNumbersGrid();
+        await generateNumbersGrid();
         await loadCustomerTickets();
     } catch (error) {
         notify('error', `❌ Error: ${error.message}`);
@@ -469,7 +489,7 @@ async function submitAutomaticPayment() {
 
             notify('success', `🎉 Automatic payment of ${totalCost} ETB successful! Ticket confirmed.`);
             selectedNumbers = [];
-            generateNumbersGrid();
+            await generateNumbersGrid();
             await loadCustomerTickets();
             await loadCustomerStats();
         } catch (error) {
