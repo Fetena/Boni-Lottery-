@@ -1,5 +1,5 @@
 // ============================================
-// MAIN ADMIN - ADMINS MANAGEMENT (FULL EDIT & PERMISSIONS)
+// UPDATED MAIN ADMIN - ADMINS MANAGEMENT (RANGE REMOVED FROM RANGES.JS AND EMBEDDED DIRECTLY IN ADMINS)
 // ============================================
 
 class Admins {
@@ -21,7 +21,7 @@ class Admins {
             <!-- Create Admin Modal -->
             <div id="create-admin-modal" class="modal fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" style="display: none;">
                 <div class="modal-content glass-panel border border-yellow-400/20 rounded-2xl p-6 max-w-lg w-full space-y-4 max-h-[90vh] overflow-y-auto">
-                    <h3 class="text-xl font-bold text-white">Create New Admin & Payment Details</h3>
+                    <h3 class="text-xl font-bold text-white">Create New Admin & Ticket Ranges</h3>
                     <div class="space-y-3 pr-2">
                         <div>
                             <label class="block text-xs text-slate-400 mb-1">Full Name</label>
@@ -53,14 +53,18 @@ class Admins {
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-2 pt-2 border-t border-yellow-400/10">
-                            <div>
-                                <label class="block text-xs text-slate-400 mb-1">Ticket Range Start</label>
-                                <input type="number" id="admin-range-start" value="1" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs">
-                            </div>
-                            <div>
-                                <label class="block text-xs text-slate-400 mb-1">Ticket Range End</label>
-                                <input type="number" id="admin-range-end" value="100" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs">
+                        <!-- Ticket Range Control (Fully Extendable Anytime) -->
+                        <div class="border-t border-yellow-400/10 pt-3 space-y-2">
+                            <p class="text-xs font-bold text-yellow-400">🎟️ Dynamic Ticket Range</p>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block text-xs text-slate-400 mb-1">Range Start</label>
+                                    <input type="number" id="admin-range-start" value="1" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-slate-400 mb-1">Range End (Extendable)</label>
+                                    <input type="number" id="admin-range-end" value="100" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs">
+                                </div>
                             </div>
                         </div>
 
@@ -84,7 +88,7 @@ class Admins {
             <!-- Edit Admin Modal -->
             <div id="edit-admin-modal" class="modal fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" style="display: none;">
                 <div class="modal-content glass-panel border border-yellow-400/20 rounded-2xl p-6 max-w-lg w-full space-y-4 max-h-[90vh] overflow-y-auto">
-                    <h3 class="text-xl font-bold text-white">Edit Admin, Payments & Permissions</h3>
+                    <h3 class="text-xl font-bold text-white">Edit Admin, Payments & Extend Ticket Range</h3>
                     <div class="space-y-3 pr-2">
                         <div>
                             <label class="block text-xs text-slate-400 mb-1">Full Name</label>
@@ -112,14 +116,18 @@ class Admins {
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-2 pt-2 border-t border-yellow-400/10">
-                            <div>
-                                <label class="block text-xs text-slate-400 mb-1">Ticket Range Start</label>
-                                <input type="number" id="edit-admin-range-start" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs">
-                            </div>
-                            <div>
-                                <label class="block text-xs text-slate-400 mb-1">Ticket Range End</label>
-                                <input type="number" id="edit-admin-range-end" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs">
+                        <!-- Dynamic Ticket Range Control (Extendable Anytime) -->
+                        <div class="border-t border-yellow-400/10 pt-3 space-y-2">
+                            <p class="text-xs font-bold text-yellow-400">🎟️ Dynamic Ticket Range (Extendable)</p>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block text-xs text-slate-400 mb-1">Range Start</label>
+                                    <input type="number" id="edit-admin-range-start" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-slate-400 mb-1">Range End (Modify/Extend)</label>
+                                    <input type="number" id="edit-admin-range-end" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-white text-xs">
+                                </div>
                             </div>
                         </div>
 
@@ -134,7 +142,7 @@ class Admins {
                             </div>
                         </div>
 
-                        <button onclick="window.mainAdminDashboard.admins.updateAdmin()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl text-xs">Update Admin</button>
+                        <button onclick="window.mainAdminDashboard.admins.updateAdmin()" class="w-full py-2 bg-yellow-400 text-black font-bold rounded-xl text-xs">Update Admin & Range</button>
                         <button onclick="window.mainAdminDashboard.admins.closeEditModal()" class="w-full py-2 bg-slate-700 text-white rounded-xl text-xs">Cancel</button>
                     </div>
                 </div>
@@ -231,10 +239,8 @@ class Admins {
         }
 
         try {
-            // 1. Create Firebase Auth credentials
             await firebase.auth().createUserWithEmailAndPassword(email, password);
 
-            // 2. Save admin info, ticket range, permissions, AND assigned payment accounts in Firestore
             await db.collection('admins').doc(email).set({
                 name,
                 email,
@@ -248,15 +254,15 @@ class Admins {
                 createdAt: new Date()
             });
 
-            // 3. Sync to admin settings profile so individual admin views pick it up
             await db.collection('admin_settings').doc(email).set({
                 adminEmail: email,
                 telebirrPhone: telebirrPhone,
                 cbeAccount: cbeAccount,
+                ticketRange: { start: rangeStart, end: rangeEnd },
                 updatedAt: new Date()
             }, { merge: true });
 
-            notify('success', `✅ Admin ${name} created with assigned payment accounts!`);
+            notify('success', `✅ Admin ${name} created with ticket range ${rangeStart}-${rangeEnd}!`);
             this.closeCreateModal();
             await this.loadData();
         } catch (error) {
@@ -295,6 +301,7 @@ class Admins {
         }
 
         try {
+            // Update admin document with the newly extended or modified ticket range
             await db.collection('admins').doc(this.editingAdminId).update({
                 name,
                 email,
@@ -306,15 +313,16 @@ class Admins {
                 updatedAt: new Date()
             });
 
-            // Sync update to settings as well
+            // Sync updated range and accounts to settings
             await db.collection('admin_settings').doc(this.editingAdminId).set({
                 adminEmail: email,
                 telebirrPhone: telebirrPhone,
                 cbeAccount: cbeAccount,
+                ticketRange: { start: rangeStart, end: rangeEnd },
                 updatedAt: new Date()
             }, { merge: true });
 
-            notify('success', '✅ Admin details & accounts updated successfully!');
+            notify('success', '✅ Admin details & ticket range updated/extended successfully!');
             this.closeEditModal();
             await this.loadData();
         } catch (error) {
@@ -335,7 +343,7 @@ class Admins {
                 .join(', ');
 
             return `
-                <div class="glass-panel rounded-lg p-4 border border-yellow-400/10">
+                <div class="glass-panel rounded-lg p-4 border border-yellow-400/15">
                     <div class="flex justify-between items-start">
                         <div class="space-y-1">
                             <p class="font-bold text-white text-sm">${admin.name || 'N/A'}</p>
@@ -344,12 +352,12 @@ class Admins {
                                 <p class="text-slate-300">📱 Telebirr: <span class="text-yellow-400">${admin.telebirrPhone || 'Not Set'}</span></p>
                                 <p class="text-slate-300">🏦 CBE Birr: <span class="text-yellow-400">${admin.cbeAccount || 'Not Set'}</span></p>
                             </div>
-                            <p class="text-xs text-yellow-400/80">🎟️ Ticket Range: ${admin.ticketRange?.start || 1} - ${admin.ticketRange?.end || 100}</p>
+                            <p class="text-xs text-yellow-400 font-bold">🎟️ Assigned Ticket Range: ${admin.ticketRange?.start || 1} — ${admin.ticketRange?.end || 100}</p>
                             <p class="text-xs text-slate-400">🛡️ Allowed Services: <span class="text-slate-200">${allowedServices || 'None'}</span></p>
                             <p class="text-xs text-slate-500">Customers: ${admin.customers || 0} • Revenue: ${admin.revenue || 0} ETB</p>
                         </div>
                         <div class="flex gap-2">
-                            <button onclick="window.mainAdminDashboard.admins.openEditModal('${admin.id}')" class="px-3 py-1 bg-yellow-400/20 text-yellow-400 text-xs rounded font-bold">Edit</button>
+                            <button onclick="window.mainAdminDashboard.admins.openEditModal('${admin.id}')" class="px-3 py-1 bg-yellow-400/20 text-yellow-400 text-xs rounded font-bold">Edit Range</button>
                             <button onclick="window.mainAdminDashboard.admins.deleteAdmin('${admin.id}')" class="px-3 py-1 bg-red-400/20 text-red-400 text-xs rounded font-bold">Delete</button>
                         </div>
                     </div>
@@ -368,7 +376,6 @@ class Admins {
 
         try {
             await db.collection('admins').doc(adminId).delete();
-            // Optionally delete settings doc too
             await db.collection('admin_settings').doc(adminId).delete().catch(() => {});
             
             notify('success', '✅ Admin deleted');
