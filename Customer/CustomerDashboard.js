@@ -198,64 +198,6 @@ class CustomerDashboard {
 
 window_customerDashboard = null;
 
-function switchCustomerTab(tabName) {
-    const allTabs = document.querySelectorAll('#customer-dashboard .tab-content');
-    allTabs.forEach(tab => {
-        tab.style.display = 'none';
-    });
-
-    const allButtons = document.querySelectorAll('#customer-dashboard .tab-button');
-    allButtons.forEach(btn => {
-        btn.classList.remove('active');
-        btn.style.color = '';
-    });
-
-    const targetEl = document.getElementById(`cust-${tabName}`);
-    if (targetEl) {
-        targetEl.style.display = 'block';
-
-        if (tabName === 'drawings') {
-            if (!window.customerDrawings) {
-                window.customerDrawings = new CustomerDrawings(currentUser.email);
-            }
-            targetEl.innerHTML = window.customerDrawings.render();
-        } else if (tabName === 'mytickets') {
-            if (!window.customerTicketsInstance) {
-                window.customerTicketsInstance = new CustomerTickets(currentUser.email);
-            }
-            targetEl.innerHTML = window.customerTicketsInstance.render();
-            window.customerTicketsInstance.init();
-
-            const badge = document.getElementById('customer-tickets-badge');
-            if (badge) {
-                badge.classList.add('hidden');
-                badge.textContent = '0';
-            }
-        } else if (tabName === 'library') {
-            if (!window.customerLibrary) {
-                window.customerLibrary = new CustomerLibrary(currentUser.email);
-            }
-            targetEl.innerHTML = window.customerLibrary.render();
-        } else if (tabName === 'appointments') {
-            const activeCustId = window.currentUser?.email || localStorage.getItem('currentCustId') || 'DEFAULT';
-            if (!window.customerAppointments) {
-                window.customerAppointments = new CustomerAppointments(activeCustId);
-            } else {
-                window.customerAppointments.setCustId(activeCustId);
-            }
-            targetEl.innerHTML = window.customerAppointments.render();
-        } else if (tabName === 'buytickets') {
-            generateNumbersGrid();
-        }
-    }
-
-    allButtons.forEach(btn => {
-        if (btn.getAttribute('onclick')?.includes(`'${tabName}'`)) {
-            btn.classList.add('active');
-            btn.style.color = '#FCD34D';
-        }
-    });
-}
 
 async function loadCustomerProfileData() {
     if (!currentUser) return;
@@ -341,6 +283,7 @@ async function generateNumbersGrid() {
     let rangeStart = 1;
     let rangeEnd = 300;
 
+    // Fetch dynamic range from Firestore settings
     if (db && typeof db.collection === 'function') {
         try {
             const doc = await db.collection('settings').doc('main_draw_schedule').get();
@@ -361,6 +304,7 @@ async function generateNumbersGrid() {
     grid.innerHTML = '';
     for (let i = rangeStart; i <= rangeEnd; i++) {
         const btn = document.createElement('button');
+        btn.type = 'button';
         btn.className = selectedNumbers.includes(i) 
             ? 'p-2 bg-yellow-400 text-black font-bold rounded text-xs'
             : 'p-2 bg-black/40 border border-yellow-400/20 text-yellow-400 rounded text-xs hover:bg-yellow-400/20';
@@ -369,6 +313,66 @@ async function generateNumbersGrid() {
         grid.appendChild(btn);
     }
     updateCost();
+}
+
+async function switchCustomerTab(tabName) {
+    const allTabs = document.querySelectorAll('#customer-dashboard .tab-content');
+    allTabs.forEach(tab => {
+        tab.style.display = 'none';
+    });
+
+    const allButtons = document.querySelectorAll('#customer-dashboard .tab-button');
+    allButtons.forEach(btn => {
+        btn.classList.remove('active');
+        btn.style.color = '';
+    });
+
+    const targetEl = document.getElementById(`cust-${tabName}`);
+    if (targetEl) {
+        targetEl.style.display = 'block';
+
+        if (tabName === 'drawings') {
+            if (!window.customerDrawings) {
+                window.customerDrawings = new CustomerDrawings(currentUser.email);
+            }
+            targetEl.innerHTML = window.customerDrawings.render();
+        } else if (tabName === 'mytickets') {
+            if (!window.customerTicketsInstance) {
+                window.customerTicketsInstance = new CustomerTickets(currentUser.email);
+            }
+            targetEl.innerHTML = window.customerTicketsInstance.render();
+            window.customerTicketsInstance.init();
+
+            const badge = document.getElementById('customer-tickets-badge');
+            if (badge) {
+                badge.classList.add('hidden');
+                badge.textContent = '0';
+            }
+        } else if (tabName === 'library') {
+            if (!window.customerLibrary) {
+                window.customerLibrary = new CustomerLibrary(currentUser.email);
+            }
+            targetEl.innerHTML = window.customerLibrary.render();
+        } else if (tabName === 'appointments') {
+            const activeCustId = window.currentUser?.email || localStorage.getItem('currentCustId') || 'DEFAULT';
+            if (!window.customerAppointments) {
+                window.customerAppointments = new CustomerAppointments(activeCustId);
+            } else {
+                window.customerAppointments.setCustId(activeCustId);
+            }
+            targetEl.innerHTML = window.customerAppointments.render();
+        } else if (tabName === 'buytickets') {
+            // ✅ Await the grid generation so Firestore finishes fetching the range first
+            await generateNumbersGrid();
+        }
+    }
+
+    allButtons.forEach(btn => {
+        if (btn.getAttribute('onclick')?.includes(`'${tabName}'`)) {
+            btn.classList.add('active');
+            btn.style.color = '#FCD34D';
+        }
+    });
 }
 
 function toggleNumber(num) {
