@@ -1,5 +1,5 @@
 // ============================================
-// ADMIN NOTIFICATIONS - FIXED V20 (BADGE & LAYOUT UPDATE)
+// ADMIN NOTIFICATIONS - FIXED V21 (BROADCAST LISTENER & UNIQUE FLAG)
 // ============================================
 
 class AdminNotifications {
@@ -23,7 +23,9 @@ class AdminNotifications {
         const currentAdminRaw = (this.adminId || localStorage.getItem('currentUserEmail') || localStorage.getItem('currentAdminEmail') || '').toString().toLowerCase().trim();
 
         if (this._unsubscribeAdminNotifs) this._unsubscribeAdminNotifs();
+        if (this._unsubscribeBroadcasts) this._unsubscribeBroadcasts();
 
+        // Listener for customer appointments
         this._unsubscribeAdminNotifs = db.collection('customer_appointments')
             .onSnapshot(snapshot => {
                 let hasNewUnnotified = false;
@@ -58,6 +60,30 @@ class AdminNotifications {
 
                 this.loadPendingApprovals();
             }, e => console.error('Admin real-time listener error:', e));
+
+        // Real-time listener for Main Admin Broadcasts (`notifications` collection)
+        this._unsubscribeBroadcasts = db.collection('notifications')
+            .onSnapshot(snapshot => {
+                let hasNewBroadcast = false;
+                let latestBroadcast = null;
+
+                snapshot.docChanges().forEach(change => {
+                    if (change.type === 'added') {
+                        hasNewBroadcast = true;
+                        latestBroadcast = { id: change.doc.id, ...change.doc.data() };
+                    }
+                });
+
+                if (hasNewBroadcast && latestBroadcast) {
+                    const title = latestBroadcast.title || 'Admin Broadcast';
+                    const message = latestBroadcast.message || '';
+                    this.showExternalPopup(`📢 [MAIN ADMIN BROADCAST]: ${message}`, title);
+                    if (typeof notify === 'function') {
+                        notify('success', `📢 Main Admin Broadcast: ${title}`);
+                    }
+                    this.loadPendingApprovals();
+                }
+            }, e => console.error('Broadcast listener error:', e));
     }
 
     showExternalPopup(message, title) {
@@ -67,9 +93,9 @@ class AdminNotifications {
         const modalHtml = `
             <div id="admin-external-popup" style="position: fixed; top: 20px; right: 20px; z-index: 999999; max-width: 380px; width: 100%; background: #000; border: 2px solid #facc15; border-radius: 12px; padding: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.8); animation: slideInRight 0.3s ease;">
                 <div style="display: flex; align-items: flex-start; gap: 12px;">
-                    <span style="font-size: 24px;">🔔</span>
+                    <span style="font-size: 24px;">📢</span>
                     <div style="flex: 1;">
-                        <h4 style="color: #fff; font-size: 15px; font-weight: bold; margin: 0 0 4px 0;">${title}</h4>
+                        <h4 style="color: #facc15; font-size: 15px; font-weight: bold; margin: 0 0 4px 0;">${title} <span style="font-size:10px; background:#facc15; color:#000; padding:1px 5px; border-radius:4px; margin-left:4px;">BROADCAST</span></h4>
                         <p style="color: #cbd5e1; font-size: 13px; margin: 0 0 12px 0; line-height: 1.4;">${message}</p>
                         <button onclick="window.adminNotifications.dismissExternalPopup()" 
                             style="width: 100%; padding: 8px; background: #facc15; color: #000; font-weight: bold; border-radius: 6px; border: none; cursor: pointer; font-size: 12px;">
@@ -212,7 +238,7 @@ class AdminNotifications {
 
                     <!-- NOTIFICATION HISTORY -->
                     <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10">
-                        <h4 class="font-bold text-white mb-3">Recent Notifications (This Admin Only)</h4>
+                        <h4 class="font-bold text-white mb-3">Recent Notifications (Main Admin Broadcasts & This Admin)</h4>
                         <div id="admin-notif-history" class="space-y-2 text-sm text-slate-300">
                             ${this.renderNotificationHistoryHtml()}
                         </div>
@@ -237,7 +263,7 @@ class AdminNotifications {
         await this.loadPendingApprovals();
     }
 
-   async loadPendingApprovals() {
+    async loadPendingApprovals() {
         if (typeof firebase === 'undefined' || !firebase.firestore || this._isLoading) return;
         this._isLoading = true;
         try {
@@ -271,27 +297,31 @@ class AdminNotifications {
                 }
             });
 
-            // Fetch from BOTH admin_notifications and main notifications collections to unify them
+            // Fetch regular admin notifications
             const notifSnapshot = await db.collection('admin_notifications').get();
-            const generalNotifSnapshot = await db.collection('notifications').get();
-
             const regularNotifs = notifSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            const broadcastNotifs = generalNotifSnapshot.docs.map(doc => {
+
+            // Fetch Main Admin broadcasts from the 'notifications' collection and assign a UNIQUE flag
+            const broadcastSnapshot = await db.collection('notifications').get();
+            const broadcastNotifs = broadcastSnapshot.docs.map(doc => {
                 const data = doc.data();
+                const tDate = data.createdAt?.toDate?.() || new Date(data.createdAt || Date.now());
                 return {
                     id: doc.id,
-                    type: data.title || 'Broadcast',
-                    message: data.message,
-                    timestamp: data.createdAt?.toDate ? data.createdAt.toDate().toLocaleTimeString() : '',
-                    adminId: data.recipient || 'All'
+                    type: '📢 MAIN ADMIN BROADCAST', // Unique Flag
+                    isMainAdminBroadcast: true,
+                    message: `[${data.title || 'Broadcast'}] ${data.message || ''}`,
+                    timestamp: tDate.toLocaleTimeString(),
+                    sentBy: data.sentBy || 'Main Admin'
                 };
             });
 
-            // Combine and filter for current admin view
-            const allNotifs = [...regularNotifs, ...broadcastNotifs];
-            this.adminNotificationsList = allNotifs.filter(n => {
+            const combinedList = [...broadcastNotifs, ...regularNotifs];
+
+            this.adminNotificationsList = combinedList.filter(n => {
+                if (n.isMainAdminBroadcast) return true; // Always show broadcasts to all admins
                 const nAdmin = (n.adminId || n.adminEmail || '').toString().toLowerCase().trim();
-                return currentAdminRaw ? (nAdmin.includes(currentAdminRaw) || nAdmin.includes('admin') || !nAdmin) : true;
+                return currentAdminRaw ? (nAdmin === currentAdminRaw || !nAdmin) : true;
             });
 
             this.refreshUI();
@@ -409,15 +439,22 @@ class AdminNotifications {
     }
 
     renderNotificationHistoryHtml() {
-        const recent = this.adminNotificationsList.slice(-5).reverse();
+        const recent = this.adminNotificationsList.slice(-10).reverse();
         if (recent.length === 0) return '<p class="text-slate-400 text-xs">No notifications sent yet</p>';
-        return recent.map(n => `
-            <div class="bg-black/30 p-3 rounded-lg border border-yellow-400/10 space-y-1">
-                <p class="font-bold text-yellow-400 text-xs">${n.type || 'Notification'}</p>
-                <p class="text-white text-sm">${n.message}</p>
-                <p class="text-[10px] text-slate-500">${n.timestamp || ''}</p>
-            </div>
-        `).join('');
+        return recent.map(n => {
+            const isBroadcast = n.isMainAdminBroadcast;
+            const badgeClass = isBroadcast ? 'bg-yellow-400 text-black border border-yellow-300' : 'bg-slate-800 text-slate-300 border border-slate-700';
+            
+            return `
+                <div class="bg-black/30 p-3.5 rounded-xl border ${isBroadcast ? 'border-yellow-400/40 shadow-lg' : 'border-yellow-400/10'} space-y-1.5">
+                    <div class="flex justify-between items-center">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-extrabold ${badgeClass}">${n.type || 'Notification'}</span>
+                        <span class="text-[10px] text-slate-400">${n.timestamp || ''}</span>
+                    </div>
+                    <p class="text-white text-sm font-medium leading-snug">${n.message}</p>
+                </div>
+            `;
+        }).join('');
     }
 
     async approveBooking(aptId, custId) {
