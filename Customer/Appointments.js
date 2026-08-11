@@ -1,5 +1,5 @@
 // ============================================
-// CUSTOMER APPOINTMENTS - FIXED V12 (STRICT NOTIFICATION TARGETING & SYNC)
+// CUSTOMER APPOINTMENTS - FIXED V13 (ISOLATE MAIN ADMIN BROADCASTS)
 // ============================================
 
 class CustomerAppointments {
@@ -30,7 +30,7 @@ class CustomerAppointments {
         }
     }
 
-    // Realtime Firebase Listener targeting ONLY this customer's notifications & broadcast notifications
+    // Realtime Firebase Listener targeting ONLY customer notifications (ignoring admin-only broadcasts)
     startCustomerNotificationPoller() {
         if (typeof firebase === 'undefined' || !firebase.firestore) return;
         const db = firebase.firestore();
@@ -67,7 +67,7 @@ class CustomerAppointments {
                 }
             }, e => console.error('Firestore notification listener error:', e));
 
-        // 2. Listen to global platform `notifications` (Broadcasts sent by admin)
+        // 2. Listen to global platform `notifications` (Filtered strictly so Main Admin / Admin-only notices NEVER appear to customers)
         this._unsubscribeBroadcasts = db.collection('notifications')
             .onSnapshot(snapshot => {
                 snapshot.docChanges().forEach(change => {
@@ -75,21 +75,17 @@ class CustomerAppointments {
                         const n = change.doc.data();
                         const target = (n.target || 'All Customers').toLowerCase();
                         
-                        // Check if broadcast applies to this customer based on target filter
-                        let applies = true;
-                        if (target.includes('unpaid')) {
-                            // If target is unpaid, verify customer status if stored, or allow through for safety
-                            applies = true; 
+                        // 🛑 STRICT ISOLATION: Skip showing broadcast if it targets Main Admin or Admins only
+                        if (target.includes('main admin') || target.includes('admin')) {
+                            return;
                         }
 
-                        if (applies) {
-                            const message = `[${n.title || 'Announcement'}] ${n.message || ''}`;
-                            this.showPopupModal(message, 'Platform Broadcast', change.doc.id + '_broadcast');
-                            if (typeof notify === 'function') {
-                                notify('success', `📢 ${message}`);
-                            }
-                            this.loadNotifications();
+                        const message = `[${n.title || 'Announcement'}] ${n.message || ''}`;
+                        this.showPopupModal(message, 'Platform Broadcast', change.doc.id + '_broadcast');
+                        if (typeof notify === 'function') {
+                            notify('success', `📢 ${message}`);
                         }
+                        this.loadNotifications();
                     }
                 });
             }, e => console.error('Broadcast listener error:', e));
@@ -131,10 +127,8 @@ class CustomerAppointments {
         const modal = document.getElementById('apt-popup-modal');
         if (modal) modal.remove();
 
-        // If it's a broadcast item, don't try to delete from customer_notifications
         if (notifId && notifId.includes('_broadcast')) return;
 
-        // Immediately delete the notification from Firestore so it doesn't take up storage
         if (notifId && typeof firebase !== 'undefined' && firebase.firestore) {
             try {
                 const db = firebase.firestore();
@@ -181,17 +175,26 @@ class CustomerAppointments {
                     return nCust === targetId;
                 });
 
-            // 2. Fetch global broadcasts from `notifications` collection
+            // 2. Fetch global broadcasts from `notifications` collection (Excluding Main Admin / Admin-only notices)
             const broadcastSnapshot = await db.collection('notifications').get();
-            const broadcasts = broadcastSnapshot.docs.map(doc => {
+            const broadcasts = [];
+            
+            broadcastSnapshot.docs.forEach(doc => {
                 const data = doc.data();
-                return {
+                const target = (data.target || '').toLowerCase();
+                
+                // 🛑 EXCLUDE admin-only or main-admin targeted broadcasts from customer view
+                if (target.includes('main admin') || target.includes('admin')) {
+                    return;
+                }
+
+                broadcasts.push({
                     id: doc.id,
                     isBroadcast: true,
                     status: data.title || 'Announcement',
                     message: `[${data.title || 'Broadcast'}] ${data.message || ''}`,
                     createdAt: data.createdAt || { toMillis: () => Date.now() }
-                };
+                });
             });
 
             // Combine both into the notifications tray list
@@ -369,10 +372,8 @@ class CustomerAppointments {
     async handleNotificationClick(notifId, message, status) {
         this.showPopupModal(message, status, notifId);
         
-        // If it's a broadcast item, skip deletion
         if (notifId && notifId.includes('_broadcast')) return;
 
-        // Automatically delete when clicked/viewed so it doesn't waste database storage
         if (notifId && typeof firebase !== 'undefined' && firebase.firestore) {
             try {
                 const db = firebase.firestore();
