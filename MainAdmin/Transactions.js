@@ -1,5 +1,5 @@
 // ============================================
-// MAIN ADMIN - TRANSACTIONS & TICKET APPROVALS (WITH RECEIPT POPUP & DELETE)
+// MAIN ADMIN - TRANSACTIONS & TICKET APPROVALS (WITH AUDIT LOGGING)
 // ============================================
 
 class Transactions {
@@ -57,31 +57,47 @@ class Transactions {
     }
 
     async approvePayment(docId) {
-    if (!db) return notify('error', '❌ Database not initialized');
-    try {
-        await db.collection('customer_tickets').doc(docId).update({
-            status: 'Approved',
-            approvedByAdminName: currentUser?.email || 'Main Admin',
-            approvedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
+        if (!db) return notify('error', '❌ Database not initialized');
+        try {
+            const adminName = currentUser?.email || 'Main Admin';
+            
+            await db.collection('customer_tickets').doc(docId).update({
+                status: 'Approved',
+                approvedByAdminName: adminName,
+                approvedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
 
-        // 🔒 ADD THIS LINE TO RECORD AUDIT LOG
-        await AuditLog.logAction('Approve Payment', currentUser?.email, `Approved ticket/transaction ID: ${docId}`, 'SUCCESS');
+            // 🔒 RECORD AUDIT LOG ENTRY
+            if (typeof AuditLog !== 'undefined' && typeof AuditLog.logAction === 'function') {
+                await AuditLog.logAction('Approve Payment', adminName, `Approved transaction ID: ${docId}`, 'SUCCESS');
+            } else {
+                console.warn('AuditLog class or logAction method not found globally.');
+            }
 
-        notify('success', '✅ Payment approved successfully!');
-        await this.loadData();
-    } catch (error) {
-        notify('error', `❌ Error: ${error.message}`);
+            notify('success', '✅ Payment approved successfully by Main Admin!');
+            await this.loadData();
+        } catch (error) {
+            notify('error', `❌ Error: ${error.message}`);
+        }
     }
-}
 
     async rejectPayment(docId) {
         if (!db) return notify('error', '❌ Database not initialized');
         try {
+            const adminName = currentUser?.email || 'Main Admin';
+
             await db.collection('customer_tickets').doc(docId).update({
                 status: 'Rejected',
                 rejectedAt: firebase.firestore.FieldValue.serverTimestamp()
             });
+
+            // 🔒 RECORD AUDIT LOG ENTRY
+            if (typeof AuditLog !== 'undefined' && typeof AuditLog.logAction === 'function') {
+                await AuditLog.logAction('Reject Payment', adminName, `Rejected transaction ID: ${docId}`, 'WARNING');
+            } else {
+                console.warn('AuditLog class or logAction method not found globally.');
+            }
+
             notify('error', '❌ Payment rejected');
             await this.loadData();
         } catch (error) {
@@ -93,7 +109,15 @@ class Transactions {
         if (!confirm('Are you sure you want to delete this transaction/ticket?')) return;
         if (!db) return notify('error', '❌ Database not initialized');
         try {
+            const adminName = currentUser?.email || 'Main Admin';
+
             await db.collection('customer_tickets').doc(docId).delete();
+
+            // 🔒 RECORD AUDIT LOG ENTRY
+            if (typeof AuditLog !== 'undefined' && typeof AuditLog.logAction === 'function') {
+                await AuditLog.logAction('Delete Transaction', adminName, `Deleted transaction ID: ${docId}`, 'DANGER');
+            }
+
             notify('success', '🗑️ Transaction deleted successfully!');
             await this.loadData();
         } catch (error) {
