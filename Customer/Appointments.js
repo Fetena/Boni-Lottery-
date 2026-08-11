@@ -1,5 +1,5 @@
 // ============================================
-// CUSTOMER APPOINTMENTS - FIXED V11 (AUTO-DELETE ON VIEW)
+// CUSTOMER APPOINTMENTS - FIXED V12 (STRICT NOTIFICATION TARGETING & SYNC)
 // ============================================
 
 class CustomerAppointments {
@@ -30,14 +30,16 @@ class CustomerAppointments {
         }
     }
 
-    // Realtime Firebase Listener targeting ONLY this customer's notifications
+    // Realtime Firebase Listener targeting ONLY this customer's notifications & broadcast notifications
     startCustomerNotificationPoller() {
         if (typeof firebase === 'undefined' || !firebase.firestore) return;
         const db = firebase.firestore();
         const activeEmail = (this.custId && this.custId !== 'DEFAULT' ? this.custId : (localStorage.getItem('currentUserEmail') || 'tt@gmail.com')).toString().toLowerCase().trim();
 
         if (this._unsubscribeNotifs) this._unsubscribeNotifs();
+        if (this._unsubscribeBroadcasts) this._unsubscribeBroadcasts();
 
+        // 1. Listen to targeted customer_notifications
         this._unsubscribeNotifs = db.collection('customer_notifications')
             .onSnapshot(snapshot => {
                 let hasChanges = false;
@@ -48,7 +50,7 @@ class CustomerAppointments {
                     if (nCustId === activeEmail) {
                         hasChanges = true;
                         if (change.type === 'added' && !n.viewed) {
-                            this.showPopupModal(n.message, n.status, change.doc.id);
+                            this.showPopupModal(n.message, n.status || 'Announcement', change.doc.id);
                             
                             const type = (n.status === 'Approved' || n.status === 'Confirmed') ? 'success' : 'error';
                             if (typeof notify === 'function') {
@@ -64,16 +66,43 @@ class CustomerAppointments {
                     this.refreshList();
                 }
             }, e => console.error('Firestore notification listener error:', e));
+
+        // 2. Listen to global platform `notifications` (Broadcasts sent by admin)
+        this._unsubscribeBroadcasts = db.collection('notifications')
+            .onSnapshot(snapshot => {
+                snapshot.docChanges().forEach(change => {
+                    if (change.type === 'added') {
+                        const n = change.doc.data();
+                        const target = (n.target || 'All Customers').toLowerCase();
+                        
+                        // Check if broadcast applies to this customer based on target filter
+                        let applies = true;
+                        if (target.includes('unpaid')) {
+                            // If target is unpaid, verify customer status if stored, or allow through for safety
+                            applies = true; 
+                        }
+
+                        if (applies) {
+                            const message = `[${n.title || 'Announcement'}] ${n.message || ''}`;
+                            this.showPopupModal(message, 'Platform Broadcast', change.doc.id + '_broadcast');
+                            if (typeof notify === 'function') {
+                                notify('success', `📢 ${message}`);
+                            }
+                            this.loadNotifications();
+                        }
+                    }
+                });
+            }, e => console.error('Broadcast listener error:', e));
     }
 
     showPopupModal(message, status, notifId) {
         const existing = document.getElementById('apt-popup-modal');
         if (existing) existing.remove();
 
-        const isApproved = status === 'Approved' || status === 'Confirmed';
-        const borderColor = isApproved ? '#10b981' : '#ef4444';
-        const textColor = isApproved ? 'text-emerald-400' : 'text-red-400';
-        const icon = isApproved ? '🎉' : '⚠️';
+        const isApproved = status === 'Approved' || status === 'Confirmed' || status === 'Platform Broadcast' || status === 'Announcement';
+        const borderColor = isApproved ? '#facc15' : '#ef4444';
+        const textColor = isApproved ? 'text-yellow-400' : 'text-red-400';
+        const icon = isApproved ? '📢' : '⚠️';
 
         const modalHtml = `
             <div id="apt-popup-modal" style="position: fixed; inset: 0; z-index: 999999; display: flex; align-items: center; justify-content: center; background-color: rgba(0,0,0,0.85); backdrop-filter: blur(4px); padding: 1rem;">
@@ -81,8 +110,8 @@ class CustomerAppointments {
                     <div style="display: flex; align-items: center; gap: 12px;">
                         <span style="font-size: 28px;">${icon}</span>
                         <div>
-                            <h3 style="color: #fff; font-size: 18px; font-weight: bold; margin: 0;">Appointment Update</h3>
-                            <p class="${textColor}" style="font-size: 12px; font-weight: 600; margin: 2px 0 0 0;">Status: ${status || 'Updated'}</p>
+                            <h3 style="color: #fff; font-size: 18px; font-weight: bold; margin: 0;">Platform Notification</h3>
+                            <p class="${textColor}" style="font-size: 12px; font-weight: 600; margin: 2px 0 0 0;">Type: ${status || 'Update'}</p>
                         </div>
                     </div>
                     <div style="padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; font-size: 14px; color: #e2e8f0; line-height: 1.4;">
@@ -101,6 +130,9 @@ class CustomerAppointments {
     async dismissPopup(notifId) {
         const modal = document.getElementById('apt-popup-modal');
         if (modal) modal.remove();
+
+        // If it's a broadcast item, don't try to delete from customer_notifications
+        if (notifId && notifId.includes('_broadcast')) return;
 
         // Immediately delete the notification from Firestore so it doesn't take up storage
         if (notifId && typeof firebase !== 'undefined' && firebase.firestore) {
@@ -140,13 +172,30 @@ class CustomerAppointments {
             const db = firebase.firestore();
             const targetId = (this.custId && this.custId !== 'DEFAULT' ? this.custId : (localStorage.getItem('currentUserEmail') || 'tt@gmail.com')).toString().toLowerCase().trim();
             
-            const snapshot = await db.collection('customer_notifications').get();
-            this.notifications = snapshot.docs
+            // 1. Fetch targeted customer notifications
+            const custNotifSnapshot = await db.collection('customer_notifications').get();
+            const custNotifs = custNotifSnapshot.docs
                 .map(doc => ({ id: doc.id, ...doc.data() }))
                 .filter(n => {
                     const nCust = (n.custId || '').toString().toLowerCase().trim();
                     return nCust === targetId;
-                })
+                });
+
+            // 2. Fetch global broadcasts from `notifications` collection
+            const broadcastSnapshot = await db.collection('notifications').get();
+            const broadcasts = broadcastSnapshot.docs.map(doc => {
+                const data = doc.data();
+                return {
+                    id: doc.id,
+                    isBroadcast: true,
+                    status: data.title || 'Announcement',
+                    message: `[${data.title || 'Broadcast'}] ${data.message || ''}`,
+                    createdAt: data.createdAt || { toMillis: () => Date.now() }
+                };
+            });
+
+            // Combine both into the notifications tray list
+            this.notifications = [...custNotifs, ...broadcasts]
                 .sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
             
             this.updateBadgeCount();
@@ -296,7 +345,9 @@ class CustomerAppointments {
         }
         return this.notifications.map(n => {
             const bgStyle = 'background: rgba(0,0,0,0.3); border-color: rgba(255,255,255,0.08);';
-            const statusColor = (n.status === 'Approved' || n.status === 'Confirmed') ? 'text-emerald-400' : 'text-red-400';
+            const isBroadcast = n.isBroadcast;
+            const statusColor = isBroadcast ? 'text-yellow-400' : ((n.status === 'Approved' || n.status === 'Confirmed') ? 'text-emerald-400' : 'text-red-400');
+            const statusLabel = isBroadcast ? '📢 Announcement' : `Status: ${n.status || 'Update'}`;
 
             const safeMsg = (n.message || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
@@ -305,7 +356,7 @@ class CustomerAppointments {
                      class="p-4 rounded-xl border cursor-pointer transition hover:border-yellow-400 flex items-start justify-between gap-3" style="${bgStyle}">
                     <div class="space-y-1">
                         <div class="flex items-center gap-2">
-                            <span class="text-xs font-semibold ${statusColor}">Status: ${n.status || 'Update'}</span>
+                            <span class="text-xs font-semibold ${statusColor}">${statusLabel}</span>
                         </div>
                         <p class="text-sm text-white leading-relaxed">${n.message}</p>
                     </div>
@@ -317,6 +368,10 @@ class CustomerAppointments {
 
     async handleNotificationClick(notifId, message, status) {
         this.showPopupModal(message, status, notifId);
+        
+        // If it's a broadcast item, skip deletion
+        if (notifId && notifId.includes('_broadcast')) return;
+
         // Automatically delete when clicked/viewed so it doesn't waste database storage
         if (notifId && typeof firebase !== 'undefined' && firebase.firestore) {
             try {
