@@ -57,19 +57,23 @@ class Transactions {
     }
 
     async approvePayment(docId) {
-        if (!db) return notify('error', '❌ Database not initialized');
-        try {
-            await db.collection('customer_tickets').doc(docId).update({
-                status: 'Approved',
-                approvedByAdminName: currentUser?.email || 'Main Admin',
-                approvedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            notify('success', '✅ Payment approved successfully by Main Admin!');
-            await this.loadData();
-        } catch (error) {
-            notify('error', `❌ Error: ${error.message}`);
-        }
+    if (!db) return notify('error', '❌ Database not initialized');
+    try {
+        await db.collection('customer_tickets').doc(docId).update({
+            status: 'Approved',
+            approvedByAdminName: currentUser?.email || 'Main Admin',
+            approvedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // 🔒 ADD THIS LINE TO RECORD AUDIT LOG
+        await AuditLog.logAction('Approve Payment', currentUser?.email, `Approved ticket/transaction ID: ${docId}`, 'SUCCESS');
+
+        notify('success', '✅ Payment approved successfully!');
+        await this.loadData();
+    } catch (error) {
+        notify('error', `❌ Error: ${error.message}`);
     }
+}
 
     async rejectPayment(docId) {
         if (!db) return notify('error', '❌ Database not initialized');
