@@ -1,5 +1,5 @@
 // ============================================
-// ADMIN NOTIFICATIONS - FIXED V21 (BROADCAST LISTENER & UNIQUE FLAG)
+// ADMIN NOTIFICATIONS - FIXED V22 (DELETABLE BROADCASTS & NOTIFICATIONS)
 // ============================================
 
 class AdminNotifications {
@@ -151,7 +151,7 @@ class AdminNotifications {
 
         return `
             <div class="space-y-6">
-                <!-- APPROVALS SECTION (WITH BADGE MOVED TO TAB NAVIGATION BAR AREA) -->
+                <!-- APPROVALS SECTION -->
                 <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
                     <div class="flex justify-between items-center">
                         <h3 class="text-2xl font-bold text-white flex items-center gap-3">
@@ -299,7 +299,7 @@ class AdminNotifications {
 
             // Fetch regular admin notifications
             const notifSnapshot = await db.collection('admin_notifications').get();
-            const regularNotifs = notifSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const regularNotifs = notifSnapshot.docs.map(doc => ({ id: doc.id, collection: 'admin_notifications', ...doc.data() }));
 
             // Fetch Main Admin broadcasts from the 'notifications' collection and assign a UNIQUE flag
             const broadcastSnapshot = await db.collection('notifications').get();
@@ -308,6 +308,7 @@ class AdminNotifications {
                 const tDate = data.createdAt?.toDate?.() || new Date(data.createdAt || Date.now());
                 return {
                     id: doc.id,
+                    collection: 'notifications', // Target collection for deletion
                     type: '📢 MAIN ADMIN BROADCAST', // Unique Flag
                     isMainAdminBroadcast: true,
                     message: `[${data.title || 'Broadcast'}] ${data.message || ''}`,
@@ -444,17 +445,44 @@ class AdminNotifications {
         return recent.map(n => {
             const isBroadcast = n.isMainAdminBroadcast;
             const badgeClass = isBroadcast ? 'bg-yellow-400 text-black border border-yellow-300' : 'bg-slate-800 text-slate-300 border border-slate-700';
+            const colName = n.collection || (isBroadcast ? 'notifications' : 'admin_notifications');
             
             return `
-                <div class="bg-black/30 p-3.5 rounded-xl border ${isBroadcast ? 'border-yellow-400/40 shadow-lg' : 'border-yellow-400/10'} space-y-1.5">
+                <div class="bg-black/30 p-3.5 rounded-xl border ${isBroadcast ? 'border-yellow-400/40 shadow-lg' : 'border-yellow-400/10'} space-y-2">
                     <div class="flex justify-between items-center">
                         <span class="px-2 py-0.5 rounded text-[10px] font-extrabold ${badgeClass}">${n.type || 'Notification'}</span>
-                        <span class="text-[10px] text-slate-400">${n.timestamp || ''}</span>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] text-slate-400">${n.timestamp || ''}</span>
+                            <button type="button" onclick="window.adminNotifications.deleteNotification('${n.id}', '${colName}')" 
+                                class="px-2 py-1 bg-red-600/80 hover:bg-red-600 text-white font-bold rounded text-[10px] cursor-pointer" title="Delete Notification">🗑️ Delete</button>
+                        </div>
                     </div>
                     <p class="text-white text-sm font-medium leading-snug">${n.message}</p>
                 </div>
             `;
         }).join('');
+    }
+
+    async deleteNotification(notifId, collectionName) {
+        if (!confirm('Are you sure you want to delete this notification item?')) return;
+        if (typeof firebase === 'undefined' || !firebase.firestore) return;
+        try {
+            const db = firebase.firestore();
+            await db.collection(collectionName).doc(notifId).delete();
+            if (typeof notify === 'function') {
+                notify('success', '🗑️ Notification deleted successfully');
+            } else {
+                alert('🗑️ Notification deleted successfully');
+            }
+            await this.loadPendingApprovals();
+        } catch (e) {
+            console.error('Error deleting notification:', e);
+            if (typeof notify === 'function') {
+                notify('error', '❌ Failed to delete notification');
+            } else {
+                alert('❌ Failed to delete notification');
+            }
+        }
     }
 
     async approveBooking(aptId, custId) {
