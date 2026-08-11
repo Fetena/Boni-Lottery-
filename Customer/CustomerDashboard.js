@@ -281,18 +281,37 @@ async function generateNumbersGrid() {
     if (!grid) return;
 
     let rangeStart = 1;
-    let rangeEnd = 300;
+    let rangeEnd = 300; // Final absolute fallback
 
-    // Fetch dynamic range from Firestore settings
     if (db && typeof db.collection === 'function') {
         try {
-            const doc = await db.collection('settings').doc('main_draw_schedule').get();
-            if (doc.exists && doc.data().ticketRange) {
-                rangeStart = Number(doc.data().ticketRange.start) || 1;
-                rangeEnd = Number(doc.data().ticketRange.end) || 300;
+            // Check multiple potential Firestore paths where admin settings might be stored
+            const paths = [
+                db.collection('settings').doc('main_draw_schedule'),
+                db.collection('admin_settings').doc('general'),
+                db.collection('settings').doc('admin_config'),
+                db.collection('settings').doc('draw_settings')
+            ];
+
+            for (const pathRef of paths) {
+                const doc = await pathRef.get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    
+                    // Check various possible object structures or field names
+                    if (data.ticketRange) {
+                        rangeStart = Number(data.ticketRange.start) || 1;
+                        rangeEnd = Number(data.ticketRange.end) || 300;
+                        break;
+                    } else if (data.rangeEnd || data.maxTicket || data.end) {
+                        rangeStart = Number(data.rangeStart || data.minTicket || data.start) || 1;
+                        rangeEnd = Number(data.rangeEnd || data.maxTicket || data.end) || 300;
+                        break;
+                    }
+                }
             }
         } catch (e) {
-            console.error('Error fetching ticket range:', e);
+            console.error('Error fetching dynamic ticket range:', e);
         }
     }
 
