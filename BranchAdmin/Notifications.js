@@ -237,7 +237,7 @@ class AdminNotifications {
         await this.loadPendingApprovals();
     }
 
-    async loadPendingApprovals() {
+   async loadPendingApprovals() {
         if (typeof firebase === 'undefined' || !firebase.firestore || this._isLoading) return;
         this._isLoading = true;
         try {
@@ -271,13 +271,28 @@ class AdminNotifications {
                 }
             });
 
+            // Fetch from BOTH admin_notifications and main notifications collections to unify them
             const notifSnapshot = await db.collection('admin_notifications').get();
-            this.adminNotificationsList = notifSnapshot.docs
-                .map(doc => ({ id: doc.id, ...doc.data() }))
-                .filter(n => {
-                    const nAdmin = (n.adminId || n.adminEmail || '').toString().toLowerCase().trim();
-                    return currentAdminRaw ? (nAdmin === currentAdminRaw || !nAdmin) : true;
-                });
+            const generalNotifSnapshot = await db.collection('notifications').get();
+
+            const regularNotifs = notifSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const broadcastNotifs = generalNotifSnapshot.docs.map(doc => {
+                const data = doc.data();
+                return {
+                    id: doc.id,
+                    type: data.title || 'Broadcast',
+                    message: data.message,
+                    timestamp: data.createdAt?.toDate ? data.createdAt.toDate().toLocaleTimeString() : '',
+                    adminId: data.recipient || 'All'
+                };
+            });
+
+            // Combine and filter for current admin view
+            const allNotifs = [...regularNotifs, ...broadcastNotifs];
+            this.adminNotificationsList = allNotifs.filter(n => {
+                const nAdmin = (n.adminId || n.adminEmail || '').toString().toLowerCase().trim();
+                return currentAdminRaw ? (nAdmin.includes(currentAdminRaw) || nAdmin.includes('admin') || !nAdmin) : true;
+            });
 
             this.refreshUI();
             this.updateTabBadge();
