@@ -89,7 +89,7 @@ class CustomerNumberGrid {
         }
     }
 
-    rerenderGrid() {
+   rerenderGrid() {
         const container = document.getElementById('numbers-grid');
         if (!container) return;
 
