@@ -1,5 +1,5 @@
 // ============================================
-// ADMIN NOTIFICATIONS - FIXED V24 (ISOLATED ADMIN TARGET)
+// ADMIN NOTIFICATIONS - FIXED V25 (MAIN ADMIN TARGET)
 // ============================================
 
 class AdminNotifications {
@@ -61,7 +61,7 @@ class AdminNotifications {
                 this.loadPendingApprovals();
             }, e => console.error('Admin real-time listener error:', e));
 
-        // Real-time listener for Main Admin Broadcasts & Admin-to-Admin broadcasts (`notifications` collection)
+        // Real-time listener for Main Admin Broadcasts & Main Admin targeted notifications (`notifications` collection)
         this._unsubscribeBroadcasts = db.collection('notifications')
             .onSnapshot(snapshot => {
                 let hasNewBroadcast = false;
@@ -76,13 +76,13 @@ class AdminNotifications {
 
                 if (hasNewBroadcast && latestBroadcast) {
                     const target = (latestBroadcast.target || '').toLowerCase();
-                    const isTargetingAdminsOnly = target === 'all admins' || target === 'admin only';
+                    const isTargetingMainAdmin = target === 'main admin' || target === 'main admin only';
                     
-                    // Only trigger popup if targeted to admins or general broadcast
-                    if (!isTargetingAdminsOnly || currentAdminRaw) {
+                    // Only trigger popup if targeted to Main Admin or general broadcast
+                    if (!isTargetingMainAdmin || currentAdminRaw) {
                         const title = latestBroadcast.title || 'Admin Broadcast';
                         const message = latestBroadcast.message || '';
-                        this.showExternalPopup(`📢 [ADMIN NOTICE]: ${message}`, title);
+                        this.showExternalPopup(`📢 [NOTICE]: ${message}`, title);
                         if (typeof notify === 'function') {
                             notify('success', `📢 Notice: ${title}`);
                         }
@@ -238,7 +238,7 @@ class AdminNotifications {
                                 <option>All Customers</option>
                                 <option>Unpaid</option>
                                 <option>Active</option>
-                                <option>All Admins (Admin Only)</option>
+                                <option>Main Admin</option>
                             </select>
                         </div>
 
@@ -319,7 +319,7 @@ class AdminNotifications {
                 return {
                     id: doc.id,
                     collection: 'notifications', 
-                    type: '📢 ADMIN NOTICE', 
+                    type: '📢 NOTICE', 
                     isMainAdminBroadcast: true,
                     message: `[${data.title || 'Broadcast'}] ${data.message || ''}`,
                     timestamp: tDate.toLocaleTimeString(),
@@ -626,7 +626,7 @@ class AdminNotifications {
 
         try {
             const db = firebase.firestore();
-            const isAdminOnlyTarget = target.toLowerCase().includes('admin');
+            const isMainAdminTarget = target.toLowerCase().includes('main admin');
 
             // Save to admin history log
             await db.collection('admin_notifications').add(notif);
@@ -636,13 +636,13 @@ class AdminNotifications {
                 const batch = db.batch();
                 let count = 0;
 
-                if (isAdminOnlyTarget) {
-                    // Save to global notifications stream so only admins receive it in their listener
+                if (isMainAdminTarget) {
+                    // Save to global notifications stream so only the Main Admin receives it in their listener
                     const globalNotifRef = db.collection('notifications').doc();
                     batch.set(globalNotifRef, {
                         title: type,
                         message: message,
-                        target: 'Admin Only',
+                        target: 'Main Admin',
                         sentBy: currentAdminRaw,
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
