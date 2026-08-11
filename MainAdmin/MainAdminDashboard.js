@@ -10,7 +10,7 @@ class MainAdminDashboard {
         this.customers = new Customers();
         this.ranges = new Ranges();
         this.payments = new Payments();
-        this.analytics = new Analytics();
+        //this.analytics = new Analytics();
         this.transactions = new Transactions();
         this.auditLog = new AuditLog();
         this.notifications = new Notifications();
@@ -41,7 +41,7 @@ class MainAdminDashboard {
                             <button onclick="window.mainAdminDashboard.switchTab('customers', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">👥 Customers</button>
                             <button onclick="window.mainAdminDashboard.switchTab('ranges', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📊 Ranges</button>
                             <button onclick="window.mainAdminDashboard.switchTab('payments', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">💳 Payments</button>
-                            <button onclick="window.mainAdminDashboard.switchTab('analytics', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📈 Analytics</button>
+                          <!--  <button onclick="window.mainAdminDashboard.switchTab('analytics', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📈 Analytics</button>->
                             <button onclick="window.mainAdminDashboard.switchTab('transactions', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">📋 Transactions</button>
                             <button onclick="window.mainAdminDashboard.switchTab('auditlog', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">🔒 Audit</button>                         
                             <button onclick="window.mainAdminDashboard.switchTab('bookings', event)" class="tab-button px-3 sm:px-4 py-2 text-xs font-bold text-slate-400 relative">
@@ -105,7 +105,7 @@ class MainAdminDashboard {
                 this.customers.loadData(),
                 this.ranges.loadData(),
                 this.payments.loadData(),
-                this.analytics.loadData(),
+                //this.analytics.loadData(),
                 this.transactions.loadData(),
                 this.auditLog.loadData(),
                 this.notifications.loadData(),
@@ -132,7 +132,7 @@ class MainAdminDashboard {
             const customersContent = document.getElementById('main-customers');
             const rangesContent = document.getElementById('main-ranges');
             const paymentsContent = document.getElementById('main-payments');
-            const analyticsContent = document.getElementById('main-analytics');
+           // const analyticsContent = document.getElementById('main-analytics');
             const transactionsContent = document.getElementById('main-transactions');
             const auditlogContent = document.getElementById('main-auditlog');
             const notificationsContent = document.getElementById('main-notifications');
@@ -145,7 +145,7 @@ class MainAdminDashboard {
             if (customersContent) customersContent.innerHTML = this.customers.render();
             if (rangesContent) rangesContent.innerHTML = this.ranges.render();
             if (paymentsContent) paymentsContent.innerHTML = this.payments.render();
-            if (analyticsContent) analyticsContent.innerHTML = this.analytics.render();
+           // if (analyticsContent) analyticsContent.innerHTML = this.analytics.render();
             if (transactionsContent) transactionsContent.innerHTML = this.transactions.render();
             if (auditlogContent) auditlogContent.innerHTML = this.auditLog.render();
             if (notificationsContent) notificationsContent.innerHTML = this.notifications.render();
