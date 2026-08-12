@@ -1,5 +1,5 @@
 // ============================================
-// CUSTOMER APPOINTMENTS - FIXED V20 (DISMISS POPUP ON VIEW)
+// CUSTOMER APPOINTMENTS - FIXED V21 (TRUE MODAL DISMISSAL)
 // ============================================
 
 class CustomerAppointments {
@@ -424,11 +424,11 @@ class CustomerAppointments {
     }
 
     handleNotificationClick(notifId, message, status) {
-        // Automatically dismisses/removes any existing popup modal first, then shows the clicked one
-        const existing = document.getElementById('apt-popup-modal');
-        if (existing) existing.remove();
+        // First, explicitly clear out any lingering popups to guarantee dismissal
+        const allModals = document.querySelectorAll('#apt-popup-modal');
+        allModals.forEach(m => m.remove());
 
-        // Opens the popup modal for the selected notification
+        // Then open the modal for the clicked notification
         this.showPopupModal(message, status, notifId);
     }
 
