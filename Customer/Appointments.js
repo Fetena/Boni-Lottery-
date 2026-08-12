@@ -1,5 +1,5 @@
 // ============================================
-// CUSTOMER APPOINTMENTS - FIXED V14 (STRICT ISOLATION FROM ADMIN NOTIFS)
+// CUSTOMER APPOINTMENTS - FIXED V15 (WITH RED BADGE COUNTER SUPPORT)
 // ============================================
 
 class CustomerAppointments {
@@ -232,12 +232,21 @@ class CustomerAppointments {
     }
 
     async updateBadgeCount() {
-        const badgeEl = document.getElementById('customer-appointments-badge');
-        if (badgeEl) {
-            badgeEl.textContent = '0';
-            badgeEl.classList.add('hidden');
-            badgeEl.style.display = 'none';
-        }
+        const unreadCount = this.notifications.length;
+        
+        // Target badge elements including tab headers or button badges
+        const badgeEls = document.querySelectorAll('#customer-appointments-badge, .customer-notif-badge');
+        
+        badgeEls.forEach(badgeEl => {
+            badgeEl.textContent = unreadCount;
+            if (unreadCount > 0) {
+                badgeEl.style.display = 'inline-flex';
+                badgeEl.classList.remove('hidden');
+            } else {
+                badgeEl.style.display = 'none';
+                badgeEl.classList.add('hidden');
+            }
+        });
     }
 
     async init() {
@@ -285,9 +294,18 @@ class CustomerAppointments {
         this.loadAssignedAdminSync();
         this.loadAppointments();
         this.loadNotifications();
+
+        const unreadCount = this.notifications.length;
+        const badgeDisplay = unreadCount > 0 ? 'inline-flex' : 'none';
+
         return `
             <div class="space-y-6">
-                <h3 class="text-2xl font-bold text-white">📅 Appointments</h3>
+                <div class="flex items-center justify-between">
+                    <h3 class="text-2xl font-bold text-white flex items-center gap-3">
+                        <span>📅 Appointments & Tickets</span>
+                        <span id="customer-appointments-badge" class="customer-notif-badge px-2.5 py-0.5 bg-rose-500 text-white font-bold text-xs rounded-full shadow-lg items-center justify-center min-w-[22px]" style="display: ${badgeDisplay};">${unreadCount}</span>
+                    </h3>
+                </div>
                 
                 <!-- Notifications Tray Section -->
                 <div class="glass-panel rounded-2xl p-6 border border-yellow-400/20 space-y-4" style="background: rgba(0,0,0,0.6);">
