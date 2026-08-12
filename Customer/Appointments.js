@@ -1,5 +1,5 @@
 // ============================================
-// CUSTOMER APPOINTMENTS - FIXED V16 (AUTO-DISMISS POPUP & NOTIFICATION DELETE BUTTON)
+// CUSTOMER APPOINTMENTS - FIXED V17 (GUARANTEED POPUP AUTO-DISMISS & FIREBASE DELETE SYNC)
 // ============================================
 
 class CustomerAppointments {
@@ -118,7 +118,7 @@ class CustomerAppointments {
                     <div style="display: flex; gap: 8px;">
                         <button onclick="window.customerAppointments.dismissPopup('${notifId}')" 
                             style="flex: 1; padding: 12px; background: #facc15; color: #000; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; font-size: 13px;">
-                            Got It, Thanks!
+                            Got It & Clear
                         </button>
                         <button onclick="window.customerAppointments.deleteNotification('${notifId}')" 
                             style="padding: 12px 16px; background: rgba(239, 68, 68, 0.2); color: #ef4444; font-weight: bold; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.4); cursor: pointer; font-size: 13px;">
@@ -132,19 +132,28 @@ class CustomerAppointments {
     }
 
     async dismissPopup(notifId) {
+        // 1. Immediately remove the modal element from the DOM
         const modal = document.getElementById('apt-popup-modal');
         if (modal) modal.remove();
 
-        if (notifId && notifId.includes('_broadcast')) return;
+        // 2. If it's a broadcast, just filter out locally
+        if (notifId && notifId.includes('_broadcast')) {
+            const cleanId = notifId.replace('_broadcast', '');
+            this.notifications = this.notifications.filter(n => n.id !== cleanId && n.id !== notifId);
+            this.refreshList();
+            return;
+        }
 
+        // 3. Delete from Firestore permanently so it disappears completely
         if (notifId && typeof firebase !== 'undefined' && firebase.firestore) {
             try {
                 const db = firebase.firestore();
                 await db.collection('customer_notifications').doc(notifId).delete();
+                if (typeof notify === 'function') notify('info', '🔕 Notification cleared');
                 await this.loadNotifications();
                 this.refreshList();
             } catch (e) {
-                console.error('Error deleting viewed notification:', e);
+                console.error('Error deleting viewed notification from Firebase:', e);
             }
         }
     }
@@ -154,9 +163,10 @@ class CustomerAppointments {
         if (modal) modal.remove();
 
         if (notifId && notifId.includes('_broadcast')) {
-            // For broadcasts, just remove from local state array or refresh
-            this.notifications = this.notifications.filter(n => n.id !== notifId);
+            const cleanId = notifId.replace('_broadcast', '');
+            this.notifications = this.notifications.filter(n => n.id !== cleanId && n.id !== notifId);
             this.refreshList();
+            if (typeof notify === 'function') notify('info', '🗑️ Notification deleted');
             return;
         }
 
@@ -332,7 +342,7 @@ class CustomerAppointments {
                 <div class="glass-panel rounded-2xl p-6 border border-yellow-400/20 space-y-4" style="background: rgba(0,0,0,0.6);">
                     <div class="flex justify-between items-center">
                         <h4 class="font-bold text-white flex items-center gap-2">🔔 Notification Updates</h4>
-                        <span class="text-xs text-slate-400">Click any notification to open and auto-clear</span>
+                        <span class="text-xs text-slate-400">Click any notification to open, clear or delete</span>
                     </div>
                     <div id="notifications-tray" class="space-y-2 max-h-60 overflow-y-auto pr-1">
                         ${this.renderNotificationsHtml()}
@@ -496,7 +506,7 @@ class CustomerAppointments {
 
         try {
             const db = firebase.firestore();
-            const targetId = (this.custId !== 'DEFAULT' ? this.custId : (localStorage.getItem('currentUserEmail' ) || 'tt@gmail.com')).toString().toLowerCase().trim();
+            const targetId = (this.custId !== 'DEFAULT' ? this.custId : (localStorage.getItem('currentUserEmail') || 'tt@gmail.com')).toString().toLowerCase().trim();
             const selectedAdmin = this.admins.find(a => (a.email || a.id) === adminEmail);
             const adminName = selectedAdmin?.name || adminEmail;
 
