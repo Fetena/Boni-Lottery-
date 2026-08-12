@@ -1,5 +1,5 @@
 // ============================================
-// CUSTOMER APPOINTMENTS - FIXED V24 (ISOLATED TRAY DELETE & RELIABLE MODAL)
+// CUSTOMER APPOINTMENTS - FIXED V25 (DIRECT DOM MODAL REMOVAL)
 // ============================================
 
 class CustomerAppointments {
@@ -38,8 +38,6 @@ class CustomerAppointments {
         if (this._unsubscribeNotifs) this._unsubscribeNotifs();
         if (this._unsubscribeBroadcasts) this._unsubscribeBroadcasts();
 
-        // ONLY listen for changes, do NOT auto-trigger popup modals on load/snapshot sync. 
-        // Popups should ONLY appear when the user explicitly clicks the "View" button.
         this._unsubscribeNotifs = db.collection('customer_notifications')
             .onSnapshot(snapshot => {
                 let hasChanges = false;
@@ -81,72 +79,73 @@ class CustomerAppointments {
     }
 
     showPopupModal(message, status, notifId) {
-        // Force fully remove any existing modals in the entire DOM
-        document.querySelectorAll('#apt-popup-modal, .apt-popup-modal-class').forEach(m => m.remove());
+        // Completely remove any existing modal elements first
+        this.dismissPopup();
 
         const isApproved = status === 'Approved' || status === 'Confirmed' || status === 'Platform Broadcast' || status === 'Announcement';
         const borderColor = isApproved ? '#facc15' : '#ef4444';
         const textColor = isApproved ? 'text-yellow-400' : 'text-red-400';
         const icon = isApproved ? '📢' : '⚠️';
 
-        const modalHtml = `
-            <div id="apt-popup-modal" class="apt-popup-modal-class" style="position: fixed; inset: 0; z-index: 999999; display: flex; align-items: center; justify-content: center; background-color: rgba(0,0,0,0.85); backdrop-filter: blur(4px); padding: 1rem;">
-                <div class="glass-panel w-full max-w-md rounded-2xl p-6 space-y-4 shadow-2xl" style="background: #000; border: 2px solid ${borderColor}; pointer-events: auto;">
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <span style="font-size: 28px;">${icon}</span>
-                        <div>
-                            <h3 style="color: #fff; font-size: 18px; font-weight: bold; margin: 0;">Platform Notification</h3>
-                            <p class="${textColor}" style="font-size: 12px; font-weight: 600; margin: 2px 0 0 0;">Type: ${status || 'Update'}</p>
-                        </div>
+        const wrapper = document.createElement('div');
+        wrapper.id = 'apt-popup-modal';
+        wrapper.className = 'apt-popup-modal-class';
+        wrapper.style.cssText = 'position: fixed; inset: 0; z-index: 999999; display: flex; align-items: center; justify-content: center; background-color: rgba(0,0,0,0.85); backdrop-filter: blur(4px); padding: 1rem;';
+        
+        wrapper.innerHTML = `
+            <div class="glass-panel w-full max-w-md rounded-2xl p-6 space-y-4 shadow-2xl" style="background: #000; border: 2px solid ${borderColor}; pointer-events: auto;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="font-size: 28px;">${icon}</span>
+                    <div>
+                        <h3 style="color: #fff; font-size: 18px; font-weight: bold; margin: 0;">Platform Notification</h3>
+                        <p class="${textColor}" style="font-size: 12px; font-weight: 600; margin: 2px 0 0 0;">Type: ${status || 'Update'}</p>
                     </div>
-                    <div style="padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; font-size: 14px; color: #e2e8f0; line-height: 1.4;">
-                        ${message}
-                    </div>
-                    <div style="display: flex; gap: 8px;">
-                        <button type="button" id="apt-modal-gotit-btn" style="flex: 1; padding: 12px; background: #facc15; color: #000; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; font-size: 13px;">
-                            Got It, Thanks!
-                        </button>
-                        <button type="button" id="apt-modal-delete-btn" style="padding: 12px 16px; background: rgba(239, 68, 68, 0.2); color: #ef4444; font-weight: bold; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.4); cursor: pointer; font-size: 13px;">
-                            🗑️ Delete
-                        </button>
-                    </div>
+                </div>
+                <div style="padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; font-size: 14px; color: #e2e8f0; line-height: 1.4;">
+                    ${message}
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button type="button" id="apt-modal-gotit-btn" style="flex: 1; padding: 12px; background: #facc15; color: #000; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; font-size: 13px;">
+                        Got It, Thanks!
+                    </button>
+                    <button type="button" id="apt-modal-delete-btn" style="padding: 12px 16px; background: rgba(239, 68, 68, 0.2); color: #ef4444; font-weight: bold; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.4); cursor: pointer; font-size: 13px;">
+                        🗑️ Delete
+                    </button>
                 </div>
             </div>
         `;
-        
-        document.body.insertAdjacentHTML('beforeend', modalHtml);
 
-        // Bind event listeners natively to bypass any inline onclick scope issues
-        setTimeout(() => {
-            const gotItBtn = document.getElementById('apt-modal-gotit-btn');
-            const deleteBtn = document.getElementById('apt-modal-delete-btn');
+        document.body.appendChild(wrapper);
 
-            if (gotItBtn) {
-                gotItBtn.onclick = (e) => {
-                    e.stopPropagation();
-                    this.dismissPopup(notifId);
-                };
-            }
-            if (deleteBtn) {
-                deleteBtn.onclick = (e) => {
-                    e.stopPropagation();
-                    this.deleteNotification(notifId);
-                };
-            }
-        }, 50);
+        // Bind direct event listeners
+        const gotItBtn = wrapper.querySelector('#apt-modal-gotit-btn');
+        const deleteBtn = wrapper.querySelector('#apt-modal-delete-btn');
+
+        if (gotItBtn) {
+            gotItBtn.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.dismissPopup();
+            };
+        }
+
+        if (deleteBtn) {
+            deleteBtn.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.deleteNotification(notifId);
+            };
+        }
     }
 
-    dismissPopup(notifId) {
-        // Aggressively remove all possible modal overlay layers from DOM
-        document.querySelectorAll('#apt-popup-modal, .apt-popup-modal-class').forEach(m => m.remove());
-        const backdrops = document.querySelectorAll('div[style*="position: fixed"][style*="z-index: 999999"]');
-        backdrops.forEach(b => b.remove());
+    dismissPopup() {
+        const modals = document.querySelectorAll('#apt-popup-modal, .apt-popup-modal-class');
+        modals.forEach(m => m.remove());
     }
 
     async deleteNotification(notifId) {
-        this.dismissPopup(notifId);
+        this.dismissPopup();
 
-        // Save dismissed/deleted ID to localStorage so it stays hidden locally without touching Firestore (preventing admin side sync deletion)
         const dismissed = JSON.parse(localStorage.getItem('dismissed_notifs_' + this.custId) || '[]');
         if (!dismissed.includes(notifId)) {
             dismissed.push(notifId);
@@ -414,7 +413,6 @@ class CustomerAppointments {
     }
 
     handleNotificationClick(notifId, message, status) {
-        document.querySelectorAll('#apt-popup-modal, .apt-popup-modal-class').forEach(m => m.remove());
         this.showPopupModal(message, status, notifId);
     }
 
