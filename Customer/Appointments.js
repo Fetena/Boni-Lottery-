@@ -1,5 +1,5 @@
 // ============================================
-// CUSTOMER APPOINTMENTS - FIXED V17 (GUARANTEED POPUP AUTO-DISMISS & FIREBASE DELETE SYNC)
+// CUSTOMER APPOINTMENTS - FIXED V18 (BROADCAST & NOTIFICATION PERSISTENCE FIX)
 // ============================================
 
 class CustomerAppointments {
@@ -12,6 +12,10 @@ class CustomerAppointments {
         this.appointments = [];
         this.admins = [];
         this.notifications = [];
+        
+        // Track locally dismissed or deleted notification IDs so they never pop up again in this session
+        this.dismissedIds = JSON.parse(localStorage.getItem('dismissed_notifs_' + this.custId) || '[]');
+
         this.init();
         this.startCustomerNotificationPoller();
     }
@@ -24,6 +28,7 @@ class CustomerAppointments {
         const cleanNewId = newCustId.toString().toLowerCase().trim();
         if (cleanNewId && cleanNewId !== this.custId.toString().toLowerCase().trim()) {
             this.custId = cleanNewId;
+            this.dismissedIds = JSON.parse(localStorage.getItem('dismissed_notifs_' + this.custId) || '[]');
             this.loadAppointments();
             this.loadNotifications();
             this.refreshList();
@@ -44,11 +49,12 @@ class CustomerAppointments {
                 snapshot.docChanges().forEach(change => {
                     const n = change.doc.data();
                     const nCustId = (n.custId || '').toString().toLowerCase().trim();
+                    const docId = change.doc.id;
                     
                     if (nCustId === activeEmail) {
                         hasChanges = true;
-                        if (change.type === 'added' && !n.viewed) {
-                            this.showPopupModal(n.message, n.status || 'Announcement', change.doc.id);
+                        if (change.type === 'added' && !n.viewed && !this.dismissedIds.includes(docId)) {
+                            this.showPopupModal(n.message, n.status || 'Announcement', docId);
                             
                             const type = (n.status === 'Approved' || n.status === 'Confirmed') ? 'success' : 'error';
                             if (typeof notify === 'function') {
@@ -71,6 +77,7 @@ class CustomerAppointments {
                     if (change.type === 'added') {
                         const n = change.doc.data();
                         const target = (n.target || n.recipient || 'All Customers').toLowerCase();
+                        const docId = change.doc.id + '_broadcast';
                         
                         if (
                             target.includes('admin') || 
@@ -82,10 +89,12 @@ class CustomerAppointments {
                             return;
                         }
 
-                        const message = `[${n.title || 'Announcement'}] ${n.message || ''}`;
-                        this.showPopupModal(message, 'Platform Broadcast', change.doc.id + '_broadcast');
-                        if (typeof notify === 'function') {
-                            notify('success', `📢 ${message}`);
+                        if (!this.dismissedIds.includes(docId)) {
+                            const message = `[${n.title || 'Announcement'}] ${n.message || ''}`;
+                            this.showPopupModal(message, 'Platform Broadcast', docId);
+                            if (typeof notify === 'function') {
+                                notify('success', `📢 ${message}`);
+                            }
                         }
                         this.loadNotifications();
                     }
@@ -94,6 +103,8 @@ class CustomerAppointments {
     }
 
     showPopupModal(message, status, notifId) {
+        if (this.dismissedIds.includes(notifId)) return;
+
         const existing = document.getElementById('apt-popup-modal');
         if (existing) existing.remove();
 
@@ -131,20 +142,32 @@ class CustomerAppointments {
         document.body.insertAdjacentHTML('beforeend', modalHtml);
     }
 
+    markAsDismissed(notifId) {
+        if (!this.dismissedIds.includes(notifId)) {
+            this.dismissedIds.push(notifId);
+            try {
+                localStorage.setItem('dismissed_notifs_' + this.custId, JSON.stringify(this.dismissedIds));
+            } catch (e) {
+                console.error('Error saving dismissed state:', e);
+            }
+        }
+    }
+
     async dismissPopup(notifId) {
-        // 1. Immediately remove the modal element from the DOM
         const modal = document.getElementById('apt-popup-modal');
         if (modal) modal.remove();
 
-        // 2. If it's a broadcast, just filter out locally
+        if (notifId) {
+            this.markAsDismissed(notifId);
+        }
+
         if (notifId && notifId.includes('_broadcast')) {
-            const cleanId = notifId.replace('_broadcast', '');
-            this.notifications = this.notifications.filter(n => n.id !== cleanId && n.id !== notifId);
+            this.notifications = this.notifications.filter(n => n.id + '_broadcast' !== notifId && n.id !== notifId);
             this.refreshList();
+            if (typeof notify === 'function') notify('info', '🔕 Announcement cleared');
             return;
         }
 
-        // 3. Delete from Firestore permanently so it disappears completely
         if (notifId && typeof firebase !== 'undefined' && firebase.firestore) {
             try {
                 const db = firebase.firestore();
@@ -154,6 +177,9 @@ class CustomerAppointments {
                 this.refreshList();
             } catch (e) {
                 console.error('Error deleting viewed notification from Firebase:', e);
+                // Fallback local removal if Firestore security rules or connection fails
+                this.notifications = this.notifications.filter(n => n.id !== notifId);
+                this.refreshList();
             }
         }
     }
@@ -161,6 +187,10 @@ class CustomerAppointments {
     async deleteNotification(notifId) {
         const modal = document.getElementById('apt-popup-modal');
         if (modal) modal.remove();
+
+        if (notifId) {
+            this.markAsDismissed(notifId);
+        }
 
         if (notifId && notifId.includes('_broadcast')) {
             const cleanId = notifId.replace('_broadcast', '');
@@ -179,6 +209,9 @@ class CustomerAppointments {
                 this.refreshList();
             } catch (e) {
                 console.error('Error deleting notification from Firebase:', e);
+                // Fallback local removal if Firebase delete fails
+                this.notifications = this.notifications.filter(n => n.id !== notifId);
+                this.refreshList();
             }
         }
     }
@@ -213,7 +246,7 @@ class CustomerAppointments {
                 .map(doc => ({ id: doc.id, ...doc.data() }))
                 .filter(n => {
                     const nCust = (n.custId || '').toString().toLowerCase().trim();
-                    return nCust === targetId;
+                    return nCust === targetId && !this.dismissedIds.includes(n.id);
                 });
 
             const broadcastSnapshot = await db.collection('notifications').get();
@@ -222,13 +255,15 @@ class CustomerAppointments {
             broadcastSnapshot.docs.forEach(doc => {
                 const data = doc.data();
                 const target = (data.target || data.recipient || '').toLowerCase();
+                const broadcastUniqueId = doc.id + '_broadcast';
                 
                 if (
                     target.includes('admin') || 
                     target.includes('main admin') || 
                     target.includes('admins only') || 
                     target.includes('branch admin') ||
-                    data.isAdminOnly === true
+                    data.isAdminOnly === true ||
+                    this.dismissedIds.includes(broadcastUniqueId)
                 ) {
                     return;
                 }
@@ -412,19 +447,20 @@ class CustomerAppointments {
             const statusColor = isBroadcast ? 'text-yellow-400' : ((n.status === 'Approved' || n.status === 'Confirmed') ? 'text-emerald-400' : 'text-red-400');
             const statusLabel = isBroadcast ? '📢 Announcement' : `Status: ${n.status || 'Update'}`;
 
+            const targetNotifId = isBroadcast ? n.id + '_broadcast' : n.id;
             const safeMsg = (n.message || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
             return `
                 <div class="p-4 rounded-xl border border-white/5 flex items-start justify-between gap-3" style="${bgStyle}">
-                    <div onclick="window.customerAppointments.handleNotificationClick('${n.id}', '${safeMsg}', '${n.status || 'Updated'}')" class="space-y-1 flex-1 cursor-pointer">
+                    <div onclick="window.customerAppointments.handleNotificationClick('${targetNotifId}', '${safeMsg}', '${n.status || 'Updated'}')" class="space-y-1 flex-1 cursor-pointer">
                         <div class="flex items-center gap-2">
                             <span class="text-xs font-semibold ${statusColor}">${statusLabel}</span>
                         </div>
                         <p class="text-sm text-white leading-relaxed">${n.message}</p>
                     </div>
                     <div class="flex items-center gap-2">
-                        <button onclick="window.customerAppointments.handleNotificationClick('${n.id}', '${safeMsg}', '${n.status || 'Updated'}')" class="text-xs text-yellow-400 whitespace-nowrap font-medium px-2 py-1 bg-yellow-400/10 rounded hover:bg-yellow-400/20 transition">🔍 View</button>
-                        <button onclick="window.customerAppointments.deleteNotification('${n.id}')" class="text-xs text-red-400 whitespace-nowrap font-medium px-2 py-1 bg-red-500/10 rounded hover:bg-red-500/20 transition">🗑️</button>
+                        <button onclick="window.customerAppointments.handleNotificationClick('${targetNotifId}', '${safeMsg}', '${n.status || 'Updated'}')" class="text-xs text-yellow-400 whitespace-nowrap font-medium px-2 py-1 bg-yellow-400/10 rounded hover:bg-yellow-400/20 transition">🔍 View</button>
+                        <button onclick="window.customerAppointments.deleteNotification('${targetNotifId}')" class="text-xs text-red-400 whitespace-nowrap font-medium px-2 py-1 bg-red-500/10 rounded hover:bg-red-500/20 transition">🗑️</button>
                     </div>
                 </div>
             `;
@@ -433,19 +469,7 @@ class CustomerAppointments {
 
     async handleNotificationClick(notifId, message, status) {
         this.showPopupModal(message, status, notifId);
-        
-        if (notifId && notifId.includes('_broadcast')) return;
-
-        if (notifId && typeof firebase !== 'undefined' && firebase.firestore) {
-            try {
-                const db = firebase.firestore();
-                await db.collection('customer_notifications').doc(notifId).delete();
-                await this.loadNotifications();
-                this.refreshList();
-            } catch (e) {
-                console.error('Error deleting notification on click:', e);
-            }
-        }
+        await this.dismissPopup(notifId);
     }
 
     renderAppointmentsHtml() {
