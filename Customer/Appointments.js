@@ -1,5 +1,5 @@
 // ============================================
-// CUSTOMER APPOINTMENTS - FIXED V19 (RESTORABLE NOTIFICATION TRAY & PERSISTENT VIEW)
+// CUSTOMER APPOINTMENTS - FIXED V20 (DISMISS POPUP ON VIEW)
 // ============================================
 
 class CustomerAppointments {
@@ -424,7 +424,11 @@ class CustomerAppointments {
     }
 
     handleNotificationClick(notifId, message, status) {
-        // Only opens the popup modal. It will NOT auto-delete the notification, keeping it visible in the tray until the user clicks the trash icon.
+        // Automatically dismisses/removes any existing popup modal first, then shows the clicked one
+        const existing = document.getElementById('apt-popup-modal');
+        if (existing) existing.remove();
+
+        // Opens the popup modal for the selected notification
         this.showPopupModal(message, status, notifId);
     }
 
