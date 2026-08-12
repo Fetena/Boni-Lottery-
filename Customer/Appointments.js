@@ -141,8 +141,14 @@ class CustomerAppointments {
         const modal = document.getElementById('apt-popup-modal');
         if (modal) modal.remove();
 
+        // Save dismissed/deleted ID to localStorage so it stays hidden on re-login
+        const dismissed = JSON.parse(localStorage.getItem('dismissed_notifs_' + this.custId) || '[]');
+        if (!dismissed.includes(notifId)) {
+            dismissed.push(notifId);
+            localStorage.setItem('dismissed_notifs_' + this.custId, JSON.stringify(dismissed));
+        }
+
         if (notifId && notifId.includes('_broadcast')) {
-            // Filter broadcast out of local array view
             this.notifications = this.notifications.filter(n => (n.id + '_broadcast') !== notifId && n.id !== notifId);
             this.refreshList();
             if (typeof notify === 'function') notify('info', '🗑️ Announcement removed from tray');
@@ -186,13 +192,16 @@ class CustomerAppointments {
         try {
             const db = firebase.firestore();
             const targetId = (this.custId && this.custId !== 'DEFAULT' ? this.custId : (localStorage.getItem('currentUserEmail') || 'tt@gmail.com')).toString().toLowerCase().trim();
+            const dismissed = JSON.parse(localStorage.getItem('dismissed_notifs_' + this.custId) || '[]');
             
             const custNotifSnapshot = await db.collection('customer_notifications').get();
             const custNotifs = custNotifSnapshot.docs
                 .map(doc => ({ id: doc.id, ...doc.data() }))
                 .filter(n => {
                     const nCust = (n.custId || '').toString().toLowerCase().trim();
-                    return nCust === targetId || !n.custId;
+                    const matchesUser = nCust === targetId || !n.custId;
+                    const isNotDismissed = !dismissed.includes(n.id);
+                    return matchesUser && isNotDismissed;
                 });
 
             const broadcastSnapshot = await db.collection('notifications').get();
@@ -201,13 +210,16 @@ class CustomerAppointments {
             broadcastSnapshot.docs.forEach(doc => {
                 const data = doc.data();
                 const target = (data.target || data.recipient || '').toLowerCase();
+                const broadcastId = doc.id + '_broadcast';
                 
                 if (
                     target.includes('admin') || 
                     target.includes('main admin') || 
                     target.includes('admins only') || 
                     target.includes('branch admin') ||
-                    data.isAdminOnly === true
+                    data.isAdminOnly === true ||
+                    dismissed.includes(broadcastId) ||
+                    dismissed.includes(doc.id)
                 ) {
                     return;
                 }
