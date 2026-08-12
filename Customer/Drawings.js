@@ -1,6 +1,7 @@
 // ============================================
 // FULLY REVISED CUSTOMER DRAWINGS COMPONENT
-// Parent: CustomerDashboard
+// Fixes: Eliminates default/dummy fallback display 
+// and enforces direct real-time loading without refresh.
 // ============================================
 
 class CustomerDrawings {
@@ -28,8 +29,13 @@ class CustomerDrawings {
             if (doc.exists) {
                 customerData = doc.data();
             } else {
-                const localCusts = JSON.parse(localStorage.getItem('registered_customers') || '[]');
-                customerData = localCusts.find(c => c.id === this.custId) || {};
+                const customerSettingsDoc = await db.collection('customer_settings').doc(this.custId).get();
+                if (customerSettingsDoc.exists) {
+                    customerData = customerSettingsDoc.data();
+                } else {
+                    const localCusts = JSON.parse(localStorage.getItem('registered_customers') || '[]');
+                    customerData = localCusts.find(c => c.id === this.custId || c.email === this.custId) || {};
+                }
             }
 
             this.customerAdmin = customerData.assignedAdmin || customerData.adminId || customerData.branchAdmin || customerData.preferredAdmin || 'Main Admin';
@@ -67,12 +73,12 @@ class CustomerDrawings {
                     };
                 });
             } else {
-                this.draws = this.defaultDraws();
+                this.draws = [];
             }
         } catch (e) {
             console.error('Error fetching admin drawings:', e);
             this.customerAdmin = 'Main Admin';
-            this.draws = this.defaultDraws();
+            this.draws = [];
         }
     }
 
@@ -99,7 +105,6 @@ class CustomerDrawings {
                     nextDrawTitleEl.textContent = `${targetDate} • ${targetTime} ${ampm}`;
                 }
 
-                // Update watch live button click handlers dynamically with admin's saved link
                 const watchBtn = document.getElementById('customer-tiktok-btn');
                 if (watchBtn) {
                     watchBtn.setAttribute('onclick', `customerDrawings.goToTikTok('${tiktokLink}')`);
@@ -185,7 +190,6 @@ class CustomerDrawings {
         });
     }
 
-    // Automatic Client-Side Live Notification Trigger (Stays for 30 min, disappears on click)
     initLiveDrawAutoListener() {
         if (!db) return;
 
@@ -216,7 +220,7 @@ class CustomerDrawings {
                 const now = new Date().getTime();
                 const timeDiff = now - drawTimeMs;
                 const windowKey = `notified_draw_${year}-${month}-${day}_${hours}-${minutes}`;
-                const thirtyMinutesMs = 30 * 60 * 1000; // 30 minutes duration
+                const thirtyMinutesMs = 30 * 60 * 1000;
 
                 if (timeDiff >= 0 && timeDiff <= thirtyMinutesMs && !localStorage.getItem(windowKey)) {
                     localStorage.setItem(windowKey, 'true');
@@ -294,33 +298,23 @@ class CustomerDrawings {
         }
     }
 
-    defaultDraws() {
-        return [
-            {
-                id: 'DRAW001',
-                adminId: this.customerAdmin || 'Main Admin',
-                date: 'Next Scheduled Draw',
-                time: '20:00',
-                status: 'Upcoming',
-                winners: [],
-                winningNumber: null,
-                tickets: 0,
-                prizePool: 5000
-            }
-        ];
-    }
-
     render() {
         const adminDraws = this.draws.filter(d => !d.adminId || d.adminId === this.customerAdmin || d.adminId === 'Main Admin');
-        const activeDraws = adminDraws.length > 0 ? adminDraws : this.defaultDraws();
-        const nextDraw = activeDraws.find(d => d.status === 'Upcoming') || activeDraws[0];
+        const activeDraws = adminDraws.length > 0 ? adminDraws : [];
+        const nextDraw = activeDraws.length > 0 ? (activeDraws.find(d => d.status === 'Upcoming') || activeDraws[0]) : {
+            id: 'DEFAULT',
+            date: 'Loading Schedule...',
+            time: '',
+            prizePool: 5000,
+            status: 'Upcoming'
+        };
         const pastDraws = activeDraws.filter(d => d.id !== nextDraw.id);
 
         return `
             <div class="space-y-4">
                 <div class="flex justify-between items-center">
                     <h3 class="text-2xl font-bold text-white">🎰 Home Dashboard</h3>
-                    <span class="text-xs bg-yellow-400/10 text-yellow-400 border border-yellow-400/20 px-3 py-1 rounded-full">Managed by: ${this.customerAdmin}</span>
+                    <span class="text-xs bg-yellow-400/10 text-yellow-400 border border-yellow-400/20 px-3 py-1 rounded-full">Managed by: ${this.customerAdmin || 'Main Admin'}</span>
                 </div>
 
                 <!-- LIVE SCHEDULE SYNC BANNER -->
@@ -331,7 +325,7 @@ class CustomerDrawings {
                 <!-- UPCOMING DRAW & LIVE COUNTDOWN -->
                 <div class="glass-panel rounded-2xl p-8 border border-yellow-400/10 text-center space-y-4 bg-gradient-to-br from-yellow-400/10 to-transparent">
                     <h4 class="text-2xl font-bold text-yellow-400">Next Admin Drawing</h4>
-                    <p id="next-draw-datetime-display" class="text-3xl font-bold text-white">${nextDraw.date} • ${nextDraw.time}</p>
+                    <p id="next-draw-datetime-display" class="text-3xl font-bold text-white">${nextDraw.date} ${nextDraw.time ? '• ' + nextDraw.time : ''}</p>
                     
                     <!-- DYNAMIC COUNTDOWN BADGE -->
                     <div>
@@ -340,7 +334,7 @@ class CustomerDrawings {
                         </span>
                     </div>
 
-                    <p class="text-slate-300 font-medium">Prize Pool: <span class="text-yellow-400">${nextDraw.prizePool || 0} ETB</span></p>
+                    <p class="text-slate-300 font-medium">Prize Pool: <span class="text-yellow-400">${nextDraw.prizePool || 5000} ETB</span></p>
                     
                     <!-- REAL-TIME 3 WINNERS CONTAINER -->
                     <div id="customer-live-winners-display" class="w-full max-w-lg mx-auto"></div>
@@ -358,7 +352,7 @@ class CustomerDrawings {
                         <div>
                             <label class="text-xs text-slate-400 mb-1 block">Select Drawing Date</label>
                             <select id="check-draw-date" class="w-full bg-black/40 border border-yellow-400/20 rounded-xl py-2 px-4 text-sm text-white outline-none">
-                                ${activeDraws.map(d => `<option value="${d.id}">${d.date} - Pool: ${d.prizePool || 0} ETB (${d.status})</option>`).join('')}
+                                ${activeDraws.length > 0 ? activeDraws.map(d => `<option value="${d.id}">${d.date} - Pool: ${d.prizePool || 0} ETB (${d.status})</option>`).join('') : '<option value="">No Active Drawings Available</option>'}
                             </select>
                         </div>
                         <div>
@@ -478,18 +472,15 @@ class CustomerDrawings {
     }
 }
 
-// Global scope initialization & auto-hooking for single-page tab routing
 let customerDrawings = null;
 
 function initCustomerDrawingsModule() {
-    const custId = localStorage.getItem('currentCustId') || 'DEFAULT';
+    const custId = currentUser?.email || localStorage.getItem('currentCustId') || 'DEFAULT';
     customerDrawings = new CustomerDrawings(custId);
 }
 
-// Handle initial load
 document.addEventListener('DOMContentLoaded', () => {
     initCustomerDrawingsModule();
 });
 
-// Expose a hook so that when the user clicks the "Home" tab router, it re-renders instantly without needing a full-page refresh
 window.reloadCustomerDrawings = initCustomerDrawingsModule;
