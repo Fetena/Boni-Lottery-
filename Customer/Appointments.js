@@ -440,7 +440,9 @@ class CustomerAppointments {
         const description = document.getElementById('apt-desc')?.value;
 
         if (!rawDate || !time || !purpose || !adminEmail) {
-            if (typeof notify === 'function') notify('error', '❌ Please fill all required fields');
+            if (typeof notify === 'function') {
+                notify('error', '❌ Please fill all required fields');
+            }
             return;
         }
 
@@ -453,7 +455,7 @@ class CustomerAppointments {
 
         try {
             const db = firebase.firestore();
-            const targetId = (this.custId !== 'DEFAULT' ? this.custId : (localStorage.getItem('currentUserEmail'] || 'tt@gmail.com')).toString().toLowerCase().trim();
+            const targetId = (this.custId !== 'DEFAULT' ? this.custId : (localStorage.getItem('currentUserEmail') || 'tt@gmail.com')).toString().toLowerCase().trim();
             const selectedAdmin = this.admins.find(a => (a.email || a.id) === adminEmail);
             const adminName = selectedAdmin?.name || adminEmail;
 
@@ -474,7 +476,9 @@ class CustomerAppointments {
 
             await db.collection('customer_appointments').add(appointment);
 
-            if (typeof notify === 'function') notify('success', `✅ Appointment successfully booked with ${adminName}!`);
+            if (typeof notify === 'function') {
+                notify('success', `✅ Appointment successfully booked with ${adminName}!`);
+            }
             
             document.getElementById('apt-admin').value = '';
             document.getElementById('apt-date').value = '';
@@ -485,7 +489,9 @@ class CustomerAppointments {
             this.refreshList();
         } catch (e) {
             console.error('Error booking appointment in Firebase:', e);
-            if (typeof notify === 'function') notify('error', '❌ Failed to book appointment');
+            if (typeof notify === 'function') {
+                notify('error', '❌ Failed to book appointment');
+            }
         }
     }
 
