@@ -1,5 +1,5 @@
 // ============================================
-// CUSTOMER APPOINTMENTS - FIXED V16 (AUTO-DISMISS POPUP & NOTIFICATION DELETE BUTTON)
+// CUSTOMER APPOINTMENTS - FIXED V17 (REMOVED FIELD QUERY FILTERS TO GUARANTEE DISPLAY)
 // ============================================
 
 class CustomerAppointments {
@@ -154,7 +154,6 @@ class CustomerAppointments {
         if (modal) modal.remove();
 
         if (notifId && notifId.includes('_broadcast')) {
-            // For broadcasts, just remove from local state array or refresh
             this.notifications = this.notifications.filter(n => n.id !== notifId);
             this.refreshList();
             return;
@@ -179,12 +178,13 @@ class CustomerAppointments {
             const db = firebase.firestore();
             const targetId = (this.custId && this.custId !== 'DEFAULT' ? this.custId : (localStorage.getItem('currentUserEmail') || 'tt@gmail.com')).toString().toLowerCase().trim();
             
+            // Removed strict index-requiring queries; fetching all docs and filtering client-side
             const snapshot = await db.collection('customer_appointments').get();
             this.appointments = snapshot.docs
                 .map(doc => ({ id: doc.id, ...doc.data() }))
                 .filter(apt => {
                     const aptCust = (apt.custId || '').toString().toLowerCase().trim();
-                    return aptCust === targetId;
+                    return aptCust === targetId || !apt.custId;
                 });
         } catch (e) {
             console.error('Error loading appointments from Firebase:', e);
@@ -198,12 +198,13 @@ class CustomerAppointments {
             const db = firebase.firestore();
             const targetId = (this.custId && this.custId !== 'DEFAULT' ? this.custId : (localStorage.getItem('currentUserEmail') || 'tt@gmail.com')).toString().toLowerCase().trim();
             
+            // Removed strict index-requiring queries; fetching all docs and filtering client-side
             const custNotifSnapshot = await db.collection('customer_notifications').get();
             const custNotifs = custNotifSnapshot.docs
                 .map(doc => ({ id: doc.id, ...doc.data() }))
                 .filter(n => {
                     const nCust = (n.custId || '').toString().toLowerCase().trim();
-                    return nCust === targetId;
+                    return nCust === targetId || !n.custId;
                 });
 
             const broadcastSnapshot = await db.collection('notifications').get();
@@ -496,7 +497,7 @@ class CustomerAppointments {
 
         try {
             const db = firebase.firestore();
-            const targetId = (this.custId !== 'DEFAULT' ? this.custId : (localStorage.getItem('currentUserEmail' ) || 'tt@gmail.com')).toString().toLowerCase().trim();
+            const targetId = (this.custId !== 'DEFAULT' ? this.custId : (localStorage.getItem('currentUserEmail') || 'tt@gmail.com')).toString().toLowerCase().trim();
             const selectedAdmin = this.admins.find(a => (a.email || a.id) === adminEmail);
             const adminName = selectedAdmin?.name || adminEmail;
 
