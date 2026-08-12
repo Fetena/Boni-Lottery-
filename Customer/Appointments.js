@@ -1,5 +1,5 @@
 // ============================================
-// CUSTOMER APPOINTMENTS - FIXED V18 (BROADCAST & NOTIFICATION PERSISTENCE FIX)
+// CUSTOMER APPOINTMENTS - FIXED V19 (SECURE NOTIFICATION PERSISTENCE & REALTIME SYNC)
 // ============================================
 
 class CustomerAppointments {
@@ -13,7 +13,6 @@ class CustomerAppointments {
         this.admins = [];
         this.notifications = [];
         
-        // Track locally dismissed or deleted notification IDs so they never pop up again in this session
         this.dismissedIds = JSON.parse(localStorage.getItem('dismissed_notifs_' + this.custId) || '[]');
 
         this.init();
@@ -43,6 +42,7 @@ class CustomerAppointments {
         if (this._unsubscribeNotifs) this._unsubscribeNotifs();
         if (this._unsubscribeBroadcasts) this._unsubscribeBroadcasts();
 
+        // Listen to personal notifications using snapshots for real-time delivery
         this._unsubscribeNotifs = db.collection('customer_notifications')
             .onSnapshot(snapshot => {
                 let hasChanges = false;
@@ -65,12 +65,11 @@ class CustomerAppointments {
                 });
 
                 if (hasChanges) {
-                    this.loadAppointments();
                     this.loadNotifications();
-                    this.refreshList();
                 }
             }, e => console.error('Firestore notification listener error:', e));
 
+        // Listen to platform broadcasts
         this._unsubscribeBroadcasts = db.collection('notifications')
             .onSnapshot(snapshot => {
                 snapshot.docChanges().forEach(change => {
@@ -162,7 +161,7 @@ class CustomerAppointments {
         }
 
         if (notifId && notifId.includes('_broadcast')) {
-            this.notifications = this.notifications.filter(n => n.id + '_broadcast' !== notifId && n.id !== notifId);
+            this.notifications = this.notifications.filter(n => (n.id + '_broadcast') !== notifId && n.id !== notifId);
             this.refreshList();
             if (typeof notify === 'function') notify('info', '🔕 Announcement cleared');
             return;
@@ -173,15 +172,13 @@ class CustomerAppointments {
                 const db = firebase.firestore();
                 await db.collection('customer_notifications').doc(notifId).delete();
                 if (typeof notify === 'function') notify('info', '🔕 Notification cleared');
-                await this.loadNotifications();
-                this.refreshList();
             } catch (e) {
                 console.error('Error deleting viewed notification from Firebase:', e);
-                // Fallback local removal if Firestore security rules or connection fails
-                this.notifications = this.notifications.filter(n => n.id !== notifId);
-                this.refreshList();
             }
         }
+
+        await this.loadNotifications();
+        this.refreshList();
     }
 
     async deleteNotification(notifId) {
@@ -205,15 +202,13 @@ class CustomerAppointments {
                 const db = firebase.firestore();
                 await db.collection('customer_notifications').doc(notifId).delete();
                 if (typeof notify === 'function') notify('info', '🗑️ Notification deleted');
-                await this.loadNotifications();
-                this.refreshList();
             } catch (e) {
                 console.error('Error deleting notification from Firebase:', e);
-                // Fallback local removal if Firebase delete fails
-                this.notifications = this.notifications.filter(n => n.id !== notifId);
-                this.refreshList();
             }
         }
+
+        await this.loadNotifications();
+        this.refreshList();
     }
 
     async loadAppointments() {
