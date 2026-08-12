@@ -1,5 +1,5 @@
 // ============================================
-// CUSTOMER APPOINTMENTS - FIXED V15 (WITH RED BADGE COUNTER SUPPORT)
+// CUSTOMER APPOINTMENTS - FIXED V16 (AUTO-DISMISS POPUP & NOTIFICATION DELETE BUTTON)
 // ============================================
 
 class CustomerAppointments {
@@ -30,7 +30,6 @@ class CustomerAppointments {
         }
     }
 
-    // Realtime Firebase Listener targeting ONLY customer notifications (strictly ignoring admin broadcasts)
     startCustomerNotificationPoller() {
         if (typeof firebase === 'undefined' || !firebase.firestore) return;
         const db = firebase.firestore();
@@ -39,7 +38,6 @@ class CustomerAppointments {
         if (this._unsubscribeNotifs) this._unsubscribeNotifs();
         if (this._unsubscribeBroadcasts) this._unsubscribeBroadcasts();
 
-        // 1. Listen exclusively to targeted customer_notifications collection
         this._unsubscribeNotifs = db.collection('customer_notifications')
             .onSnapshot(snapshot => {
                 let hasChanges = false;
@@ -67,7 +65,6 @@ class CustomerAppointments {
                 }
             }, e => console.error('Firestore notification listener error:', e));
 
-        // 2. Listen to global platform `notifications` with STRICT checking to block admin-only content
         this._unsubscribeBroadcasts = db.collection('notifications')
             .onSnapshot(snapshot => {
                 snapshot.docChanges().forEach(change => {
@@ -75,7 +72,6 @@ class CustomerAppointments {
                         const n = change.doc.data();
                         const target = (n.target || n.recipient || 'All Customers').toLowerCase();
                         
-                        // 🛑 STRICT ISOLATION: If the broadcast is meant for admins or main admin, completely ignore it for customers
                         if (
                             target.includes('admin') || 
                             target.includes('main admin') || 
@@ -119,10 +115,16 @@ class CustomerAppointments {
                     <div style="padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; font-size: 14px; color: #e2e8f0; line-height: 1.4;">
                         ${message}
                     </div>
-                    <button onclick="window.customerAppointments.dismissPopup('${notifId}')" 
-                        style="width: 100%; padding: 12px; background: #facc15; color: #000; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; font-size: 13px;">
-                        Got It, Thanks!
-                    </button>
+                    <div style="display: flex; gap: 8px;">
+                        <button onclick="window.customerAppointments.dismissPopup('${notifId}')" 
+                            style="flex: 1; padding: 12px; background: #facc15; color: #000; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; font-size: 13px;">
+                            Got It, Thanks!
+                        </button>
+                        <button onclick="window.customerAppointments.deleteNotification('${notifId}')" 
+                            style="padding: 12px 16px; background: rgba(239, 68, 68, 0.2); color: #ef4444; font-weight: bold; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.4); cursor: pointer; font-size: 13px;">
+                            🗑️ Delete
+                        </button>
+                    </div>
                 </div>
             </div>
         `;
@@ -143,6 +145,30 @@ class CustomerAppointments {
                 this.refreshList();
             } catch (e) {
                 console.error('Error deleting viewed notification:', e);
+            }
+        }
+    }
+
+    async deleteNotification(notifId) {
+        const modal = document.getElementById('apt-popup-modal');
+        if (modal) modal.remove();
+
+        if (notifId && notifId.includes('_broadcast')) {
+            // For broadcasts, just remove from local state array or refresh
+            this.notifications = this.notifications.filter(n => n.id !== notifId);
+            this.refreshList();
+            return;
+        }
+
+        if (notifId && typeof firebase !== 'undefined' && firebase.firestore) {
+            try {
+                const db = firebase.firestore();
+                await db.collection('customer_notifications').doc(notifId).delete();
+                if (typeof notify === 'function') notify('info', '🗑️ Notification deleted');
+                await this.loadNotifications();
+                this.refreshList();
+            } catch (e) {
+                console.error('Error deleting notification from Firebase:', e);
             }
         }
     }
@@ -172,7 +198,6 @@ class CustomerAppointments {
             const db = firebase.firestore();
             const targetId = (this.custId && this.custId !== 'DEFAULT' ? this.custId : (localStorage.getItem('currentUserEmail') || 'tt@gmail.com')).toString().toLowerCase().trim();
             
-            // 1. Fetch targeted customer notifications
             const custNotifSnapshot = await db.collection('customer_notifications').get();
             const custNotifs = custNotifSnapshot.docs
                 .map(doc => ({ id: doc.id, ...doc.data() }))
@@ -181,7 +206,6 @@ class CustomerAppointments {
                     return nCust === targetId;
                 });
 
-            // 2. Fetch global broadcasts from `notifications` collection (Strictly filtering out admin entries)
             const broadcastSnapshot = await db.collection('notifications').get();
             const broadcasts = [];
             
@@ -189,7 +213,6 @@ class CustomerAppointments {
                 const data = doc.data();
                 const target = (data.target || data.recipient || '').toLowerCase();
                 
-                // 🛑 EXCLUDE admin-only or main-admin targeted broadcasts from customer view
                 if (
                     target.includes('admin') || 
                     target.includes('main admin') || 
@@ -233,8 +256,6 @@ class CustomerAppointments {
 
     async updateBadgeCount() {
         const unreadCount = this.notifications.length;
-        
-        // Target badge elements including tab headers or button badges
         const badgeEls = document.querySelectorAll('#customer-appointments-badge, .customer-notif-badge');
         
         badgeEls.forEach(badgeEl => {
@@ -384,15 +405,17 @@ class CustomerAppointments {
             const safeMsg = (n.message || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
             return `
-                <div onclick="window.customerAppointments.handleNotificationClick('${n.id}', '${safeMsg}', '${n.status || 'Updated'}')" 
-                     class="p-4 rounded-xl border cursor-pointer transition hover:border-yellow-400 flex items-start justify-between gap-3" style="${bgStyle}">
-                    <div class="space-y-1">
+                <div class="p-4 rounded-xl border border-white/5 flex items-start justify-between gap-3" style="${bgStyle}">
+                    <div onclick="window.customerAppointments.handleNotificationClick('${n.id}', '${safeMsg}', '${n.status || 'Updated'}')" class="space-y-1 flex-1 cursor-pointer">
                         <div class="flex items-center gap-2">
                             <span class="text-xs font-semibold ${statusColor}">${statusLabel}</span>
                         </div>
                         <p class="text-sm text-white leading-relaxed">${n.message}</p>
                     </div>
-                    <span class="text-xs text-yellow-400 whitespace-nowrap font-medium">🔍 View</span>
+                    <div class="flex items-center gap-2">
+                        <button onclick="window.customerAppointments.handleNotificationClick('${n.id}', '${safeMsg}', '${n.status || 'Updated'}')" class="text-xs text-yellow-400 whitespace-nowrap font-medium px-2 py-1 bg-yellow-400/10 rounded hover:bg-yellow-400/20 transition">🔍 View</button>
+                        <button onclick="window.customerAppointments.deleteNotification('${n.id}')" class="text-xs text-red-400 whitespace-nowrap font-medium px-2 py-1 bg-red-500/10 rounded hover:bg-red-500/20 transition">🗑️</button>
+                    </div>
                 </div>
             `;
         }).join('');
@@ -473,7 +496,7 @@ class CustomerAppointments {
 
         try {
             const db = firebase.firestore();
-            const targetId = (this.custId !== 'DEFAULT' ? this.custId : (localStorage.getItem('currentUserEmail') || 'tt@gmail.com')).toString().toLowerCase().trim();
+            const targetId = (this.custId !== 'DEFAULT' ? this.custId : (localStorage.getItem('currentUserEmail' ) || 'tt@gmail.com')).toString().toLowerCase().trim();
             const selectedAdmin = this.admins.find(a => (a.email || a.id) === adminEmail);
             const adminName = selectedAdmin?.name || adminEmail;
 
