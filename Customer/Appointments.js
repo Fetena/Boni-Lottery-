@@ -1,5 +1,5 @@
 // ============================================
-// CUSTOMER APPOINTMENTS - FIXED V23 (ISOLATED DELETE & INSTANT DISMISS)
+// CUSTOMER APPOINTMENTS - FIXED V24 (ISOLATED TRAY DELETE & RELIABLE MODAL)
 // ============================================
 
 class CustomerAppointments {
@@ -38,23 +38,16 @@ class CustomerAppointments {
         if (this._unsubscribeNotifs) this._unsubscribeNotifs();
         if (this._unsubscribeBroadcasts) this._unsubscribeBroadcasts();
 
+        // ONLY listen for changes, do NOT auto-trigger popup modals on load/snapshot sync. 
+        // Popups should ONLY appear when the user explicitly clicks the "View" button.
         this._unsubscribeNotifs = db.collection('customer_notifications')
             .onSnapshot(snapshot => {
                 let hasChanges = false;
                 snapshot.docChanges().forEach(change => {
                     const n = change.doc.data();
                     const nCustId = (n.custId || '').toString().toLowerCase().trim();
-                    
                     if (nCustId === activeEmail) {
                         hasChanges = true;
-                        if (change.type === 'added' && !n.viewed) {
-                            this.showPopupModal(n.message, n.status || 'Announcement', change.doc.id);
-                            
-                            const type = (n.status === 'Approved' || n.status === 'Confirmed') ? 'success' : 'error';
-                            if (typeof notify === 'function') {
-                                notify(type, `🔔 ${n.message}`);
-                            }
-                        }
                     }
                 });
 
@@ -81,12 +74,6 @@ class CustomerAppointments {
                         ) {
                             return;
                         }
-
-                        const message = `[${n.title || 'Announcement'}] ${n.message || ''}`;
-                        this.showPopupModal(message, 'Platform Broadcast', change.doc.id + '_broadcast');
-                        if (typeof notify === 'function') {
-                            notify('success', `📢 ${message}`);
-                        }
                         this.loadNotifications();
                     }
                 });
@@ -104,7 +91,7 @@ class CustomerAppointments {
 
         const modalHtml = `
             <div id="apt-popup-modal" class="apt-popup-modal-class" style="position: fixed; inset: 0; z-index: 999999; display: flex; align-items: center; justify-content: center; background-color: rgba(0,0,0,0.85); backdrop-filter: blur(4px); padding: 1rem;">
-                <div class="glass-panel w-full max-w-md rounded-2xl p-6 space-y-4 shadow-2xl" style="background: #000; border: 2px solid ${borderColor};">
+                <div class="glass-panel w-full max-w-md rounded-2xl p-6 space-y-4 shadow-2xl" style="background: #000; border: 2px solid ${borderColor}; pointer-events: auto;">
                     <div style="display: flex; align-items: center; gap: 12px;">
                         <span style="font-size: 28px;">${icon}</span>
                         <div>
@@ -116,19 +103,37 @@ class CustomerAppointments {
                         ${message}
                     </div>
                     <div style="display: flex; gap: 8px;">
-                        <button type="button" onclick="window.customerAppointments.dismissPopup('${notifId}')" 
-                            style="flex: 1; padding: 12px; background: #facc15; color: #000; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; font-size: 13px;">
+                        <button type="button" id="apt-modal-gotit-btn" style="flex: 1; padding: 12px; background: #facc15; color: #000; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; font-size: 13px;">
                             Got It, Thanks!
                         </button>
-                        <button type="button" onclick="window.customerAppointments.deleteNotification('${notifId}')" 
-                            style="padding: 12px 16px; background: rgba(239, 68, 68, 0.2); color: #ef4444; font-weight: bold; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.4); cursor: pointer; font-size: 13px;">
+                        <button type="button" id="apt-modal-delete-btn" style="padding: 12px 16px; background: rgba(239, 68, 68, 0.2); color: #ef4444; font-weight: bold; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.4); cursor: pointer; font-size: 13px;">
                             🗑️ Delete
                         </button>
                     </div>
                 </div>
             </div>
         `;
+        
         document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+        // Bind event listeners natively to bypass any inline onclick scope issues
+        setTimeout(() => {
+            const gotItBtn = document.getElementById('apt-modal-gotit-btn');
+            const deleteBtn = document.getElementById('apt-modal-delete-btn');
+
+            if (gotItBtn) {
+                gotItBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    this.dismissPopup(notifId);
+                };
+            }
+            if (deleteBtn) {
+                deleteBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    this.deleteNotification(notifId);
+                };
+            }
+        }, 50);
     }
 
     dismissPopup(notifId) {
@@ -141,24 +146,16 @@ class CustomerAppointments {
     async deleteNotification(notifId) {
         this.dismissPopup(notifId);
 
-        // Save dismissed/deleted ID to localStorage so it stays hidden on re-login
+        // Save dismissed/deleted ID to localStorage so it stays hidden locally without touching Firestore (preventing admin side sync deletion)
         const dismissed = JSON.parse(localStorage.getItem('dismissed_notifs_' + this.custId) || '[]');
         if (!dismissed.includes(notifId)) {
             dismissed.push(notifId);
             localStorage.setItem('dismissed_notifs_' + this.custId, JSON.stringify(dismissed));
         }
 
-        if (notifId && notifId.includes('_broadcast')) {
-            this.notifications = this.notifications.filter(n => (n.id + '_broadcast') !== notifId && n.id !== notifId);
-            this.refreshList();
-            if (typeof notify === 'function') notify('info', '🗑️ Announcement removed from tray');
-            return;
-        }
-
-        // Only hide locally / mark as hidden for this specific customer without deleting the master document from Firebase (preventing admin deletion sync conflict)
-        this.notifications = this.notifications.filter(n => n.id !== notifId);
+        this.notifications = this.notifications.filter(n => n.id !== notifId && (n.id + '_broadcast') !== notifId);
         this.refreshList();
-        if (typeof notify === 'function') notify('info', '🗑️ Notification dismissed from your tray');
+        if (typeof notify === 'function') notify('info', '🗑️ Notification removed from your tray');
     }
 
     async loadAppointments() {
@@ -417,10 +414,7 @@ class CustomerAppointments {
     }
 
     handleNotificationClick(notifId, message, status) {
-        // Clear lingering popups first
         document.querySelectorAll('#apt-popup-modal, .apt-popup-modal-class').forEach(m => m.remove());
-
-        // Open modal for clicked notification
         this.showPopupModal(message, status, notifId);
     }
 
@@ -491,7 +485,7 @@ class CustomerAppointments {
             const appointment = {
                 custId: targetId,
                 adminEmail: cleanAdminEmail,
-                adminName: mainName = adminName,
+                adminName: adminName,
                 date: formattedDate,
                 time,
                 purpose,
