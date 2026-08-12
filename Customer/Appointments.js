@@ -1,5 +1,5 @@
 // ============================================
-// CUSTOMER APPOINTMENTS - FIXED V13 (ISOLATE MAIN ADMIN BROADCASTS)
+// CUSTOMER APPOINTMENTS - FIXED V14 (STRICT ISOLATION FROM ADMIN NOTIFS)
 // ============================================
 
 class CustomerAppointments {
@@ -30,7 +30,7 @@ class CustomerAppointments {
         }
     }
 
-    // Realtime Firebase Listener targeting ONLY customer notifications (ignoring admin-only broadcasts)
+    // Realtime Firebase Listener targeting ONLY customer notifications (strictly ignoring admin broadcasts)
     startCustomerNotificationPoller() {
         if (typeof firebase === 'undefined' || !firebase.firestore) return;
         const db = firebase.firestore();
@@ -39,7 +39,7 @@ class CustomerAppointments {
         if (this._unsubscribeNotifs) this._unsubscribeNotifs();
         if (this._unsubscribeBroadcasts) this._unsubscribeBroadcasts();
 
-        // 1. Listen to targeted customer_notifications
+        // 1. Listen exclusively to targeted customer_notifications collection
         this._unsubscribeNotifs = db.collection('customer_notifications')
             .onSnapshot(snapshot => {
                 let hasChanges = false;
@@ -67,16 +67,22 @@ class CustomerAppointments {
                 }
             }, e => console.error('Firestore notification listener error:', e));
 
-        // 2. Listen to global platform `notifications` (Filtered strictly so Main Admin / Admin-only notices NEVER appear to customers)
+        // 2. Listen to global platform `notifications` with STRICT checking to block admin-only content
         this._unsubscribeBroadcasts = db.collection('notifications')
             .onSnapshot(snapshot => {
                 snapshot.docChanges().forEach(change => {
                     if (change.type === 'added') {
                         const n = change.doc.data();
-                        const target = (n.target || 'All Customers').toLowerCase();
+                        const target = (n.target || n.recipient || 'All Customers').toLowerCase();
                         
-                        // 🛑 STRICT ISOLATION: Skip showing broadcast if it targets Main Admin or Admins only
-                        if (target.includes('main admin') || target.includes('admin')) {
+                        // 🛑 STRICT ISOLATION: If the broadcast is meant for admins or main admin, completely ignore it for customers
+                        if (
+                            target.includes('admin') || 
+                            target.includes('main admin') || 
+                            target.includes('admins only') || 
+                            target.includes('branch admin') ||
+                            n.isAdminOnly === true
+                        ) {
                             return;
                         }
 
@@ -175,16 +181,22 @@ class CustomerAppointments {
                     return nCust === targetId;
                 });
 
-            // 2. Fetch global broadcasts from `notifications` collection (Excluding Main Admin / Admin-only notices)
+            // 2. Fetch global broadcasts from `notifications` collection (Strictly filtering out admin entries)
             const broadcastSnapshot = await db.collection('notifications').get();
             const broadcasts = [];
             
             broadcastSnapshot.docs.forEach(doc => {
                 const data = doc.data();
-                const target = (data.target || '').toLowerCase();
+                const target = (data.target || data.recipient || '').toLowerCase();
                 
                 // 🛑 EXCLUDE admin-only or main-admin targeted broadcasts from customer view
-                if (target.includes('main admin') || target.includes('admin')) {
+                if (
+                    target.includes('admin') || 
+                    target.includes('main admin') || 
+                    target.includes('admins only') || 
+                    target.includes('branch admin') ||
+                    data.isAdminOnly === true
+                ) {
                     return;
                 }
 
@@ -197,7 +209,6 @@ class CustomerAppointments {
                 });
             });
 
-            // Combine both into the notifications tray list
             this.notifications = [...custNotifs, ...broadcasts]
                 .sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
             
@@ -442,7 +453,7 @@ class CustomerAppointments {
 
         try {
             const db = firebase.firestore();
-            const targetId = (this.custId !== 'DEFAULT' ? this.custId : (localStorage.getItem('currentUserEmail') || 'tt@gmail.com')).toString().toLowerCase().trim();
+            const targetId = (this.custId !== 'DEFAULT' ? this.custId : (localStorage.getItem('currentUserEmail'] || 'tt@gmail.com')).toString().toLowerCase().trim();
             const selectedAdmin = this.admins.find(a => (a.email || a.id) === adminEmail);
             const adminName = selectedAdmin?.name || adminEmail;
 
@@ -493,20 +504,3 @@ class CustomerAppointments {
         }
     }
 }
-
-document.addEventListener('DOMContentLoaded', () => {
-    if (document.getElementById('apt-admin')) {
-        document.getElementById('apt-admin').addEventListener('change', function() {
-            const emailEl = document.getElementById('selected-admin-email');
-            if (emailEl) {
-                emailEl.textContent = this.value || '--';
-            }
-        });
-    }
-});
-
-window.customerAppointments = null;
-document.addEventListener('DOMContentLoaded', () => {
-    const activeEmail = localStorage.getItem('currentUserEmail') || 'tt@gmail.com';
-    window.customerAppointments = new CustomerAppointments(activeEmail);
-});
