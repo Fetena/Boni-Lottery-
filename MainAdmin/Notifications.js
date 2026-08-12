@@ -286,7 +286,7 @@ class Notifications {
         if (modal) modal.classList.add('hidden');
     }
 
-    async sendNotification() {
+   async sendNotification() {
         const title = document.getElementById('notif-title-input')?.value || '';
         const message = document.getElementById('notif-message-input')?.value || '';
         const recipient = document.getElementById('notif-recipient-input')?.value || 'Admins Only';
@@ -308,6 +308,8 @@ class Notifications {
                 title: title,
                 message: message,
                 recipient: recipient,
+                target: recipient, // Explicitly tagged for admin isolation
+                isAdminOnly: true, // 🛑 Flag ensuring customers drop this message instantly
                 sentBy: adminName,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
@@ -316,7 +318,7 @@ class Notifications {
                 await AuditLog.logAction('Send Admin Notification', adminName, `Title: ${title} to ${recipient}`, 'INFO');
             }
 
-            notify('success', '✅ Notification broadcasted successfully!');
+            notify('success', '✅ Notification broadcasted successfully to admins!');
             this.closeSendModal();
             
             const titleEl = document.getElementById('notif-title-input');
