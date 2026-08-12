@@ -1,5 +1,5 @@
 // ============================================
-// CUSTOMER APPOINTMENTS - FIXED V22 (INSTANT MODAL DISMISSAL)
+// CUSTOMER APPOINTMENTS - FIXED V23 (ISOLATED DELETE & INSTANT DISMISS)
 // ============================================
 
 class CustomerAppointments {
@@ -94,8 +94,8 @@ class CustomerAppointments {
     }
 
     showPopupModal(message, status, notifId) {
-        const existing = document.getElementById('apt-popup-modal');
-        if (existing) existing.remove();
+        // Force fully remove any existing modals in the entire DOM
+        document.querySelectorAll('#apt-popup-modal, .apt-popup-modal-class').forEach(m => m.remove());
 
         const isApproved = status === 'Approved' || status === 'Confirmed' || status === 'Platform Broadcast' || status === 'Announcement';
         const borderColor = isApproved ? '#facc15' : '#ef4444';
@@ -103,7 +103,7 @@ class CustomerAppointments {
         const icon = isApproved ? '📢' : '⚠️';
 
         const modalHtml = `
-            <div id="apt-popup-modal" style="position: fixed; inset: 0; z-index: 999999; display: flex; align-items: center; justify-content: center; background-color: rgba(0,0,0,0.85); backdrop-filter: blur(4px); padding: 1rem;">
+            <div id="apt-popup-modal" class="apt-popup-modal-class" style="position: fixed; inset: 0; z-index: 999999; display: flex; align-items: center; justify-content: center; background-color: rgba(0,0,0,0.85); backdrop-filter: blur(4px); padding: 1rem;">
                 <div class="glass-panel w-full max-w-md rounded-2xl p-6 space-y-4 shadow-2xl" style="background: #000; border: 2px solid ${borderColor};">
                     <div style="display: flex; align-items: center; gap: 12px;">
                         <span style="font-size: 28px;">${icon}</span>
@@ -116,11 +116,11 @@ class CustomerAppointments {
                         ${message}
                     </div>
                     <div style="display: flex; gap: 8px;">
-                        <button onclick="window.customerAppointments.dismissPopup('${notifId}')" 
+                        <button type="button" onclick="window.customerAppointments.dismissPopup('${notifId}')" 
                             style="flex: 1; padding: 12px; background: #facc15; color: #000; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; font-size: 13px;">
                             Got It, Thanks!
                         </button>
-                        <button onclick="window.customerAppointments.deleteNotification('${notifId}')" 
+                        <button type="button" onclick="window.customerAppointments.deleteNotification('${notifId}')" 
                             style="padding: 12px 16px; background: rgba(239, 68, 68, 0.2); color: #ef4444; font-weight: bold; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.4); cursor: pointer; font-size: 13px;">
                             🗑️ Delete
                         </button>
@@ -132,19 +132,14 @@ class CustomerAppointments {
     }
 
     dismissPopup(notifId) {
-        // Force-remove any modal elements present in the DOM instantly
-        const modals = document.querySelectorAll('#apt-popup-modal');
-        modals.forEach(modal => modal.remove());
-        
-        const backdrop = document.querySelector('.glass-panel[style*="position: fixed"]');
-        if (backdrop && backdrop.parentNode) {
-            backdrop.parentNode.removeChild(backdrop);
-        }
+        // Aggressively remove all possible modal overlay layers from DOM
+        document.querySelectorAll('#apt-popup-modal, .apt-popup-modal-class').forEach(m => m.remove());
+        const backdrops = document.querySelectorAll('div[style*="position: fixed"][style*="z-index: 999999"]');
+        backdrops.forEach(b => b.remove());
     }
 
     async deleteNotification(notifId) {
-        const modal = document.getElementById('apt-popup-modal');
-        if (modal) modal.remove();
+        this.dismissPopup(notifId);
 
         // Save dismissed/deleted ID to localStorage so it stays hidden on re-login
         const dismissed = JSON.parse(localStorage.getItem('dismissed_notifs_' + this.custId) || '[]');
@@ -160,17 +155,10 @@ class CustomerAppointments {
             return;
         }
 
-        if (notifId && typeof firebase !== 'undefined' && firebase.firestore) {
-            try {
-                const db = firebase.firestore();
-                await db.collection('customer_notifications').doc(notifId).delete();
-                if (typeof notify === 'function') notify('info', '🗑️ Notification deleted');
-                await this.loadNotifications();
-                this.refreshList();
-            } catch (e) {
-                console.error('Error deleting notification from Firebase:', e);
-            }
-        }
+        // Only hide locally / mark as hidden for this specific customer without deleting the master document from Firebase (preventing admin deletion sync conflict)
+        this.notifications = this.notifications.filter(n => n.id !== notifId);
+        this.refreshList();
+        if (typeof notify === 'function') notify('info', '🗑️ Notification dismissed from your tray');
     }
 
     async loadAppointments() {
@@ -420,8 +408,8 @@ class CustomerAppointments {
                         <p class="text-sm text-white leading-relaxed">${n.message}</p>
                     </div>
                     <div class="flex items-center gap-2">
-                        <button onclick="window.customerAppointments.handleNotificationClick('${targetNotifId}', '${safeMsg}', '${n.status || 'Updated'}')" class="text-xs text-yellow-400 whitespace-nowrap font-medium px-2 py-1 bg-yellow-400/10 rounded hover:bg-yellow-400/20 transition">🔍 View</button>
-                        <button onclick="window.customerAppointments.deleteNotification('${targetNotifId}')" class="text-xs text-red-400 whitespace-nowrap font-medium px-2 py-1 bg-red-500/10 rounded hover:bg-red-500/20 transition">🗑️</button>
+                        <button type="button" onclick="window.customerAppointments.handleNotificationClick('${targetNotifId}', '${safeMsg}', '${n.status || 'Updated'}')" class="text-xs text-yellow-400 whitespace-nowrap font-medium px-2 py-1 bg-yellow-400/10 rounded hover:bg-yellow-400/20 transition">🔍 View</button>
+                        <button type="button" onclick="window.customerAppointments.deleteNotification('${targetNotifId}')" class="text-xs text-red-400 whitespace-nowrap font-medium px-2 py-1 bg-red-500/10 rounded hover:bg-red-500/20 transition">🗑️</button>
                     </div>
                 </div>
             `;
@@ -429,11 +417,10 @@ class CustomerAppointments {
     }
 
     handleNotificationClick(notifId, message, status) {
-        // Clear any lingering popups first
-        const allModals = document.querySelectorAll('#apt-popup-modal');
-        allModals.forEach(m => m.remove());
+        // Clear lingering popups first
+        document.querySelectorAll('#apt-popup-modal, .apt-popup-modal-class').forEach(m => m.remove());
 
-        // Open the modal for the clicked notification
+        // Open modal for clicked notification
         this.showPopupModal(message, status, notifId);
     }
 
@@ -504,7 +491,7 @@ class CustomerAppointments {
             const appointment = {
                 custId: targetId,
                 adminEmail: cleanAdminEmail,
-                adminName: adminName,
+                adminName: mainName = adminName,
                 date: formattedDate,
                 time,
                 purpose,
