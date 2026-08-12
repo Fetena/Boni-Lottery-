@@ -1,5 +1,5 @@
 // ============================================
-// UPDATED CUSTOMER DRAWINGS COMPONENT (FIXED TAB RENDER)
+// FULLY REVISED CUSTOMER DRAWINGS COMPONENT
 // Parent: CustomerDashboard
 // ============================================
 
@@ -478,9 +478,18 @@ class CustomerDrawings {
     }
 }
 
-let customerDrawings;
+// Global scope initialization & auto-hooking for single-page tab routing
+let customerDrawings = null;
 
-// ✅ FIXED: Explicitly hook into `switchCustomerTab` in your main dashboard controller so it instantiates immediately upon clicking the "Home" tab without requiring a manual page refresh.
-if (typeof window.customerDrawingsInstance === 'undefined') {
-    window.customerDrawingsInstance = null;
+function initCustomerDrawingsModule() {
+    const custId = localStorage.getItem('currentCustId') || 'DEFAULT';
+    customerDrawings = new CustomerDrawings(custId);
 }
+
+// Handle initial load
+document.addEventListener('DOMContentLoaded', () => {
+    initCustomerDrawingsModule();
+});
+
+// Expose a hook so that when the user clicks the "Home" tab router, it re-renders instantly without needing a full-page refresh
+window.reloadCustomerDrawings = initCustomerDrawingsModule;
