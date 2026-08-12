@@ -1,5 +1,5 @@
 // ============================================
-// ADMIN NOTIFICATIONS - FIXED V26 (ISOLATED ADMIN & MAIN ADMIN POPUPS)
+// ADMIN NOTIFICATIONS - FIXED V27 (RESTORABLE NOTIFICATION TRAY & PERSISTENT POPUPS)
 // ============================================
 
 class AdminNotifications {
@@ -52,7 +52,7 @@ class AdminNotifications {
                 if (hasNewUnnotified && latestApt) {
                     localStorage.removeItem('admin_notifications_viewed_' + this.adminId);
                     const message = `New booking from ${latestApt.custId || 'Customer'} for ${latestApt.purpose || 'Appointment'} on ${latestApt.date || 'TBD'} at ${latestApt.time || 'TBD'}`;
-                    this.showExternalPopup(message, latestApt.purpose || 'New Appointment Request');
+                    this.showPopupModal(message, latestApt.purpose || 'New Appointment Request', latestApt.id);
                     if (typeof notify === 'function') {
                         notify('success', `🔔 ${message}`);
                     }
@@ -69,27 +69,22 @@ class AdminNotifications {
                         const broadcastData = change.doc.data();
                         const target = (broadcastData.target || '').toLowerCase();
                         
-                        // Check if user is Main Admin (e.g. mainadmin@gmail.com or designated main admin flag/email)
-                        // Adjust condition based on your platform's main admin identifier, or check if target matches 'main admin'
-                        const isMainAdmin = currentAdminRaw.includes('mainadmin') || currentAdminRaw === 'main@gmail.com'; // Change or extend to match your main admin account
+                        const isMainAdmin = currentAdminRaw.includes('mainadmin') || currentAdminRaw === 'main@gmail.com';
 
                         const isTargetingMainAdminOnly = target.includes('main admin') || target.includes('main admin only');
                         const isTargetingAdminsOnly = target.includes('admins only') || target.includes('all admins');
 
-                        // 🛑 ISOLATION LOGIC:
-                        // - If it targets Main Admin Only, ONLY show popup if the current user IS the Main Admin.
-                        // - If it targets Admins Only (sent from Main Admin to Branch Admins), ONLY show popup if the current user is a Branch Admin (NOT Main Admin).
                         if (isTargetingMainAdminOnly && !isMainAdmin) {
-                            return; // Skip showing Main Admin targeted notices to regular admins
+                            return; 
                         }
                         if (isTargetingAdminsOnly && isMainAdmin) {
-                            return; // Skip showing regular admin broadcasts to Main Admin if desired, or let them see it. Let's make sure branch admin notices trigger for branch admins.
+                            return; 
                         }
 
                         const title = broadcastData.title || 'Broadcast Notice';
                         const message = broadcastData.message || '';
                         
-                        this.showExternalPopup(`📢 [NOTICE]: ${message}`, title);
+                        this.showPopupModal(`📢 [NOTICE]: ${message}`, title, change.doc.id + '_broadcast');
                         if (typeof notify === 'function') {
                             notify('success', `📢 Notice: ${title}`);
                         }
@@ -99,20 +94,36 @@ class AdminNotifications {
             }, e => console.error('Broadcast listener error:', e));
     }
 
-    showExternalPopup(message, title) {
-        const existing = document.getElementById('admin-external-popup');
+    showPopupModal(message, status, notifId) {
+        const existing = document.getElementById('admin-popup-modal');
         if (existing) existing.remove();
 
+        const isApproved = status === 'Approved' || status === 'Confirmed' || status === 'Platform Broadcast' || status === 'Announcement' || status.includes('New');
+        const borderColor = isApproved ? '#facc15' : '#ef4444';
+        const textColor = isApproved ? 'text-yellow-400' : 'text-red-400';
+        const icon = isApproved ? '📢' : '⚠️';
+
         const modalHtml = `
-            <div id="admin-external-popup" style="position: fixed; top: 20px; right: 20px; z-index: 999999; max-width: 380px; width: 100%; background: #000; border: 2px solid #facc15; border-radius: 12px; padding: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.8); animation: slideInRight 0.3s ease;">
-                <div style="display: flex; align-items: flex-start; gap: 12px;">
-                    <span style="font-size: 24px;">📢</span>
-                    <div style="flex: 1;">
-                        <h4 style="color: #facc15; font-size: 15px; font-weight: bold; margin: 0 0 4px 0;">${title} <span style="font-size:10px; background:#facc15; color:#000; padding:1px 5px; border-radius:4px; margin-left:4px;">NOTICE</span></h4>
-                        <p style="color: #cbd5e1; font-size: 13px; margin: 0 0 12px 0; line-height: 1.4;">${message}</p>
-                        <button onclick="window.adminNotifications.dismissExternalPopup()" 
-                            style="width: 100%; padding: 8px; background: #facc15; color: #000; font-weight: bold; border-radius: 6px; border: none; cursor: pointer; font-size: 12px;">
-                            Got It & View in Center
+            <div id="admin-popup-modal" style="position: fixed; inset: 0; z-index: 999999; display: flex; align-items: center; justify-content: center; background-color: rgba(0,0,0,0.85); backdrop-filter: blur(4px); padding: 1rem;">
+                <div class="glass-panel w-full max-w-md rounded-2xl p-6 space-y-4 shadow-2xl" style="background: #000; border: 2px solid ${borderColor};">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span style="font-size: 28px;">${icon}</span>
+                        <div>
+                            <h3 style="color: #fff; font-size: 18px; font-weight: bold; margin: 0;">Admin Notification</h3>
+                            <p class="${textColor}" style="font-size: 12px; font-weight: 600; margin: 2px 0 0 0;">Type: ${status || 'Update'}</p>
+                        </div>
+                    </div>
+                    <div style="padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; font-size: 14px; color: #e2e8f0; line-height: 1.4;">
+                        ${message}
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button onclick="window.adminNotifications.dismissPopup('${notifId}')" 
+                            style="flex: 1; padding: 12px; background: #facc15; color: #000; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; font-size: 13px;">
+                            Got It, Thanks!
+                        </button>
+                        <button onclick="window.adminNotifications.deletePopupNotification('${notifId}')" 
+                            style="padding: 12px 16px; background: rgba(239, 68, 68, 0.2); color: #ef4444; font-weight: bold; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.4); cursor: pointer; font-size: 13px;">
+                            🗑️ Delete
                         </button>
                     </div>
                 </div>
@@ -121,10 +132,41 @@ class AdminNotifications {
         document.body.insertAdjacentHTML('beforeend', modalHtml);
     }
 
-    dismissExternalPopup() {
-        const popup = document.getElementById('admin-external-popup');
-        if (popup) popup.remove();
+    dismissPopup(notifId) {
+        const modal = document.getElementById('admin-popup-modal');
+        if (modal) modal.remove();
         this.loadPendingApprovals();
+    }
+
+    async deletePopupNotification(notifId) {
+        const modal = document.getElementById('admin-popup-modal');
+        if (modal) modal.remove();
+
+        if (notifId && notifId.includes('_broadcast')) {
+            const cleanId = notifId.replace('_broadcast', '');
+            if (typeof firebase !== 'undefined' && firebase.firestore) {
+                try {
+                    const db = firebase.firestore();
+                    await db.collection('notifications').doc(cleanId).delete();
+                    if (typeof notify === 'function') notify('info', '🗑️ Broadcast notice removed');
+                    await this.loadPendingApprovals();
+                } catch (e) {
+                    console.error('Error deleting broadcast notice:', e);
+                }
+            }
+            return;
+        }
+
+        if (notifId && typeof firebase !== 'undefined' && firebase.firestore) {
+            try {
+                const db = firebase.firestore();
+                await db.collection('customer_appointments').doc(notifId).delete();
+                if (typeof notify === 'function') notify('info', '🗑️ Booking appointment removed');
+                await this.loadPendingApprovals();
+            } catch (e) {
+                console.error('Error deleting appointment from popup:', e);
+            }
+        }
     }
 
     updateTabBadge() {
@@ -164,6 +206,17 @@ class AdminNotifications {
 
         return `
             <div class="space-y-6">
+                <!-- NOTIFICATIONS TRAY SECTION -->
+                <div class="glass-panel rounded-2xl p-6 border border-yellow-400/20 space-y-4" style="background: rgba(0,0,0,0.6);">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-bold text-white flex items-center gap-2">🔔 Admin Notification Tray</h4>
+                        <span class="text-xs text-slate-400">Click View to open popup, use Trash to delete</span>
+                    </div>
+                    <div id="admin-notifications-tray" class="space-y-2 max-h-60 overflow-y-auto pr-1">
+                        ${this.renderNotificationsTrayHtml()}
+                    </div>
+                </div>
+
                 <!-- APPROVALS SECTION -->
                 <div class="glass-panel rounded-2xl p-6 border border-yellow-400/10 space-y-4">
                     <div class="flex justify-between items-center">
@@ -271,9 +324,9 @@ class AdminNotifications {
             const count = this.pendingApprovals.length;
             const latest = this.pendingApprovals[0];
             const message = `You have ${count} pending booking request(s). Latest: ${latest.custId || 'Customer'} - ${latest.purpose || 'Appointment'} on ${latest.date || 'TBD'} at ${latest.time || 'TBD'}`;
-            this.showExternalPopup(message, `Pending Requests (${count})`);
+            this.showPopupModal(message, `Pending Requests (${count})`, latest.id);
         } else {
-            this.showExternalPopup('No pending bookings found to show right now.', 'System Notification');
+            this.showPopupModal('No pending bookings found to show right now.', 'System Notification', 'sys_notice');
         }
     }
 
@@ -350,6 +403,51 @@ class AdminNotifications {
         } finally {
             this._isLoading = false;
         }
+    }
+
+    renderNotificationsTrayHtml() {
+        if (this.pendingApprovals.length === 0 && this.adminNotificationsList.length === 0) {
+            return '<p class="text-slate-500 text-sm text-center py-4">No notifications yet</p>';
+        }
+
+        // Combine pending bookings and recent broadcasts/notifs for the tray view
+        const pendingTrayItems = this.pendingApprovals.map(apt => ({
+            id: apt.id,
+            status: 'Pending Booking',
+            message: `New booking from ${apt.custId || 'Customer'} for ${apt.purpose || 'Appointment'} on ${apt.date || 'TBD'} at ${apt.time || 'TBD'}`,
+            isBroadcast: false
+        }));
+
+        const broadcastTrayItems = this.adminNotificationsList.map(n => ({
+            id: n.isMainAdminBroadcast ? n.id + '_broadcast' : n.id,
+            status: n.type || 'Notice',
+            message: n.message,
+            isBroadcast: true,
+            collection: n.collection || 'admin_notifications'
+        }));
+
+        const allTray = [...pendingTrayItems, ...broadcastTrayItems];
+
+        return allTray.map(n => {
+            const bgStyle = 'background: rgba(0,0,0,0.3); border-color: rgba(255,255,255,0.08);';
+            const statusColor = n.isBroadcast ? 'text-yellow-400' : 'text-emerald-400';
+            const safeMsg = (n.message || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
+            return `
+                <div class="p-4 rounded-xl border border-white/5 flex items-start justify-between gap-3" style="${bgStyle}">
+                    <div class="space-y-1 flex-1">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-semibold ${statusColor}">${n.status}</span>
+                        </div>
+                        <p class="text-sm text-white leading-relaxed">${n.message}</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="window.adminNotifications.showPopupModal('${safeMsg}', '${n.status}', '${n.id}')" class="text-xs text-yellow-400 whitespace-nowrap font-medium px-2 py-1 bg-yellow-400/10 rounded hover:bg-yellow-400/20 transition">🔍 View</button>
+                        <button onclick="window.adminNotifications.deletePopupNotification('${n.id}')" class="text-xs text-red-400 whitespace-nowrap font-medium px-2 py-1 bg-red-500/10 rounded hover:bg-red-500/20 transition">🗑️</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
     }
 
     renderApprovalItems() {
@@ -585,6 +683,9 @@ class AdminNotifications {
     }
 
     refreshUI() {
+        const trayEl = document.getElementById('admin-notifications-tray');
+        if (trayEl) trayEl.innerHTML = this.renderNotificationsTrayHtml();
+
         const approvalListEl = document.getElementById('admin-approval-list');
         if (approvalListEl) approvalListEl.innerHTML = this.renderApprovalItems();
 
@@ -637,27 +738,23 @@ class AdminNotifications {
             const isMainAdminTarget = target.toLowerCase().includes('main admin');
             const isAdminOnlyTarget = target.toLowerCase().includes('admins only');
 
-            // Save to admin history log
             await db.collection('admin_notifications').add(notif);
 
-            // If In-Platform Notification is checked
             if (sendPlatform) {
                 const batch = db.batch();
                 let count = 0;
 
                 if (isMainAdminTarget || isAdminOnlyTarget) {
-                    // Save to global `notifications` collection with targeted property so only intended roles get popups
                     const globalNotifRef = db.collection('notifications').doc();
                     batch.set(globalNotifRef, {
                         title: type,
                         message: message,
-                        target: target, // 'Main Admin' or 'Admins Only'
+                        target: target,
                         sentBy: currentAdminRaw,
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
                     count++;
                 } else {
-                    // Send to customer accounts
                     let customersSnapshot;
                     if (target === 'Unpaid') {
                         customersSnapshot = await db.collection('users').where('paymentStatus', '==', 'unpaid').get();
