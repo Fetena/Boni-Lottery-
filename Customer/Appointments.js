@@ -1,5 +1,5 @@
 // ============================================
-// CUSTOMER APPOINTMENTS - FIXED V21 (TRUE MODAL DISMISSAL)
+// CUSTOMER APPOINTMENTS - FIXED V22 (INSTANT MODAL DISMISSAL)
 // ============================================
 
 class CustomerAppointments {
@@ -132,9 +132,14 @@ class CustomerAppointments {
     }
 
     dismissPopup(notifId) {
-        // Just closes the popup modal without deleting the notification from database/tray
-        const modal = document.getElementById('apt-popup-modal');
-        if (modal) modal.remove();
+        // Force-remove any modal elements present in the DOM instantly
+        const modals = document.querySelectorAll('#apt-popup-modal');
+        modals.forEach(modal => modal.remove());
+        
+        const backdrop = document.querySelector('.glass-panel[style*="position: fixed"]');
+        if (backdrop && backdrop.parentNode) {
+            backdrop.parentNode.removeChild(backdrop);
+        }
     }
 
     async deleteNotification(notifId) {
@@ -424,11 +429,11 @@ class CustomerAppointments {
     }
 
     handleNotificationClick(notifId, message, status) {
-        // First, explicitly clear out any lingering popups to guarantee dismissal
+        // Clear any lingering popups first
         const allModals = document.querySelectorAll('#apt-popup-modal');
         allModals.forEach(m => m.remove());
 
-        // Then open the modal for the clicked notification
+        // Open the modal for the clicked notification
         this.showPopupModal(message, status, notifId);
     }
 
