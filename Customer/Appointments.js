@@ -1,5 +1,5 @@
 // ============================================
-// CUSTOMER APPOINTMENTS - FIXED V19 (SECURE NOTIFICATION PERSISTENCE & REALTIME SYNC)
+// CUSTOMER APPOINTMENTS - FIXED V20 (STABLE FIRESTORE QUERY & REALTIME NOTIFICATION SYNC)
 // ============================================
 
 class CustomerAppointments {
@@ -42,7 +42,7 @@ class CustomerAppointments {
         if (this._unsubscribeNotifs) this._unsubscribeNotifs();
         if (this._unsubscribeBroadcasts) this._unsubscribeBroadcasts();
 
-        // Listen to personal notifications using snapshots for real-time delivery
+        // Listen to personal notifications collection in real-time
         this._unsubscribeNotifs = db.collection('customer_notifications')
             .onSnapshot(snapshot => {
                 let hasChanges = false;
@@ -53,7 +53,7 @@ class CustomerAppointments {
                     
                     if (nCustId === activeEmail) {
                         hasChanges = true;
-                        if (change.type === 'added' && !n.viewed && !this.dismissedIds.includes(docId)) {
+                        if (change.type === 'added' && !this.dismissedIds.includes(docId)) {
                             this.showPopupModal(n.message, n.status || 'Announcement', docId);
                             
                             const type = (n.status === 'Approved' || n.status === 'Confirmed') ? 'success' : 'error';
@@ -64,16 +64,18 @@ class CustomerAppointments {
                     }
                 });
 
-                if (hasChanges) {
+                if (hasChanges || snapshot.size >= 0) {
                     this.loadNotifications();
                 }
             }, e => console.error('Firestore notification listener error:', e));
 
-        // Listen to platform broadcasts
+        // Listen to platform-wide broadcasts
         this._unsubscribeBroadcasts = db.collection('notifications')
             .onSnapshot(snapshot => {
+                let hasChanges = false;
                 snapshot.docChanges().forEach(change => {
                     if (change.type === 'added') {
+                        hasChanges = true;
                         const n = change.doc.data();
                         const target = (n.target || n.recipient || 'All Customers').toLowerCase();
                         const docId = change.doc.id + '_broadcast';
@@ -95,9 +97,12 @@ class CustomerAppointments {
                                 notify('success', `📢 ${message}`);
                             }
                         }
-                        this.loadNotifications();
                     }
                 });
+
+                if (hasChanges || snapshot.size >= 0) {
+                    this.loadNotifications();
+                }
             }, e => console.error('Broadcast listener error:', e));
     }
 
@@ -236,20 +241,33 @@ class CustomerAppointments {
             const db = firebase.firestore();
             const targetId = (this.custId && this.custId !== 'DEFAULT' ? this.custId : (localStorage.getItem('currentUserEmail') || 'tt@gmail.com')).toString().toLowerCase().trim();
             
+            // Fetch personal customer notifications
             const custNotifSnapshot = await db.collection('customer_notifications').get();
-            const custNotifs = custNotifSnapshot.docs
-                .map(doc => ({ id: doc.id, ...doc.data() }))
-                .filter(n => {
-                    const nCust = (n.custId || '').toString().toLowerCase().trim();
-                    return nCust === targetId && !this.dismissedIds.includes(n.id);
-                });
+            const custNotifs = [];
+            
+            custNotifSnapshot.docs.forEach(doc => {
+                const data = doc.data();
+                const nCust = (data.custId || '').toString().toLowerCase().trim();
+                
+                // Match current user and ensure it hasn't been locally dismissed/deleted
+                if (nCust === targetId && !this.dismissedIds.includes(doc.id)) {
+                    custNotifs.push({
+                        id: doc.id,
+                        isBroadcast: false,
+                        status: data.status || 'Update',
+                        message: data.message || '',
+                        createdAt: data.createdAt || { toMillis: () => Date.now() }
+                    });
+                }
+            });
 
+            // Fetch platform announcements / broadcasts
             const broadcastSnapshot = await db.collection('notifications').get();
             const broadcasts = [];
             
             broadcastSnapshot.docs.forEach(doc => {
                 const data = doc.data();
-                const target = (data.target || data.recipient || '').toLowerCase();
+                const target = (data.target || data.recipient || 'All Customers').toLowerCase();
                 const broadcastUniqueId = doc.id + '_broadcast';
                 
                 if (
@@ -275,7 +293,7 @@ class CustomerAppointments {
             this.notifications = [...custNotifs, ...broadcasts]
                 .sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
             
-            this.updateBadgeCount();
+            this.refreshList();
         } catch (e) {
             console.error('Error loading notifications:', e);
             this.notifications = [];
