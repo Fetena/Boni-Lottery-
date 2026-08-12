@@ -1,5 +1,5 @@
 // ============================================
-// UPDATED CUSTOMER DRAWINGS COMPONENT (FIXED STREAM LINK)
+// UPDATED CUSTOMER DRAWINGS COMPONENT (FIXED TAB RENDER)
 // Parent: CustomerDashboard
 // ============================================
 
@@ -479,6 +479,8 @@ class CustomerDrawings {
 }
 
 let customerDrawings;
-document.addEventListener('DOMContentLoaded', () => {
-    customerDrawings = new CustomerDrawings(localStorage.getItem('currentCustId') || 'DEFAULT');
-});
+
+// ✅ FIXED: Explicitly hook into `switchCustomerTab` in your main dashboard controller so it instantiates immediately upon clicking the "Home" tab without requiring a manual page refresh.
+if (typeof window.customerDrawingsInstance === 'undefined') {
+    window.customerDrawingsInstance = null;
+}
